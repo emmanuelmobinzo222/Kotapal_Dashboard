@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Debug Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+        input { padding: 8px; margin: 5px; width: 200px; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>Login Debug Test</h1>
+    
+    <div class="test-section">
+        <h3>Test User Registration</h3>
+        <input type="text" id="regName" placeholder="Full Name" value="Test User">
+        <input type="email" id="regEmail" placeholder="Email" value="test@example.com">
+        <input type="password" id="regPassword" placeholder="Password" value="password123">
+        <input type="url" id="regWebsite" placeholder="Website" value="https://example.com">
+        <select id="regPlan">
+            <option value="starter">Starter</option>
+            <option value="pro">Pro</option>
+            <option value="creatorplus">Creator+</option>
+            <option value="agency">Agency</option>
+        </select>
+        <button onclick="testRegister()">Register User</button>
+        <div id="regResult"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>Test User Login</h3>
+        <input type="email" id="loginEmail" placeholder="Email" value="test@example.com">
+        <input type="password" id="loginPassword" placeholder="Password" value="password123">
+        <button onclick="testLogin()">Login User</button>
+        <div id="loginResult"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>Test Profile Access</h3>
+        <button onclick="testProfile()">Get Profile</button>
+        <div id="profileResult"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>Database Status</h3>
+        <button onclick="checkDatabase()">Check Database</button>
+        <div id="dbResult"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3000';
+        let authToken = null;
+
+        async function apiRequest(endpoint, options = {}) {
+            const url = `${API_BASE}${endpoint}`;
+            const config = {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                ...options
+            };
+
+            if (authToken) {
+                config.headers['Authorization'] = `Bearer ${authToken}`;
+            }
+
+            const response = await fetch(url, config);
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || `HTTP ${response.status}`);
+            }
+
+            return data;
+        }
+
+        async function testRegister() {
+            const resultDiv = document.getElementById('regResult');
+            resultDiv.innerHTML = '<div class="info">Registering user...</div>';
+
+            try {
+                const userData = {
+                    name: document.getElementById('regName').value,
+                    email: document.getElementById('regEmail').value,
+                    password: document.getElementById('regPassword').value,
+                    website: document.getElementById('regWebsite').value,
+                    plan: document.getElementById('regPlan').value
+                };
+
+                const response = await apiRequest('/api/auth/register', {
+                    method: 'POST',
+                    body: JSON.stringify(userData)
+                });
+
+                resultDiv.innerHTML = `
+                    <div class="success">
+                        ✅ Registration successful!<br>
+                        User: ${response.user.name}<br>
+                        Email: ${response.user.email}<br>
+                        Plan: ${response.user.plan}<br>
+                        Website: ${response.user.website || 'Not provided'}<br>
+                        Token: ${response.token.substring(0, 20)}...
+                    </div>
+                `;
+
+                // Store token for subsequent requests
+                authToken = response.token;
+                localStorage.setItem('kotaToken', authToken);
+                localStorage.setItem('kotaUser', JSON.stringify(response.user));
+
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        ❌ Registration failed: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        async function testLogin() {
+            const resultDiv = document.getElementById('loginResult');
+            resultDiv.innerHTML = '<div class="info">Logging in...</div>';
+
+            try {
+                const loginData = {
+                    email: document.getElementById('loginEmail').value,
+                    password: document.getElementById('loginPassword').value
+                };
+
+                const response = await apiRequest('/api/auth/login', {
+                    method: 'POST',
+                    body: JSON.stringify(loginData)
+                });
+
+                resultDiv.innerHTML = `
+                    <div class="success">
+                        ✅ Login successful!<br>
+                        User: ${response.user.name}<br>
+                        Email: ${response.user.email}<br>
+                        Plan: ${response.user.plan}<br>
+                        Website: ${response.user.website || 'Not provided'}<br>
+                        Redirect: ${response.redirectPage}<br>
+                        Token: ${response.token.substring(0, 20)}...
+                    </div>
+                `;
+
+                // Store token for subsequent requests
+                authToken = response.token;
+                localStorage.setItem('kotaToken', authToken);
+                localStorage.setItem('kotaUser', JSON.stringify(response.user));
+
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        ❌ Login failed: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        async function testProfile() {
+            const resultDiv = document.getElementById('profileResult');
+            resultDiv.innerHTML = '<div class="info">Getting profile...</div>';
+
+            try {
+                const response = await apiRequest('/api/user/profile');
+                resultDiv.innerHTML = `
+                    <div class="success">
+                        ✅ Profile retrieved successfully!<br>
+                        <pre>${JSON.stringify(response, null, 2)}</pre>
+                    </div>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        ❌ Profile access failed: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        async function checkDatabase() {
+            const resultDiv = document.getElementById('dbResult');
+            resultDiv.innerHTML = '<div class="info">Checking database...</div>';
+
+            try {
+                const response = await apiRequest('/api/health');
+                resultDiv.innerHTML = `
+                    <div class="success">
+                        ✅ Database connection successful!<br>
+                        <pre>${JSON.stringify(response, null, 2)}</pre>
+                    </div>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        ❌ Database check failed: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        // Load stored token on page load
+        window.addEventListener('load', () => {
+            authToken = localStorage.getItem('kotaToken');
+            if (authToken) {
+                document.getElementById('profileResult').innerHTML = '<div class="info">Token found in localStorage. You can test profile access.</div>';
+            }
+        });
+    </script>
+</body>
+</html>
