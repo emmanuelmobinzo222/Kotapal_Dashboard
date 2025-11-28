@@ -1,9 +1,0 @@
-<component name="libraryTable">
-  <library name="nodejs-portable">
-    <CLASSES>
-      <root url="jar://$PROJECT_DIR$/KotaPal simple/nodejs-portable.zip!/" />
-    </CLASSES>
-    <JAVADOC />
-    <SOURCES />
-  </library>
-</component>
