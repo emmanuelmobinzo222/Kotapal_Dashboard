@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login & Signup Verification Test</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 20px; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container { 
+            max-width: 800px; 
+            margin: 0 auto; 
+            background: white; 
+            border-radius: 10px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .content {
+            padding: 30px;
+        }
+        .test-section { 
+            margin: 20px 0; 
+            padding: 20px; 
+            border: 2px solid #e0e0e0; 
+            border-radius: 8px; 
+            background: #f9f9f9;
+        }
+        .success { 
+            background-color: #d4edda; 
+            border-color: #c3e6cb; 
+            color: #155724;
+        }
+        .error { 
+            background-color: #f8d7da; 
+            border-color: #f5c6cb; 
+            color: #721c24;
+        }
+        .info { 
+            background-color: #d1ecf1; 
+            border-color: #bee5eb; 
+            color: #0c5460;
+        }
+        .warning { 
+            background-color: #fff3cd; 
+            border-color: #ffeaa7; 
+            color: #856404;
+        }
+        button { 
+            padding: 12px 24px; 
+            margin: 8px; 
+            cursor: pointer; 
+            border: none; 
+            border-radius: 6px; 
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .btn-primary { 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+            color: white; 
+        }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4); }
+        .btn-success { 
+            background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%); 
+            color: white; 
+        }
+        .btn-success:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(86, 171, 47, 0.4); }
+        .btn-danger { 
+            background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%); 
+            color: white; 
+        }
+        .btn-danger:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(255, 65, 108, 0.4); }
+        .btn-warning { 
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); 
+            color: white; 
+        }
+        .btn-warning:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(240, 147, 251, 0.4); }
+        input, select { 
+            padding: 12px; 
+            margin: 8px; 
+            width: 200px; 
+            border: 2px solid #e0e0e0; 
+            border-radius: 6px; 
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        pre { 
+            background: #f8f9fa; 
+            padding: 15px; 
+            border-radius: 6px; 
+            overflow-x: auto; 
+            font-size: 12px; 
+            border: 1px solid #e0e0e0;
+        }
+        .grid { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 20px; 
+        }
+        .full-width { 
+            grid-column: 1 / -1; 
+        }
+        h1 { 
+            color: white; 
+            margin: 0;
+            font-size: 2.5em;
+        }
+        h3 { 
+            color: #333; 
+            margin-bottom: 15px; 
+            font-size: 1.3em;
+        }
+        .status { 
+            padding: 15px; 
+            border-radius: 6px; 
+            margin: 15px 0; 
+            font-weight: 600;
+        }
+        .test-result {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+            border-left: 4px solid;
+        }
+        .test-pass { background: #d4edda; border-left-color: #28a745; }
+        .test-fail { background: #f8d7da; border-left-color: #dc3545; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔐 Login & Signup Verification</h1>
+            <p>Comprehensive testing of authentication functionality</p>
+        </div>
+        
+        <div class="content">
+            <div class="test-section">
+                <h3>🚀 Quick Verification Test</h3>
+                <button class="btn-primary" onclick="runFullTest()">Run Complete Test Suite</button>
+                <div id="fullTestResult"></div>
+            </div>
+
+            <div class="grid">
+                <div class="test-section">
+                    <h3>👤 User Registration</h3>
+                    <input type="text" id="regName" placeholder="Full Name" value="Test User">
+                    <input type="email" id="regEmail" placeholder="Email" value="test@example.com">
+                    <input type="password" id="regPassword" placeholder="Password" value="password123">
+                    <input type="url" id="regWebsite" placeholder="Website" value="https://example.com">
+                    <select id="regPlan">
+                        <option value="starter">Starter</option>
+                        <option value="pro">Pro</option>
+                        <option value="creatorplus">Creator+</option>
+                        <option value="agency">Agency</option>
+                    </select>
+                    <button class="btn-success" onclick="testRegister()">Register User</button>
+                    <div id="regResult"></div>
+                </div>
+
+                <div class="test-section">
+                    <h3>🔑 User Login</h3>
+                    <input type="email" id="loginEmail" placeholder="Email" value="test@example.com">
+                    <input type="password" id="loginPassword" placeholder="Password" value="password123">
+                    <button class="btn-primary" onclick="testLogin()">Login User</button>
+                    <div id="loginResult"></div>
+                </div>
+            </div>
+
+            <div class="grid">
+                <div class="test-section">
+                    <h3>👤 Profile Access</h3>
+                    <button class="btn-primary" onclick="testProfile()">Get Profile</button>
+                    <div id="profileResult"></div>
+                </div>
+
+                <div class="test-section">
+                    <h3>🔍 Server Status</h3>
+                    <button class="btn-warning" onclick="checkServer()">Check Server</button>
+                    <div id="serverResult"></div>
+                </div>
+            </div>
+
+            <div class="test-section">
+                <h3>🧪 Error Handling Tests</h3>
+                <button class="btn-warning" onclick="testInvalidLogin()">Test Invalid Login</button>
+                <button class="btn-warning" onclick="testDuplicateEmail()">Test Duplicate Email</button>
+                <button class="btn-danger" onclick="clearAllData()">Clear All Data</button>
+                <div id="errorTestResult"></div>
+            </div>
+
+            <div class="test-section full-width">
+                <h3>📊 Test Results Summary</h3>
+                <div id="summaryResult"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3000';
+        let authToken = null;
+        let testResults = [];
+
+        async function apiRequest(endpoint, options = {}) {
+            const url = `${API_BASE}${endpoint}`;
+            const config = {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                ...options
+            };
+
+            if (authToken) {
+                config.headers['Authorization'] = `Bearer ${authToken}`;
+            }
+
+            console.log('Making request to:', url, config);
+            const response = await fetch(url, config);
+            const data = await response.json();
+
+            console.log('Response:', response.status, data);
+
+            if (!response.ok) {
+                throw new Error(data.error || `HTTP ${response.status}`);
+            }
+
+            return data;
+        }
+
+        function addTestResult(testName, success, message, data = null) {
+            testResults.push({
+                test: testName,
+                success,
+                message,
+                data,
+                timestamp: new Date().toISOString()
+            });
+            updateSummary();
+        }
+
+        function updateSummary() {
+            const summaryDiv = document.getElementById('summaryResult');
+            const total = testResults.length;
+            const passed = testResults.filter(r => r.success).length;
+            const failed = total - passed;
+            
+            summaryDiv.innerHTML = `
+                <div class="status ${passed === total ? 'success' : 'warning'}">
+                    <strong>Test Summary:</strong> ${passed}/${total} tests passed
+                    ${failed > 0 ? ` (${failed} failed)` : ''}
+                </div>
+                <div style="max-height: 300px; overflow-y: auto;">
+                    ${testResults.map(result => `
+                        <div class="test-result ${result.success ? 'test-pass' : 'test-fail'}">
+                            <strong>${result.success ? '✅' : '❌'} ${result.test}:</strong> ${result.message}
+                            ${result.data ? `<pre>${JSON.stringify(result.data, null, 2)}</pre>` : ''}
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        async function runFullTest() {
+            const resultDiv = document.getElementById('fullTestResult');
+            resultDiv.innerHTML = '<div class="info">Running complete test suite...</div>';
+
+            const tests = [
+                { name: 'Server Health', fn: checkServer },
+                { name: 'User Registration', fn: testRegister },
+                { name: 'User Login', fn: testLogin },
+                { name: 'Profile Access', fn: testProfile },
+                { name: 'Invalid Login', fn: testInvalidLogin },
+                { name: 'Duplicate Email', fn: testDuplicateEmail }
+            ];
+
+            let passed = 0;
+            let failed = 0;
+
+            for (const test of tests) {
+                try {
+                    await test.fn();
+                    passed++;
+                } catch (error) {
+                    failed++;
+                    console.error(`Test ${test.name} failed:`, error);
+                }
+            }
+
+            resultDiv.innerHTML = `
+                <div class="status ${failed === 0 ? 'success' : 'warning'}">
+                    <strong>Full Test Suite Complete!</strong><br>
+                    ✅ Passed: ${passed}<br>
+                    ❌ Failed: ${failed}<br>
+                    📊 Total: ${passed + failed}
+                </div>
+            `;
+        }
+
+        async function testRegister() {
+            const resultDiv = document.getElementById('regResult');
+            resultDiv.innerHTML = '<div class="info">Registering user...</div>';
+
+            try {
+                const userData = {
+                    name: document.getElementById('regName').value,
+                    email: document.getElementById('regEmail').value,
+                    password: document.getElementById('regPassword').value,
+                    website: document.getElementById('regWebsite').value,
+                    plan: document.getElementById('regPlan').value
+                };
+
+                const response = await apiRequest('/api/auth/register', {
+                    method: 'POST',
+                    body: JSON.stringify(userData)
+                });
+
+                resultDiv.innerHTML = `
+                    <div class="success">
+                        ✅ Registration successful!<br>
+                        <strong>User:</strong> ${response.user.name}<br>
+                        <strong>Email:</strong> ${response.user.email}<br>
+                        <strong>Plan:</strong> ${response.user.plan}<br>
+                        <strong>Website:</strong> ${response.user.website || 'Not provided'}<br>
+                        <strong>Redirect:</strong> ${response.redirectPage}<br>
+                        <strong>Token:</strong> ${response.token.substring(0, 20)}...
+                    </div>
+                `;
+
+                // Store token for subsequent requests
+                authToken = response.token;
+                localStorage.setItem('kotaToken', authToken);
+                localStorage.setItem('kotaUser', JSON.stringify(response.user));
+
+                addTestResult('Registration', true, 'User registered successfully', response.user);
+
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        ❌ Registration failed: ${error.message}
+                    </div>
+                `;
+                addTestResult('Registration', false, `Registration failed: ${error.message}`);
+            }
+        }
+
+        async function testLogin() {
+            const resultDiv = document.getElementById('loginResult');
+            resultDiv.innerHTML = '<div class="info">Logging in...</div>';
+
+            try {
+                const loginData = {
+                    email: document.getElementById('loginEmail').value,
+                    password: document.getElementById('loginPassword').value
+                };
+
+                const response = await apiRequest('/api/auth/login', {
+                    method: 'POST',
+                    body: JSON.stringify(loginData)
+                });
+
+                resultDiv.innerHTML = `
+                    <div class="success">
+                        ✅ Login successful!<br>
+                        <strong>User:</strong> ${response.user.name}<br>
+                        <strong>Email:</strong> ${response.user.email}<br>
+                        <strong>Plan:</strong> ${response.user.plan}<br>
+                        <strong>Website:</strong> ${response.user.website || 'Not provided'}<br>
+                        <strong>Redirect:</strong> ${response.redirectPage}<br>
+                        <strong>Token:</strong> ${response.token.substring(0, 20)}...
+                    </div>
+                `;
+
+                // Store token for subsequent requests
+                authToken = response.token;
+                localStorage.setItem('kotaToken', authToken);
+                localStorage.setItem('kotaUser', JSON.stringify(response.user));
+
+                addTestResult('Login', true, 'User logged in successfully', response.user);
+
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        ❌ Login failed: ${error.message}
+                    </div>
+                `;
+                addTestResult('Login', false, `Login failed: ${error.message}`);
+            }
+        }
+
+        async function testProfile() {
+            const resultDiv = document.getElementById('profileResult');
+            resultDiv.innerHTML = '<div class="info">Getting profile...</div>';
+
+            try {
+                const response = await apiRequest('/api/user/profile');
+                resultDiv.innerHTML = `
+                    <div class="success">
+                        ✅ Profile retrieved successfully!<br>
+                        <pre>${JSON.stringify(response, null, 2)}</pre>
+                    </div>
+                `;
+                addTestResult('Profile Access', true, 'Profile retrieved successfully', response);
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        ❌ Profile access failed: ${error.message}
+                    </div>
+                `;
+                addTestResult('Profile Access', false, `Profile access failed: ${error.message}`);
+            }
+        }
+
+        async function checkServer() {
+            const resultDiv = document.getElementById('serverResult');
+            resultDiv.innerHTML = '<div class="info">Checking server...</div>';
+
+            try {
+                const response = await apiRequest('/');
+                resultDiv.innerHTML = `
+                    <div class="success">
+                        ✅ Server is healthy!<br>
+                        <pre>${JSON.stringify(response, null, 2)}</pre>
+                    </div>
+                `;
+                addTestResult('Server Health', true, 'Server is running and healthy', response);
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        ❌ Server check failed: ${error.message}
+                    </div>
+                `;
+                addTestResult('Server Health', false, `Server check failed: ${error.message}`);
+            }
+        }
+
+        async function testInvalidLogin() {
+            const resultDiv = document.getElementById('errorTestResult');
+            resultDiv.innerHTML = '<div class="info">Testing invalid login...</div>';
+
+            try {
+                await apiRequest('/api/auth/login', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        email: 'nonexistent@example.com',
+                        password: 'wrongpassword'
+                    })
+                });
+                
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        ❌ Invalid login test failed - should have returned error
+                    </div>
+                `;
+                addTestResult('Invalid Login Test', false, 'Should have failed but succeeded');
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="success">
+                        ✅ Invalid login correctly rejected: ${error.message}
+                    </div>
+                `;
+                addTestResult('Invalid Login Test', true, `Correctly rejected invalid login: ${error.message}`);
+            }
+        }
+
+        async function testDuplicateEmail() {
+            const resultDiv = document.getElementById('errorTestResult');
+            resultDiv.innerHTML = '<div class="info">Testing duplicate email...</div>';
+
+            try {
+                // First registration
+                await apiRequest('/api/auth/register', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        name: 'First User',
+                        email: 'duplicate@example.com',
+                        password: 'password123',
+                        plan: 'starter'
+                    })
+                });
+
+                // Second registration with same email
+                await apiRequest('/api/auth/register', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        name: 'Second User',
+                        email: 'duplicate@example.com',
+                        password: 'password123',
+                        plan: 'pro'
+                    })
+                });
+
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        ❌ Duplicate email test failed - should have returned error
+                    </div>
+                `;
+                addTestResult('Duplicate Email Test', false, 'Should have failed but succeeded');
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="success">
+                        ✅ Duplicate email correctly rejected: ${error.message}
+                    </div>
+                `;
+                addTestResult('Duplicate Email Test', true, `Correctly rejected duplicate email: ${error.message}`);
+            }
+        }
+
+        async function clearAllData() {
+            const resultDiv = document.getElementById('errorTestResult');
+            resultDiv.innerHTML = '<div class="info">Clearing all data...</div>';
+
+            try {
+                // Clear localStorage
+                localStorage.removeItem('kotaToken');
+                localStorage.removeItem('kotaUser');
+                authToken = null;
+                testResults = [];
+
+                resultDiv.innerHTML = `
+                    <div class="success">
+                        ✅ All data cleared!<br>
+                        - Local storage cleared<br>
+                        - Auth token cleared<br>
+                        - Test results cleared
+                    </div>
+                `;
+                addTestResult('Clear Data', true, 'All data cleared successfully');
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        ❌ Clear data failed: ${error.message}
+                    </div>
+                `;
+                addTestResult('Clear Data', false, `Clear data failed: ${error.message}`);
+            }
+        }
+
+        // Load stored token on page load
+        window.addEventListener('load', () => {
+            authToken = localStorage.getItem('kotaToken');
+            if (authToken) {
+                document.getElementById('profileResult').innerHTML = '<div class="info">Token found in localStorage. You can test profile access.</div>';
+            }
+            
+            // Auto-run server check on load
+            checkServer();
+        });
+    </script>
+</body>
+</html>
