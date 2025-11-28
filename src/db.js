@@ -148,5 +148,6 @@ module.exports = {
   state,
   load,
   save,
+  ensureDataFile,
   DATA_PATH
 };

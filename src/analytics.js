@@ -104,7 +104,7 @@ class Analytics {
       overview: {
         totalClicks,
         totalRevenue,
-        avgCTR: parseFloat(avgCTR.toFixed(2)),
+        avgCTR: parseFloat((avgCTR || 0).toFixed(2)),
         conversionRate: parseFloat(conversionRate.toFixed(2)),
         clickGrowthRate: parseFloat(clickGrowthRate.toFixed(2)),
         activeBlocks: blocks.filter(b => b.status === 'active').length,
@@ -257,8 +257,8 @@ class Analytics {
         await store.updateDailyMetrics(user.id, today, {
           clicks: analytics.totalClicks,
           revenue: analytics.totalRevenue,
-          blocks: analytics.totalBlocks,
-          avgCTR: analytics.avgCTR
+          blocks: analytics.metrics?.overview?.totalBlocks || analytics.totalBlocks || 0,
+          avgCTR: analytics.metrics?.overview?.avgCTR || 0
         });
       }
       

@@ -293,6 +293,30 @@ class AffiliateAPIs {
     }
   }
 
+  async getSkimlinksProductDetails(productId) {
+    try {
+      // Mock implementation - replace with actual Skimlinks API
+      const productIdClean = productId.replace('skm_', '');
+      return {
+        id: `skm_${productIdClean}`,
+        title: 'Skimlinks Product',
+        image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8c25lYWtlcnN8ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&w=500&q=80',
+        price: 0,
+        originalPrice: 0,
+        rating: 4.0,
+        reviews: 0,
+        availability: 'Available',
+        productId: productIdClean,
+        category: 'General',
+        retailer: 'skimlinks',
+        url: `https://skimlinks.com/product/${productIdClean}`
+      };
+    } catch (error) {
+      console.error('Skimlinks product details error:', error);
+      throw new Error('Failed to get Skimlinks product details');
+    }
+  }
+
   // Generate affiliate URLs
   async generateAffiliateUrl(retailer, productId, affiliateId) {
     switch (retailer) {

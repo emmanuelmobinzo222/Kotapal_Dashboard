@@ -61,30 +61,60 @@ app.use(bodyParser.urlencoded({ extended: true, limit: '10mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Initialize Database (Firebase/Supabase)
+// Initialize Database (Firebase/Supabase) - Offline-capable with local fallback
 (async () => { 
   try {
     const firebaseConfig = require('./src/firebase-config');
     const supabaseConfig = require('./src/supabase-config');
     
-    // Try Supabase first
-    const supabaseInitialized = await supabaseConfig.initSupabase();
+    let dbType = 'Local JSON'; // Default to local for offline support
     
-    // Try Firebase if Supabase not configured
-    if (!supabaseInitialized) {
-      await firebaseConfig.initFirebase();
+    // Only try cloud databases if explicitly configured (for offline support)
+    const hasFirebaseConfig = firebaseConfig.isFirebaseConfigured && firebaseConfig.isFirebaseConfigured();
+    const hasSupabaseConfig = supabaseConfig.isSupabaseConfigured && supabaseConfig.isSupabaseConfigured();
+    
+    if (hasSupabaseConfig) {
+      try {
+        const supabaseInitialized = await supabaseConfig.initSupabase();
+        if (supabaseInitialized) {
+          dbType = 'Supabase';
+        }
+      } catch (error) {
+        console.log('Supabase unavailable (offline?), using local database');
+      }
     }
     
-    // Initialize store with whichever database is configured
-    const firebaseStoreInitialized = await store.initFirebase();
+    if (dbType === 'Local JSON' && hasFirebaseConfig) {
+      try {
+        const firebaseStoreInitialized = await store.initFirebase();
+        if (firebaseStoreInitialized) {
+          dbType = 'Firebase';
+        }
+      } catch (error) {
+        console.log('Firebase unavailable (offline?), using local database');
+      }
+    }
     
-    const dbType = supabaseInitialized ? 'Supabase' : 
-                   firebaseStoreInitialized ? 'Firebase' : 'Local JSON';
+    // Ensure local database is always initialized for offline support
+    if (dbType === 'Local JSON') {
+      const db = require('./src/db');
+      db.ensureDataFile(); // Initialize local JSON database
+      console.log('✓ Local JSON database ready (offline-capable)');
+    }
     
     console.log('Database initialized - using:', dbType);
+    console.log('✓ Offline login supported with local database');
   } catch (error) {
     console.error('Database initialization error:', error);
-    console.log('Falling back to Local JSON database');
+    console.log('Using Local JSON database (offline mode)');
+    // Ensure local database works even if initialization fails
+    try {
+      const db = require('./src/db');
+      db.ensureDataFile();
+      console.log('✓ Local JSON database initialized');
+    } catch (dbError) {
+      console.error('Local database initialization failed:', dbError);
+    }
   }
 })();
 
@@ -840,9 +870,19 @@ app.post('/api/ai/generate-faq', authenticateToken, async (req, res) => {
   }
 });
 
-// Serve React app for all other routes
+// Serve React app for all other routes (only if file exists, for production builds)
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  const indexPath = path.join(__dirname, 'public', 'index.html');
+  if (require('fs').existsSync(indexPath)) {
+    res.sendFile(indexPath);
+  } else {
+    // In development, frontend runs on separate port
+    res.status(404).json({ 
+      error: 'Not found',
+      message: 'Frontend is running on http://localhost:3001. Please access the application there.',
+      frontendUrl: 'http://localhost:3001'
+    });
+  }
 });
 
 // Error handling middleware

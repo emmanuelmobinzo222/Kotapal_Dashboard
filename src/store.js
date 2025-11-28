@@ -84,6 +84,46 @@ async function updateUser(id, updates) {
   return safe;
 }
 
+async function getAllUsers() {
+  if (useFirebase) {
+    const snap = await firestore.collection('users').get();
+    return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  }
+  return db.state.users;
+}
+
+async function updateDailyMetrics(userId, date, metrics) {
+  if (useFirebase) {
+    await firestore.collection('dailyMetrics').doc(`${userId}_${date}`).set({
+      userId,
+      date,
+      ...metrics,
+      updatedAt: new Date().toISOString()
+    }, { merge: true });
+    return true;
+  }
+  
+  if (!db.state.dailyMetrics) {
+    db.state.dailyMetrics = [];
+  }
+  
+  const idx = db.state.dailyMetrics.findIndex(m => m.userId === userId && m.date === date);
+  const metricData = {
+    userId,
+    date,
+    ...metrics,
+    updatedAt: new Date().toISOString()
+  };
+  
+  if (idx === -1) {
+    db.state.dailyMetrics.push(metricData);
+  } else {
+    db.state.dailyMetrics[idx] = metricData;
+  }
+  db.save();
+  return true;
+}
+
 // Blocks
 async function listBlocksByUser(userId) {
   if (useFirebase) {
@@ -326,6 +366,7 @@ module.exports = {
   getUserById,
   createUser,
   updateUser,
+  getAllUsers,
   listBlocksByUser,
   getBlockById,
   createBlock,
@@ -338,5 +379,6 @@ module.exports = {
   getAnalyticsData,
   createPasswordResetToken,
   getPasswordResetToken,
-  deletePasswordResetToken
+  deletePasswordResetToken,
+  updateDailyMetrics
 };
