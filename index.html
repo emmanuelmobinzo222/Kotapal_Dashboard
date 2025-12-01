@@ -5,7 +5,36 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KOTAPAL - Monetize Your Content</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Firebase Client SDK (for global cloud auth & Firestore) -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+
     <script>
+        // Firebase Web Configuration (same project as backend)
+        const firebaseConfig = {
+            apiKey: "AIzaSyCNU1QFZhmUuk2QWDeNi4ff3-le4KNnbrU",
+            authDomain: "kotapal-1e8f6.firebaseapp.com",
+            projectId: "kotapal-1e8f6",
+            storageBucket: "kotapal-1e8f6.firebasestorage.app",
+            messagingSenderId: "487227333489",
+            appId: "1:487227333489:web:a370f5e07b9e4c3d79f4d0",
+            measurementId: "G-8GQ7JGDZ7P"
+        };
+
+        let firebaseApp = null;
+        let firebaseAuth = null;
+        let firebaseDB = null;
+
+        try {
+            firebaseApp = firebase.initializeApp(firebaseConfig);
+            firebaseAuth = firebase.auth();
+            firebaseDB = firebase.firestore();
+            console.log('✅ Firebase client initialized');
+        } catch (e) {
+            console.warn('⚠️ Firebase client not initialized:', e.message);
+        }
+
         // Simple Database System (embedded for reliability)
         class UserDatabase {
             constructor() {
@@ -119,21 +148,7 @@
 
         // Create global database instance
         window.userDB = new UserDatabase();
-
-        // Debug functions
-        window.debugDB = {
-            showUsers: () => {
-                console.log('=== USER DATABASE ===');
-                console.log('Total users:', window.userDB.getUserCount());
-                console.log('Users:', window.userDB.getAllUsers());
-            },
-            clearDB: () => {
-                window.userDB.users = [];
-                localStorage.removeItem(window.userDB.databaseKey);
-                console.log('Database cleared');
-            }
-        };
-
+        
         console.log('✅ User Database System Initialized');
     </script>
     <style>
@@ -1040,7 +1055,8 @@
     <nav>
         <div class="nav-container">
             <div class="logo">
-                            <img src="images/IMG_4258.png" alt="KotaPal Logo" style="height: 80px; width: 200px; object-fit: contain; vertical-align: middle;" />
+                            <img src="images/IMG_4258.png" alt="KotaPal Logo" style="height: 80px; width: 200px; object-fit: contain; vertical-align: middle;" onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='block';" />
+                            <span style="display:none; font-weight: 700; font-size: 1.5rem; color: var(--primary);">KOTAPAL</span>
             </div>
             
             <ul class="nav-links">
@@ -1161,7 +1177,7 @@
                 <h2 class="text-center">Simple Plans That Scale With You</h2>
                 <p class="text-center">Pick the plan that matches your growth</p>
                 <div class="pricing-grid">
-                    <div class="pricing-card">
+                    <div class="pricing-card" data-plan="free">
                         <h3>Free</h3>
                         <div class="price">$0<span class="price-period">/free</span></div>
                         <ul class="features-list">
@@ -1170,9 +1186,9 @@
                             <li><i class="fas fa-check"></i> Limited blocks</li>
                             <li><i class="fas fa-check"></i> Watermarked embed</li>
                         </ul>
-                        <button class="btn btn-primary">Join the Waitlist</button>
+                        <button class="btn btn-primary pricing-signup-btn">Sign Up</button>
                     </div>
-                    <div class="pricing-card">
+                    <div class="pricing-card" data-plan="starter">
                         <h3>Starter</h3>
                         <div class="price">$19<span class="price-period">/mo</span></div>
                         <ul class="features-list">
@@ -1180,9 +1196,9 @@
                             <li><i class="fas fa-check"></i> Shopify + 1 Affiliate Network</li>
                             <li><i class="fas fa-check"></i> Basic analytics</li>
                         </ul>
-                        <button class="btn btn-primary">Join the Waitlist</button>
+                        <button class="btn btn-primary pricing-signup-btn">Sign Up</button>
                     </div>
-                    <div class="pricing-card popular">
+                    <div class="pricing-card popular" data-plan="pro">
                         <div class="popular-tag">Most Popular</div>
                         <h3>Pro</h3>
                         <div class="price">$49<span class="price-period">/mo</span></div>
@@ -1192,9 +1208,9 @@
                             <li><i class="fas fa-check"></i> Smart Geo Redirect</li>
                             <li><i class="fas fa-check"></i> Email-friendly exports</li>
                         </ul>
-                        <button class="btn btn-primary">Join the Waitlist</button>
+                        <button class="btn btn-primary pricing-signup-btn">Sign Up</button>
                     </div>
-                    <div class="pricing-card">
+                    <div class="pricing-card" data-plan="creatorplus">
                         <h3>Creator+</h3>
                         <div class="price">$99<span class="price-period">/mo</span></div>
                         <ul class="features-list">
@@ -1203,9 +1219,9 @@
                             <li><i class="fas fa-check"></i> Newsletter block formats</li>
                             <li><i class="fas fa-check"></i> Heatmaps & CTR insights</li>
                         </ul>
-                        <button class="btn btn-primary">Join the Waitlist</button>
+                        <button class="btn btn-primary pricing-signup-btn">Sign Up</button>
                     </div>
-                    <div class="pricing-card">
+                    <div class="pricing-card" data-plan="agency">
                         <div class="popular-tag">Top Tier</div>
                         <h3>Agency</h3>
                         <div class="price">$199+<span class="price-period">/mo</span></div>
@@ -1214,7 +1230,7 @@
                             <li><i class="fas fa-check"></i> Multiple client management</li>
                             <li><i class="fas fa-check"></i> Custom domains & branding</li>
                         </ul>
-                        <button class="btn btn-primary">Join the Waitlist</button>
+                        <button class="btn btn-primary pricing-signup-btn">Sign Up</button>
                     </div>
                 </div>
                 <p class="text-center" style="margin-top: 30px;">All plans include a 14-day free trial. No credit card required.</p>
@@ -1435,7 +1451,8 @@
         <div class="container">
             <div class="footer-content">
                 <div class="footer-column">
-                        <img src="images/IMG_4258.JPG" alt="KotaPal Logo" style="height: 40px; width: 40px; object-fit: contain; margin-bottom: 10px;" />
+                        <img src="images/IMG_4258.JPG" alt="KotaPal Logo" style="height: 40px; width: 40px; object-fit: contain; margin-bottom: 10px;" onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='inline-block';" />
+                        <span style="display:none; font-weight: 700; font-size: 1.2rem; color: white;">KOTAPAL</span>
                         <p>Turn your content into sustainable passive income with our smart affiliate tools.</p>
                         <div class="social-links">
                             <a href="#"><i class="fab fa-twitter"></i></a>
@@ -1579,13 +1596,6 @@
                         <a href="#" class="forgot-password">Forgot Password?</a>
                     </div>
                     <button type="submit" class="btn btn-primary">Login</button>
-                    <div style="text-align: center; margin: 15px 0; color: var(--gray);">or</div>
-                    <button type="button" class="btn btn-secondary" style="width: 100%;" onclick="alert('Google Sign-In will be available soon!')">
-                        <i class="fab fa-google"></i> Sign in with Google
-                    </button>
-                    <button type="button" class="btn btn-outline" style="width: 100%; margin-top: 10px; font-size: 0.8rem;" onclick="debugDB.showUsers()">
-                        🔍 Show Database
-                    </button>
                 </form>
             </div>
             <div id="signupForm" class="auth-form">
@@ -1640,10 +1650,6 @@
                         By signing up, you agree to our <a href="#" style="color: var(--primary);">Terms of Service</a> and <a href="#" style="color: var(--primary);">Privacy Policy</a>.
                     </div>
                     <button type="submit" class="btn btn-primary">Sign Up</button>
-                    <div style="text-align: center; margin: 15px 0; color: var(--gray);">or</div>
-                    <button type="button" class="btn btn-secondary" style="width: 100%;" onclick="alert('Google Sign-In will be available soon!')">
-                        <i class="fab fa-google"></i> Sign up with Google
-                    </button>
                     <div id="lpSignupStatus" style="margin-top:10px;font-size:0.9rem;color:#6b7280;"></div>
                 </form>
             </div>
@@ -1802,7 +1808,7 @@
             }
         }
 
-        // Handle login (landing modal)
+        // Handle login (landing modal) - Firebase → local DB fallback
         document.querySelector('#loginFormInner').addEventListener('submit', async function(e) {
             e.preventDefault();
             const email = document.getElementById('loginEmail').value.trim();
@@ -1815,11 +1821,42 @@
             console.log('Password:', password);
             
             try {
-                // Use database to authenticate user
-                const user = window.userDB.authenticateUser(email, password);
-                
-                console.log('✅ LOGIN SUCCESS');
-                console.log('User:', user);
+                let user = null;
+
+                // 1) Try Firebase Auth first (global cloud users)
+                if (firebaseAuth) {
+                    try {
+                        const cred = await firebaseAuth.signInWithEmailAndPassword(email, password);
+                        console.log('✅ Firebase login success:', cred.user.uid);
+
+                        // Load user profile from Firestore (if exists)
+                        let profile = null;
+                        if (firebaseDB) {
+                            const docRef = firebaseDB.collection('users').doc(cred.user.uid);
+                            const snap = await docRef.get();
+                            if (snap.exists) {
+                                profile = snap.data();
+                            }
+                        }
+
+                        user = {
+                            id: cred.user.uid,
+                            name: profile?.name || cred.user.displayName || email.split('@')[0],
+                            email: cred.user.email,
+                            website: profile?.website || '',
+                            plan: profile?.plan || 'starter',
+                            settings: profile?.settings || { notifications: true, theme: 'light' }
+                        };
+                    } catch (firebaseError) {
+                        console.warn('Firebase login failed, falling back to local DB:', firebaseError.message);
+                    }
+                }
+
+                // 2) Fallback to local UserDatabase if Firebase not available or failed
+                if (!user) {
+                    user = window.userDB.authenticateUser(email, password);
+                    console.log('✅ Local DB login success:', user.email);
+                }
                 
                 // Store current user for dashboard (match dashboard expectations)
                 localStorage.setItem('currentUser', JSON.stringify(user));
@@ -1849,7 +1886,7 @@
             }
         });
 
-        // Handle signup (landing modal)
+        // Handle signup (landing modal) - Firebase → local DB fallback
         document.querySelector('#signupFormInner').addEventListener('submit', async function(e) {
             e.preventDefault();
             const name = document.getElementById('signupName').value;
@@ -1878,21 +1915,58 @@
                 console.log('Name:', name);
                 console.log('Email:', email);
                 console.log('Plan:', plan);
-                
-                // Use database to create user
-                const userData = {
-                    name: name,
-                    email: email.toLowerCase().trim(),
-                    password: password,
-                    website: website || '',
-                    plan: plan,
-                    settings: { notifications: true, theme: 'light' }
-                };
-                
-                const newUser = window.userDB.createUser(userData);
-                
-                console.log('✅ User created successfully');
-                console.log('User:', newUser);
+
+                let newUser = null;
+
+                // 1) Try Firebase signup first
+                if (firebaseAuth) {
+                    try {
+                        const cred = await firebaseAuth.createUserWithEmailAndPassword(email, password);
+                        const uid = cred.user.uid;
+
+                        // Create user document in Firestore
+                        if (firebaseDB) {
+                            await firebaseDB.collection('users').doc(uid).set({
+                                name,
+                                email: email.toLowerCase().trim(),
+                                website: website || '',
+                                plan,
+                                settings: { notifications: true, theme: 'light' },
+                                createdAt: new Date().toISOString()
+                            }, { merge: true });
+                        }
+
+                        newUser = {
+                            id: uid,
+                            name,
+                            email: email.toLowerCase().trim(),
+                            website: website || '',
+                            plan,
+                            settings: { notifications: true, theme: 'light' }
+                        };
+
+                        console.log('✅ Firebase user created:', newUser.email);
+                    } catch (firebaseError) {
+                        console.warn('Firebase signup failed, falling back to local DB:', firebaseError.message);
+                    }
+                }
+
+                // 2) Fallback to local UserDatabase if Firebase not available or failed
+                if (!newUser) {
+                    const userData = {
+                        name: name,
+                        email: email.toLowerCase().trim(),
+                        password: password,
+                        website: website || '',
+                        plan: plan,
+                        settings: { notifications: true, theme: 'light' }
+                    };
+                    
+                    newUser = window.userDB.createUser(userData);
+                    
+                    console.log('✅ Local DB user created successfully');
+                    console.log('User:', newUser);
+                }
                 
                 // Store current user for dashboard (match dashboard expectations)
                 localStorage.setItem('currentUser', JSON.stringify(newUser));
@@ -1926,6 +2000,40 @@
             card.addEventListener('click', function() {
                 document.querySelectorAll('.plan-card').forEach(c => c.style.border = '2px solid #e5e7eb');
                 this.style.border = '2px solid var(--primary)';
+            });
+        });
+
+        // Handle pricing "Sign Up" buttons - open modal and preselect plan
+        document.querySelectorAll('.pricing-signup-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const card = this.closest('.pricing-card');
+                const plan = card ? card.getAttribute('data-plan') : 'starter';
+
+                // Switch to signup tab
+                document.querySelectorAll('.auth-tab').forEach(tab => tab.classList.remove('active'));
+                const signupTab = document.querySelector('.auth-tab[data-tab="signup"]');
+                if (signupTab) signupTab.classList.add('active');
+                document.getElementById('loginForm').classList.remove('active');
+                document.getElementById('signupForm').classList.add('active');
+
+                // Preselect matching plan card in signup modal
+                if (plan) {
+                    document.querySelectorAll('.plan-card').forEach(c => {
+                        c.style.border = '2px solid #e5e7eb';
+                        if (c.getAttribute('data-plan') === plan) {
+                            c.style.border = '2px solid var(--primary)';
+                        }
+                    });
+                }
+
+                // Show auth modal
+                showAuthModal();
+
+                // Scroll modal content to plan section (optional)
+                const planSection = document.getElementById('planCards');
+                if (planSection) {
+                    planSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
             });
         });
 

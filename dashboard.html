@@ -213,7 +213,12 @@
             display: flex;
             align-items: center;
             flex: 1;
-            justify-content: center;
+            justify-content: flex-start;
+        }
+        .logo img {
+            display: block !important;
+            max-width: 150px;
+            height: auto;
         }
         .logo-icon {
             width: 40px;
@@ -1655,30 +1660,6 @@
         }
         
         /* Floating Toggle Button (always visible when sidebar is hidden) */
-        .floating-toggle-btn {
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            z-index: 1000;
-            background: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: none;
-        }
-        .floating-toggle-btn:hover {
-            background: var(--primary-dark);
-            transform: scale(1.1);
-            box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
-        }
-        .floating-toggle-btn:active {
-            transform: scale(0.95);
-        }
         
         .header {
             display: flex;
@@ -1757,9 +1738,29 @@
             font-weight: 700;
             margin-bottom: 5px;
         }
+        .stat-value.hidden {
+            filter: blur(8px);
+            user-select: none;
+        }
         .stat-label {
             color: var(--gray);
             font-size: 0.9rem;
+        }
+        /* Global sensitive data toggle button */
+        #globalSensitiveToggle, #globalSensitiveToggleAnalytics {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 16px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        #globalSensitiveToggle:hover, #globalSensitiveToggleAnalytics:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        #globalSensitiveToggle i, #globalSensitiveToggleAnalytics i {
+            font-size: 1rem;
         }
         /* Blocks Grid */
         .blocks-grid {
@@ -2054,7 +2055,8 @@
         <div class="sidebar">
             <div class="sidebar-header">
                 <div class="logo">
-                    <div class="logo-text" style="font-weight:700;font-size:1.5rem;color:var(--dark);">KOTA PAL</div>
+                    <img src="images/IMG_4258.png" alt="KotaPal Logo" style="height: 40px; width: auto; max-width: 150px; object-fit: contain; margin-right: 10px; display: block;" onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='block';" />
+                    <div class="logo-text" style="font-weight:700;font-size:1.5rem;color:var(--dark);display:none;">KOTA PAL</div>
                 </div>
                 <button id="sidebarToggle" class="sidebar-toggle-btn">
                     <i class="fas fa-bars"></i>
@@ -2062,7 +2064,7 @@
             </div>
             <div class="user-info">
                 <div style="display: flex; align-items: center;">
-                    <img src="https://i.pravatar.cc/40?img=1" alt="User" class="user-avatar">
+                    <img src="https://i.pravatar.cc/40?img=1" alt="User" class="user-avatar" onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2240%22 height=%2240%22%3E%3Ccircle cx=%2220%22 cy=%2220%22 r=%2220%22 fill=%22%233b82f6%22/%3E%3Ctext x=%2220%22 y=%2226%22 font-size=%2216%22 fill=%22white%22 text-anchor=%22middle%22 font-weight=%22bold%22%3EU%3C/text%3E%3C/svg%3E';">
                     <div>
                         <div class="user-name">Loading...</div>
                         <div class="user-plan">Loading...</div>
@@ -2139,27 +2141,35 @@
                     <button class="btn btn-primary" id="createBlockBtn">Create New Block</button>
                 </div>
 
+                <!-- Global Toggle for Sensitive Data -->
+                <div style="display: flex; justify-content: center; margin-bottom: 15px;">
+                    <button id="globalSensitiveToggle" class="btn btn-secondary" onclick="toggleAllSensitive()" style="display: flex; align-items: center; gap: 8px;">
+                        <i class="fas fa-eye-slash"></i>
+                        <span>Show Sensitive Data</span>
+                    </button>
+                </div>
+
                 <!-- Stats Cards -->
                 <div class="stats-grid">
                     <div class="stat-card">
                         <div class="stat-icon stat-primary">
                             <i class="fas fa-mouse-pointer"></i>
                         </div>
-                        <div class="stat-value" id="totalClicks">0</div>
+                        <div class="stat-value" id="totalClicks" data-sensitive="true">0</div>
                         <div class="stat-label">Total Clicks</div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-icon stat-success">
                             <i class="fas fa-dollar-sign"></i>
                         </div>
-                        <div class="stat-value" id="estimatedRevenue">$0.00</div>
+                        <div class="stat-value" id="estimatedRevenue" data-sensitive="true">$0.00</div>
                         <div class="stat-label">Estimated Revenue</div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-icon stat-warning">
                             <i class="fas fa-percentage"></i>
                         </div>
-                        <div class="stat-value" id="avgCTR">0%</div>
+                        <div class="stat-value" id="avgCTR" data-sensitive="true">0%</div>
                         <div class="stat-label">Average CTR</div>
                     </div>
                     <div class="stat-card">
@@ -2632,24 +2642,31 @@
                         <option value="skimlinks">Skimlinks</option>
                     </select>
                 </div>
+                <!-- Global Toggle for Sensitive Data -->
+                <div style="display: flex; justify-content: center; margin-top: 15px; margin-bottom: 15px;">
+                    <button id="globalSensitiveToggleAnalytics" class="btn btn-secondary" onclick="toggleAllSensitive()" style="display: flex; align-items: center; gap: 8px;">
+                        <i class="fas fa-eye-slash"></i>
+                        <span>Show Sensitive Data</span>
+                    </button>
+                </div>
                 <div class="stats-grid" style="margin-top:15px;">
                     <div class="stat-card">
                         <div class="stat-icon stat-primary"><i class="fas fa-mouse-pointer"></i></div>
-                        <div class="stat-value" id="filteredClicks">0</div>
+                        <div class="stat-value" id="filteredClicks" data-sensitive="true">0</div>
                         <div class="stat-label">Clicks</div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-icon stat-success"><i class="fas fa-dollar-sign"></i></div>
-                        <div class="stat-value" id="filteredRevenue">$0.00</div>
+                        <div class="stat-value" id="filteredRevenue" data-sensitive="true">$0.00</div>
                         <div class="stat-label">Revenue</div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-icon stat-warning"><i class="fas fa-percentage"></i></div>
-                        <div class="stat-value" id="filteredCTR">0%</div>
+                        <div class="stat-value" id="filteredCTR" data-sensitive="true">0%</div>
                         <div class="stat-label">CTR</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-icon stat-danger"><i class="fas fa-chart-bar"></i></div>
+                        <div class="stat-icon stat-info"><i class="fas fa-cubes"></i></div>
                         <div class="stat-value" id="blocksShowing">0</div>
                         <div class="stat-label">Blocks Showing</div>
                     </div>
@@ -2924,10 +2941,6 @@
         </div>
     </div>
 
-    <!-- Floating Toggle Button (appears when sidebar is hidden) -->
-    <button id="floatingToggle" class="floating-toggle-btn">
-        <i class="fas fa-bars"></i>
-    </button>
 
     <script>
         // (AI calls will be routed through backend API; no user API key required)
@@ -2982,6 +2995,7 @@
         let currentIntegrations = [];
         let selectedProductsList = [];
         let currentLayout = 'grid';
+        let userLocation = { country: null, countryCode: null, region: null, city: null, ip: null, timezone: null };
 
         async function apiRequest(path, { method = 'GET', body } = {}) {
             const headers = { 'Content-Type': 'application/json' };
@@ -3144,10 +3158,13 @@
             container.innerHTML = '<p style="color:var(--gray);text-align:center;padding:20px;">Loading top products...</p>';
             
             try {
-                // Try to fetch from backend API
+                // Try to fetch from backend API with location data
                 const products = await apiRequest('/api/products/top-performing', {
                     method: 'POST',
-                    body: { apiKeys }
+                    body: { 
+                        apiKeys,
+                        location: userLocation
+                    }
                 });
                 
                 if (products && products.length > 0) {
@@ -3164,17 +3181,35 @@
                     container.innerHTML = '<p style="color:var(--gray);text-align:center;padding:20px;">No top performing products found. Check your API keys and try again.</p>';
                 }
             } catch (err) {
-                // Fallback: show mock/demo products if API keys are set
+                // Fallback: show mock/demo products if API keys are set (region-specific)
                 if (apiKeys.amazonApiKey || apiKeys.walmartApiKey || apiKeys.shopifyApiKey) {
-                    const mockProducts = [
-                        { title: 'Sony WH-1000XM5', retailer: 'amazon', price: 299.99, clicks: 1247, revenue: 89.42, image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=500&q=80' },
-                        { title: 'Bose QuietComfort 45', retailer: 'amazon', price: 279.99, clicks: 892, revenue: 67.85, image: 'https://images.unsplash.com/photo-1572536147248-ac59a8abfa4b?auto=format&fit=crop&w=500&q=80' },
-                        { title: 'Samsung 55" Crystal UHD', retailer: 'walmart', price: 499.99, clicks: 654, revenue: 52.30, image: 'https://images.unsplash.com/photo-1593305841991-05c297ba4575?auto=format&fit=crop&w=500&q=80' }
-                    ];
+                    const region = userLocation.countryCode || 'US';
+                    const regionName = userLocation.country || 'United States';
+                    
+                    // Region-specific mock products
+                    let mockProducts = [];
+                    if (region === 'US' || region === 'CA') {
+                        mockProducts = [
+                            { title: 'Sony WH-1000XM5', retailer: 'amazon', price: 299.99, clicks: 1247, revenue: 89.42, image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=500&q=80', region: regionName },
+                            { title: 'Bose QuietComfort 45', retailer: 'amazon', price: 279.99, clicks: 892, revenue: 67.85, image: 'https://images.unsplash.com/photo-1572536147248-ac59a8abfa4b?auto=format&fit=crop&w=500&q=80', region: regionName },
+                            { title: 'Samsung 55" Crystal UHD', retailer: 'walmart', price: 499.99, clicks: 654, revenue: 52.30, image: 'https://images.unsplash.com/photo-1593305841991-05c297ba4575?auto=format&fit=crop&w=500&q=80', region: regionName }
+                        ];
+                    } else if (region === 'GB' || region === 'UK') {
+                        mockProducts = [
+                            { title: 'Sony WH-1000XM5', retailer: 'amazon', price: 249.99, clicks: 1123, revenue: 78.50, image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=500&q=80', region: regionName },
+                            { title: 'Bose QuietComfort 45', retailer: 'amazon', price: 229.99, clicks: 856, revenue: 62.30, image: 'https://images.unsplash.com/photo-1572536147248-ac59a8abfa4b?auto=format&fit=crop&w=500&q=80', region: regionName }
+                        ];
+                    } else {
+                        mockProducts = [
+                            { title: 'Sony WH-1000XM5', retailer: 'amazon', price: 299.99, clicks: 1247, revenue: 89.42, image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=500&q=80', region: regionName },
+                            { title: 'Bose QuietComfort 45', retailer: 'amazon', price: 279.99, clicks: 892, revenue: 67.85, image: 'https://images.unsplash.com/photo-1572536147248-ac59a8abfa4b?auto=format&fit=crop&w=500&q=80', region: regionName }
+                        ];
+                    }
                     // Automatically add mock products to library
                     const added = (addProductsToLibrary(mockProducts.map(p => ({ ...p, source: 'api' }))) || 0);
                     if (added > 0) {
-                        showNotification(`${added} top performing product(s) added to library`, 'success', 'Products Added');
+                        const regionMsg = userLocation.country ? ` for ${userLocation.country}` : '';
+                        showNotification(`${added} top performing product(s)${regionMsg} added to library`, 'success', 'Products Added');
                         if (document.getElementById('products-page')?.style.display !== 'none') {
                             renderProductsLibrary();
                         }
@@ -3196,7 +3231,10 @@
                 return;
             }
             
-            container.innerHTML = products.map((product, index) => {
+            // Show region info if available
+            const regionInfo = userLocation.country ? `<div style="background:#f0f9ff;border-left:4px solid var(--primary);padding:12px 15px;margin-bottom:15px;border-radius:4px;"><p style="color:var(--primary);font-size:0.9rem;margin:0;"><i class="fas fa-map-marker-alt" style="margin-right:8px;"></i>Showing products for <strong>${userLocation.country}${userLocation.city ? ', ' + userLocation.city : ''}</strong></p></div>` : '';
+            
+            container.innerHTML = regionInfo + products.map((product, index) => {
                 // Escape product data for safe JSON encoding
                 const productData = JSON.stringify({
                     title: product.title || '',
@@ -3212,7 +3250,7 @@
                 <div style="display:flex;gap:15px;padding:15px;border:1px solid #e5e7eb;border-radius:8px;margin-bottom:15px;background:white;align-items:center;">
                     <div style="position:relative;">
                         <span style="position:absolute;top:-8px;left:-8px;background:var(--primary);color:white;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:600;">${index + 1}</span>
-                        <img src="${product.image || 'https://via.placeholder.com/100'}" alt="${product.title}" style="width:100px;height:100px;object-fit:cover;border-radius:8px;">
+                        <img src="${product.image || 'https://via.placeholder.com/100'}" alt="${product.title}" style="width:100px;height:100px;object-fit:cover;border-radius:8px;" onerror="this.onerror=null; this.src='https://via.placeholder.com/100?text=Product';">
                     </div>
                     <div style="flex:1;">
                         <h4 style="margin:0 0 5px 0;">${product.title}</h4>
@@ -3489,7 +3527,10 @@
 
             // Load product library
             loadProductLibrary();
-
+            
+            // Detect user's location via IP geolocation
+            await detectUserLocation();
+            
             // Check if user is logged in
             const savedUser = localStorage.getItem('kotaUser');
             if (savedUser) {
@@ -3514,6 +3555,22 @@
             
             // Set up event listeners
             setupEventListeners();
+            
+            // Verify logo images are loaded
+            setTimeout(() => {
+                const logoImages = document.querySelectorAll('.logo img');
+                logoImages.forEach(img => {
+                    if (img.complete && img.naturalHeight === 0) {
+                        console.warn('Logo image failed to load:', img.src);
+                        img.style.display = 'none';
+                        const fallback = img.nextElementSibling;
+                        if (fallback) fallback.style.display = 'block';
+                    } else {
+                        img.style.display = 'block';
+                        img.style.visibility = 'visible';
+                    }
+                });
+            }, 500);
         }
         // Simple accept/reject banner
         function injectChangeBanner() {
@@ -3599,6 +3656,11 @@
             renderActivityTable();
             renderAnalytics();
             renderAlerts();
+            // Restore sensitive state after data loads
+            setTimeout(() => {
+                initializeSensitiveState();
+                restoreSensitiveState();
+            }, 100);
         }
 
             // Navigate helpers
@@ -3668,14 +3730,6 @@
                     inlineToggles.forEach(btn => btn.style.display = 'none');
                 }
                 
-                // Show/hide floating toggle button
-                const floatingToggle = document.getElementById('floatingToggle');
-                if (sidebar.classList.contains('hidden')) {
-                    floatingToggle.style.display = 'block';
-                } else {
-                    floatingToggle.style.display = 'none';
-                }
-                
                 // Update button icons
                 const sidebarIcon = sidebarToggle.querySelector('i');
                 if (sidebar.classList.contains('hidden')) {
@@ -3697,11 +3751,6 @@
                 }
             });
             
-            // Add event listener to floating toggle button
-            const floatingToggle = document.getElementById('floatingToggle');
-            if (floatingToggle) {
-                floatingToggle.addEventListener('click', toggleSidebar);
-            }
             
             // Keyboard shortcut (Ctrl/Cmd + B)
             document.addEventListener('keydown', function(e) {
@@ -3763,15 +3812,9 @@
                 localStorage.removeItem('kotaToken');
                 currentUser = null;
                 authToken = null;
-                try {
-                    if (location.protocol === 'file:') {
-                        window.location.href = 'index.html';
-                    } else {
-                        window.location.href = '/index.html';
-                    }
-                } catch(_) {
-                    window.location.href = 'index.html';
-                }
+                // Use relative path that works for both local and GitHub Pages
+                const basePath = window.location.pathname.replace(/\/[^/]*$/, '/');
+                window.location.href = basePath + 'index.html';
             });
 
             // Modal close buttons
@@ -3960,6 +4003,20 @@
                 page = 'blocks';
             }
             
+            // Check password for settings page
+            if (page === 'settings') {
+                if (!checkSettingsAccess()) {
+                    return; // Access denied, don't show page
+                }
+            }
+            
+            // Check password for settings page
+            if (page === 'settings') {
+                if (!checkSettingsAccess()) {
+                    return; // Access denied, don't show page
+                }
+            }
+            
             // Hide all pages
             currentPage.style.display = 'none';
             blocksPage.style.display = 'none';
@@ -3976,6 +4033,15 @@
             switch(page) {
                 case 'dashboard':
                     currentPage.style.display = 'block';
+                    setTimeout(() => {
+                        initializeSensitiveState();
+                        restoreSensitiveState();
+                    }, 50);
+                    // Show global toggle button for dashboard
+                    const dashboardToggle = document.getElementById('globalSensitiveToggle');
+                    if (dashboardToggle) dashboardToggle.style.display = 'flex';
+                    const analyticsToggle = document.getElementById('globalSensitiveToggleAnalytics');
+                    if (analyticsToggle) analyticsToggle.style.display = 'none';
                     break;
                 case 'blocks':
                     blocksPage.style.display = 'block';
@@ -3986,6 +4052,15 @@
                 case 'analytics':
                     analyticsPage.style.display = 'block';
                     renderAnalytics();
+                    setTimeout(() => {
+                        initializeSensitiveState();
+                        restoreSensitiveState();
+                    }, 50);
+                    // Show global toggle button for analytics
+                    const dashboardToggle2 = document.getElementById('globalSensitiveToggle');
+                    if (dashboardToggle2) dashboardToggle2.style.display = 'none';
+                    const analyticsToggle2 = document.getElementById('globalSensitiveToggleAnalytics');
+                    if (analyticsToggle2) analyticsToggle2.style.display = 'flex';
                     break;
                 case 'account':
                     accountPage.style.display = 'block';
@@ -4442,6 +4517,227 @@
         }
 
         // Update dashboard stats
+        // Global toggle for all sensitive information visibility
+        function toggleAllSensitive() {
+            const sensitiveElements = document.querySelectorAll('[data-sensitive="true"]');
+            const globalToggleBtn = document.getElementById('globalSensitiveToggle') || document.getElementById('globalSensitiveToggleAnalytics');
+            const globalToggleIcon = globalToggleBtn ? globalToggleBtn.querySelector('i') : null;
+            const globalToggleText = globalToggleBtn ? globalToggleBtn.querySelector('span') : null;
+            
+            // Check if any sensitive element is visible
+            let anyVisible = false;
+            sensitiveElements.forEach(element => {
+                if (!element.classList.contains('hidden')) {
+                    anyVisible = true;
+                }
+            });
+            
+            // Toggle all elements
+            sensitiveElements.forEach(element => {
+                if (anyVisible) {
+                    // Hide all
+                    element.classList.add('hidden');
+                    localStorage.setItem('sensitive_' + element.id, 'hidden');
+                } else {
+                    // Show all
+                    element.classList.remove('hidden');
+                    localStorage.setItem('sensitive_' + element.id, 'visible');
+                }
+            });
+            
+            // Update global toggle button
+            if (globalToggleBtn && globalToggleIcon && globalToggleText) {
+                if (anyVisible) {
+                    globalToggleIcon.classList.remove('fa-eye');
+                    globalToggleIcon.classList.add('fa-eye-slash');
+                    globalToggleText.textContent = 'Show Sensitive Data';
+                } else {
+                    globalToggleIcon.classList.remove('fa-eye-slash');
+                    globalToggleIcon.classList.add('fa-eye');
+                    globalToggleText.textContent = 'Hide Sensitive Data';
+                }
+            }
+            
+            // Store global state
+            localStorage.setItem('sensitive_global_state', anyVisible ? 'hidden' : 'visible');
+        }
+        
+        // Update global toggle button state
+        function updateGlobalToggleState() {
+            const sensitiveElements = document.querySelectorAll('[data-sensitive="true"]');
+            const globalToggleBtn = document.getElementById('globalSensitiveToggle') || document.getElementById('globalSensitiveToggleAnalytics');
+            const globalToggleIcon = globalToggleBtn ? globalToggleBtn.querySelector('i') : null;
+            const globalToggleText = globalToggleBtn ? globalToggleBtn.querySelector('span') : null;
+            
+            if (!globalToggleBtn || !globalToggleIcon || !globalToggleText) return;
+            
+            // Check if any sensitive element is visible
+            let anyVisible = false;
+            sensitiveElements.forEach(element => {
+                if (!element.classList.contains('hidden')) {
+                    anyVisible = true;
+                }
+            });
+            
+            if (anyVisible) {
+                globalToggleIcon.classList.remove('fa-eye-slash');
+                globalToggleIcon.classList.add('fa-eye');
+                globalToggleText.textContent = 'Hide Sensitive Data';
+            } else {
+                globalToggleIcon.classList.remove('fa-eye');
+                globalToggleIcon.classList.add('fa-eye-slash');
+                globalToggleText.textContent = 'Show Sensitive Data';
+            }
+        }
+        
+        // Restore sensitive information visibility state
+        function restoreSensitiveState() {
+            const globalState = localStorage.getItem('sensitive_global_state');
+            const sensitiveElements = document.querySelectorAll('[data-sensitive="true"]');
+            
+            // Use global state if available, otherwise default to hidden
+            const shouldBeVisible = globalState === 'visible';
+            
+            sensitiveElements.forEach(element => {
+                if (shouldBeVisible) {
+                    element.classList.remove('hidden');
+                    localStorage.setItem('sensitive_' + element.id, 'visible');
+                } else {
+                    element.classList.add('hidden');
+                    localStorage.setItem('sensitive_' + element.id, 'hidden');
+                }
+            });
+            
+            // Update global toggle button state
+            updateGlobalToggleState();
+        }
+        
+        // Initialize sensitive info as hidden on page load (default state)
+        function initializeSensitiveState() {
+            const sensitiveElements = document.querySelectorAll('[data-sensitive="true"]');
+            const globalState = localStorage.getItem('sensitive_global_state');
+            
+            // Default to hidden if no global state exists
+            const shouldBeVisible = globalState === 'visible';
+            
+            sensitiveElements.forEach(element => {
+                if (shouldBeVisible) {
+                    element.classList.remove('hidden');
+                    localStorage.setItem('sensitive_' + element.id, 'visible');
+                } else {
+                    element.classList.add('hidden');
+                    localStorage.setItem('sensitive_' + element.id, 'hidden');
+                }
+            });
+            
+            // Update global toggle button state
+            updateGlobalToggleState();
+        }
+        
+        // Detect user location via IP geolocation
+        async function detectUserLocation() {
+            try {
+                // Try multiple free geolocation APIs
+                const apis = [
+                    'https://ipapi.co/json/',
+                    'https://ip-api.com/json/',
+                    'https://api.ipify.org?format=json'
+                ];
+                
+                // Try ipapi.co first (most reliable)
+                try {
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 5000);
+                    const response = await fetch('https://ipapi.co/json/', { signal: controller.signal });
+                    clearTimeout(timeoutId);
+                    if (response.ok) {
+                        const data = await response.json();
+                        userLocation = {
+                            country: data.country_name || data.country || null,
+                            countryCode: data.country_code || data.country || null,
+                            region: data.region || data.regionName || null,
+                            city: data.city || null,
+                            ip: data.ip || null,
+                            timezone: data.timezone || null
+                        };
+                        console.log('✅ User location detected:', userLocation);
+                        localStorage.setItem('kotaUserLocation', JSON.stringify(userLocation));
+                        return;
+                    }
+                } catch (e) {
+                    console.log('ipapi.co failed, trying alternative...');
+                }
+                
+                // Fallback to ip-api.com
+                try {
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 5000);
+                    const response = await fetch('https://ip-api.com/json/', { signal: controller.signal });
+                    clearTimeout(timeoutId);
+                    if (response.ok) {
+                        const data = await response.json();
+                        userLocation = {
+                            country: data.country || null,
+                            countryCode: data.countryCode || null,
+                            region: data.regionName || null,
+                            city: data.city || null,
+                            ip: data.query || null,
+                            timezone: data.timezone || null
+                        };
+                        console.log('✅ User location detected (fallback):', userLocation);
+                        localStorage.setItem('kotaUserLocation', JSON.stringify(userLocation));
+                        return;
+                    }
+                } catch (e) {
+                    console.log('ip-api.com failed, using cached or default...');
+                }
+                
+                // Use cached location if available
+                const cached = localStorage.getItem('kotaUserLocation');
+                if (cached) {
+                    userLocation = JSON.parse(cached);
+                    console.log('✅ Using cached location:', userLocation);
+                } else {
+                    // Default to US if detection fails
+                    userLocation = { country: 'United States', countryCode: 'US', region: null, city: null, ip: null };
+                    console.log('⚠️ Location detection failed, defaulting to US');
+                }
+            } catch (error) {
+                console.error('Location detection error:', error);
+                // Use cached or default
+                const cached = localStorage.getItem('kotaUserLocation');
+                if (cached) {
+                    userLocation = JSON.parse(cached);
+                } else {
+                    userLocation = { country: 'United States', countryCode: 'US', region: null, city: null, ip: null };
+                }
+            }
+        }
+        
+        // Check settings page access (password protection)
+        function checkSettingsAccess() {
+            const accessGranted = sessionStorage.getItem('settingsAccessGranted');
+            if (accessGranted === 'true') {
+                return true;
+            }
+            
+            const password = prompt('Enter password to access Settings:');
+            if (!password) {
+                showNotification('Access denied. Password required to view Settings.', 'warning', 'Access Denied');
+                return false;
+            }
+            
+            // Check password against current user's password
+            if (currentUser && currentUser.password === password) {
+                sessionStorage.setItem('settingsAccessGranted', 'true');
+                showNotification('Access granted', 'success', 'Settings Unlocked');
+                return true;
+            } else {
+                showNotification('Incorrect password. Access denied.', 'error', 'Access Denied');
+                return false;
+            }
+        }
+
         function updateDashboardStats() {
             if (currentBlocks.length === 0) return;
             
@@ -4730,8 +5026,12 @@
             searchStatus.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
             productsContainer.innerHTML = '';
             try {
-                const products = await apiRequest(`/api/products/search?retailer=${encodeURIComponent(retailer)}&query=${encodeURIComponent(query)}`);
-                searchStatus.textContent = `Found ${products.length} products for "${query}"`;
+                const products = await apiRequest(`/api/products/search?retailer=${encodeURIComponent(retailer)}&query=${encodeURIComponent(query)}`, {
+                    method: 'POST',
+                    body: { location: userLocation }
+                });
+                const regionMsg = userLocation.country ? ` in ${userLocation.country}` : '';
+                searchStatus.textContent = `Found ${products.length} products for "${query}"${regionMsg}`;
                 
                 // Automatically add searched products to library
                 if (products && products.length > 0) {
@@ -5083,7 +5383,7 @@
                 const priceLabel = product.price ? product.price.toFixed(2) : '0.00';
                 return `
                 <div style="display: flex; gap: 15px; padding: 15px; border: 1px solid #e5e7eb; border-radius: 8px; margin-bottom: 15px; background: white;">
-                    <img src="${product.image || 'https://via.placeholder.com/100'}" alt="${product.title}" style="width: 100px; height: 100px; object-fit: cover; border-radius: 8px;">
+                    <img src="${product.image || 'https://via.placeholder.com/100'}" alt="${product.title}" style="width: 100px; height: 100px; object-fit: cover; border-radius: 8px;" onerror="this.onerror=null; this.src='https://via.placeholder.com/100?text=' + encodeURIComponent('${product.title.substring(0, 10)}');">
                     <div style="flex: 1;">
                         <h4 style="margin: 0 0 5px 0;">${product.title}</h4>
                         <p style="color: var(--gray); font-size: 0.9rem; margin: 0 0 10px 0;">
