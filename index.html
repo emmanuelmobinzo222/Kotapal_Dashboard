@@ -1084,18 +1084,6 @@
             <div class="hero-content">
                 <h1>Smart Product Blocks That Convert — Anywhere</h1>
                 <p>Kota helps creators, bloggers, and e-commerce sellers combine their Shopify products with Amazon and Walmart affiliate offers — into powerful AI-powered product blocks that work across your blog, store, YouTube, and email.</p>
-                <div class="hero-buttons">
-                    <button class="btn btn-primary">Join the Waitlist</button>
-                </div>
-                <div style="display: flex; align-items: center; color: #fff;">
-                    <div style="display: flex; margin-right: 15px;">
-                        <img src="https://i.pravatar.cc/40?img=1" alt="User" style="width: 40px; height: 40px; border-radius: 50%; border: 2px solid white; margin-right: -10px;">
-                        <img src="https://i.pravatar.cc/40?img=2" alt="User" style="width: 40px; height: 40px; border-radius: 50%; border: 2px solid white; margin-right: -10px;">
-                        <img src="https://i.pravatar.cc/40?img=3" alt="User" style="width: 40px; height: 40px; border-radius: 50%; border: 2px solid white; margin-right: -10px;">
-                        <img src="https://i.pravatar.cc/40?img=4" alt="User" style="width: 40px; height: 40px; border-radius: 50%; border: 2px solid white;">
-                    </div>
-                    <span>Join 12,500+ creators already monetizing</span>
-                </div>
             </div>
         </section>
 
@@ -1719,9 +1707,19 @@
             document.body.style.overflow = ''; // Restore scrolling
         }
 
-        // Close modal when clicking outside
+        // Close modal when clicking outside (but not while user is typing)
+        let isUserTyping = false;
+        const authInputs = document.querySelectorAll('#authModal input');
+        authInputs.forEach(input => {
+            input.addEventListener('focus', () => { isUserTyping = true; });
+            input.addEventListener('blur', () => { 
+                // Small delay to allow clicking submit button
+                setTimeout(() => { isUserTyping = false; }, 200);
+            });
+        });
+        
         window.onclick = function(event) {
-            if (event.target == authModal) {
+            if (event.target == authModal && !isUserTyping) {
                 closeAuthModal();
             }
         }
@@ -1731,9 +1729,17 @@
             btn.onclick = closeAuthModal;
         });
 
-        // Tab switching
+        // Tab switching (prevent switching while user is actively typing)
         authTabs.forEach(tab => {
-            tab.addEventListener('click', () => {
+            tab.addEventListener('click', (e) => {
+                // Don't switch tabs if user is currently typing in a form field
+                const activeInput = document.activeElement;
+                if (activeInput && activeInput.tagName === 'INPUT' && activeInput.closest('#authModal')) {
+                    // User is typing, don't switch tabs
+                    e.preventDefault();
+                    return;
+                }
+                
                 // Remove active class from all tabs and forms
                 authTabs.forEach(t => t.classList.remove('active'));
                 authForms.forEach(f => f.classList.remove('active'));

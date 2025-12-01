@@ -246,6 +246,7 @@
             height: 40px;
             border-radius: 50%;
             margin-right: 10px;
+            object-fit: cover;
         }
         .user-name {
             font-weight: 600;
@@ -1730,6 +1731,9 @@
         .stat-warning {
             background: var(--warning);
         }
+        .stat-info {
+            background: var(--info, #3b82f6);
+        }
         .stat-danger {
             background: var(--danger);
         }
@@ -2064,7 +2068,7 @@
             </div>
             <div class="user-info">
                 <div style="display: flex; align-items: center;">
-                    <img src="https://i.pravatar.cc/40?img=1" alt="User" class="user-avatar" onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2240%22 height=%2240%22%3E%3Ccircle cx=%2220%22 cy=%2220%22 r=%2220%22 fill=%22%233b82f6%22/%3E%3Ctext x=%2220%22 y=%2226%22 font-size=%2216%22 fill=%22white%22 text-anchor=%22middle%22 font-weight=%22bold%22%3EU%3C/text%3E%3C/svg%3E';">
+                    <img id="sidebarUserAvatar" src="https://i.pravatar.cc/40?img=1" alt="User" class="user-avatar" onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2240%22 height=%2240%22%3E%3Ccircle cx=%2220%22 cy=%2220%22 r=%2220%22 fill=%22%233b82f6%22/%3E%3Ctext x=%2220%22 y=%2226%22 font-size=%2216%22 fill=%22white%22 text-anchor=%22middle%22 font-weight=%22bold%22%3EU%3C/text%3E%3C/svg%3E';">
                     <div>
                         <div class="user-name">Loading...</div>
                         <div class="user-plan">Loading...</div>
@@ -2176,7 +2180,7 @@
                         <div class="stat-icon stat-info">
                             <i class="fas fa-cubes"></i>
                         </div>
-                        <div class="stat-value" id="totalBlocks">0</div>
+                        <div class="stat-value" id="totalBlocks" data-sensitive="true">0</div>
                         <div class="stat-label">Total Blocks</div>
                     </div>
                 </div>
@@ -2790,6 +2794,20 @@
                     <label for="userWebsiteSettings">Website/Blog URL</label>
                     <input type="url" id="userWebsiteSettings" class="form-control">
                 </div>
+                <div class="form-group">
+                    <label>Profile Picture</label>
+                    <div style="display:flex;align-items:center;gap:15px;flex-wrap:wrap;">
+                        <img id="settingsAvatarPreview" src="https://i.pravatar.cc/80?img=1" alt="Profile preview" class="user-avatar" style="width:60px;height:60px;border-radius:50%;object-fit:cover;border:2px solid #e5e7eb;" onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2260%22 height=%2260%22%3E%3Ccircle cx=%2230%22 cy=%2230%22 r=%2230%22 fill=%22%233b82f6%22/%3E%3Ctext x=%2230%22 y=%2238%22 font-size=%2224%22 fill=%22white%22 text-anchor=%22middle%22 font-weight=%22bold%22%3EU%3C/text%3E%3C/svg%3E';">
+                        <div style="flex:1;min-width:220px;">
+                            <input type="url" id="userAvatarUrlSettings" class="form-control" placeholder="https://your-cdn.com/avatar.jpg or data:image/...">
+                            <small style="color:var(--gray);font-size:0.85rem;">Paste an image URL or a data URL. This picture will appear in the sidebar.</small>
+                        </div>
+                        <div style="flex-basis:100%;margin-top:10px;">
+                            <input type="file" id="userAvatarFileSettings" accept="image/*" class="form-control">
+                            <small style="color:var(--gray);font-size:0.85rem;">Or upload a picture (stored in your browser and, where supported, in your profile).</small>
+                        </div>
+                    </div>
+                </div>
                 <button type="submit" class="btn btn-primary">Save Profile</button>
                 <div id="settingsProfileStatus" style="margin-top:10px;font-size:0.9rem;color:var(--gray);"></div>
             </form>
@@ -3052,16 +3070,60 @@
 
         // Populate settings profile form with current user data
         function populateSettingsForm() {
-            if (!currentUser) return;
+            if (!currentUser) {
+                console.warn('⚠️ populateSettingsForm: currentUser is null');
+                // Try to load from localStorage as fallback
+                const saved = localStorage.getItem('kotaUser');
+                if (saved) {
+                    try {
+                        currentUser = JSON.parse(saved);
+                        console.log('✅ Loaded currentUser from localStorage:', currentUser);
+                    } catch (e) {
+                        console.error('❌ Failed to parse saved user:', e);
+                        return;
+                    }
+                } else {
+                    return;
+                }
+            }
+            
+            console.log('🔄 populateSettingsForm called with:', currentUser);
+            
             const n = document.getElementById('userNameSettings');
             const e = document.getElementById('userEmailSettings');
             const w = document.getElementById('userWebsiteSettings');
-            if (n) n.value = currentUser.name || '';
-            if (e) e.value = currentUser.email || '';
-            if (w) w.value = currentUser.website || '';
+            const avatarUrlInput = document.getElementById('userAvatarUrlSettings');
+            const avatarPreview = document.getElementById('settingsAvatarPreview');
+            
+            if (n) {
+                n.value = currentUser.name || '';
+                console.log('✅ Set userNameSettings to:', currentUser.name);
+            }
+            if (e) {
+                e.value = currentUser.email || '';
+                console.log('✅ Set userEmailSettings to:', currentUser.email);
+            }
+            if (w) {
+                w.value = currentUser.website || '';
+                console.log('✅ Set userWebsiteSettings to:', currentUser.website);
+            }
+            if (avatarUrlInput) {
+                avatarUrlInput.value = currentUser.avatarUrl || '';
+                console.log('✅ Set userAvatarUrlSettings to:', currentUser.avatarUrl);
+            }
+            if (avatarPreview) {
+                if (currentUser.avatarUrl) {
+                    avatarPreview.src = currentUser.avatarUrl;
+                } else {
+                    // Fallback to default avatar
+                    avatarPreview.src = 'https://i.pravatar.cc/80?img=1';
+                }
+            }
             
             // Populate API keys from user settings
             populateApiKeysForm();
+            
+            console.log('✅ populateSettingsForm completed');
         }
         
         // Populate API keys form with saved keys
@@ -3119,6 +3181,9 @@
                 });
                 currentUser = updated || { ...(currentUser || {}), apiKeys };
                 localStorage.setItem('kotaUser', JSON.stringify(currentUser));
+                // Update user display in real-time
+                
+                updateUserDisplay();
                 showNotification('API keys saved successfully!', 'success', 'Keys Saved');
                 
                 // Load top performing products after saving
@@ -3135,7 +3200,9 @@
                 if (!currentUser) currentUser = {};
                 currentUser.apiKeys = apiKeys;
                 localStorage.setItem('kotaUser', JSON.stringify(currentUser));
-                showNotification('API keys saved (offline mode)', 'success', 'Keys Saved');
+                // Update user display in real-time
+                updateUserDisplay();
+                showNotification('API keys saved (offline mode). Changes visible immediately.', 'warning', 'Keys Saved');
                 await loadTopPerformingProducts();
                 if (apiKeys.amazonSiteStripeLink) {
                     await fetchSiteStripeProducts(apiKeys.amazonSiteStripeLink, apiKeys, status);
@@ -3360,29 +3427,133 @@
         // Handle settings profile update
         async function handleSettingsProfileUpdate(e) {
             e.preventDefault();
+            e.stopPropagation();
+            
+            console.log('🔧 Settings profile update triggered');
+            
             const name = (document.getElementById('userNameSettings')?.value || '').trim();
             const email = (document.getElementById('userEmailSettings')?.value || '').trim();
             const website = (document.getElementById('userWebsiteSettings')?.value || '').trim();
+            const avatarUrl = (document.getElementById('userAvatarUrlSettings')?.value || '').trim();
+            
+            console.log('📝 Form values:', { name, email, website, avatarUrl });
+            console.log('👤 Current user before update:', currentUser);
+            
             const status = document.getElementById('settingsProfileStatus');
             if (status) { status.style.color = 'var(--gray)'; status.textContent = 'Saving...'; }
+            
+            // Validate required fields
+            if (!name || !email) {
+                showNotification('Name and email are required', 'error', 'Validation Error');
+                if (status) { status.style.color = 'var(--danger)'; status.textContent = 'Name and email required'; }
+                return;
+            }
+            
             try {
-                const updated = await apiRequest('/api/user/profile', { method: 'PUT', body: { name, email, website }});
-                currentUser = updated || { ...(currentUser || {}), name, email, website };
+                const updated = await apiRequest('/api/user/profile', { method: 'PUT', body: { name, email, website, avatarUrl }});
+                console.log('✅ Backend response:', updated);
+                
+                // Merge with existing currentUser to preserve all fields
+                currentUser = { 
+                    ...(currentUser || {}), 
+                    ...(updated || {}),
+                    name, 
+                    email, 
+                    website, 
+                    avatarUrl 
+                };
+                
+                console.log('💾 Updated currentUser:', currentUser);
+                
                 localStorage.setItem('kotaUser', JSON.stringify(currentUser));
-                updateUserDisplay();
+                console.log('💾 Saved to localStorage');
+                
+                // Update sidebar name IMMEDIATELY (before setTimeout)
+                const userNameEl = document.querySelector('.user-name');
+                if (userNameEl) {
+                    userNameEl.textContent = currentUser.name || 'User';
+                    console.log('✅ IMMEDIATE sidebar name update to:', currentUser.name);
+                }
+                
+                // Force immediate UI update with a small delay to ensure DOM is ready
+                setTimeout(() => {
+                    // Update ALL displays in real-time
+                    updateUserDisplay();
+                    console.log('🔄 Called updateUserDisplay()');
+                    
+                    // Refresh settings form to show saved values (with currentUser data)
+                    populateSettingsForm();
+                    console.log('🔄 Called populateSettingsForm()');
+                    
+                    // Update account page form if it's visible
+                    updateAccountForm();
+                    console.log('🔄 Called updateAccountForm()');
+                    
+                    // Verify the update worked
+                    const savedUser = JSON.parse(localStorage.getItem('kotaUser') || '{}');
+                    console.log('✅ Verification - localStorage user:', savedUser);
+                    console.log('✅ Verification - currentUser:', currentUser);
+                    
+                    // Double-check sidebar name is updated
+                    const verifyNameEl = document.querySelector('.user-name');
+                    if (verifyNameEl) {
+                        console.log('✅ Final verification - Sidebar name is now:', verifyNameEl.textContent);
+                    }
+                }, 50);
+                
+                // Show success notification
+                showNotification('Profile updated successfully!', 'success', 'Profile Saved');
                 if (status) { status.style.color = '#065f46'; status.textContent = 'Saved'; }
-            } catch (_) {
+            } catch (err) {
+                console.error('❌ Error updating profile:', err);
                 // Offline fallback
-                currentUser = { ...(currentUser || {}), name, email, website };
+                currentUser = { 
+                    ...(currentUser || {}), 
+                    name, 
+                    email, 
+                    website, 
+                    avatarUrl 
+                };
+                
+                console.log('💾 Offline fallback - Updated currentUser:', currentUser);
+                
                 localStorage.setItem('kotaUser', JSON.stringify(currentUser));
-                updateUserDisplay();
+                console.log('💾 Offline fallback - Saved to localStorage');
+                
+                // Update sidebar name IMMEDIATELY (before setTimeout)
+                const userNameEl = document.querySelector('.user-name');
+                if (userNameEl) {
+                    userNameEl.textContent = currentUser.name || 'User';
+                    console.log('✅ IMMEDIATE sidebar name update (offline) to:', currentUser.name);
+                }
+                
+                // Force immediate UI update with a small delay to ensure DOM is ready
+                setTimeout(() => {
+                    // Update ALL displays in real-time
+                    updateUserDisplay();
+                    populateSettingsForm();
+                    updateAccountForm();
+                    
+                    // Verify the update worked
+                    const savedUser = JSON.parse(localStorage.getItem('kotaUser') || '{}');
+                    console.log('✅ Verification - localStorage user:', savedUser);
+                    console.log('✅ Verification - currentUser:', currentUser);
+                    
+                    // Double-check sidebar name is updated
+                    const verifyNameEl = document.querySelector('.user-name');
+                    if (verifyNameEl) {
+                        console.log('✅ Final verification - Sidebar name is now:', verifyNameEl.textContent);
+                    }
+                }, 50);
+                
+                showNotification('Profile saved locally (backend offline). Changes visible immediately.', 'warning', 'Saved Offline');
                 if (status) { status.style.color = '#065f46'; status.textContent = 'Saved (offline)'; }
             }
         }
 
         // Handle password change with current password verification
         async function handlePasswordChange(e) {
-            e.preventDefault();
+            if (e) e.preventDefault();
             const current = document.getElementById('currentPassword')?.value || '';
             const next = document.getElementById('newPassword')?.value || '';
             const confirmPw = document.getElementById('confirmPassword')?.value || '';
@@ -3407,6 +3578,7 @@
                 document.getElementById('currentPassword').value='';
                 document.getElementById('newPassword').value='';
                 document.getElementById('confirmPassword').value='';
+                showNotification('Password updated successfully', 'success', 'Password Saved');
             } catch (_) {
                 // Offline fallback: update local only
                 currentUser.password = next;
@@ -3415,7 +3587,156 @@
                 document.getElementById('currentPassword').value='';
                 document.getElementById('newPassword').value='';
                 document.getElementById('confirmPassword').value='';
+                showNotification('Password saved locally (backend offline)', 'warning', 'Saved Offline');
             }
+        }
+        
+        // Auto-save profile fields (name, email, website, avatar) on blur and with debounced input
+        function setupAutoSaveProfileFields() {
+            let saveTimeout = null;
+            const DEBOUNCE_DELAY = 1000; // 1 second after user stops typing
+            
+            const nameInput = document.getElementById('userNameSettings');
+            const emailInput = document.getElementById('userEmailSettings');
+            const websiteInput = document.getElementById('userWebsiteSettings');
+            const avatarInput = document.getElementById('userAvatarUrlSettings');
+            
+            // Debounced auto-save function
+            const debouncedAutoSave = () => {
+                clearTimeout(saveTimeout);
+                saveTimeout = setTimeout(() => {
+                    autoSaveProfile();
+                }, DEBOUNCE_DELAY);
+            };
+            
+            // Auto-save function (without form submission event)
+            const autoSaveProfile = async () => {
+                if (!currentUser) return;
+                
+                const name = (nameInput?.value || '').trim();
+                const email = (emailInput?.value || '').trim();
+                const website = (websiteInput?.value || '').trim();
+                const avatarUrl = (avatarInput?.value || '').trim();
+                
+                // Only save if name and email are filled (required fields)
+                if (!name || !email) return;
+                
+                console.log('💾 Auto-saving profile:', { name, email, website, avatarUrl });
+                
+                const status = document.getElementById('settingsProfileStatus');
+                if (status) { 
+                    status.style.color = 'var(--gray)'; 
+                    status.textContent = 'Saving...'; 
+                }
+                
+                try {
+                    const updated = await apiRequest('/api/user/profile', { method: 'PUT', body: { name, email, website, avatarUrl }});
+                    console.log('✅ Auto-save backend response:', updated);
+                    
+                    // Merge with existing currentUser to preserve all fields
+                    currentUser = { 
+                        ...(currentUser || {}), 
+                        ...(updated || {}),
+                        name, 
+                        email, 
+                        website, 
+                        avatarUrl 
+                    };
+                    
+                    localStorage.setItem('kotaUser', JSON.stringify(currentUser));
+                    
+                    // Update sidebar name IMMEDIATELY
+                    const userNameEl = document.querySelector('.user-name');
+                    if (userNameEl) {
+                        userNameEl.textContent = currentUser.name || 'User';
+                    }
+                    
+                    // Update all displays
+                    setTimeout(() => {
+                        updateUserDisplay();
+                        populateSettingsForm();
+                        updateAccountForm();
+                    }, 50);
+                    
+                    if (status) { 
+                        status.style.color = '#065f46'; 
+                        status.textContent = 'Saved automatically'; 
+                    }
+                } catch (err) {
+                    console.error('❌ Auto-save error:', err);
+                    // Offline fallback
+                    currentUser = { 
+                        ...(currentUser || {}), 
+                        name, 
+                        email, 
+                        website, 
+                        avatarUrl 
+                    };
+                    
+                    localStorage.setItem('kotaUser', JSON.stringify(currentUser));
+                    
+                    // Update sidebar name IMMEDIATELY
+                    const userNameEl = document.querySelector('.user-name');
+                    if (userNameEl) {
+                        userNameEl.textContent = currentUser.name || 'User';
+                    }
+                    
+                    setTimeout(() => {
+                        updateUserDisplay();
+                        populateSettingsForm();
+                        updateAccountForm();
+                    }, 50);
+                    
+                    if (status) { 
+                        status.style.color = '#065f46'; 
+                        status.textContent = 'Saved automatically (offline)'; 
+                    }
+                }
+            };
+            
+            // Attach event listeners
+            if (nameInput) {
+                nameInput.addEventListener('input', debouncedAutoSave);
+                nameInput.addEventListener('blur', autoSaveProfile);
+            }
+            if (emailInput) {
+                emailInput.addEventListener('input', debouncedAutoSave);
+                emailInput.addEventListener('blur', autoSaveProfile);
+            }
+            if (websiteInput) {
+                websiteInput.addEventListener('input', debouncedAutoSave);
+                websiteInput.addEventListener('blur', autoSaveProfile);
+            }
+            if (avatarInput) {
+                avatarInput.addEventListener('input', debouncedAutoSave);
+                avatarInput.addEventListener('blur', autoSaveProfile);
+            }
+            
+            console.log('✅ Auto-save profile fields initialized');
+        }
+        
+        // Auto-save password when all fields are filled and user leaves confirm field
+        function setupAutoSavePassword() {
+            const currentPwInput = document.getElementById('currentPassword');
+            const newPwInput = document.getElementById('newPassword');
+            const confirmPwInput = document.getElementById('confirmPassword');
+            
+            if (!currentPwInput || !newPwInput || !confirmPwInput) return;
+            
+            // Auto-save when user leaves confirm password field (if all fields are filled)
+            confirmPwInput.addEventListener('blur', () => {
+                const current = currentPwInput.value || '';
+                const next = newPwInput.value || '';
+                const confirmPw = confirmPwInput.value || '';
+                
+                // Only auto-save if all three fields are filled
+                if (current && next && confirmPw && next === confirmPw) {
+                    console.log('💾 Auto-saving password (all fields filled and match)');
+                    handlePasswordChange(null); // Pass null instead of event
+                }
+            });
+            
+            console.log('✅ Auto-save password initialized');
         }
         // Feature mode: 'live' (default) or 'mock' (set by Reject button)
         function isMockMode() {
@@ -3691,9 +4012,20 @@
         async function loadLiveData() {
             try {
                 const profile = await apiRequest('/api/user/profile');
-                currentUser = profile;
-                localStorage.setItem('kotaUser', JSON.stringify(currentUser));
-                updateUserDisplay();
+                // Only update currentUser if we got valid profile data from backend
+                if (profile && profile.email) {
+                    currentUser = profile;
+                    localStorage.setItem('kotaUser', JSON.stringify(currentUser));
+                    updateUserDisplay();
+                } else {
+                    // Backend returned invalid data, keep existing currentUser from localStorage
+                    console.warn('Backend returned invalid profile, keeping cached user data');
+                    if (!currentUser) {
+                        const saved = localStorage.getItem('kotaUser');
+                        if (saved) currentUser = JSON.parse(saved);
+                    }
+                    updateUserDisplay();
+                }
 
                 currentBlocks = await apiRequest('/api/blocks');
                 currentIntegrations = await apiRequest('/api/integrations');
@@ -3705,8 +4037,16 @@
                 await renderAnalytics();
                 await renderAlerts();
             } catch (e) {
-                console.error(e);
-                // As a last resort, load mock data to avoid UI failure
+                console.error('Error loading live data:', e);
+                // Keep currentUser from localStorage, only load mock blocks/integrations
+                if (!currentUser) {
+                    const saved = localStorage.getItem('kotaUser');
+                    if (saved) {
+                        currentUser = JSON.parse(saved);
+                        updateUserDisplay();
+                    }
+                }
+                // As a last resort, load mock data for blocks/integrations (but keep real user)
                 loadMockData();
             }
         }
@@ -3831,7 +4171,33 @@
                 signupModal.style.display = 'none';
                 loginModal.style.display = 'block';
             });
-            
+
+            // Settings: avatar file upload → preview + URL field + auto-save
+            const avatarFileInput = document.getElementById('userAvatarFileSettings');
+            const avatarUrlInput = document.getElementById('userAvatarUrlSettings');
+            const avatarPreview = document.getElementById('settingsAvatarPreview');
+            if (avatarFileInput && avatarUrlInput && avatarPreview) {
+                avatarFileInput.addEventListener('change', function() {
+                    const file = this.files && this.files[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = function(ev) {
+                        const dataUrl = ev.target.result;
+                        avatarUrlInput.value = dataUrl;
+                        avatarPreview.src = dataUrl;
+                        // Trigger auto-save after avatar is loaded by dispatching input event
+                        // This will use the debounced auto-save from setupAutoSaveProfileFields
+                        setTimeout(() => {
+                            avatarUrlInput.dispatchEvent(new Event('input', { bubbles: true }));
+                            // Also trigger blur to save immediately
+                            setTimeout(() => {
+                                avatarUrlInput.dispatchEvent(new Event('blur', { bubbles: true }));
+                            }, 50);
+                        }, 100);
+                    };
+                    reader.readAsDataURL(file);
+                });
+            }
             showSignup.addEventListener('click', function(e) {
                 e.preventDefault();
                 loginModal.style.display = 'none';
@@ -3850,16 +4216,31 @@
                 showNotification('API key copied to clipboard!', 'success', 'Copied');
             });
 
-            // Settings profile form
+            // Settings profile form - Auto-save on blur and debounced input
             const settingsProfileForm = document.getElementById('settingsProfileForm');
             if (settingsProfileForm) {
-                settingsProfileForm.addEventListener('submit', handleSettingsProfileUpdate);
+                // Remove any existing listeners to prevent duplicates
+                const newForm = settingsProfileForm.cloneNode(true);
+                settingsProfileForm.parentNode.replaceChild(newForm, settingsProfileForm);
+                // Add event listener to the new form (as fallback)
+                document.getElementById('settingsProfileForm').addEventListener('submit', function(e) {
+                    console.log('📋 Settings form submit event triggered');
+                    handleSettingsProfileUpdate(e);
+                });
+                console.log('✅ Settings profile form event listener attached');
+                
+                // Auto-save functionality for profile fields
+                setupAutoSaveProfileFields();
+            } else {
+                console.warn('⚠️ settingsProfileForm not found');
             }
 
-            // Password form
+            // Password form - Auto-save when all fields are filled
             const passwordForm = document.getElementById('passwordForm');
             if (passwordForm) {
                 passwordForm.addEventListener('submit', handlePasswordChange);
+                // Auto-save password when all fields are filled and user leaves confirm field
+                setupAutoSavePassword();
             }
             
             // Affiliate API Keys form
@@ -3998,6 +4379,14 @@
 
         // Show page
         function showPage(page) {
+            // Initialize auto-save when Settings page is shown
+            if (page === 'settings') {
+                // Small delay to ensure DOM is ready
+                setTimeout(() => {
+                    setupAutoSaveProfileFields();
+                    setupAutoSavePassword();
+                }, 100);
+            }
             // Redirect new-block to blocks page since it's not in main navigation
             if (page === 'new-block') {
                 page = 'blocks';
@@ -4077,9 +4466,22 @@
                     break;
                 case 'settings':
                     if (settingsPage) {
+                        // Check password access first
+                        if (!checkSettingsAccess()) {
+                            // Access denied, hide settings page and go back to previous page
+                            settingsPage.style.display = 'none';
+                            // Go back to dashboard if access denied
+                            goToPage('dashboard');
+                            return;
+                        }
                         settingsPage.style.display = 'block';
                         populateSettingsForm();
                         loadTopPerformingProducts();
+                        // Initialize auto-save after form is populated
+                        setTimeout(() => {
+                            setupAutoSaveProfileFields();
+                            setupAutoSavePassword();
+                        }, 150);
                     }
                     break;
                 case 'billing':
@@ -4104,7 +4506,11 @@
                         localStorage.setItem('kotaToken', authToken);
                     }
                     updateUserDisplay();
-                    loadMockData();
+                    // Try to load live data first (to get latest from backend), fallback to mock if offline
+                    loadLiveData().catch(() => {
+                        console.log('Backend unavailable, using cached user data and mock blocks');
+                        loadMockData();
+                    });
                     navigateAfterAuth('offline');
                     return;
                 } catch (e) {
@@ -4149,7 +4555,35 @@
             
             // Fallback to API or mock mode
             if (isMockMode()) {
-                currentUser = { id: 'user_123', name: 'John Doe', email, plan: 'pro', createdAt: '2024-01-15' };
+                // In mock mode, try to use the actual user from localStorage first (from index.html login)
+                const savedUser = localStorage.getItem('kotaUser');
+                if (savedUser) {
+                    try {
+                        currentUser = JSON.parse(savedUser);
+                        // Verify email matches (security check)
+                        if (currentUser.email && currentUser.email.toLowerCase() !== email.toLowerCase()) {
+                            throw new Error('Email mismatch');
+                        }
+                    } catch (e) {
+                        // If saved user doesn't match or doesn't exist, create minimal user object
+                        currentUser = { 
+                            id: 'user_' + Date.now(), 
+                            name: email.split('@')[0], 
+                            email: email.toLowerCase(), 
+                            plan: 'starter', 
+                            createdAt: new Date().toISOString() 
+                        };
+                    }
+                } else {
+                    // No saved user, create minimal user object
+                    currentUser = { 
+                        id: 'user_' + Date.now(), 
+                        name: email.split('@')[0], 
+                        email: email.toLowerCase(), 
+                        plan: 'starter', 
+                        createdAt: new Date().toISOString() 
+                    };
+                }
                 localStorage.setItem('kotaUser', JSON.stringify(currentUser));
                 updateUserDisplay();
                 loginModal.style.display = 'none';
@@ -4267,12 +4701,17 @@
             const website = document.getElementById('userWebsite').value;
             try {
                 const updated = await apiRequest('/api/user/profile', { method: 'PUT', body: { name, email, website } });
-                currentUser = updated;
-            localStorage.setItem('kotaUser', JSON.stringify(currentUser));
-            updateUserDisplay();
-                    showNotification('Profile updated successfully!', 'success', 'Profile Saved');
+                currentUser = updated || { ...(currentUser || {}), name, email, website };
+                localStorage.setItem('kotaUser', JSON.stringify(currentUser));
+                updateUserDisplay();
+                showNotification('Profile updated successfully!', 'success', 'Profile Saved');
             } catch (err) {
-                    showNotification(err.message || 'Update failed', 'error', 'Update Error');
+                // Offline/local fallback: update cached user so UI still reflects changes
+                currentUser = { ...(currentUser || {}), name, email, website };
+                localStorage.setItem('kotaUser', JSON.stringify(currentUser));
+                updateUserDisplay();
+                // Let the user know backend is offline but their local profile was updated
+                showNotification('Profile saved locally (backend offline). Your dashboard will use the updated info.', 'warning', 'Saved Offline');
             }
         }
 
@@ -4322,28 +4761,68 @@
 
         // Update user display
         function updateUserDisplay() {
-            if (currentUser) {
-                document.querySelector('.user-name').textContent = currentUser.name;
-                const planElement = document.querySelector('.user-plan');
-                const plan = currentUser.plan;
+            if (!currentUser) {
+                console.warn('⚠️ updateUserDisplay called but currentUser is null');
+                return;
+            }
+            
+            console.log('🔄 updateUserDisplay called with:', currentUser);
+            
+            // Update sidebar name (force immediate update)
+            const userNameEl = document.querySelector('.user-name');
+            if (userNameEl) {
+                // Force a reflow to ensure the update is visible
+                userNameEl.style.display = 'none';
+                userNameEl.offsetHeight; // Trigger reflow
+                userNameEl.style.display = '';
+                userNameEl.textContent = currentUser.name || 'User';
+                console.log('✅ Updated sidebar name to:', currentUser.name);
+            } else {
+                console.warn('⚠️ .user-name element not found');
+                // Try alternative selector
+                const altNameEl = document.querySelector('.user-info .user-name');
+                if (altNameEl) {
+                    altNameEl.textContent = currentUser.name || 'User';
+                    console.log('✅ Updated sidebar name (alternative selector) to:', currentUser.name);
+                }
+            }
+            
+            // Update plan
+            const planElement = document.querySelector('.user-plan');
+            if (planElement) {
+                const plan = currentUser.plan || 'starter';
                 planElement.textContent = 
                     plan === 'starter' ? 'Starter Plan' : 
                     plan === 'pro' ? 'Pro Plan' : 
                     plan === 'creatorplus' ? 'Creator+ Plan' : 
                     plan === 'agency' ? 'Agency Plan' : 'Unknown Plan';
                 planElement.className = 'user-plan ' + plan;
-                
-                // Update account form fields with current user data
-                updateAccountForm();
-                
-                // Update billing section with user's actual plan
-                updateBillingSection();
-                renderBillingHistory();
-                populateSettingsForm();
-                
-                // Update plan info on dashboard
-                updatePlanInfo();
+                console.log('✅ Updated plan to:', plan);
             }
+            
+            // Update sidebar avatar
+            const avatarImg = document.getElementById('sidebarUserAvatar');
+            if (avatarImg) {
+                if (currentUser.avatarUrl) {
+                    avatarImg.src = currentUser.avatarUrl;
+                    console.log('✅ Updated avatar to:', currentUser.avatarUrl);
+                } else {
+                    avatarImg.src = 'https://i.pravatar.cc/40?img=1';
+                }
+            }
+            
+            // Update account form fields with current user data
+            updateAccountForm();
+            
+            // Update billing section with user's actual plan
+            updateBillingSection();
+            renderBillingHistory();
+            populateSettingsForm();
+            
+            // Update plan info on dashboard
+            updatePlanInfo();
+            
+            console.log('✅ updateUserDisplay completed');
         }
 
         // Update account form with current user data
