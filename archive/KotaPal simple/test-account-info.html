@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Account Info</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .info { background: #f5f5f5; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .success { background: #d4edda; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; border: 1px solid #f5c6cb; }
+    </style>
+</head>
+<body>
+    <h1>Account Information Test</h1>
+    
+    <div id="userInfo" class="info">
+        <h3>Current User Data:</h3>
+        <div id="userDetails">Loading...</div>
+    </div>
+    
+    <div id="accountFormTest" class="info">
+        <h3>Account Form Test:</h3>
+        <form id="testForm">
+            <div>
+                <label>Name: </label>
+                <input type="text" id="userName" style="width: 300px;">
+            </div>
+            <div>
+                <label>Email: </label>
+                <input type="email" id="userEmail" style="width: 300px;">
+            </div>
+            <div>
+                <label>Website: </label>
+                <input type="url" id="userWebsite" style="width: 300px;">
+            </div>
+        </form>
+    </div>
+
+    <script>
+        // Check if user is logged in
+        const savedUser = localStorage.getItem('kotaUser');
+        const userDetails = document.getElementById('userDetails');
+        
+        if (savedUser) {
+            const user = JSON.parse(savedUser);
+            userDetails.innerHTML = `
+                <strong>Name:</strong> ${user.name || 'Not set'}<br>
+                <strong>Email:</strong> ${user.email || 'Not set'}<br>
+                <strong>Plan:</strong> ${user.plan || 'Not set'}<br>
+                <strong>Website:</strong> ${user.website || 'Not set'}<br>
+                <strong>Created:</strong> ${user.createdAt || 'Not set'}<br>
+                <strong>Last Login:</strong> ${user.lastLogin || 'Not set'}
+            `;
+            
+            // Populate form fields
+            document.getElementById('userName').value = user.name || '';
+            document.getElementById('userEmail').value = user.email || '';
+            document.getElementById('userWebsite').value = user.website || '';
+            
+            document.getElementById('userInfo').className = 'info success';
+        } else {
+            userDetails.innerHTML = 'No user logged in. Please login first.';
+            document.getElementById('userInfo').className = 'info error';
+        }
+    </script>
+</body>
+</html>

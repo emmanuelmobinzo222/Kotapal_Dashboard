@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complete Login Test - All Plans</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .status {
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        button {
+            background: #3b82f6;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #2563eb;
+        }
+        .plan-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 15px 0;
+            border-left: 4px solid #3b82f6;
+        }
+        .user-info {
+            background: #e7f3ff;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .dashboard-link {
+            background: #28a745;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+            display: inline-block;
+            margin: 5px;
+        }
+        .dashboard-link:hover {
+            background: #218838;
+        }
+        .test-results {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 Complete Login Test - All User Plans</h1>
+        <p>Test user registration, login, and dashboard access for all subscription plans.</p>
+        
+        <button onclick="testAllPlans()">Test All Plans</button>
+        <button onclick="testStarterPlan()">Test Starter Plan</button>
+        <button onclick="testProPlan()">Test Pro Plan</button>
+        <button onclick="testCreatorPlusPlan()">Test Creator+ Plan</button>
+        <button onclick="clearResults()">Clear Results</button>
+        
+        <div id="status"></div>
+        <div id="results" class="test-results"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3000/api';
+        
+        async function testAllPlans() {
+            document.getElementById('status').innerHTML = '<div class="status info">🔄 Testing all user plans...</div>';
+            document.getElementById('results').innerHTML = '';
+            
+            await testStarterPlan();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            await testProPlan();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            await testCreatorPlusPlan();
+            
+            document.getElementById('status').innerHTML = '<div class="status success">✅ All plan tests completed!</div>';
+        }
+        
+        async function testStarterPlan() {
+            const resultsDiv = document.getElementById('results');
+            const timestamp = Date.now();
+            
+            try {
+                // Register starter user
+                const registerResponse = await fetch(`${API_BASE}/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: 'Starter User',
+                        email: `starter${timestamp}@example.com`,
+                        password: 'password123',
+                        plan: 'starter'
+                    })
+                });
+                
+                if (registerResponse.ok) {
+                    const data = await registerResponse.json();
+                    
+                    // Test login
+                    const loginResponse = await fetch(`${API_BASE}/auth/login`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            email: `starter${timestamp}@example.com`,
+                            password: 'password123'
+                        })
+                    });
+                    
+                    if (loginResponse.ok) {
+                        const loginData = await loginResponse.json();
+                        
+                        resultsDiv.innerHTML += `
+                            <div class="plan-section">
+                                <h3>📊 Starter Plan - SUCCESS</h3>
+                                <div class="user-info">
+                                    <strong>User:</strong> ${data.user.name}<br>
+                                    <strong>Email:</strong> ${data.user.email}<br>
+                                    <strong>Plan:</strong> ${data.user.plan}<br>
+                                    <strong>Status:</strong> ✅ Registered & Logged In
+                                </div>
+                                <p><strong>Features:</strong> Basic analytics, 5 product blocks, Amazon integration</p>
+                                <a href="dashboard.html" class="dashboard-link" onclick="localStorage.setItem('kotaToken', '${loginData.token}'); localStorage.setItem('kotaUser', JSON.stringify(${JSON.stringify(loginData.user)}));">Go to Dashboard</a>
+                            </div>
+                        `;
+                    } else {
+                        resultsDiv.innerHTML += `<div class="plan-section"><h3>❌ Starter Plan - Login Failed</h3></div>`;
+                    }
+                } else {
+                    resultsDiv.innerHTML += `<div class="plan-section"><h3>❌ Starter Plan - Registration Failed</h3></div>`;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML += `<div class="plan-section"><h3>❌ Starter Plan - Error: ${error.message}</h3></div>`;
+            }
+        }
+        
+        async function testProPlan() {
+            const resultsDiv = document.getElementById('results');
+            const timestamp = Date.now();
+            
+            try {
+                // Register pro user
+                const registerResponse = await fetch(`${API_BASE}/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: 'Pro User',
+                        email: `pro${timestamp}@example.com`,
+                        password: 'password123',
+                        plan: 'pro'
+                    })
+                });
+                
+                if (registerResponse.ok) {
+                    const data = await registerResponse.json();
+                    
+                    // Test login
+                    const loginResponse = await fetch(`${API_BASE}/auth/login`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            email: `pro${timestamp}@example.com`,
+                            password: 'password123'
+                        })
+                    });
+                    
+                    if (loginResponse.ok) {
+                        const loginData = await loginResponse.json();
+                        
+                        resultsDiv.innerHTML += `
+                            <div class="plan-section">
+                                <h3>📈 Pro Plan - SUCCESS</h3>
+                                <div class="user-info">
+                                    <strong>User:</strong> ${data.user.name}<br>
+                                    <strong>Email:</strong> ${data.user.email}<br>
+                                    <strong>Plan:</strong> ${data.user.plan}<br>
+                                    <strong>Status:</strong> ✅ Registered & Logged In
+                                </div>
+                                <p><strong>Features:</strong> Advanced analytics, 50 product blocks, all retailers</p>
+                                <a href="dashboard.html" class="dashboard-link" onclick="localStorage.setItem('kotaToken', '${loginData.token}'); localStorage.setItem('kotaUser', JSON.stringify(${JSON.stringify(loginData.user)}));">Go to Dashboard</a>
+                            </div>
+                        `;
+                    } else {
+                        resultsDiv.innerHTML += `<div class="plan-section"><h3>❌ Pro Plan - Login Failed</h3></div>`;
+                    }
+                } else {
+                    resultsDiv.innerHTML += `<div class="plan-section"><h3>❌ Pro Plan - Registration Failed</h3></div>`;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML += `<div class="plan-section"><h3>❌ Pro Plan - Error: ${error.message}</h3></div>`;
+            }
+        }
+        
+        async function testCreatorPlusPlan() {
+            const resultsDiv = document.getElementById('results');
+            const timestamp = Date.now();
+            
+            try {
+                // Register creatorplus user
+                const registerResponse = await fetch(`${API_BASE}/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: 'Creator+ User',
+                        email: `creatorplus${timestamp}@example.com`,
+                        password: 'password123',
+                        plan: 'creatorplus'
+                    })
+                });
+                
+                if (registerResponse.ok) {
+                    const data = await registerResponse.json();
+                    
+                    // Test login
+                    const loginResponse = await fetch(`${API_BASE}/auth/login`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            email: `creatorplus${timestamp}@example.com`,
+                            password: 'password123'
+                        })
+                    });
+                    
+                    if (loginResponse.ok) {
+                        const loginData = await loginResponse.json();
+                        
+                        resultsDiv.innerHTML += `
+                            <div class="plan-section">
+                                <h3>🔗 Creator+ Plan - SUCCESS</h3>
+                                <div class="user-info">
+                                    <strong>User:</strong> ${data.user.name}<br>
+                                    <strong>Email:</strong> ${data.user.email}<br>
+                                    <strong>Plan:</strong> ${data.user.plan}<br>
+                                    <strong>Status:</strong> ✅ Registered & Logged In
+                                </div>
+                                <p><strong>Features:</strong> All features, unlimited blocks, AI integration, priority support</p>
+                                <a href="dashboard.html" class="dashboard-link" onclick="localStorage.setItem('kotaToken', '${loginData.token}'); localStorage.setItem('kotaUser', JSON.stringify(${JSON.stringify(loginData.user)}));">Go to Dashboard</a>
+                            </div>
+                        `;
+                    } else {
+                        resultsDiv.innerHTML += `<div class="plan-section"><h3>❌ Creator+ Plan - Login Failed</h3></div>`;
+                    }
+                } else {
+                    resultsDiv.innerHTML += `<div class="plan-section"><h3>❌ Creator+ Plan - Registration Failed</h3></div>`;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML += `<div class="plan-section"><h3>❌ Creator+ Plan - Error: ${error.message}</h3></div>`;
+            }
+        }
+        
+        function clearResults() {
+            document.getElementById('status').innerHTML = '';
+            document.getElementById('results').innerHTML = '';
+        }
+        
+        // Auto-test on page load
+        window.onload = function() {
+            document.getElementById('status').innerHTML = `
+                <div class="status info">
+                    🎯 Ready to test complete login functionality!<br>
+                    This will test user registration, login, and dashboard access for all subscription plans.
+                </div>
+            `;
+        };
+    </script>
+</body>
+</html>
