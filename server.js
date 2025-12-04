@@ -257,7 +257,9 @@ app.post('/api/auth/register', async (req, res) => {
       }
     };
 
-    await store.createUser(newUser);
+    console.log('📝 Creating user in database:', newUser.email);
+    const createdUser = await store.createUser(newUser);
+    console.log('✅ User created successfully:', createdUser.email, 'ID:', createdUser.id);
 
     // Generate JWT
     const token = jwt.sign(

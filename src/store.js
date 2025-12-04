@@ -5,34 +5,67 @@ let firestore = null;
 let FieldValue = null;
 
 function hasFirebaseEnv() {
-  return !!process.env.FIREBASE_PROJECT_ID && !!process.env.GOOGLE_APPLICATION_CREDENTIALS;
+  return !!(
+    process.env.FIREBASE_PROJECT_ID && 
+    process.env.FIREBASE_PROJECT_ID !== 'your-firebase-project-id' &&
+    (
+      process.env.GOOGLE_APPLICATION_CREDENTIALS ||
+      process.env.FIREBASE_ADMIN_SDK_KEY ||
+      process.env.FIREBASE_CONFIG
+    )
+  );
 }
 
 async function initFirebase() {
-  if (!hasFirebaseEnv()) return false;
+  if (!hasFirebaseEnv()) {
+    console.log('⚠️ Firebase not configured - missing environment variables');
+    return false;
+  }
   try {
     const admin = require('firebase-admin');
     let credential;
     
-    // Try to load service account from file path
+    // Option 1: Service account JSON file
     if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
       const serviceAccount = require(process.env.GOOGLE_APPLICATION_CREDENTIALS);
       credential = admin.credential.cert(serviceAccount);
+      console.log('📁 Using Firebase credentials from file:', process.env.GOOGLE_APPLICATION_CREDENTIALS);
+    }
+    // Option 2: Base64 encoded key (for deployment)
+    else if (process.env.FIREBASE_ADMIN_SDK_KEY) {
+      const keyBuffer = Buffer.from(process.env.FIREBASE_ADMIN_SDK_KEY, 'base64');
+      const serviceAccount = JSON.parse(keyBuffer.toString('utf-8'));
+      credential = admin.credential.cert(serviceAccount);
+      console.log('🔑 Using Firebase credentials from base64 encoded key');
+    }
+    // Option 3: Direct JSON config in environment
+    else if (process.env.FIREBASE_CONFIG) {
+      const firebaseConfig = JSON.parse(process.env.FIREBASE_CONFIG);
+      credential = admin.credential.cert(firebaseConfig);
+      console.log('⚙️ Using Firebase credentials from FIREBASE_CONFIG');
+    }
+    
+    if (!credential) {
+      console.warn('⚠️ No Firebase credential found, trying application default');
+      credential = admin.credential.applicationDefault();
     }
     
     if (!admin.apps.length) {
       admin.initializeApp({
-        credential: credential || admin.credential.applicationDefault(),
+        credential,
         projectId: process.env.FIREBASE_PROJECT_ID
       });
     }
     firestore = admin.firestore();
     FieldValue = admin.firestore.FieldValue;
     useFirebase = true;
-    console.log('✓ Firebase initialized successfully');
+    console.log('✅ Firebase initialized successfully - Project ID:', process.env.FIREBASE_PROJECT_ID);
+    console.log('✅ Firestore ready - data will be saved to Firebase');
     return true;
   } catch (e) {
-    console.warn('Firebase init failed, falling back to local db:', e.message);
+    console.error('❌ Firebase init failed:', e.message);
+    console.error('Stack:', e.stack);
+    console.warn('⚠️ Falling back to local JSON database');
     useFirebase = false;
     return false;
   }
@@ -44,9 +77,14 @@ const db = require('./db');
 // Users
 async function getUserByEmail(email) {
   if (useFirebase) {
-    const snap = await firestore.collection('users').where('email', '==', email).limit(1).get();
-    if (snap.empty) return null;
-    return { id: snap.docs[0].id, ...snap.docs[0].data() };
+    const snap = await firestore.collection('users').where('email', '==', email.toLowerCase().trim()).limit(1).get();
+    if (snap.empty) {
+      console.log('🔍 User not found in Firebase:', email);
+      return null;
+    }
+    const user = { id: snap.docs[0].id, ...snap.docs[0].data() };
+    console.log('✅ User found in Firebase:', email, 'ID:', user.id);
+    return user;
   }
   return db.state.users.find(u => u.email === email) || null;
 }
@@ -61,8 +99,11 @@ async function getUserById(id) {
 
 async function createUser(user) {
   if (useFirebase) {
-    const ref = await firestore.collection('users').add(user);
-    const doc = await ref.get();
+    // Use the user's ID as the document ID for consistency
+    const userRef = firestore.collection('users').doc(user.id);
+    await userRef.set(user);
+    const doc = await userRef.get();
+    console.log('✅ User saved to Firebase:', user.email, 'with ID:', user.id);
     return { id: doc.id, ...doc.data() };
   }
   db.state.users.push(user);
@@ -74,6 +115,11 @@ async function updateUser(id, updates) {
   if (useFirebase) {
     await firestore.collection('users').doc(id).set(updates, { merge: true });
     const doc = await firestore.collection('users').doc(id).get();
+    if (!doc.exists) {
+      console.warn('⚠️ User document not found in Firebase:', id);
+      return null;
+    }
+    console.log('✅ User updated in Firebase:', id);
     return { id: doc.id, ...doc.data() };
   }
   const idx = db.state.users.findIndex(u => u.id === id);
@@ -223,9 +269,10 @@ async function createPasswordResetToken(userId, token, expiresAt) {
     await firestore.collection('passwordResetTokens').add({
       userId,
       token,
-      expiresAt,
+      expiresAt: expiresAt.toISOString ? expiresAt.toISOString() : expiresAt,
       createdAt: new Date().toISOString()
     });
+    console.log('✅ Password reset token saved to Firebase for user:', userId);
     return { userId, token, expiresAt };
   }
   

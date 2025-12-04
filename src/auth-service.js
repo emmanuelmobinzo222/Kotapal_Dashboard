@@ -70,7 +70,9 @@ async function sendPasswordResetEmail(email, resetToken, userId) {
     throw new Error('Email service not configured');
   }
 
-  const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:3001'}/reset-password?token=${resetToken}&userId=${userId}`;
+  // Use the correct frontend URL (production or development)
+  const frontendUrl = process.env.FRONTEND_URL || process.env.BASE_URL || 'http://localhost:3001';
+  const resetUrl = `${frontendUrl}?token=${resetToken}&userId=${userId}`;
   
   const transporter = createTransporter();
   
