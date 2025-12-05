@@ -2028,7 +2028,19 @@
                 }
                 
                 try {
+                    // Auto-detect API base URL
+                    let API_BASE = '';
+                    if (window.location.hostname === 'kotapal.com' || window.location.hostname === 'www.kotapal.com') {
+                        API_BASE = window.location.origin;
+                    } else if (window.location.origin === 'file://') {
+                        API_BASE = 'http://localhost:3000';
+                    } else {
+                        API_BASE = window.location.origin;
+                    }
+                    
                     console.log('🌐 Attempting server signup via API:', API_BASE + '/api/auth/register');
+                    console.log('🌐 Signup data:', { name, email: email.toLowerCase().trim(), plan });
+                    
                     const resp = await apiRequest('/api/auth/register', {
                         method: 'POST',
                         body: {
@@ -2041,6 +2053,13 @@
                     });
                     
                     console.log('✅ Server signup success:', resp);
+                    console.log('✅ User ID:', resp.user?.id);
+                    console.log('✅ User email:', resp.user?.email);
+                    
+                    if (!resp.user || !resp.user.id) {
+                        throw new Error('Server response missing user data');
+                    }
+                    
                     newUser = resp.user;
                     localStorage.setItem('kotaToken', resp.token);
                     localStorage.setItem('kotaUser', JSON.stringify(newUser));
@@ -2057,8 +2076,12 @@
                     if (status) { status.textContent = ''; }
                     return;
                 } catch (apiError) {
-                    console.warn('Server signup failed, trying Firebase client-side:', apiError.message);
-                    // Continue to fallback options
+                    console.error('❌ Server signup failed:', apiError);
+                    console.error('❌ Error message:', apiError.message);
+                    console.error('❌ Error stack:', apiError.stack);
+                    console.warn('⚠️ Server signup failed, trying Firebase client-side fallback');
+                    // Continue to fallback options - but this should NOT happen if server is working
+                    showNotification('Server signup failed: ' + apiError.message + '. Trying alternative method...', 'warning', 'Signup Warning');
                 }
 
                 // PRIORITY 2: Fallback to Firebase client-side if server API not available

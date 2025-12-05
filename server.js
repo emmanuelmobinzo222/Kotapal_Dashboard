@@ -260,10 +260,31 @@ app.post('/api/auth/register', async (req, res) => {
     // Normalize email (lowercase and trim) for consistency
     newUser.email = newUser.email.toLowerCase().trim();
     
+    console.log('📝 ===== USER REGISTRATION START =====');
     console.log('📝 Creating user in database:', newUser.email);
     console.log('📝 User data:', { id: newUser.id, name: newUser.name, email: newUser.email, plan: newUser.plan });
-    const createdUser = await store.createUser(newUser);
-    console.log('✅ User created successfully:', createdUser.email, 'ID:', createdUser.id);
+    
+    try {
+      const createdUser = await store.createUser(newUser);
+      console.log('✅ User created successfully:', createdUser.email, 'ID:', createdUser.id);
+      console.log('✅ ===== USER REGISTRATION SUCCESS =====');
+      
+      // Verify the user was actually saved (especially for Firebase)
+      if (createdUser) {
+        const verifyUser = await store.getUserByEmail(createdUser.email);
+        if (verifyUser) {
+          console.log('✅ VERIFICATION: User found in database after creation');
+          console.log('✅ VERIFICATION: User ID matches:', verifyUser.id === createdUser.id);
+        } else {
+          console.error('❌ VERIFICATION FAILED: User NOT found in database after creation!');
+          console.error('❌ This indicates the user was NOT saved to Firebase/server!');
+        }
+      }
+    } catch (createError) {
+      console.error('❌ ERROR creating user in database:', createError);
+      console.error('❌ Error stack:', createError.stack);
+      throw createError; // Re-throw to return 500 error
+    }
 
     // Generate JWT
     const token = jwt.sign(
@@ -295,11 +316,19 @@ app.post('/api/auth/login', async (req, res) => {
 
     if (errors.length) return res.status(400).json({ error: errors.join(', ') });
 
+    // Normalize email (lowercase and trim) for consistency
+    const normalizedEmail = email.toLowerCase().trim();
+    console.log('🔐 Login attempt for email:', normalizedEmail);
+    console.log('🔐 Original email from request:', email);
+
     // Find user
-    const user = await store.getUserByEmail(email);
+    const user = await store.getUserByEmail(normalizedEmail);
     if (!user) {
+      console.log('❌ User not found in database for email:', normalizedEmail);
       return res.status(401).json({ error: 'No account found with this email address' });
     }
+    
+    console.log('✅ User found:', user.email, 'ID:', user.id);
 
     // Verify password
     const isPasswordValid = await bcrypt.compare(password, user.password);

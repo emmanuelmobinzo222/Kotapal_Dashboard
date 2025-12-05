@@ -76,17 +76,28 @@ const db = require('./db');
 
 // Users
 async function getUserByEmail(email) {
+  // Normalize email for consistent lookup
+  const normalizedEmail = email.toLowerCase().trim();
+  
   if (useFirebase) {
-    const snap = await firestore.collection('users').where('email', '==', email.toLowerCase().trim()).limit(1).get();
+    console.log('🔍 Searching Firebase for email:', normalizedEmail);
+    const snap = await firestore.collection('users').where('email', '==', normalizedEmail).limit(1).get();
     if (snap.empty) {
-      console.log('🔍 User not found in Firebase:', email);
+      console.log('❌ User not found in Firebase for email:', normalizedEmail);
+      // Also try to list some users to debug (remove in production)
+      try {
+        const allUsers = await firestore.collection('users').limit(5).get();
+        console.log('📋 Sample users in Firebase:', allUsers.docs.map(doc => ({ id: doc.id, email: doc.data().email })));
+      } catch (err) {
+        console.log('Could not list users for debugging');
+      }
       return null;
     }
     const user = { id: snap.docs[0].id, ...snap.docs[0].data() };
-    console.log('✅ User found in Firebase:', email, 'ID:', user.id);
+    console.log('✅ User found in Firebase:', normalizedEmail, 'ID:', user.id);
     return user;
   }
-  return db.state.users.find(u => u.email === email) || null;
+  return db.state.users.find(u => u.email && u.email.toLowerCase().trim() === normalizedEmail) || null;
 }
 
 async function getUserById(id) {
@@ -98,14 +109,48 @@ async function getUserById(id) {
 }
 
 async function createUser(user) {
-  if (useFirebase) {
-    // Use the user's ID as the document ID for consistency
-    const userRef = firestore.collection('users').doc(user.id);
-    await userRef.set(user);
-    const doc = await userRef.get();
-    console.log('✅ User saved to Firebase:', user.email, 'with ID:', user.id);
-    return { id: doc.id, ...doc.data() };
+  // Ensure email is normalized (lowercase and trim) for consistency
+  if (user.email) {
+    user.email = user.email.toLowerCase().trim();
   }
+  
+  if (useFirebase) {
+    try {
+      console.log('🔥 Saving user to Firebase Firestore...');
+      console.log('🔥 User ID:', user.id);
+      console.log('🔥 User email:', user.email);
+      
+      // Use the user's ID as the document ID for consistency
+      const userRef = firestore.collection('users').doc(user.id);
+      await userRef.set(user);
+      
+      // Verify the save
+      const doc = await userRef.get();
+      if (!doc.exists) {
+        throw new Error('Failed to save user to Firebase - document does not exist after save');
+      }
+      
+      const savedData = doc.data();
+      console.log('✅ User saved to Firebase successfully!');
+      console.log('✅ Firebase document path: users/' + user.id);
+      console.log('✅ Saved email:', savedData.email);
+      console.log('✅ Saved name:', savedData.name);
+      
+      return { id: doc.id, ...savedData };
+    } catch (firebaseError) {
+      console.error('❌ ERROR saving user to Firebase:', firebaseError);
+      console.error('❌ Error message:', firebaseError.message);
+      console.error('❌ Error code:', firebaseError.code);
+      throw firebaseError; // Re-throw so server knows it failed
+    }
+  }
+  
+  // Ensure email is normalized for local DB too
+  if (user.email) {
+    user.email = user.email.toLowerCase().trim();
+  }
+  console.log('💾 Saving user to local JSON database (offline mode)');
+  console.log('⚠️ WARNING: User is NOT being saved to Firebase/server!');
   db.state.users.push(user);
   db.save();
   return user;
