@@ -1811,7 +1811,18 @@
         });
 
         // Landing auth wiring to backend
-        let API_BASE = 'http://localhost:3000';
+        // Auto-detect API base URL
+        function getApiBase() {
+            if (window.location.hostname === 'kotapal.com' || window.location.hostname === 'www.kotapal.com') {
+                return window.location.origin;
+            } else if (window.location.origin === 'file://') {
+                return 'http://localhost:3000';
+            } else {
+                return window.location.origin;
+            }
+        }
+        
+        let API_BASE = getApiBase();
         
         console.log('API_BASE set to:', API_BASE);
         console.log('Current location:', location.href);
@@ -1821,7 +1832,9 @@
             const token = localStorage.getItem('kotaToken');
             if (token) headers['Authorization'] = 'Bearer ' + token;
             
-            const url = API_BASE + path;
+            // Use dynamic API_BASE detection
+            const apiBase = getApiBase();
+            const url = apiBase + path;
             console.log(`${method} Request:`, url);
             if (body) console.log('Body:', body);
             
@@ -1855,7 +1868,7 @@
             }
         }
 
-        // Handle login (landing modal) - Firebase → local DB fallback
+        // Handle login (landing modal) - Server API → Firebase → local DB fallback
         document.querySelector('#loginFormInner').addEventListener('submit', async function(e) {
             e.preventDefault();
             const email = document.getElementById('loginEmail').value.trim();
@@ -1870,8 +1883,46 @@
             try {
                 let user = null;
 
-                // 1) Try Firebase Auth first (global cloud users)
-                if (firebaseAuth) {
+                // PRIORITY 1: Try server API first (for global access from anywhere)
+                // Auto-detect API base URL
+                let API_BASE = '';
+                if (window.location.hostname === 'kotapal.com' || window.location.hostname === 'www.kotapal.com') {
+                    API_BASE = window.location.origin;
+                } else if (window.location.origin === 'file://') {
+                    API_BASE = 'http://localhost:3000';
+                } else {
+                    API_BASE = window.location.origin;
+                }
+                
+                try {
+                    console.log('🌐 Attempting server login via API:', API_BASE + '/api/auth/login');
+                    const resp = await apiRequest('/api/auth/login', {
+                        method: 'POST',
+                        body: { email, password }
+                    });
+                    
+                    console.log('✅ Server login success:', resp);
+                    user = resp.user;
+                    localStorage.setItem('kotaToken', resp.token);
+                    localStorage.setItem('kotaUser', JSON.stringify(user));
+                    localStorage.setItem('currentUser', JSON.stringify(user));
+                    sessionStorage.setItem('currentUser', JSON.stringify(user));
+                    
+                    showNotification('Welcome back ' + user.name + '!', 'success', 'Welcome!');
+                    setTimeout(() => {
+                        closeAuthModal();
+                        window.location.href = 'dashboard.html#dashboard';
+                    }, 1000);
+                    
+                    btn.disabled = false; btn.textContent = 'Login';
+                    return;
+                } catch (apiError) {
+                    console.warn('Server login failed, trying Firebase client-side:', apiError.message);
+                    // Continue to fallback options
+                }
+
+                // PRIORITY 2: Fallback to Firebase Auth if server API not available
+                if (!user && firebaseAuth) {
                     try {
                         const cred = await firebaseAuth.signInWithEmailAndPassword(email, password);
                         console.log('✅ Firebase login success:', cred.user.uid);
@@ -1899,7 +1950,7 @@
                     }
                 }
 
-                // 2) Fallback to local UserDatabase if Firebase not available or failed
+                // PRIORITY 3: Fallback to local UserDatabase if all else fails
                 if (!user) {
                     user = window.userDB.authenticateUser(email, password);
                     console.log('✅ Local DB login success:', user.email);
@@ -1912,7 +1963,7 @@
                 localStorage.setItem('kotaUser', JSON.stringify(user));
                 localStorage.setItem('kotaToken', 'db_token_' + btoa(user.email));
                 
-                showNotification('Welcome back ' + user.name + '!', 'success', 'Welcome!');
+                showNotification('Welcome back ' + user.name + '! (Offline mode - data saved locally only)', 'warning', 'Welcome!');
                 setTimeout(() => {
                     closeAuthModal();
                     window.location.href = 'dashboard.html#dashboard';
@@ -1921,9 +1972,9 @@
             } catch (error) {
                 console.log('❌ Login failed:', error.message);
                 
-                if (error.message === 'User not found') {
+                if (error.message === 'User not found' || error.message.includes('No account found')) {
                     showNotification('No account found with email: ' + email + '. Please click "Get Started" to create an account first.', 'error', 'Account Not Found');
-                } else if (error.message === 'Invalid password') {
+                } else if (error.message === 'Invalid password' || error.message.includes('Incorrect password')) {
                     showNotification('Wrong password. Please try again.', 'error', 'Login Failed');
                 } else {
                     showNotification('Login failed: ' + error.message, 'error', 'Login Error');
@@ -1933,7 +1984,7 @@
             }
         });
 
-        // Handle signup (landing modal) - Firebase → local DB fallback
+        // Handle signup (landing modal) - Server API → Firebase → local DB fallback
         document.querySelector('#signupFormInner').addEventListener('submit', async function(e) {
             e.preventDefault();
             const name = document.getElementById('signupName').value;
@@ -1965,8 +2016,53 @@
 
                 let newUser = null;
 
-                // 1) Try Firebase signup first
-                if (firebaseAuth) {
+                // PRIORITY 1: Try server API first (for global access from anywhere)
+                // Auto-detect API base URL
+                let API_BASE = '';
+                if (window.location.hostname === 'kotapal.com' || window.location.hostname === 'www.kotapal.com') {
+                    API_BASE = window.location.origin;
+                } else if (window.location.origin === 'file://') {
+                    API_BASE = 'http://localhost:3000';
+                } else {
+                    API_BASE = window.location.origin;
+                }
+                
+                try {
+                    console.log('🌐 Attempting server signup via API:', API_BASE + '/api/auth/register');
+                    const resp = await apiRequest('/api/auth/register', {
+                        method: 'POST',
+                        body: {
+                            name,
+                            email: email.toLowerCase().trim(),
+                            password,
+                            website: website || '',
+                            plan
+                        }
+                    });
+                    
+                    console.log('✅ Server signup success:', resp);
+                    newUser = resp.user;
+                    localStorage.setItem('kotaToken', resp.token);
+                    localStorage.setItem('kotaUser', JSON.stringify(newUser));
+                    localStorage.setItem('currentUser', JSON.stringify(newUser));
+                    sessionStorage.setItem('currentUser', JSON.stringify(newUser));
+                    
+                    showNotification('Account created successfully! Welcome ' + name + '!', 'success', 'Welcome!');
+                    setTimeout(() => {
+                        closeAuthModal();
+                        window.location.href = 'dashboard.html#dashboard';
+                    }, 1500);
+                    
+                    btn.disabled = false; btn.textContent = 'Sign Up';
+                    if (status) { status.textContent = ''; }
+                    return;
+                } catch (apiError) {
+                    console.warn('Server signup failed, trying Firebase client-side:', apiError.message);
+                    // Continue to fallback options
+                }
+
+                // PRIORITY 2: Fallback to Firebase client-side if server API not available
+                if (!newUser && firebaseAuth) {
                     try {
                         const cred = await firebaseAuth.createUserWithEmailAndPassword(email, password);
                         const uid = cred.user.uid;
@@ -1992,13 +2088,13 @@
                             settings: { notifications: true, theme: 'light' }
                         };
 
-                        console.log('✅ Firebase user created:', newUser.email);
+                        console.log('✅ Firebase client-side user created:', newUser.email);
                     } catch (firebaseError) {
                         console.warn('Firebase signup failed, falling back to local DB:', firebaseError.message);
                     }
                 }
 
-                // 2) Fallback to local UserDatabase if Firebase not available or failed
+                // PRIORITY 3: Fallback to local UserDatabase if all else fails
                 if (!newUser) {
                     const userData = {
                         name: name,
@@ -2022,7 +2118,7 @@
                 localStorage.setItem('kotaUser', JSON.stringify(newUser));
                 localStorage.setItem('kotaToken', 'db_token_' + btoa(newUser.email));
                 
-                showNotification('Account created successfully! Welcome ' + name + '!', 'success', 'Welcome!');
+                showNotification('Account created successfully! Welcome ' + name + '! (Offline mode - data saved locally only)', 'warning', 'Welcome!');
                 setTimeout(() => {
                     closeAuthModal();
                     window.location.href = 'dashboard.html#dashboard';
@@ -2031,7 +2127,7 @@
             } catch (err) {
                 console.error('Signup error:', err);
                 
-                if (err.message.includes('already exists')) {
+                if (err.message.includes('already exists') || err.message.includes('already registered')) {
                     showNotification('An account with this email already exists. Please try logging in instead.', 'warning', 'Account Exists');
                 } else {
                     showNotification('Signup failed: ' + (err.message || 'Unknown error'), 'error', 'Signup Error');

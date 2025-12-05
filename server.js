@@ -257,7 +257,11 @@ app.post('/api/auth/register', async (req, res) => {
       }
     };
 
+    // Normalize email (lowercase and trim) for consistency
+    newUser.email = newUser.email.toLowerCase().trim();
+    
     console.log('📝 Creating user in database:', newUser.email);
+    console.log('📝 User data:', { id: newUser.id, name: newUser.name, email: newUser.email, plan: newUser.plan });
     const createdUser = await store.createUser(newUser);
     console.log('✅ User created successfully:', createdUser.email, 'ID:', createdUser.id);
 
