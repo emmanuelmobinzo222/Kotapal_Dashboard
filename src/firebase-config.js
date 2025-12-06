@@ -6,14 +6,23 @@ let firestore = null;
 let FieldValue = null;
 
 function isFirebaseConfigured() {
-  return !!(
-    process.env.FIREBASE_PROJECT_ID && 
-    process.env.FIREBASE_PROJECT_ID !== 'your-firebase-project-id' &&
-    (
-      process.env.GOOGLE_APPLICATION_CREDENTIALS ||
-      process.env.FIREBASE_ADMIN_SDK_KEY
-    )
-  );
+  const hasProjectId = process.env.FIREBASE_PROJECT_ID && 
+    process.env.FIREBASE_PROJECT_ID !== 'your-firebase-project-id';
+  const hasCredentials = process.env.GOOGLE_APPLICATION_CREDENTIALS ||
+    process.env.FIREBASE_ADMIN_SDK_KEY ||
+    process.env.FIREBASE_CONFIG;
+  
+  const isConfigured = !!(hasProjectId && hasCredentials);
+  
+  if (!isConfigured) {
+    console.log('🔍 Firebase config check:');
+    console.log('  - FIREBASE_PROJECT_ID:', process.env.FIREBASE_PROJECT_ID || 'NOT SET');
+    console.log('  - GOOGLE_APPLICATION_CREDENTIALS:', process.env.GOOGLE_APPLICATION_CREDENTIALS || 'NOT SET');
+    console.log('  - FIREBASE_ADMIN_SDK_KEY:', process.env.FIREBASE_ADMIN_SDK_KEY ? 'SET' : 'NOT SET');
+    console.log('  - FIREBASE_CONFIG:', process.env.FIREBASE_CONFIG ? 'SET' : 'NOT SET');
+  }
+  
+  return isConfigured;
 }
 
 async function initFirebase() {

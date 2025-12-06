@@ -151,6 +151,8 @@ async function createUser(user) {
   }
   console.log('💾 Saving user to local JSON database (offline mode)');
   console.log('⚠️ WARNING: User is NOT being saved to Firebase/server!');
+  console.log('⚠️ WARNING: This user will only be available on this device!');
+  console.log('⚠️ WARNING: To enable Firebase, check your .env file and restart the server');
   db.state.users.push(user);
   db.save();
   return user;
@@ -452,8 +454,17 @@ async function getAnalyticsData(userId, filters = {}) {
   };
 }
 
+function getFirebaseStatus() {
+  return {
+    isUsingFirebase: useFirebase,
+    hasFirestore: !!firestore,
+    envCheck: hasFirebaseEnv()
+  };
+}
+
 module.exports = {
   initFirebase,
+  getFirebaseStatus,
   getUserByEmail,
   getUserById,
   createUser,

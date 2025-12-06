@@ -86,13 +86,21 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
     
     if (dbType === 'Local JSON' && hasFirebaseConfig) {
       try {
+        console.log('🔄 Attempting to initialize Firebase...');
         const firebaseStoreInitialized = await store.initFirebase();
         if (firebaseStoreInitialized) {
           dbType = 'Firebase';
+          console.log('✅ Firebase is now active - all data will be saved to Firebase Firestore');
+        } else {
+          console.log('⚠️ Firebase initialization returned false - using local database');
         }
       } catch (error) {
-        console.log('Firebase unavailable (offline?), using local database');
+        console.error('❌ Firebase initialization error:', error.message);
+        console.error('❌ Error stack:', error.stack);
+        console.log('⚠️ Firebase unavailable, using local database');
       }
+    } else if (!hasFirebaseConfig) {
+      console.log('⚠️ Firebase not configured - check .env file for FIREBASE_PROJECT_ID and GOOGLE_APPLICATION_CREDENTIALS');
     }
     
     // Ensure local database is always initialized for offline support
@@ -104,6 +112,25 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
     
     console.log('Database initialized - using:', dbType);
     console.log('✓ Offline login supported with local database');
+    
+    // Log Firebase status for debugging
+    if (dbType === 'Firebase') {
+      const fbStatus = store.getFirebaseStatus();
+      console.log('✅ Firebase Status:', {
+        isUsingFirebase: fbStatus.isUsingFirebase,
+        hasFirestore: fbStatus.hasFirestore
+      });
+    } else {
+      const fbStatus = store.getFirebaseStatus();
+      console.log('⚠️ Firebase Status:', {
+        isUsingFirebase: fbStatus.isUsingFirebase,
+        hasFirestore: fbStatus.hasFirestore,
+        envCheck: fbStatus.envCheck
+      });
+      if (!fbStatus.envCheck) {
+        console.log('⚠️ Firebase environment variables not properly configured');
+      }
+    }
   } catch (error) {
     console.error('Database initialization error:', error);
     console.log('Using Local JSON database (offline mode)');
