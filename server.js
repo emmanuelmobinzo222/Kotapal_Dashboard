@@ -84,47 +84,23 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
       }
     }
     
-    // PRIORITY: Firebase is PRIMARY storage when firebase-key.json exists
-    if (hasFirebaseConfig) {
+    if (dbType === 'Local JSON' && hasFirebaseConfig) {
       try {
-        console.log('🔄 Initializing Firebase as PRIMARY storage...');
-        console.log('📁 Checking for firebase-key.json...');
-        
+        console.log('🔄 Attempting to initialize Firebase...');
         const firebaseStoreInitialized = await store.initFirebase();
         if (firebaseStoreInitialized) {
           dbType = 'Firebase';
-          console.log('');
-          console.log('═══════════════════════════════════════════════════════');
-          console.log('   ✅ FIREBASE IS PRIMARY STORAGE');
-          console.log('═══════════════════════════════════════════════════════');
-          console.log('🔥 All data will be saved to Firebase Firestore');
-          console.log('🌐 Data accessible from ANY device, ANY location');
-          console.log('💾 Local storage is backup only');
-          console.log('═══════════════════════════════════════════════════════');
-          console.log('');
+          console.log('✅ Firebase is now active - all data will be saved to Firebase Firestore');
         } else {
-          console.log('');
-          console.log('⚠️ Firebase initialization returned false');
-          console.log('⚠️ Check that firebase-key.json exists and is valid');
-          console.log('⚠️ Using local database as fallback');
-          console.log('');
+          console.log('⚠️ Firebase initialization returned false - using local database');
         }
       } catch (error) {
-        console.error('');
-        console.error('❌ CRITICAL: Firebase initialization failed!');
-        console.error('❌ Error:', error.message);
-        console.error('❌ Stack:', error.stack);
-        console.error('⚠️ Using local database as fallback');
-        console.error('⚠️ Data will NOT be accessible from other devices');
-        console.error('');
+        console.error('❌ Firebase initialization error:', error.message);
+        console.error('❌ Error stack:', error.stack);
+        console.log('⚠️ Firebase unavailable, using local database');
       }
-    } else {
-      console.log('');
-      console.log('⚠️ Firebase not configured');
-      console.log('⚠️ Required: FIREBASE_PROJECT_ID and GOOGLE_APPLICATION_CREDENTIALS');
-      console.log('⚠️ Check .env file and ensure firebase-key.json exists');
-      console.log('⚠️ Using local JSON database (offline mode only)');
-      console.log('');
+    } else if (!hasFirebaseConfig) {
+      console.log('⚠️ Firebase not configured - check .env file for FIREBASE_PROJECT_ID and GOOGLE_APPLICATION_CREDENTIALS');
     }
     
     // Ensure local database is always initialized for offline support
@@ -311,66 +287,25 @@ app.post('/api/auth/register', async (req, res) => {
     // Normalize email (lowercase and trim) for consistency
     newUser.email = newUser.email.toLowerCase().trim();
     
-    console.log('');
-    console.log('═══════════════════════════════════════════════════════');
-    console.log('   📝 USER REGISTRATION START');
-    console.log('═══════════════════════════════════════════════════════');
-    console.log('📧 Email:', newUser.email);
-    console.log('👤 Name:', newUser.name);
-    console.log('🆔 User ID:', newUser.id);
-    console.log('📦 Plan:', newUser.plan);
-    
-    // Check Firebase status before creating user
-    const fbStatus = store.getFirebaseStatus();
-    if (fbStatus.isUsingFirebase) {
-      console.log('🔥 Storage: Firebase Firestore (PRIMARY)');
-      console.log('🌐 Data will be accessible from ANY device, ANY location');
-    } else {
-      console.log('💾 Storage: Local JSON (FALLBACK ONLY)');
-      console.log('⚠️  Data will ONLY be available on this device!');
-    }
-    console.log('═══════════════════════════════════════════════════════');
-    console.log('');
+    console.log('📝 ===== USER REGISTRATION START =====');
+    console.log('📝 Creating user in database:', newUser.email);
+    console.log('📝 User data:', { id: newUser.id, name: newUser.name, email: newUser.email, plan: newUser.plan });
     
     try {
       const createdUser = await store.createUser(newUser);
       console.log('✅ User created successfully:', createdUser.email, 'ID:', createdUser.id);
+      console.log('✅ ===== USER REGISTRATION SUCCESS =====');
       
-      // CRITICAL: Verify the user was actually saved to Firebase
-      console.log('');
-      console.log('🔍 Verifying user was saved to database...');
-      const verifyUser = await store.getUserByEmail(createdUser.email);
-      if (verifyUser) {
-        console.log('');
-        console.log('═══════════════════════════════════════════════════════');
-        console.log('   ✅ VERIFICATION SUCCESSFUL');
-        console.log('═══════════════════════════════════════════════════════');
-        console.log('✅ User found in database after creation');
-        console.log('🆔 User ID:', verifyUser.id);
-        console.log('📧 User email:', verifyUser.email);
-        console.log('👤 User name:', verifyUser.name);
-        
-        const fbStatus = store.getFirebaseStatus();
-        if (fbStatus.isUsingFirebase) {
-          console.log('🔥 Storage: Firebase Firestore');
-          console.log('🌐 User can now log in from ANY device, ANY location worldwide');
-          console.log('🌐 Works from South Africa, USA, Europe, Asia, etc.');
+      // Verify the user was actually saved (especially for Firebase)
+      if (createdUser) {
+        const verifyUser = await store.getUserByEmail(createdUser.email);
+        if (verifyUser) {
+          console.log('✅ VERIFICATION: User found in database after creation');
+          console.log('✅ VERIFICATION: User ID matches:', verifyUser.id === createdUser.id);
         } else {
-          console.log('💾 Storage: Local JSON (offline mode)');
-          console.log('⚠️  User can ONLY log in on this device');
+          console.error('❌ VERIFICATION FAILED: User NOT found in database after creation!');
+          console.error('❌ This indicates the user was NOT saved to Firebase/server!');
         }
-        console.log('═══════════════════════════════════════════════════════');
-        console.log('');
-      } else {
-        console.error('');
-        console.error('═══════════════════════════════════════════════════════');
-        console.error('   ❌ VERIFICATION FAILED');
-        console.error('═══════════════════════════════════════════════════════');
-        console.error('❌ User NOT found in database after creation!');
-        console.error('❌ This indicates the user was NOT saved to Firebase/server!');
-        console.error('❌ Check Firebase connection and credentials');
-        console.error('═══════════════════════════════════════════════════════');
-        console.error('');
       }
     } catch (createError) {
       console.error('❌ ERROR creating user in database:', createError);
@@ -622,32 +557,7 @@ app.put('/api/user/profile', authenticateToken, async (req, res) => {
     if (website !== undefined) updates.website = sanitizeString(website);
     if (settings !== undefined) updates.settings = settings;
 
-    console.log('');
-    console.log('═══════════════════════════════════════════════════════');
-    console.log('   📝 PROFILE UPDATE START');
-    console.log('═══════════════════════════════════════════════════════');
-    const fbStatus = store.getFirebaseStatus();
-    if (fbStatus.isUsingFirebase) {
-      console.log('🔥 Storage: Firebase Firestore (PRIMARY)');
-      console.log('🌐 Updates will be accessible from ANY device, ANY location');
-    } else {
-      console.log('💾 Storage: Local JSON (FALLBACK ONLY)');
-      console.log('⚠️  Updates will ONLY be available on this device!');
-    }
-    console.log('📝 Updating fields:', Object.keys(updates).join(', '));
-    console.log('═══════════════════════════════════════════════════════');
-    console.log('');
-
     const updated = await store.updateUser(req.user.id, updates);
-    
-    if (updated) {
-      const fbStatusAfter = store.getFirebaseStatus();
-      if (fbStatusAfter.isUsingFirebase) {
-        console.log('✅ Changes saved to Firebase Firestore');
-        console.log('✅ Changes accessible from ANY device, ANY location worldwide');
-      }
-    }
-    
     res.json(updated);
   } catch (error) {
     console.error('Update profile error:', error);

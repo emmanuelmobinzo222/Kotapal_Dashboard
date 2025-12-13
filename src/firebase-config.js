@@ -40,8 +40,11 @@ async function initFirebase() {
 
     // Option 1: Service account JSON file
     if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
-      const serviceAccount = require(process.env.GOOGLE_APPLICATION_CREDENTIALS);
+      const path = require('path');
+      const credentialsPath = path.resolve(process.cwd(), process.env.GOOGLE_APPLICATION_CREDENTIALS);
+      const serviceAccount = require(credentialsPath);
       credential = admin.credential.cert(serviceAccount);
+      console.log('📁 Using Firebase credentials from file:', credentialsPath);
     }
     // Option 2: Base64 encoded key (for deployment)
     else if (process.env.FIREBASE_ADMIN_SDK_KEY) {

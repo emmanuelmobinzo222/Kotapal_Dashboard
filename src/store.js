@@ -19,49 +19,37 @@ function hasFirebaseEnv() {
 async function initFirebase() {
   if (!hasFirebaseEnv()) {
     console.log('⚠️ Firebase not configured - missing environment variables');
-    console.log('📋 Required: FIREBASE_PROJECT_ID and GOOGLE_APPLICATION_CREDENTIALS (or firebase-key.json)');
     return false;
   }
   try {
     const admin = require('firebase-admin');
     let credential;
-    let credentialSource = '';
     
-    // Option 1: Service account JSON file (PRIMARY METHOD - firebase-key.json)
+    // Option 1: Service account JSON file
     if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
-      const credPath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
-      const fs = require('fs');
       const path = require('path');
-      
-      // Check if file exists
-      if (!fs.existsSync(credPath)) {
-        throw new Error(`Firebase credentials file not found: ${credPath}`);
-      }
-      
-      const serviceAccount = require(credPath);
+      const credentialsPath = path.resolve(process.cwd(), process.env.GOOGLE_APPLICATION_CREDENTIALS);
+      const serviceAccount = require(credentialsPath);
       credential = admin.credential.cert(serviceAccount);
-      credentialSource = 'firebase-key.json file';
-      console.log('📁 [PRIMARY] Using Firebase credentials from:', credPath);
-      console.log('📁 Project ID from key file:', serviceAccount.project_id);
+      console.log('📁 Using Firebase credentials from file:', credentialsPath);
     }
     // Option 2: Base64 encoded key (for deployment)
     else if (process.env.FIREBASE_ADMIN_SDK_KEY) {
       const keyBuffer = Buffer.from(process.env.FIREBASE_ADMIN_SDK_KEY, 'base64');
       const serviceAccount = JSON.parse(keyBuffer.toString('utf-8'));
       credential = admin.credential.cert(serviceAccount);
-      credentialSource = 'base64 encoded key';
       console.log('🔑 Using Firebase credentials from base64 encoded key');
     }
     // Option 3: Direct JSON config in environment
     else if (process.env.FIREBASE_CONFIG) {
       const firebaseConfig = JSON.parse(process.env.FIREBASE_CONFIG);
       credential = admin.credential.cert(firebaseConfig);
-      credentialSource = 'FIREBASE_CONFIG environment variable';
       console.log('⚙️ Using Firebase credentials from FIREBASE_CONFIG');
     }
     
     if (!credential) {
-      throw new Error('No Firebase credential found. Check GOOGLE_APPLICATION_CREDENTIALS, FIREBASE_ADMIN_SDK_KEY, or FIREBASE_CONFIG');
+      console.warn('⚠️ No Firebase credential found, trying application default');
+      credential = admin.credential.applicationDefault();
     }
     
     if (!admin.apps.length) {
@@ -73,31 +61,13 @@ async function initFirebase() {
     firestore = admin.firestore();
     FieldValue = admin.firestore.FieldValue;
     useFirebase = true;
-    
-    console.log('');
-    console.log('═══════════════════════════════════════════════════════');
-    console.log('   ✅ FIREBASE FIRESTORE INITIALIZED (PRIMARY STORAGE)');
-    console.log('═══════════════════════════════════════════════════════');
-    console.log('📁 Credential source:', credentialSource);
-    console.log('🔥 Project ID:', process.env.FIREBASE_PROJECT_ID);
-    console.log('✅ Firestore ready - ALL data will be saved to Firebase');
-    console.log('✅ Data accessible from ANY device, ANY location worldwide');
-    console.log('✅ Local storage is backup only (Firebase is primary)');
-    console.log('═══════════════════════════════════════════════════════');
-    console.log('');
-    
+    console.log('✅ Firebase initialized successfully - Project ID:', process.env.FIREBASE_PROJECT_ID);
+    console.log('✅ Firestore ready - data will be saved to Firebase');
     return true;
   } catch (e) {
-    console.error('');
-    console.error('═══════════════════════════════════════════════════════');
-    console.error('   ❌ FIREBASE INITIALIZATION FAILED');
-    console.error('═══════════════════════════════════════════════════════');
-    console.error('❌ Error:', e.message);
-    console.error('❌ Stack:', e.stack);
-    console.error('⚠️  Falling back to local JSON database');
-    console.error('⚠️  Data will NOT be accessible from other devices');
-    console.error('═══════════════════════════════════════════════════════');
-    console.error('');
+    console.error('❌ Firebase init failed:', e.message);
+    console.error('Stack:', e.stack);
+    console.warn('⚠️ Falling back to local JSON database');
     useFirebase = false;
     return false;
   }
@@ -146,10 +116,9 @@ async function createUser(user) {
     user.email = user.email.toLowerCase().trim();
   }
   
-  // PRIMARY STORAGE: Firebase Firestore (when firebase-key.json exists)
   if (useFirebase) {
     try {
-      console.log('🔥 [PRIMARY] Saving user to Firebase Firestore...');
+      console.log('🔥 Saving user to Firebase Firestore...');
       console.log('🔥 User ID:', user.id);
       console.log('🔥 User email:', user.email);
       
@@ -157,95 +126,51 @@ async function createUser(user) {
       const userRef = firestore.collection('users').doc(user.id);
       await userRef.set(user);
       
-      // CRITICAL: Verify the save to Firebase
+      // Verify the save
       const doc = await userRef.get();
       if (!doc.exists) {
-        throw new Error('CRITICAL: Failed to save user to Firebase - document does not exist after save');
+        throw new Error('Failed to save user to Firebase - document does not exist after save');
       }
       
       const savedData = doc.data();
-      console.log('✅ [VERIFIED] User saved to Firebase Firestore successfully!');
+      console.log('✅ User saved to Firebase successfully!');
       console.log('✅ Firebase document path: users/' + user.id);
       console.log('✅ Saved email:', savedData.email);
       console.log('✅ Saved name:', savedData.name);
-      console.log('✅ Data is now accessible from ANY device, ANY location worldwide');
-      
-      // Also save to local as backup (but Firebase is primary)
-      try {
-        db.state.users.push(user);
-        db.save();
-        console.log('💾 Local backup saved (Firebase is primary)');
-      } catch (localError) {
-        console.warn('⚠️ Local backup failed (non-critical):', localError.message);
-      }
       
       return { id: doc.id, ...savedData };
     } catch (firebaseError) {
-      console.error('❌ CRITICAL ERROR: Failed to save user to Firebase!');
+      console.error('❌ ERROR saving user to Firebase:', firebaseError);
       console.error('❌ Error message:', firebaseError.message);
       console.error('❌ Error code:', firebaseError.code);
-      console.error('❌ Stack:', firebaseError.stack);
-      throw firebaseError; // Re-throw so server knows Firebase save failed
+      throw firebaseError; // Re-throw so server knows it failed
     }
   }
   
-  // FALLBACK ONLY: Local storage (when Firebase is not available)
   // Ensure email is normalized for local DB too
   if (user.email) {
     user.email = user.email.toLowerCase().trim();
   }
-  console.log('💾 [FALLBACK] Saving user to local JSON database (offline mode)');
-  console.log('⚠️ WARNING: Firebase is NOT configured or NOT available!');
+  console.log('💾 Saving user to local JSON database (offline mode)');
   console.log('⚠️ WARNING: User is NOT being saved to Firebase/server!');
   console.log('⚠️ WARNING: This user will only be available on this device!');
-  console.log('⚠️ WARNING: To enable Firebase, ensure firebase-key.json exists and .env is configured');
+  console.log('⚠️ WARNING: To enable Firebase, check your .env file and restart the server');
   db.state.users.push(user);
   db.save();
   return user;
 }
 
 async function updateUser(id, updates) {
-  // PRIMARY STORAGE: Firebase Firestore
   if (useFirebase) {
-    try {
-      console.log('🔥 [PRIMARY] Updating user in Firebase Firestore:', id);
-      const userRef = firestore.collection('users').doc(id);
-      await userRef.set(updates, { merge: true });
-      
-      // Verify the update
-      const doc = await userRef.get();
-      if (!doc.exists) {
-        console.warn('⚠️ User document not found in Firebase:', id);
-        return null;
-      }
-      
-      const updatedData = doc.data();
-      console.log('✅ [VERIFIED] User updated in Firebase Firestore:', id);
-      console.log('✅ Updated fields:', Object.keys(updates).join(', '));
-      console.log('✅ Data is now accessible from ANY device, ANY location worldwide');
-      
-      // Also update local as backup
-      try {
-        const idx = db.state.users.findIndex(u => u.id === id);
-        if (idx !== -1) {
-          db.state.users[idx] = { ...db.state.users[idx], ...updates };
-          db.save();
-          console.log('💾 Local backup updated (Firebase is primary)');
-        }
-      } catch (localError) {
-        console.warn('⚠️ Local backup update failed (non-critical):', localError.message);
-      }
-      
-      return { id: doc.id, ...updatedData };
-    } catch (firebaseError) {
-      console.error('❌ CRITICAL ERROR: Failed to update user in Firebase!');
-      console.error('❌ Error:', firebaseError.message);
-      throw firebaseError;
+    await firestore.collection('users').doc(id).set(updates, { merge: true });
+    const doc = await firestore.collection('users').doc(id).get();
+    if (!doc.exists) {
+      console.warn('⚠️ User document not found in Firebase:', id);
+      return null;
     }
+    console.log('✅ User updated in Firebase:', id);
+    return { id: doc.id, ...doc.data() };
   }
-  
-  // FALLBACK: Local storage
-  console.log('💾 [FALLBACK] Updating user in local JSON database');
   const idx = db.state.users.findIndex(u => u.id === id);
   if (idx === -1) return null;
   db.state.users[idx] = { ...db.state.users[idx], ...updates };
@@ -312,40 +237,11 @@ async function getBlockById(blockId) {
 }
 
 async function createBlock(block) {
-  // PRIMARY STORAGE: Firebase Firestore
   if (useFirebase) {
-    try {
-      console.log('🔥 [PRIMARY] Saving block to Firebase Firestore...');
-      const ref = await firestore.collection('blocks').add(block);
-      const doc = await ref.get();
-      
-      // Verify the save
-      if (!doc.exists) {
-        throw new Error('Failed to save block to Firebase - document does not exist after save');
-      }
-      
-      console.log('✅ [VERIFIED] Block saved to Firebase Firestore:', doc.id);
-      console.log('✅ Data is now accessible from ANY device, ANY location worldwide');
-      
-      // Also save to local as backup
-      try {
-        db.state.blocks.push({ ...block, id: doc.id });
-        db.save();
-        console.log('💾 Local backup saved (Firebase is primary)');
-      } catch (localError) {
-        console.warn('⚠️ Local backup failed (non-critical):', localError.message);
-      }
-      
-      return { id: doc.id, ...doc.data() };
-    } catch (firebaseError) {
-      console.error('❌ CRITICAL ERROR: Failed to save block to Firebase!');
-      console.error('❌ Error:', firebaseError.message);
-      throw firebaseError;
-    }
+    const ref = await firestore.collection('blocks').add(block);
+    const doc = await ref.get();
+    return { id: doc.id, ...doc.data() };
   }
-  
-  // FALLBACK: Local storage
-  console.log('💾 [FALLBACK] Saving block to local JSON database');
   db.state.blocks.push(block);
   db.save();
   return block;
