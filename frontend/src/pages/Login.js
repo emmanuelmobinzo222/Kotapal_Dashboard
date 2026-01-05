@@ -37,26 +37,39 @@ function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        {/* Header */}
-        <div>
-          <div className="mx-auto h-12 w-12 bg-gradient-to-r from-primary-500 to-secondary-500 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-xl">K</span>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full">
+        <div className="bg-white rounded-2xl shadow-xl p-8">
+          {/* Offline indicator */}
+          {!isOnline && (
+            <div className="mb-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4 flex items-center">
+              <WifiOffIcon className="h-5 w-5 text-yellow-600 mr-3" />
+              <div>
+                <p className="text-sm font-medium text-yellow-800">You're offline</p>
+                <p className="text-xs text-yellow-600">You can still login with cached credentials</p>
+              </div>
+            </div>
+          )}
+          
+          {/* Header */}
+          <div className="text-center mb-8">
+            <div className="mx-auto h-14 w-14 bg-gradient-to-r from-primary-500 to-secondary-500 rounded-xl flex items-center justify-center mb-4">
+              <span className="text-white font-bold text-2xl">K</span>
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900">
+              Sign in to your account
+            </h2>
+            <p className="mt-2 text-sm text-gray-600">
+              Or{' '}
+              <Link
+                to="/register"
+                className="font-medium text-primary-600 hover:text-primary-500"
+                data-testid="register-link"
+              >
+                create a new account
+              </Link>
+            </p>
           </div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Sign in to your account
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Or{' '}
-            <Link
-              to="/register"
-              className="font-medium text-primary-600 hover:text-primary-500"
-            >
-              create a new account
-            </Link>
-          </p>
-        </div>
 
         {/* Form */}
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
