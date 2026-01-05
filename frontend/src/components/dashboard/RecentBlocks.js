@@ -99,7 +99,7 @@ function RecentBlocks({ blocks }) {
         ) : (
           <div className="px-6 py-8 text-center">
             <div className="text-gray-400 mb-2">
-              <Squares2X2Icon className="h-8 w-8 mx-auto" />
+              <LayoutGridIcon className="h-8 w-8 mx-auto" />
             </div>
             <p className="text-sm text-gray-500">No blocks created yet</p>
             <Link 
