@@ -47,32 +47,35 @@ function App() {
   }
 
   return (
-    <Routes>
-      {/* Public routes */}
-      <Route path="/login" element={!user ? <Login /> : <Navigate to="/dashboard" />} />
-      <Route path="/register" element={!user ? <Register /> : <Navigate to="/dashboard" />} />
-      <Route path="/forgot-password" element={!user ? <ForgotPassword /> : <Navigate to="/dashboard" />} />
-      <Route path="/reset-password" element={!user ? <ResetPassword /> : <Navigate to="/dashboard" />} />
-      
-      {/* Protected routes */}
-      <Route path="/" element={user ? <Layout /> : <Navigate to="/login" />}>
-        <Route index element={<Navigate to="/dashboard" />} />
-        <Route path="dashboard" element={<Dashboard />} />
-        <Route path="blocks" element={<Blocks />} />
-        <Route path="blocks/new" element={<CreateBlock />} />
-        <Route path="blocks/:id/edit" element={<EditBlock />} />
-        <Route path="products" element={<ProductLibrary />} />
-        <Route path="ai-assistant" element={<AIAssistant />} />
-        <Route path="analytics" element={<Analytics />} />
-        <Route path="integrations" element={<Integrations />} />
-        <Route path="settings" element={<Settings />} />
-        <Route path="billing" element={<Billing />} />
-        <Route path="account" element={<Account />} />
-      </Route>
-      
-      {/* Catch all route */}
-      <Route path="*" element={<Navigate to="/" />} />
-    </Routes>
+    <>
+      <OfflineIndicator />
+      <Routes>
+        {/* Public routes */}
+        <Route path="/login" element={!user ? <Login /> : <Navigate to="/dashboard" />} />
+        <Route path="/register" element={!user ? <Register /> : <Navigate to="/dashboard" />} />
+        <Route path="/forgot-password" element={!user ? <ForgotPassword /> : <Navigate to="/dashboard" />} />
+        <Route path="/reset-password" element={!user ? <ResetPassword /> : <Navigate to="/dashboard" />} />
+        
+        {/* Protected routes */}
+        <Route path="/" element={user ? <Layout /> : <Navigate to="/login" />}>
+          <Route index element={<Navigate to="/dashboard" />} />
+          <Route path="dashboard" element={<Dashboard />} />
+          <Route path="blocks" element={<Blocks />} />
+          <Route path="blocks/new" element={<CreateBlock />} />
+          <Route path="blocks/:id/edit" element={<EditBlock />} />
+          <Route path="products" element={<ProductLibrary />} />
+          <Route path="ai-assistant" element={<AIAssistant />} />
+          <Route path="analytics" element={<Analytics />} />
+          <Route path="integrations" element={<Integrations />} />
+          <Route path="settings" element={<Settings />} />
+          <Route path="billing" element={<Billing />} />
+          <Route path="account" element={<Account />} />
+        </Route>
+        
+        {/* Catch all route */}
+        <Route path="*" element={<Navigate to="/" />} />
+      </Routes>
+    </>
   );
 }
 
