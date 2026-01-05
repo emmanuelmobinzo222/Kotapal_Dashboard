@@ -2,22 +2,22 @@ import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { 
   HomeIcon, 
-  Squares2X2Icon, 
+  LayoutGridIcon, 
   PlusIcon,
-  ChartBarIcon,
-  CogIcon,
-  Sparkles,
-  XMarkIcon
+  BarChartIcon,
+  SettingsIcon,
+  SparklesIcon,
+  XIcon
 } from 'lucide-react';
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: HomeIcon },
-  { name: 'SmartBlocks', href: '/blocks', icon: Squares2X2Icon },
-  { name: 'Product Library', href: '/products', icon: Squares2X2Icon },
-  { name: 'AI Assistant', href: '/ai-assistant', icon: Sparkles },
-  { name: 'Analytics', href: '/analytics', icon: ChartBarIcon },
-  { name: 'Settings', href: '/settings', icon: CogIcon },
-  { name: 'Billing', href: '/billing', icon: CogIcon },
+  { name: 'SmartBlocks', href: '/blocks', icon: LayoutGridIcon },
+  { name: 'Product Library', href: '/products', icon: LayoutGridIcon },
+  { name: 'AI Assistant', href: '/ai-assistant', icon: SparklesIcon },
+  { name: 'Analytics', href: '/analytics', icon: BarChartIcon },
+  { name: 'Settings', href: '/settings', icon: SettingsIcon },
+  { name: 'Billing', href: '/billing', icon: SettingsIcon },
 ];
 
 function Sidebar({ isOpen, onClose }) {
