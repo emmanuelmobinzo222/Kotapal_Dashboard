@@ -2,19 +2,19 @@ import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { 
   HomeIcon, 
-  Squares2X2Icon, 
+  LayoutGridIcon, 
   PlusIcon,
-  ChartBarIcon,
-  CogIcon,
-  XMarkIcon
+  BarChartIcon,
+  SettingsIcon,
+  XIcon
 } from 'lucide-react';
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: HomeIcon },
-  { name: 'Blocks', href: '/blocks', icon: Squares2X2Icon },
+  { name: 'Blocks', href: '/blocks', icon: LayoutGridIcon },
   { name: 'Create Block', href: '/blocks/new', icon: PlusIcon },
-  { name: 'Analytics', href: '/analytics', icon: ChartBarIcon },
-  { name: 'Integrations', href: '/integrations', icon: CogIcon },
+  { name: 'Analytics', href: '/analytics', icon: BarChartIcon },
+  { name: 'Integrations', href: '/integrations', icon: SettingsIcon },
 ];
 
 function MobileMenu({ isOpen, onClose }) {
