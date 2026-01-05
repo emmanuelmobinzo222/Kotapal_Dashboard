@@ -4,16 +4,25 @@ import { BrowserRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from 'react-query';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './hooks/useAuth';
+import * as serviceWorkerRegistration from './serviceWorkerRegistration';
+import { offlineManager } from './firebase';
 import './index.css';
 import App from './App';
 
-// Create a client
+// Create a client with offline support
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      retry: 1,
+      retry: (failureCount, error) => {
+        // Don't retry if offline
+        if (!navigator.onLine || error?.isOffline) {
+          return false;
+        }
+        return failureCount < 2;
+      },
       refetchOnWindowFocus: false,
       staleTime: 5 * 60 * 1000, // 5 minutes
+      cacheTime: 30 * 60 * 1000, // 30 minutes - keep data longer for offline
     },
   },
 });
@@ -54,3 +63,22 @@ root.render(
     </QueryClientProvider>
   </React.StrictMode>
 );
+
+// Register service worker for offline support
+serviceWorkerRegistration.register({
+  onSuccess: () => {
+    console.log('KotaPal is ready for offline use!');
+  },
+  onUpdate: (registration) => {
+    console.log('New version available! Refresh to update.');
+    // Optionally show a notification to the user
+  }
+});
+
+// Setup message listener for service worker sync events
+serviceWorkerRegistration.setupSWMessageListener((data) => {
+  if (data.type === 'SYNC_PENDING') {
+    // Process any pending offline operations
+    offlineManager.processPendingQueue();
+  }
+});
