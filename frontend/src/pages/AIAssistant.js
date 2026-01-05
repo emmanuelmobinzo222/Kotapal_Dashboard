@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
 import { api } from '../utils/api';
 import { 
-  Sparkles, 
-  FileText, 
-  CheckCircle, 
-  AlertCircle, 
-  Lightbulb,
-  HelpCircle,
-  Copy,
-  RefreshCw,
-  Send
+  SparklesIcon, 
+  FileTextIcon, 
+  CheckCircleIcon, 
+  AlertCircleIcon, 
+  LightbulbIcon,
+  HelpCircleIcon,
+  CopyIcon,
+  RefreshCwIcon,
+  SendIcon
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
