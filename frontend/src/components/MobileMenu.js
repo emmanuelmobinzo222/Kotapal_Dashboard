@@ -46,7 +46,7 @@ function MobileMenu({ isOpen, onClose }) {
               className="-mr-2 p-2 text-gray-400 hover:text-gray-500"
               onClick={onClose}
             >
-              <XMarkIcon className="h-6 w-6" />
+              <XIcon className="h-6 w-6" />
             </button>
           </div>
 
