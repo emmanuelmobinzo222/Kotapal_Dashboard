@@ -6,7 +6,8 @@ import {
   TrendingUpIcon,
   MoreHorizontalIcon,
   PlayIcon,
-  PauseIcon
+  PauseIcon,
+  LayoutGridIcon
 } from 'lucide-react';
 
 function RecentBlocks({ blocks }) {
