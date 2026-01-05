@@ -139,7 +139,7 @@ function AIAssistant() {
       {/* Header */}
       <div className="bg-gradient-to-r from-purple-600 to-indigo-600 rounded-lg p-6 text-white">
         <div className="flex items-center gap-3 mb-2">
-          <Sparkles className="h-8 w-8" />
+          <SparklesIcon className="h-8 w-8" />
           <h1 className="text-3xl font-bold">AI Assistant</h1>
         </div>
         <p className="text-purple-100">
@@ -152,7 +152,7 @@ function AIAssistant() {
         {/* Feature 1: Product Blurb Generator */}
         <div className="bg-white rounded-lg shadow-md p-6">
           <div className="flex items-center gap-2 mb-4">
-            <FileText className="h-6 w-6 text-indigo-600" />
+            <FileTextIcon className="h-6 w-6 text-indigo-600" />
             <h2 className="text-xl font-semibold">Generate Product Blurbs</h2>
           </div>
           
@@ -205,9 +205,9 @@ function AIAssistant() {
               className="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {loading ? (
-                <RefreshCw className="h-5 w-5 animate-spin" />
+                <RefreshCwIcon className="h-5 w-5 animate-spin" />
               ) : (
-                <Send className="h-5 w-5" />
+                <SendIcon className="h-5 w-5" />
               )}
               Generate Blurb
             </button>
@@ -220,7 +220,7 @@ function AIAssistant() {
                     onClick={() => copyToClipboard(blurbResult)}
                     className="text-indigo-600 hover:text-indigo-700 flex items-center gap-1"
                   >
-                    <Copy className="h-4 w-4" />
+                    <CopyIcon className="h-4 w-4" />
                     Copy
                   </button>
                 </div>
@@ -233,7 +233,7 @@ function AIAssistant() {
         {/* Feature 2: Pros and Cons Generator */}
         <div className="bg-white rounded-lg shadow-md p-6">
           <div className="flex items-center gap-2 mb-4">
-            <Lightbulb className="h-6 w-6 text-green-600" />
+            <LightbulbIcon className="h-6 w-6 text-green-600" />
             <h2 className="text-xl font-semibold">Auto-Write Pros & Cons</h2>
           </div>
           
@@ -270,9 +270,9 @@ function AIAssistant() {
               className="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {loading ? (
-                <RefreshCw className="h-5 w-5 animate-spin" />
+                <RefreshCwIcon className="h-5 w-5 animate-spin" />
               ) : (
-                <Send className="h-5 w-5" />
+                <SendIcon className="h-5 w-5" />
               )}
               Generate Pros & Cons
             </button>
@@ -281,7 +281,7 @@ function AIAssistant() {
               <div className="mt-4 space-y-3">
                 <div className="p-4 bg-green-50 rounded-md border border-green-200">
                   <div className="flex items-center gap-2 mb-2">
-                    <CheckCircle className="h-5 w-5 text-green-600" />
+                    <CheckCircleIcon className="h-5 w-5 text-green-600" />
                     <span className="font-semibold text-green-800">Pros</span>
                   </div>
                   <ul className="space-y-1">
@@ -293,7 +293,7 @@ function AIAssistant() {
 
                 <div className="p-4 bg-red-50 rounded-md border border-red-200">
                   <div className="flex items-center gap-2 mb-2">
-                    <AlertCircle className="h-5 w-5 text-red-600" />
+                    <AlertCircleIcon className="h-5 w-5 text-red-600" />
                     <span className="font-semibold text-red-800">Cons</span>
                   </div>
                   <ul className="space-y-1">
@@ -309,7 +309,7 @@ function AIAssistant() {
                   )}
                   className="w-full text-green-600 hover:text-green-700 flex items-center justify-center gap-1 text-sm"
                 >
-                  <Copy className="h-4 w-4" />
+                  <CopyIcon className="h-4 w-4" />
                   Copy All
                 </button>
               </div>
@@ -321,7 +321,7 @@ function AIAssistant() {
       {/* Product Alternatives */}
       <div className="bg-white rounded-lg shadow-md p-6">
         <div className="flex items-center gap-2 mb-4">
-          <Sparkles className="h-6 w-6 text-purple-600" />
+          <SparklesIcon className="h-6 w-6 text-purple-600" />
           <h2 className="text-xl font-semibold">Suggest Better Product Alternatives</h2>
         </div>
         
@@ -359,9 +359,9 @@ function AIAssistant() {
           className="w-full md:w-auto bg-purple-600 text-white py-2 px-6 rounded-md hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
           {loading ? (
-            <RefreshCw className="h-5 w-5 animate-spin" />
+            <RefreshCwIcon className="h-5 w-5 animate-spin" />
           ) : (
-            <Send className="h-5 w-5" />
+            <SendIcon className="h-5 w-5" />
           )}
           Suggest Alternatives
         </button>
@@ -372,7 +372,7 @@ function AIAssistant() {
               <div key={index} className="p-4 bg-gradient-to-br from-purple-50 to-indigo-50 rounded-md border border-purple-200">
                 <div className="flex items-start justify-between mb-2">
                   <span className="text-sm font-semibold text-purple-800">{alt.name}</span>
-                  <Lightbulb className="h-5 w-5 text-purple-600 flex-shrink-0" />
+                  <LightbulbIcon className="h-5 w-5 text-purple-600 flex-shrink-0" />
                 </div>
                 {alt.reason && (
                   <p className="text-sm text-gray-700">{alt.reason}</p>
@@ -389,7 +389,7 @@ function AIAssistant() {
       {/* FAQ Builder */}
       <div className="bg-white rounded-lg shadow-md p-6">
         <div className="flex items-center gap-2 mb-4">
-          <HelpCircle className="h-6 w-6 text-blue-600" />
+          <HelpCircleIcon className="h-6 w-6 text-blue-600" />
           <h2 className="text-xl font-semibold">AI FAQ Builder (For SEO)</h2>
         </div>
         
@@ -441,9 +441,9 @@ function AIAssistant() {
           className="w-full md:w-auto bg-blue-600 text-white py-2 px-6 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
           {loading ? (
-            <RefreshCw className="h-5 w-5 animate-spin" />
+            <RefreshCwIcon className="h-5 w-5 animate-spin" />
           ) : (
-            <Send className="h-5 w-5" />
+            <SendIcon className="h-5 w-5" />
           )}
           Generate FAQ
         </button>
@@ -458,7 +458,7 @@ function AIAssistant() {
                 )}
                 className="text-blue-600 hover:text-blue-700 flex items-center gap-1 text-sm"
               >
-                <Copy className="h-4 w-4" />
+                <CopyIcon className="h-4 w-4" />
                 Copy All
               </button>
             </div>
@@ -478,7 +478,7 @@ function AIAssistant() {
                       onClick={() => copyToClipboard(`Q: ${faq.question}\nA: ${faq.answer}`)}
                       className="text-blue-600 hover:text-blue-700"
                     >
-                      <Copy className="h-4 w-4" />
+                      <CopyIcon className="h-4 w-4" />
                     </button>
                   </div>
                 </div>
