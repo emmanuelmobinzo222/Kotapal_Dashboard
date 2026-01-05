@@ -27,6 +27,19 @@ function Register() {
     { id: 'creatorplus', name: 'Creator+', price: '$49/mo', description: 'For power users' }
   ];
 
+  const validatePassword = (password) => {
+    const checks = {
+      length: password.length >= 8,
+      uppercase: /[A-Z]/.test(password),
+      lowercase: /[a-z]/.test(password),
+      number: /[0-9]/.test(password)
+    };
+    return checks;
+  };
+
+  const passwordChecks = validatePassword(formData.password);
+  const allChecksPass = Object.values(passwordChecks).every(Boolean);
+
   const handleChange = (e) => {
     setFormData({
       ...formData,
@@ -37,8 +50,18 @@ function Register() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
+    if (!isOnline) {
+      toast.error('You need to be online to create an account');
+      return;
+    }
+    
     if (formData.password !== formData.confirmPassword) {
-      alert('Passwords do not match');
+      toast.error('Passwords do not match');
+      return;
+    }
+
+    if (!allChecksPass) {
+      toast.error('Password does not meet requirements');
       return;
     }
     
