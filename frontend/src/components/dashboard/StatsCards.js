@@ -3,7 +3,7 @@ import {
   MousePointerIcon, 
   DollarSignIcon, 
   TrendingUpIcon, 
-  Squares2X2Icon 
+  LayoutGridIcon 
 } from 'lucide-react';
 
 const stats = [
@@ -33,7 +33,7 @@ const stats = [
   {
     name: 'Active Blocks',
     value: 'activeBlocks',
-    icon: Squares2X2Icon,
+    icon: LayoutGridIcon,
     color: 'text-orange-600',
     bgColor: 'bg-orange-100',
   },
