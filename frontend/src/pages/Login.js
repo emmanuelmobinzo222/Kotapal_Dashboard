@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { EyeIcon, EyeOffIcon } from 'lucide-react';
+import { EyeIcon, EyeOffIcon, WifiOffIcon } from 'lucide-react';
 import LoadingSpinner from '../components/LoadingSpinner';
 
 function Login() {
@@ -12,7 +12,7 @@ function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   
-  const { login } = useAuth();
+  const { login, isOnline } = useAuth();
   const navigate = useNavigate();
 
   const handleChange = (e) => {
