@@ -1,0 +1,489 @@
+// Enhanced Store abstraction: Firebase Firestore when configured, else local JSON db
+const path = require('path');
+let useFirebase = false;
+let firestore = null;
+let FieldValue = null;
+
+function hasFirebaseEnv() {
+  return !!(
+    process.env.FIREBASE_PROJECT_ID && 
+    process.env.FIREBASE_PROJECT_ID !== 'your-firebase-project-id' &&
+    (
+      process.env.GOOGLE_APPLICATION_CREDENTIALS ||
+      process.env.FIREBASE_ADMIN_SDK_KEY ||
+      process.env.FIREBASE_CONFIG
+    )
+  );
+}
+
+async function initFirebase() {
+  if (!hasFirebaseEnv()) {
+    console.log('⚠️ Firebase not configured - missing environment variables');
+    return false;
+  }
+  try {
+    const admin = require('firebase-admin');
+    let credential;
+    
+    // Option 1: Service account JSON file
+    if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+      const path = require('path');
+      const credentialsPath = path.resolve(process.cwd(), process.env.GOOGLE_APPLICATION_CREDENTIALS);
+      const serviceAccount = require(credentialsPath);
+      credential = admin.credential.cert(serviceAccount);
+      console.log('📁 Using Firebase credentials from file:', credentialsPath);
+    }
+    // Option 2: Base64 encoded key (for deployment)
+    else if (process.env.FIREBASE_ADMIN_SDK_KEY) {
+      const keyBuffer = Buffer.from(process.env.FIREBASE_ADMIN_SDK_KEY, 'base64');
+      const serviceAccount = JSON.parse(keyBuffer.toString('utf-8'));
+      credential = admin.credential.cert(serviceAccount);
+      console.log('🔑 Using Firebase credentials from base64 encoded key');
+    }
+    // Option 3: Direct JSON config in environment
+    else if (process.env.FIREBASE_CONFIG) {
+      const firebaseConfig = JSON.parse(process.env.FIREBASE_CONFIG);
+      credential = admin.credential.cert(firebaseConfig);
+      console.log('⚙️ Using Firebase credentials from FIREBASE_CONFIG');
+    }
+    
+    if (!credential) {
+      console.warn('⚠️ No Firebase credential found, trying application default');
+      credential = admin.credential.applicationDefault();
+    }
+    
+    if (!admin.apps.length) {
+      admin.initializeApp({
+        credential,
+        projectId: process.env.FIREBASE_PROJECT_ID
+      });
+    }
+    firestore = admin.firestore();
+    FieldValue = admin.firestore.FieldValue;
+    useFirebase = true;
+    console.log('✅ Firebase initialized successfully - Project ID:', process.env.FIREBASE_PROJECT_ID);
+    console.log('✅ Firestore ready - data will be saved to Firebase');
+    return true;
+  } catch (e) {
+    console.error('❌ Firebase init failed:', e.message);
+    console.error('Stack:', e.stack);
+    console.warn('⚠️ Falling back to local JSON database');
+    useFirebase = false;
+    return false;
+  }
+}
+
+// Local fallback
+const db = require('./db');
+
+// Users
+async function getUserByEmail(email) {
+  // Normalize email for consistent lookup
+  const normalizedEmail = email.toLowerCase().trim();
+  
+  if (useFirebase) {
+    console.log('🔍 Searching Firebase for email:', normalizedEmail);
+    const snap = await firestore.collection('users').where('email', '==', normalizedEmail).limit(1).get();
+    if (snap.empty) {
+      console.log('❌ User not found in Firebase for email:', normalizedEmail);
+      // Also try to list some users to debug (remove in production)
+      try {
+        const allUsers = await firestore.collection('users').limit(5).get();
+        console.log('📋 Sample users in Firebase:', allUsers.docs.map(doc => ({ id: doc.id, email: doc.data().email })));
+      } catch (err) {
+        console.log('Could not list users for debugging');
+      }
+      return null;
+    }
+    const user = { id: snap.docs[0].id, ...snap.docs[0].data() };
+    console.log('✅ User found in Firebase:', normalizedEmail, 'ID:', user.id);
+    return user;
+  }
+  return db.state.users.find(u => u.email && u.email.toLowerCase().trim() === normalizedEmail) || null;
+}
+
+async function getUserById(id) {
+  if (useFirebase) {
+    const doc = await firestore.collection('users').doc(id).get();
+    return doc.exists ? { id: doc.id, ...doc.data() } : null;
+  }
+  return db.state.users.find(u => u.id === id) || null;
+}
+
+async function createUser(user) {
+  // Ensure email is normalized (lowercase and trim) for consistency
+  if (user.email) {
+    user.email = user.email.toLowerCase().trim();
+  }
+  
+  if (useFirebase) {
+    try {
+      console.log('🔥 Saving user to Firebase Firestore...');
+      console.log('🔥 User ID:', user.id);
+      console.log('🔥 User email:', user.email);
+      
+      // Use the user's ID as the document ID for consistency
+      const userRef = firestore.collection('users').doc(user.id);
+      await userRef.set(user);
+      
+      // Verify the save
+      const doc = await userRef.get();
+      if (!doc.exists) {
+        throw new Error('Failed to save user to Firebase - document does not exist after save');
+      }
+      
+      const savedData = doc.data();
+      console.log('✅ User saved to Firebase successfully!');
+      console.log('✅ Firebase document path: users/' + user.id);
+      console.log('✅ Saved email:', savedData.email);
+      console.log('✅ Saved name:', savedData.name);
+      
+      return { id: doc.id, ...savedData };
+    } catch (firebaseError) {
+      console.error('❌ ERROR saving user to Firebase:', firebaseError);
+      console.error('❌ Error message:', firebaseError.message);
+      console.error('❌ Error code:', firebaseError.code);
+      throw firebaseError; // Re-throw so server knows it failed
+    }
+  }
+  
+  // Ensure email is normalized for local DB too
+  if (user.email) {
+    user.email = user.email.toLowerCase().trim();
+  }
+  console.log('💾 Saving user to local JSON database (offline mode)');
+  console.log('⚠️ WARNING: User is NOT being saved to Firebase/server!');
+  console.log('⚠️ WARNING: This user will only be available on this device!');
+  console.log('⚠️ WARNING: To enable Firebase, check your .env file and restart the server');
+  db.state.users.push(user);
+  db.save();
+  return user;
+}
+
+async function updateUser(id, updates) {
+  if (useFirebase) {
+    await firestore.collection('users').doc(id).set(updates, { merge: true });
+    const doc = await firestore.collection('users').doc(id).get();
+    if (!doc.exists) {
+      console.warn('⚠️ User document not found in Firebase:', id);
+      return null;
+    }
+    console.log('✅ User updated in Firebase:', id);
+    return { id: doc.id, ...doc.data() };
+  }
+  const idx = db.state.users.findIndex(u => u.id === id);
+  if (idx === -1) return null;
+  db.state.users[idx] = { ...db.state.users[idx], ...updates };
+  db.save();
+  const { password, ...safe } = db.state.users[idx];
+  return safe;
+}
+
+async function getAllUsers() {
+  if (useFirebase) {
+    const snap = await firestore.collection('users').get();
+    return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  }
+  return db.state.users;
+}
+
+async function updateDailyMetrics(userId, date, metrics) {
+  if (useFirebase) {
+    await firestore.collection('dailyMetrics').doc(`${userId}_${date}`).set({
+      userId,
+      date,
+      ...metrics,
+      updatedAt: new Date().toISOString()
+    }, { merge: true });
+    return true;
+  }
+  
+  if (!db.state.dailyMetrics) {
+    db.state.dailyMetrics = [];
+  }
+  
+  const idx = db.state.dailyMetrics.findIndex(m => m.userId === userId && m.date === date);
+  const metricData = {
+    userId,
+    date,
+    ...metrics,
+    updatedAt: new Date().toISOString()
+  };
+  
+  if (idx === -1) {
+    db.state.dailyMetrics.push(metricData);
+  } else {
+    db.state.dailyMetrics[idx] = metricData;
+  }
+  db.save();
+  return true;
+}
+
+// Blocks
+async function listBlocksByUser(userId) {
+  if (useFirebase) {
+    const snap = await firestore.collection('blocks').where('userId', '==', userId).get();
+    return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  }
+  return db.state.blocks.filter(b => b.userId === userId);
+}
+
+async function getBlockById(blockId) {
+  if (useFirebase) {
+    const doc = await firestore.collection('blocks').doc(blockId).get();
+    return doc.exists ? { id: doc.id, ...doc.data() } : null;
+  }
+  return db.state.blocks.find(b => b.id === blockId) || null;
+}
+
+async function createBlock(block) {
+  if (useFirebase) {
+    const ref = await firestore.collection('blocks').add(block);
+    const doc = await ref.get();
+    return { id: doc.id, ...doc.data() };
+  }
+  db.state.blocks.push(block);
+  db.save();
+  return block;
+}
+
+async function updateBlock(userId, id, updates) {
+  if (useFirebase) {
+    const docRef = firestore.collection('blocks').doc(id);
+    const doc = await docRef.get();
+    if (!doc.exists || doc.data().userId !== userId) return null;
+    await docRef.set(updates, { merge: true });
+    const newDoc = await docRef.get();
+    return { id: newDoc.id, ...newDoc.data() };
+  }
+  const idx = db.state.blocks.findIndex(b => b.id === id && b.userId === userId);
+  if (idx === -1) return null;
+  db.state.blocks[idx] = { ...db.state.blocks[idx], ...updates };
+  db.save();
+  return db.state.blocks[idx];
+}
+
+async function deleteBlock(userId, id) {
+  if (useFirebase) {
+    const docRef = firestore.collection('blocks').doc(id);
+    const doc = await docRef.get();
+    if (!doc.exists || doc.data().userId !== userId) return null;
+    await docRef.delete();
+    return { id };
+  }
+  const idx = db.state.blocks.findIndex(b => b.id === id && b.userId === userId);
+  if (idx === -1) return null;
+  const removed = db.state.blocks.splice(idx, 1)[0];
+  db.save();
+  return removed;
+}
+
+// Integrations
+async function listIntegrations(userId) {
+  if (useFirebase) {
+    const snap = await firestore.collection('integrations').where('userId', '==', userId).get();
+    return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  }
+  return db.state.integrations.filter(i => i.userId === userId);
+}
+
+async function upsertIntegration(integration) {
+  if (useFirebase) {
+    const ref = firestore.collection('integrations').doc(`${integration.userId}_${integration.id}`);
+    await ref.set(integration, { merge: true });
+    const doc = await ref.get();
+    return { id: integration.id, ...doc.data() };
+  }
+  const idx = db.state.integrations.findIndex(i => i.id === integration.id && i.userId === integration.userId);
+  if (idx === -1) db.state.integrations.push(integration);
+  else db.state.integrations[idx] = { ...db.state.integrations[idx], ...integration };
+  db.save();
+  return integration;
+}
+
+// Clicks
+async function addClick(click) {
+  if (useFirebase) {
+    await firestore.collection('clicks').add(click);
+    return click;
+  }
+  db.state.clicks.push(click);
+  db.save();
+  return click;
+}
+
+// Password reset tokens
+async function createPasswordResetToken(userId, token, expiresAt) {
+  if (useFirebase) {
+    await firestore.collection('passwordResetTokens').add({
+      userId,
+      token,
+      expiresAt: expiresAt.toISOString ? expiresAt.toISOString() : expiresAt,
+      createdAt: new Date().toISOString()
+    });
+    console.log('✅ Password reset token saved to Firebase for user:', userId);
+    return { userId, token, expiresAt };
+  }
+  
+  if (!db.state.passwordResetTokens) {
+    db.state.passwordResetTokens = [];
+  }
+  
+  db.state.passwordResetTokens.push({
+    userId,
+    token,
+    expiresAt,
+    createdAt: new Date().toISOString()
+  });
+  db.save();
+  return { userId, token, expiresAt };
+}
+
+async function getPasswordResetToken(token) {
+  if (useFirebase) {
+    const snap = await firestore.collection('passwordResetTokens')
+      .where('token', '==', token)
+      .limit(1)
+      .get();
+    
+    if (snap.empty) return null;
+    const data = snap.docs[0].data();
+    
+    // Check if token is expired
+    if (new Date(data.expiresAt) < new Date()) {
+      return null;
+    }
+    
+    return data;
+  }
+  
+  if (!db.state.passwordResetTokens) return null;
+  
+  const tokenData = db.state.passwordResetTokens.find(t => t.token === token);
+  if (!tokenData) return null;
+  
+  // Check if token is expired
+  if (new Date(tokenData.expiresAt) < new Date()) {
+    return null;
+  }
+  
+  return tokenData;
+}
+
+async function deletePasswordResetToken(token) {
+  if (useFirebase) {
+    const snap = await firestore.collection('passwordResetTokens')
+      .where('token', '==', token)
+      .limit(1)
+      .get();
+    
+    if (!snap.empty) {
+      await snap.docs[0].ref.delete();
+    }
+    return true;
+  }
+  
+  if (!db.state.passwordResetTokens) return true;
+  
+  const index = db.state.passwordResetTokens.findIndex(t => t.token === token);
+  if (index !== -1) {
+    db.state.passwordResetTokens.splice(index, 1);
+    db.save();
+  }
+  return true;
+}
+
+async function getClicksByUser(userId, filters = {}) {
+  if (useFirebase) {
+    let query = firestore.collection('clicks').where('userId', '==', userId);
+    
+    if (filters.startDate) {
+      query = query.where('timestamp', '>=', filters.startDate);
+    }
+    if (filters.endDate) {
+      query = query.where('timestamp', '<=', filters.endDate);
+    }
+    if (filters.retailer) {
+      query = query.where('retailer', '==', filters.retailer);
+    }
+    if (filters.blockId) {
+      query = query.where('blockId', '==', filters.blockId);
+    }
+    
+    const snap = await query.get();
+    return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  }
+  
+  let clicks = db.state.clicks.filter(c => c.userId === userId);
+  
+  if (filters.startDate) {
+    clicks = clicks.filter(c => c.timestamp >= filters.startDate);
+  }
+  if (filters.endDate) {
+    clicks = clicks.filter(c => c.timestamp <= filters.endDate);
+  }
+  if (filters.retailer) {
+    clicks = clicks.filter(c => c.retailer === filters.retailer);
+  }
+  if (filters.blockId) {
+    clicks = clicks.filter(c => c.blockId === filters.blockId);
+  }
+  
+  return clicks;
+}
+
+// Analytics
+async function getAnalyticsData(userId, filters = {}) {
+  const clicks = await getClicksByUser(userId, filters);
+  const blocks = await listBlocksByUser(userId);
+  
+  return {
+    clicks,
+    blocks,
+    totalClicks: clicks.length,
+    totalRevenue: clicks.reduce((sum, click) => sum + (click.revenue || 0), 0),
+    avgCTR: blocks.length > 0 ? blocks.reduce((sum, block) => sum + block.ctr, 0) / blocks.length : 0,
+    topBlocks: blocks.sort((a, b) => b.clicks - a.clicks).slice(0, 5),
+    clicksByRetailer: clicks.reduce((acc, click) => {
+      acc[click.retailer] = (acc[click.retailer] || 0) + 1;
+      return acc;
+    }, {}),
+    clicksByDay: clicks.reduce((acc, click) => {
+      const day = click.timestamp.split('T')[0];
+      acc[day] = (acc[day] || 0) + 1;
+      return acc;
+    }, {})
+  };
+}
+
+function getFirebaseStatus() {
+  return {
+    isUsingFirebase: useFirebase,
+    hasFirestore: !!firestore,
+    envCheck: hasFirebaseEnv()
+  };
+}
+
+module.exports = {
+  initFirebase,
+  getFirebaseStatus,
+  getUserByEmail,
+  getUserById,
+  createUser,
+  updateUser,
+  getAllUsers,
+  listBlocksByUser,
+  getBlockById,
+  createBlock,
+  updateBlock,
+  deleteBlock,
+  listIntegrations,
+  upsertIntegration,
+  addClick,
+  getClicksByUser,
+  getAnalyticsData,
+  createPasswordResetToken,
+  getPasswordResetToken,
+  deletePasswordResetToken,
+  updateDailyMetrics
+};
