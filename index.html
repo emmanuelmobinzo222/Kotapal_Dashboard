@@ -2128,8 +2128,30 @@
         };
 
         // Initialize Firebase
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
+        let auth;
+        try {
+            // Check if Firebase config is set up
+            if (firebaseConfig.apiKey === "YOUR_API_KEY" || 
+                firebaseConfig.authDomain === "YOUR_AUTH_DOMAIN") {
+                console.error('Firebase not configured! Please update firebaseConfig with your Firebase project values.');
+                // Show a helpful error message
+                window.addEventListener('DOMContentLoaded', () => {
+                    const loginBtn = document.getElementById('loginBtn');
+                    if (loginBtn) {
+                        loginBtn.addEventListener('click', (e) => {
+                            e.preventDefault();
+                            alert('Firebase is not configured yet. Please update the firebaseConfig object in index.html with your Firebase project credentials.\n\nSee FIREBASE_SETUP.md for instructions.');
+                        });
+                    }
+                });
+            } else {
+                firebase.initializeApp(firebaseConfig);
+                auth = firebase.auth();
+            }
+        } catch (error) {
+            console.error('Firebase initialization error:', error);
+            alert('Firebase initialization failed. Please check your configuration.');
+        }
 
         // ============================================
         // Firebase Authentication Functions
@@ -2148,8 +2170,34 @@
 
         // Handle Login
         async function handleFirebaseLogin(email, password) {
+            // Check if Firebase is initialized
+            if (!auth) {
+                showAuthMessage('authMessage', 'Firebase is not configured. Please contact support.', 'error');
+                console.error('Firebase auth not initialized');
+                return;
+            }
+
+            // Validate inputs
+            if (!email || !email.trim()) {
+                showAuthMessage('authMessage', 'Please enter your email address.', 'error');
+                return;
+            }
+
+            if (!password) {
+                showAuthMessage('authMessage', 'Please enter your password.', 'error');
+                return;
+            }
+
             try {
-                const userCredential = await auth.signInWithEmailAndPassword(email, password);
+                // Show loading state
+                const submitBtn = document.querySelector('#loginFormElement button[type="submit"]');
+                const originalText = submitBtn ? submitBtn.textContent : 'Login';
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.textContent = 'Logging in...';
+                }
+
+                const userCredential = await auth.signInWithEmailAndPassword(email.trim(), password);
                 const user = userCredential.user;
                 
                 // Get user display name from Firestore or use email
@@ -2166,25 +2214,48 @@
                 
                 // Close modal - dashboard will show automatically via auth.onAuthStateChanged
                 closeAuthModal();
-                showAuthMessage('authMessage', 'Login successful!', 'success');
+                showAuthMessage('authMessage', 'Login successful! Redirecting to dashboard...', 'success');
+                
+                // Re-enable button
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = originalText;
+                }
             } catch (error) {
+                console.error('Login error:', error);
+                
+                // Re-enable button
+                const submitBtn = document.querySelector('#loginFormElement button[type="submit"]');
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Login';
+                }
+                
                 let errorMessage = 'Login failed. Please try again.';
                 switch (error.code) {
                     case 'auth/user-not-found':
-                        errorMessage = 'No account found with this email.';
+                        errorMessage = 'No account found with this email. Please check your email or sign up.';
                         break;
                     case 'auth/wrong-password':
-                        errorMessage = 'Incorrect password.';
+                        errorMessage = 'Incorrect password. Please try again or use "Forgot Password?".';
                         break;
                     case 'auth/invalid-email':
-                        errorMessage = 'Invalid email address.';
+                        errorMessage = 'Invalid email address. Please enter a valid email.';
                         break;
                     case 'auth/user-disabled':
-                        errorMessage = 'This account has been disabled.';
+                        errorMessage = 'This account has been disabled. Please contact support.';
                         break;
                     case 'auth/too-many-requests':
-                        errorMessage = 'Too many failed attempts. Please try again later.';
+                        errorMessage = 'Too many failed attempts. Please try again later or reset your password.';
                         break;
+                    case 'auth/network-request-failed':
+                        errorMessage = 'Network error. Please check your internet connection and try again.';
+                        break;
+                    case 'auth/invalid-credential':
+                        errorMessage = 'Invalid email or password. Please check your credentials.';
+                        break;
+                    default:
+                        errorMessage = `Login failed: ${error.message || 'Unknown error'}. Please try again.`;
                 }
                 showAuthMessage('authMessage', errorMessage, 'error');
             }
@@ -2192,39 +2263,98 @@
 
         // Handle Sign Up
         async function handleFirebaseSignup(name, email, password) {
+            // Check if Firebase is initialized
+            if (!auth) {
+                showAuthMessage('signupMessage', 'Firebase is not configured. Please contact support.', 'error');
+                console.error('Firebase auth not initialized');
+                return;
+            }
+
+            // Validate inputs
+            if (!name || !name.trim()) {
+                showAuthMessage('signupMessage', 'Please enter your full name.', 'error');
+                return;
+            }
+
+            if (!email || !email.trim()) {
+                showAuthMessage('signupMessage', 'Please enter your email address.', 'error');
+                return;
+            }
+
+            if (!password || password.length < 6) {
+                showAuthMessage('signupMessage', 'Password must be at least 6 characters long.', 'error');
+                return;
+            }
+
             try {
-                const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+                // Show loading state
+                const submitBtn = document.querySelector('#signupFormElement button[type="submit"]');
+                const originalText = submitBtn ? submitBtn.textContent : 'Sign Up';
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.textContent = 'Creating Account...';
+                }
+
+                const userCredential = await auth.createUserWithEmailAndPassword(email.trim(), password);
                 const user = userCredential.user;
                 
                 // Update user profile with display name
-                await user.updateProfile({
-                    displayName: name
-                });
+                try {
+                    await user.updateProfile({
+                        displayName: name.trim()
+                    });
+                } catch (profileError) {
+                    console.warn('Could not update profile:', profileError);
+                    // Continue even if profile update fails
+                }
                 
                 // Store user data in localStorage
                 const userData = {
                     uid: user.uid,
                     email: user.email,
-                    displayName: name,
+                    displayName: name.trim(),
                     emailVerified: user.emailVerified
                 };
                 localStorage.setItem('kotaUser', JSON.stringify(userData));
                 
                 // Close modal - dashboard will show automatically via auth.onAuthStateChanged
                 closeAuthModal();
-                showAuthMessage('signupMessage', 'Account created successfully!', 'success');
+                showAuthMessage('signupMessage', 'Account created successfully! Redirecting to dashboard...', 'success');
+                
+                // Re-enable button
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = originalText;
+                }
             } catch (error) {
+                console.error('Sign up error:', error);
                 let errorMessage = 'Sign up failed. Please try again.';
+                
+                // Re-enable button
+                const submitBtn = document.querySelector('#signupFormElement button[type="submit"]');
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Sign Up';
+                }
+                
                 switch (error.code) {
                     case 'auth/email-already-in-use':
-                        errorMessage = 'An account with this email already exists.';
+                        errorMessage = 'An account with this email already exists. Please use a different email or try logging in.';
                         break;
                     case 'auth/invalid-email':
-                        errorMessage = 'Invalid email address.';
+                        errorMessage = 'Invalid email address. Please enter a valid email.';
                         break;
                     case 'auth/weak-password':
-                        errorMessage = 'Password should be at least 6 characters.';
+                        errorMessage = 'Password is too weak. Please use at least 6 characters.';
                         break;
+                    case 'auth/operation-not-allowed':
+                        errorMessage = 'Email/password accounts are not enabled. Please contact support.';
+                        break;
+                    case 'auth/network-request-failed':
+                        errorMessage = 'Network error. Please check your internet connection and try again.';
+                        break;
+                    default:
+                        errorMessage = `Sign up failed: ${error.message || 'Unknown error'}. Please try again.`;
                 }
                 showAuthMessage('signupMessage', errorMessage, 'error');
             }
@@ -2232,19 +2362,67 @@
 
         // Handle Password Reset
         async function handlePasswordReset(email) {
+            // Check if Firebase is initialized
+            if (!auth) {
+                showAuthMessage('resetMessage', 'Firebase is not configured. Please contact support.', 'error');
+                console.error('Firebase auth not initialized');
+                return;
+            }
+
+            // Validate input
+            if (!email || !email.trim()) {
+                showAuthMessage('resetMessage', 'Please enter your email address.', 'error');
+                return;
+            }
+
             try {
-                await auth.sendPasswordResetEmail(email);
-                showAuthMessage('resetMessage', 'Password reset email sent! Check your inbox.', 'success');
+                // Show loading state
+                const submitBtn = document.querySelector('#resetPasswordForm button[type="submit"]');
+                const originalText = submitBtn ? submitBtn.textContent : 'Send Reset Link';
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.textContent = 'Sending...';
+                }
+
+                await auth.sendPasswordResetEmail(email.trim(), {
+                    url: window.location.origin + window.location.pathname,
+                    handleCodeInApp: false
+                });
+                
+                showAuthMessage('resetMessage', 'Password reset email sent! Please check your inbox and spam folder. Click the link in the email to reset your password.', 'success');
                 document.getElementById('resetPasswordForm').reset();
+                
+                // Re-enable button
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = originalText;
+                }
             } catch (error) {
+                console.error('Password reset error:', error);
+                
+                // Re-enable button
+                const submitBtn = document.querySelector('#resetPasswordForm button[type="submit"]');
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Send Reset Link';
+                }
+                
                 let errorMessage = 'Failed to send reset email. Please try again.';
                 switch (error.code) {
                     case 'auth/user-not-found':
-                        errorMessage = 'No account found with this email.';
+                        errorMessage = 'No account found with this email. Please check your email address.';
                         break;
                     case 'auth/invalid-email':
-                        errorMessage = 'Invalid email address.';
+                        errorMessage = 'Invalid email address. Please enter a valid email.';
                         break;
+                    case 'auth/too-many-requests':
+                        errorMessage = 'Too many requests. Please try again later.';
+                        break;
+                    case 'auth/network-request-failed':
+                        errorMessage = 'Network error. Please check your internet connection and try again.';
+                        break;
+                    default:
+                        errorMessage = `Failed to send reset email: ${error.message || 'Unknown error'}. Please try again.`;
                 }
                 showAuthMessage('resetMessage', errorMessage, 'error');
             }
@@ -2258,48 +2436,52 @@
         let currentLayout = 'grid';
 
         // Check authentication state and show appropriate view
-        auth.onAuthStateChanged((user) => {
-            if (user) {
-                // User is signed in - show dashboard
-                const userData = {
-                    uid: user.uid,
-                    email: user.email,
-                    displayName: user.displayName || user.email.split('@')[0],
-                    emailVerified: user.emailVerified
-                };
-                localStorage.setItem('kotaUser', JSON.stringify(userData));
-                currentUser = userData;
-                
-                // Hide landing page, show dashboard
-                const landingView = document.getElementById('landing-page-view');
-                const nav = document.querySelector('nav');
-                const footer = document.querySelector('footer');
-                const dashboardView = document.getElementById('dashboard-view');
-                
-                if (landingView) landingView.style.display = 'none';
-                if (nav) nav.style.display = 'none';
-                if (footer) footer.style.display = 'none';
-                if (dashboardView) dashboardView.classList.add('active');
-                
-                // Initialize dashboard
-                initDashboard();
-            } else {
-                // User is signed out - show landing page
-                localStorage.removeItem('kotaUser');
-                currentUser = null;
-                
-                // Hide dashboard, show landing page
-                const landingView = document.getElementById('landing-page-view');
-                const nav = document.querySelector('nav');
-                const footer = document.querySelector('footer');
-                const dashboardView = document.getElementById('dashboard-view');
-                
-                if (dashboardView) dashboardView.classList.remove('active');
-                if (landingView) landingView.style.display = 'block';
-                if (nav) nav.style.display = 'flex';
-                if (footer) footer.style.display = 'block';
-            }
-        });
+        if (auth) {
+            auth.onAuthStateChanged((user) => {
+                if (user) {
+                    // User is signed in - show dashboard
+                        const userData = {
+                            uid: user.uid,
+                            email: user.email,
+                            displayName: user.displayName || user.email.split('@')[0],
+                            emailVerified: user.emailVerified
+                        };
+                        localStorage.setItem('kotaUser', JSON.stringify(userData));
+                        currentUser = userData;
+                        
+                        // Hide landing page, show dashboard
+                        const landingView = document.getElementById('landing-page-view');
+                        const nav = document.querySelector('nav');
+                        const footer = document.querySelector('footer');
+                        const dashboardView = document.getElementById('dashboard-view');
+                        
+                        if (landingView) landingView.style.display = 'none';
+                        if (nav) nav.style.display = 'none';
+                        if (footer) footer.style.display = 'none';
+                        if (dashboardView) dashboardView.classList.add('active');
+                        
+                        // Initialize dashboard
+                        initDashboard();
+                    } else {
+                        // User is signed out - show landing page
+                        localStorage.removeItem('kotaUser');
+                        currentUser = null;
+                        
+                        // Hide dashboard, show landing page
+                        const landingView = document.getElementById('landing-page-view');
+                        const nav = document.querySelector('nav');
+                        const footer = document.querySelector('footer');
+                        const dashboardView = document.getElementById('dashboard-view');
+                        
+                        if (dashboardView) dashboardView.classList.remove('active');
+                        if (landingView) landingView.style.display = 'block';
+                        if (nav) nav.style.display = 'flex';
+                        if (footer) footer.style.display = 'block';
+                }
+            });
+        } else {
+            console.warn('Firebase auth not initialized - authentication features will not work');
+        }
 
         // ============================================
         // Existing JavaScript Code
