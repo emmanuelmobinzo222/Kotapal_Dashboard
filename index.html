@@ -1179,15 +1179,82 @@
                 width: 100%;
                 height: auto;
                 position: relative;
+                box-shadow: none;
+                border-bottom: 1px solid #e5e7eb;
             }
             .main-content {
                 margin-left: 0;
+                padding: 15px;
+            }
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+            .header .btn {
+                width: 100%;
             }
             .stats-grid {
                 grid-template-columns: 1fr;
+                gap: 15px;
             }
             .blocks-grid {
                 grid-template-columns: 1fr;
+            }
+            .page-title {
+                font-size: 1.5rem;
+            }
+            .card {
+                padding: 20px;
+            }
+            .nav-menu {
+                padding: 0 5px;
+            }
+            .nav-link {
+                padding: 10px 15px;
+                font-size: 0.9rem;
+            }
+            .user-info {
+                padding: 15px;
+            }
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+            .hero p {
+                font-size: 1.2rem;
+            }
+            .features-grid,
+            .pricing-grid,
+            .blog-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .hero h1 {
+                font-size: 2rem;
+            }
+            .hero p {
+                font-size: 1rem;
+            }
+            .hero-buttons {
+                flex-direction: column;
+                width: 100%;
+            }
+            .hero-buttons .btn {
+                width: 100%;
+            }
+            .stat-card {
+                padding: 20px;
+            }
+            .stat-icon {
+                width: 50px;
+                height: 50px;
+                font-size: 1.2rem;
+            }
+            .stat-value {
+                font-size: 1.5rem;
             }
         }
     </style>
@@ -1578,9 +1645,33 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="#" class="nav-link" data-page="account">
-                            <i class="fas fa-user"></i>
-                            Account
+                        <a href="#" class="nav-link" data-page="product-library">
+                            <i class="fas fa-box"></i>
+                            Product Library
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-page="ai-assistant">
+                            <i class="fas fa-robot"></i>
+                            AI Assistant
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-page="analytics">
+                            <i class="fas fa-chart-line"></i>
+                            Analytics
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-page="settings">
+                            <i class="fas fa-cog"></i>
+                            Settings
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-page="billing">
+                            <i class="fas fa-credit-card"></i>
+                            Billing
                         </a>
                     </li>
                     <li class="nav-item">
@@ -1597,7 +1688,10 @@
                 <!-- Dashboard Page -->
                 <div id="dashboard-page" class="page-content">
                     <div class="header">
-                        <h1 class="page-title">Dashboard</h1>
+                        <div>
+                            <h1 class="page-title">Dashboard</h1>
+                            <p id="welcomeMessage" style="color: var(--gray); margin-top: 5px; font-size: 0.95rem;">Welcome back!</p>
+                        </div>
                         <button class="btn btn-primary" id="createBlockBtn">Create New Block</button>
                     </div>
 
@@ -1824,7 +1918,53 @@
                     </div>
                 </div>
 
-                <!-- Account Page -->
+                <!-- Settings Page -->
+                <div id="settings-page" class="page-content" style="display: none;">
+                    <div class="header">
+                        <h1 class="page-title">Settings</h1>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Profile Settings</h3>
+                            <span id="autoSaveStatus" style="color: var(--success); font-size: 0.9rem; display: none;">
+                                <i class="fas fa-check-circle"></i> Saved
+                            </span>
+                        </div>
+                        <form id="profileForm">
+                            <div class="form-group">
+                                <label for="profileName">Name</label>
+                                <input type="text" id="profileName" class="form-control" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="profileEmail">Email</label>
+                                <input type="email" id="profileEmail" class="form-control" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="profileWebsite">Website/Blog URL</label>
+                                <input type="url" id="profileWebsite" class="form-control" placeholder="https://yourwebsite.com">
+                            </div>
+                            <div class="form-group">
+                                <label for="profilePicture">Profile Picture</label>
+                                <div style="display: flex; align-items: center; gap: 20px; margin-top: 10px;">
+                                    <img id="profilePicturePreview" src="https://i.pravatar.cc/80?img=1" alt="Profile" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid #e5e7eb;">
+                                    <div style="flex: 1;">
+                                        <input type="url" id="profilePictureUrl" class="form-control" placeholder="https://your-cdn.com/avatar.jpg or data:image/..." style="margin-bottom: 10px;">
+                                        <p style="font-size: 0.85rem; color: var(--gray); margin-bottom: 10px;">Paste an image URL or a data URL. This picture will appear in the sidebar.</p>
+                                        <div style="display: flex; align-items: center; gap: 10px;">
+                                            <input type="file" id="profilePictureFile" accept="image/*" style="display: none;">
+                                            <button type="button" class="btn btn-secondary" onclick="document.getElementById('profilePictureFile').click()">Choose File</button>
+                                            <span id="fileName" style="color: var(--gray); font-size: 0.9rem;">No file chosen</span>
+                                        </div>
+                                        <p style="font-size: 0.85rem; color: var(--gray); margin-top: 10px;">Or upload a picture (stored in your browser and, where supported, in your profile).</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary" style="display: none;" id="manualSaveBtn">Save Profile</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Account Page (Legacy - keeping for compatibility) -->
                 <div id="account-page" class="page-content" style="display: none;">
                     <div class="header">
                         <h1 class="page-title">Account Settings</h1>
@@ -1833,7 +1973,7 @@
                         <div class="card-header">
                             <h3 class="card-title">Profile</h3>
                         </div>
-                        <form id="profileForm">
+                        <form id="profileFormLegacy">
                             <div class="form-group">
                                 <label for="userName">Name</label>
                                 <input type="text" id="userName" class="form-control" required>
@@ -1914,6 +2054,54 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Product Library Page -->
+                <div id="product-library-page" class="page-content" style="display: none;">
+                    <div class="header">
+                        <h1 class="page-title">Product Library</h1>
+                        <button class="btn btn-primary">Add New Product</button>
+                    </div>
+                    <div class="card">
+                        <h3>Product Library</h3>
+                        <p>Manage your product library here. This feature is coming soon.</p>
+                    </div>
+                </div>
+
+                <!-- AI Assistant Page -->
+                <div id="ai-assistant-page" class="page-content" style="display: none;">
+                    <div class="header">
+                        <h1 class="page-title">AI Assistant</h1>
+                    </div>
+                    <div class="card">
+                        <h3>AI Assistant</h3>
+                        <p>Get AI-powered assistance for your content. This feature is coming soon.</p>
+                    </div>
+                </div>
+
+                <!-- Billing Page -->
+                <div id="billing-page" class="page-content" style="display: none;">
+                    <div class="header">
+                        <h1 class="page-title">Billing</h1>
+                    </div>
+                    <div class="card">
+                        <h3>Billing & Subscription</h3>
+                        <p>Manage your billing and subscription here.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Password Modal -->
+    <div id="settingsPasswordModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close" onclick="document.getElementById('settingsPasswordModal').style.display='none'">&times;</span>
+            <h2>This page says</h2>
+            <p style="margin: 20px 0;">Enter password to access Settings:</p>
+            <input type="password" id="settingsPasswordInput" class="form-control" placeholder="Enter password" style="margin-bottom: 20px;">
+            <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                <button class="btn btn-secondary" onclick="document.getElementById('settingsPasswordModal').style.display='none'">Cancel</button>
+                <button class="btn btn-primary" onclick="verifySettingsPassword()">OK</button>
             </div>
         </div>
     </div>
@@ -2448,6 +2636,152 @@
         let currentIntegrations = [];
         let selectedProductsList = [];
         let currentLayout = 'grid';
+        let settingsAccessGranted = false;
+        let autoSaveTimeout = null;
+        const SETTINGS_PASSWORD_KEY = 'kotapal_settings_password';
+
+        // Update Welcome Message
+        function updateWelcomeMessage(displayName) {
+            const welcomeMsg = document.getElementById('welcomeMessage');
+            if (welcomeMsg && displayName) {
+                welcomeMsg.textContent = `Welcome back, ${displayName}!`;
+            }
+        }
+
+        // Update Sidebar User Info
+        function updateSidebarUserInfo(userData) {
+            const userNameEl = document.querySelector('.user-name');
+            const userAvatarEl = document.querySelector('.user-avatar');
+            const userPlanEl = document.querySelector('.user-plan');
+            
+            if (userNameEl) userNameEl.textContent = userData.displayName || 'User';
+            if (userAvatarEl) {
+                const savedProfile = JSON.parse(localStorage.getItem('kotapal_profile') || '{}');
+                if (savedProfile.profilePicture) {
+                    userAvatarEl.src = savedProfile.profilePicture;
+                }
+            }
+            if (userPlanEl) {
+                const savedProfile = JSON.parse(localStorage.getItem('kotapal_profile') || '{}');
+                const plan = savedProfile.plan || 'Pro Plan';
+                userPlanEl.textContent = plan;
+                userPlanEl.className = 'user-plan ' + (plan.toLowerCase().replace(' ', ''));
+            }
+        }
+
+        // Load Profile Settings
+        function loadProfileSettings() {
+            const savedProfile = JSON.parse(localStorage.getItem('kotapal_profile') || '{}');
+            if (savedProfile.name) document.getElementById('profileName').value = savedProfile.name;
+            if (savedProfile.email) document.getElementById('profileEmail').value = savedProfile.email;
+            if (savedProfile.website) document.getElementById('profileWebsite').value = savedProfile.website;
+            if (savedProfile.profilePicture) {
+                document.getElementById('profilePictureUrl').value = savedProfile.profilePicture;
+                document.getElementById('profilePicturePreview').src = savedProfile.profilePicture;
+            }
+        }
+
+        // Auto-save Profile Settings
+        function autoSaveProfile() {
+            // Clear existing timeout
+            if (autoSaveTimeout) {
+                clearTimeout(autoSaveTimeout);
+            }
+
+            // Show saving indicator
+            const saveStatus = document.getElementById('autoSaveStatus');
+            if (saveStatus) {
+                saveStatus.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+                saveStatus.style.display = 'inline-block';
+                saveStatus.style.color = '#3b82f6';
+            }
+
+            // Set new timeout for auto-save
+            autoSaveTimeout = setTimeout(() => {
+                const profileData = {
+                    name: document.getElementById('profileName').value,
+                    email: document.getElementById('profileEmail').value,
+                    website: document.getElementById('profileWebsite').value,
+                    profilePicture: document.getElementById('profilePictureUrl').value || document.getElementById('profilePicturePreview').src,
+                    lastSaved: new Date().toISOString()
+                };
+                
+                localStorage.setItem('kotapal_profile', JSON.stringify(profileData));
+                
+                // Update sidebar
+                updateSidebarUserInfo({
+                    displayName: profileData.name,
+                    email: profileData.email
+                });
+                
+                // Show saved indicator
+                if (saveStatus) {
+                    saveStatus.innerHTML = '<i class="fas fa-check-circle"></i> Saved';
+                    saveStatus.style.color = 'var(--success)';
+                    setTimeout(() => {
+                        saveStatus.style.display = 'none';
+                    }, 2000);
+                }
+                
+                console.log('Profile auto-saved');
+            }, 1000); // Auto-save after 1 second of inactivity
+        }
+
+        // Settings Password Protection
+        function checkSettingsAccess() {
+            if (settingsAccessGranted) {
+                return true;
+            }
+            
+            // Check if password is stored
+            const storedPassword = localStorage.getItem(SETTINGS_PASSWORD_KEY);
+            if (!storedPassword) {
+                // First time - set password
+                const password = prompt('Set a password to protect Settings access:');
+                if (password) {
+                    localStorage.setItem(SETTINGS_PASSWORD_KEY, btoa(password));
+                    settingsAccessGranted = true;
+                    return true;
+                }
+                return false;
+            }
+            
+            // Show password modal
+            const modal = document.getElementById('settingsPasswordModal');
+            const input = document.getElementById('settingsPasswordInput');
+            modal.style.display = 'block';
+            input.value = '';
+            input.focus();
+            
+            // Handle Enter key
+            input.onkeypress = (e) => {
+                if (e.key === 'Enter') {
+                    verifySettingsPassword();
+                }
+            };
+            
+            return false; // Will be set to true if password is correct
+        }
+
+        // Verify Settings Password
+        function verifySettingsPassword() {
+            const input = document.getElementById('settingsPasswordInput');
+            const password = input.value;
+            const storedPassword = localStorage.getItem(SETTINGS_PASSWORD_KEY);
+            
+            if (password && btoa(password) === storedPassword) {
+                settingsAccessGranted = true;
+                document.getElementById('settingsPasswordModal').style.display = 'none';
+                showDashboardPage('settings-page');
+                return true;
+            } else if (password) {
+                alert('Incorrect password. Access denied.');
+                input.value = '';
+                input.focus();
+                return false;
+            }
+            return false;
+        }
 
         // Check authentication state and show appropriate view
         if (auth) {
@@ -2462,6 +2796,15 @@
                         };
                         localStorage.setItem('kotaUser', JSON.stringify(userData));
                         currentUser = userData;
+                        
+                        // Update welcome message
+                        updateWelcomeMessage(userData.displayName);
+                        
+                        // Update sidebar user info
+                        updateSidebarUserInfo(userData);
+                        
+                        // Load saved profile settings
+                        loadProfileSettings();
                         
                         // Hide landing page, show dashboard
                         const landingView = document.getElementById('landing-page-view');
@@ -2656,7 +2999,32 @@
             }, 50);
         });
 
-        // Page navigation
+        // Dashboard Page Navigation
+        function showDashboardPage(pageId) {
+            // Hide all dashboard pages
+            const pages = ['dashboard-page', 'blocks-page', 'new-block-page', 'integrations-page', 
+                          'analytics-page', 'account-page', 'settings-page', 'product-library-page', 
+                          'ai-assistant-page', 'billing-page'];
+            pages.forEach(page => {
+                const pageEl = document.getElementById(page);
+                if (pageEl) pageEl.style.display = 'none';
+            });
+            
+            // Show selected page
+            const targetPage = document.getElementById(pageId);
+            if (targetPage) {
+                targetPage.style.display = 'block';
+            }
+            
+            // Update active nav link
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('active');
+            });
+            const activeLink = document.querySelector(`[data-page="${pageId.replace('-page', '')}"]`);
+            if (activeLink) activeLink.classList.add('active');
+        }
+
+        // Landing Page navigation
         function showPage(pageId) {
             // Hide all pages
             document.getElementById('home-page').style.display = 'none';
@@ -2804,6 +3172,73 @@
             updateUserDisplay();
             loadMockData();
             setupDashboardEventListeners();
+            setupDashboardNavigation();
+            setupProfileAutoSave();
+        }
+
+        // Setup Dashboard Navigation
+        function setupDashboardNavigation() {
+            document.querySelectorAll('.nav-link[data-page]').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const pageId = link.getAttribute('data-page');
+                    
+                    // Special handling for Settings page
+                    if (pageId === 'settings') {
+                        if (!checkSettingsAccess()) {
+                            return;
+                        }
+                    }
+                    
+                    showDashboardPage(pageId + '-page');
+                });
+            });
+        }
+
+        // Setup Profile Auto-Save
+        function setupProfileAutoSave() {
+            const profileForm = document.getElementById('profileForm');
+            if (!profileForm) return;
+
+            // Auto-save on input change
+            const inputs = ['profileName', 'profileEmail', 'profileWebsite', 'profilePictureUrl'];
+            inputs.forEach(inputId => {
+                const input = document.getElementById(inputId);
+                if (input) {
+                    input.addEventListener('input', autoSaveProfile);
+                    input.addEventListener('change', autoSaveProfile);
+                }
+            });
+
+            // Handle profile picture file upload
+            const fileInput = document.getElementById('profilePictureFile');
+            if (fileInput) {
+                fileInput.addEventListener('change', (e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                        document.getElementById('fileName').textContent = file.name;
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                            const dataUrl = event.target.result;
+                            document.getElementById('profilePictureUrl').value = dataUrl;
+                            document.getElementById('profilePicturePreview').src = dataUrl;
+                            autoSaveProfile();
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                });
+            }
+
+            // Handle profile picture URL change
+            const pictureUrlInput = document.getElementById('profilePictureUrl');
+            if (pictureUrlInput) {
+                pictureUrlInput.addEventListener('input', () => {
+                    const url = pictureUrlInput.value;
+                    if (url) {
+                        document.getElementById('profilePicturePreview').src = url;
+                    }
+                });
+            }
         }
 
         // Load mock data
@@ -2873,7 +3308,15 @@
                 link.addEventListener('click', function(e) {
                     e.preventDefault();
                     const page = this.getAttribute('data-page');
-                    showDashboardPage(page);
+                    
+                    // Special handling for Settings page - password protection
+                    if (page === 'settings') {
+                        if (!checkSettingsAccess()) {
+                            return;
+                        }
+                    }
+                    
+                    showDashboardPage(page + '-page');
                     
                     navLinks.forEach(l => l.classList.remove('active'));
                     this.classList.add('active');
