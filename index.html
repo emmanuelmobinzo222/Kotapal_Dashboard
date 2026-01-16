@@ -5,137 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KOTAPAL - Monetize Your Content</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script>
-        // Simple Database System (embedded for reliability)
-        class UserDatabase {
-            constructor() {
-                this.databaseKey = 'kotapal_users_db';
-                this.users = this.loadUsers();
-                console.log('✅ Database initialized with', this.users.length, 'users');
-            }
-
-            loadUsers() {
-                try {
-                    const stored = localStorage.getItem(this.databaseKey);
-                    if (stored) {
-                        const data = JSON.parse(stored);
-                        return data.users || [];
-                    }
-                } catch (e) {
-                    console.log('Error loading database:', e);
-                }
-                return [];
-            }
-
-            saveUsers() {
-                try {
-                    const data = {
-                        users: this.users,
-                        lastUpdated: new Date().toISOString(),
-                        version: '1.0'
-                    };
-                    localStorage.setItem(this.databaseKey, JSON.stringify(data));
-                    console.log('✅ Database saved:', this.users.length, 'users');
-                    return true;
-                } catch (e) {
-                    console.error('Error saving database:', e);
-                    return false;
-                }
-            }
-
-            createUser(userData) {
-                try {
-                    // Check if user already exists
-                    const existingUser = this.findUserByEmail(userData.email);
-                    if (existingUser) {
-                        throw new Error('User with this email already exists');
-                    }
-
-                    // Create user object
-                    const newUser = {
-                        id: 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
-                        name: userData.name,
-                        email: userData.email.toLowerCase().trim(),
-                        password: userData.password,
-                        website: userData.website || '',
-                        plan: userData.plan || 'starter',
-                        createdAt: new Date().toISOString(),
-                        lastLogin: null,
-                        settings: userData.settings || { notifications: true, theme: 'light' }
-                    };
-
-                    // Add to database
-                    this.users.push(newUser);
-                    
-                    // Save database
-                    if (this.saveUsers()) {
-                        console.log('✅ User created successfully:', newUser.email);
-                        return newUser;
-                    } else {
-                        throw new Error('Failed to save user to database');
-                    }
-                } catch (e) {
-                    console.error('Error creating user:', e);
-                    throw e;
-                }
-            }
-
-            findUserByEmail(email) {
-                const normalizedEmail = email.toLowerCase().trim();
-                return this.users.find(user => user.email === normalizedEmail);
-            }
-
-            authenticateUser(email, password) {
-                try {
-                    const user = this.findUserByEmail(email);
-                    if (!user) {
-                        throw new Error('User not found');
-                    }
-
-                    if (user.password !== password) {
-                        throw new Error('Invalid password');
-                    }
-
-                    // Update last login
-                    user.lastLogin = new Date().toISOString();
-                    this.saveUsers();
-
-                    console.log('✅ User authenticated successfully:', user.email);
-                    return user;
-                } catch (e) {
-                    console.error('Authentication error:', e);
-                    throw e;
-                }
-            }
-
-            getAllUsers() {
-                return this.users;
-            }
-
-            getUserCount() {
-                return this.users.length;
-            }
-        }
-
-        // Create global database instance
-        window.userDB = new UserDatabase();
-
-        // Debug functions
-        window.debugDB = {
-            showUsers: () => {
-                console.log('=== USER DATABASE ===');
-                console.log('Total users:', window.userDB.getUserCount());
-                console.log('Users:', window.userDB.getAllUsers());
-            },
-            clearDB: () => {
-                window.userDB.users = [];
-                localStorage.removeItem(window.userDB.databaseKey);
-                console.log('Database cleared');
-            }
-        };
-
-        console.log('✅ User Database System Initialized');
-    </script>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <style>
         /* Reset and Base Styles */
         * {
@@ -774,34 +646,13 @@
 
         .modal-content {
             background-color: white;
-            margin: 6% auto;
+            margin: 10% auto;
             padding: 30px;
             border-radius: 15px;
             width: 90%;
             max-width: 500px;
             position: relative;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-        }
-
-        /* Ensure auth modal content is scrollable within the viewport */
-        #authModal .modal-content {
-            max-height: 90vh;
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
-        }
-
-        /* Make signup panel scrollable and keep submit button visible */
-        #authModal .auth-form.active {
-            max-height: none;
-            overflow: visible;
-        }
-        #authModal .auth-form form {
-            padding-bottom: 20px;
-        }
-        #authModal .auth-form button[type="submit"] {
-            display: block;
-            width: 100%;
-            margin-top: 15px;
         }
 
         .close {
@@ -873,122 +724,6 @@
             color: var(--primary);
         }
 
-        /* Custom Notification System */
-        .notification {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-            padding: 16px 20px;
-            min-width: 300px;
-            max-width: 400px;
-            z-index: 10000;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            animation: slideInRight 0.3s ease-out;
-            border-left: 4px solid var(--primary);
-        }
-        
-        .notification.success {
-            border-left-color: var(--success);
-        }
-        
-        .notification.error {
-            border-left-color: var(--danger);
-        }
-        
-        .notification.warning {
-            border-left-color: var(--warning);
-        }
-        
-        .notification.info {
-            border-left-color: var(--primary);
-        }
-        
-        .notification-icon {
-            font-size: 1.5rem;
-            flex-shrink: 0;
-        }
-        
-        .notification.success .notification-icon {
-            color: var(--success);
-        }
-        
-        .notification.error .notification-icon {
-            color: var(--danger);
-        }
-        
-        .notification.warning .notification-icon {
-            color: var(--warning);
-        }
-        
-        .notification.info .notification-icon {
-            color: var(--primary);
-        }
-        
-        .notification-content {
-            flex: 1;
-        }
-        
-        .notification-title {
-            font-weight: 600;
-            margin-bottom: 4px;
-            color: var(--dark);
-        }
-        
-        .notification-message {
-            font-size: 0.9rem;
-            color: var(--gray);
-        }
-        
-        .notification-close {
-            background: none;
-            border: none;
-            color: var(--gray);
-            font-size: 1.2rem;
-            cursor: pointer;
-            padding: 0;
-            width: 20px;
-            height: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
-        
-        .notification-close:hover {
-            color: var(--dark);
-        }
-        
-        @keyframes slideInRight {
-            from {
-                transform: translateX(100%);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
-        }
-        
-        @keyframes slideOutRight {
-            from {
-                transform: translateX(0);
-                opacity: 1;
-            }
-            to {
-                transform: translateX(100%);
-                opacity: 0;
-            }
-        }
-        
-        .notification.hiding {
-            animation: slideOutRight 0.3s ease-out forwards;
-        }
-        
         @media (max-width: 768px) {
             h1 {
                 font-size: 2.5rem;
@@ -1066,10 +801,11 @@
         <!-- Hero Section -->
         <section class="hero" id="home">
             <div class="hero-content">
-                <h1>Smart Product Blocks That Convert — Anywhere</h1>
-                <p>Kota helps creators, bloggers, and e-commerce sellers combine their Shopify products with Amazon and Walmart affiliate offers — into powerful AI-powered product blocks that work across your blog, store, YouTube, and email.</p>
+                <h1>The Smartest Way to Monetize Your Content</h1>
+                <p>Create beautiful product comparison blocks from Amazon, Walmart, and more. Track clicks. See sales. Grow revenue.</p>
                 <div class="hero-buttons">
-                    <button class="btn btn-primary">Join the Waitlist</button>
+                    <button class="btn btn-primary">Get Started Free</button>
+                    <button class="btn btn-secondary">Watch Demo</button>
                 </div>
                 <div style="display: flex; align-items: center; color: #fff;">
                     <div style="display: flex; margin-right: 15px;">
@@ -1086,71 +822,29 @@
         <!-- Features Section -->
         <section class="features" id="features">
             <div class="container">
-                <h2 class="text-center">Core Features</h2>
+                <h2 class="text-center">Everything you need to turn your content into passive income</h2>
                 <div class="features-grid">
                     <div class="feature-card">
-                        <div class="feature-icon"><i class="fas fa-plug"></i></div>
-                        <h3>Shopify + Affiliate Integration</h3>
-                        <p>Combine owned Shopify products with Amazon and Walmart affiliate offers in unified blocks.</p>
+                        <div class="feature-icon">
+                            <i class="fas fa-shopping-cart"></i>
                         </div>
-                    <div class="feature-card">
-                        <div class="feature-icon"><i class="fas fa-link"></i></div>
-                        <h3>Amazon + Walmart Product Sync</h3>
-                        <p>Keep listings fresh with automatic product, price, and link updates from both networks.</p>
+                        <h3>Embed product blocks from top retailers</h3>
+                        <p>Generate beautiful, SEO-friendly product comparison blocks from Amazon, Walmart, Shopify and more with a single click.</p>
                     </div>
                     <div class="feature-card">
-                        <div class="feature-icon"><i class="fas fa-brain"></i></div>
-                        <h3>AI Copy & Recommendations</h3>
-                        <p>Let AI write blurbs, pros/cons, and suggest higher‑converting alternatives.</p>
+                        <div class="feature-icon">
+                            <i class="fas fa-chart-line"></i>
                         </div>
-                    <div class="feature-card">
-                        <div class="feature-icon"><i class="fas fa-globe"></i></div>
-                        <h3>Universal Embed System</h3>
-                        <p>Embed anywhere: WordPress, Shopify, Ghost, Webflow, Substack, email, YouTube overlays.</p>
+                        <h3>One dashboard for clicks, conversions, and commissions</h3>
+                        <p>Monitor all your affiliate performance metrics in one unified dashboard. See exactly what's working and optimize your content.</p>
                     </div>
                     <div class="feature-card">
-                        <div class="feature-icon"><i class="fas fa-chart-bar"></i></div>
-                        <h3>Analytics Dashboard</h3>
-                        <p>See clicks, CTR, conversions, and get smart suggestions to optimize performance.</p>
+                        <div class="feature-icon">
+                            <i class="fas fa-users"></i>
                         </div>
+                        <h3>Built for bloggers, YouTubers, and Shopify sellers</h3>
+                        <p>Our tools are designed specifically for content creators who want to turn their passion into sustainable passive income.</p>
                     </div>
-            </div>
-        </section>
-
-        <!-- How It Works Section -->
-        <section class="features" style="background:#f9fafb;">
-            <div class="container">
-                <h2 class="text-center">How It Works</h2>
-                <div class="features-grid">
-                    <div class="feature-card">
-                        <div class="feature-icon"><span style="font-weight:700;font-size:1.2rem;">1</span></div>
-                        <h3>Connect Shopify, Amazon, and Walmart</h3>
-                        <p>Securely connect your store and affiliate accounts in minutes.</p>
-                    </div>
-                    <div class="feature-card">
-                        <div class="feature-icon"><span style="font-weight:700;font-size:1.2rem;">2</span></div>
-                        <h3>Drag & drop your SmartBlock</h3>
-                        <p>Build tables, carousels, callouts, bundles, and comparisons.</p>
-                    </div>
-                    <div class="feature-card">
-                        <div class="feature-icon"><span style="font-weight:700;font-size:1.2rem;">3</span></div>
-                        <h3>Embed it anywhere — and track results</h3>
-                        <p>Paste the embed and watch analytics roll in across every channel.</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Social Proof Section -->
-        <section class="products">
-            <div class="container text-center">
-                <h2>Trusted by Creators and Stores</h2>
-                <p>Logos of creators, blogs, and stores that use Kota (coming soon)</p>
-                <div style="display:flex;gap:30px;justify-content:center;align-items:center;opacity:0.6;flex-wrap:wrap;">
-                    <div style="width:120px;height:40px;background:#e5e7eb;border-radius:8px;"></div>
-                    <div style="width:120px;height:40px;background:#e5e7eb;border-radius:8px;"></div>
-                    <div style="width:120px;height:40px;background:#e5e7eb;border-radius:8px;"></div>
-                    <div style="width:120px;height:40px;background:#e5e7eb;border-radius:8px;"></div>
                 </div>
             </div>
         </section>
@@ -1158,63 +852,57 @@
         <!-- Pricing Section -->
         <section class="pricing" id="pricing">
             <div class="container">
-                <h2 class="text-center">Simple Plans That Scale With You</h2>
-                <p class="text-center">Pick the plan that matches your growth</p>
+                <h2 class="text-center">Simple Pricing</h2>
+                <p class="text-center">Choose the plan that fits your content strategy</p>
                 <div class="pricing-grid">
                     <div class="pricing-card">
-                        <h3>Free</h3>
+                        <h3>Starter</h3>
                         <div class="price">$0<span class="price-period">/free</span></div>
                         <ul class="features-list">
-                            <li><i class="fas fa-check"></i> 1 Shopify store</li>
-                            <li><i class="fas fa-check"></i> Amazon or Walmart only</li>
-                            <li><i class="fas fa-check"></i> Limited blocks</li>
-                            <li><i class="fas fa-check"></i> Watermarked embed</li>
-                        </ul>
-                        <button class="btn btn-primary">Join the Waitlist</button>
-                    </div>
-                    <div class="pricing-card">
-                        <h3>Starter</h3>
-                        <div class="price">$19<span class="price-period">/mo</span></div>
-                        <ul class="features-list">
-                            <li><i class="fas fa-check"></i> Unlimited blocks</li>
-                            <li><i class="fas fa-check"></i> Shopify + 1 Affiliate Network</li>
+                            <li><i class="fas fa-check"></i> 5 product blocks</li>
+                            <li><i class="fas fa-check"></i> Amazon only</li>
                             <li><i class="fas fa-check"></i> Basic analytics</li>
+                            <li><i class="fas fa-check"></i> Email support</li>
                         </ul>
-                        <button class="btn btn-primary">Join the Waitlist</button>
+                        <button class="btn btn-primary">Get Started Free</button>
                     </div>
                     <div class="pricing-card popular">
                         <div class="popular-tag">Most Popular</div>
                         <h3>Pro</h3>
-                        <div class="price">$49<span class="price-period">/mo</span></div>
+                        <div class="price">$19<span class="price-period">/month</span></div>
                         <ul class="features-list">
-                            <li><i class="fas fa-check"></i> Shopify + Amazon + Walmart</li>
-                            <li><i class="fas fa-check"></i> AI Writer & Optimizer</li>
-                            <li><i class="fas fa-check"></i> Smart Geo Redirect</li>
-                            <li><i class="fas fa-check"></i> Email-friendly exports</li>
+                            <li><i class="fas fa-check"></i> 50 product blocks</li>
+                            <li><i class="fas fa-check"></i> All retailers (Amazon, Walmart, Shopify)</li>
+                            <li><i class="fas fa-check"></i> Full analytics dashboard</li>
+                            <li><i class="fas fa-check"></i> Click & conversion tracking</li>
+                            <li><i class="fas fa-check"></i> Email + chat support</li>
                         </ul>
-                        <button class="btn btn-primary">Join the Waitlist</button>
+                        <button class="btn btn-primary">Start Free Trial</button>
                     </div>
                     <div class="pricing-card">
                         <h3>Creator+</h3>
-                        <div class="price">$99<span class="price-period">/mo</span></div>
+                        <div class="price">$49<span class="price-period">/month</span></div>
                         <ul class="features-list">
-                            <li><i class="fas fa-check"></i> YouTube Overlay Blocks</li>
-                            <li><i class="fas fa-check"></i> Conversion tracking</li>
-                            <li><i class="fas fa-check"></i> Newsletter block formats</li>
-                            <li><i class="fas fa-check"></i> Heatmaps & CTR insights</li>
+                            <li><i class="fas fa-check"></i> Unlimited product blocks</li>
+                            <li><i class="fas fa-check"></i> All retailers + custom integrations</li>
+                            <li><i class="fas fa-check"></i> AI-powered recommendations</li>
+                            <li><i class="fas fa-check"></i> SmartAlerts for performance changes</li>
+                            <li><i class="fas fa-check"></i> Export reports (PDF/CSV)</li>
+                            <li><i class="fas fa-check"></i> Priority support</li>
+                            <li><i class="fas fa-check"></i> Advanced SEO optimization</li>
                         </ul>
-                        <button class="btn btn-primary">Join the Waitlist</button>
+                        <button class="btn btn-primary">Start Free Trial</button>
                     </div>
                     <div class="pricing-card">
-                        <div class="popular-tag">Top Tier</div>
                         <h3>Agency</h3>
-                        <div class="price">$199+<span class="price-period">/mo</span></div>
+                        <div class="price">$199<span class="price-period">/month</span></div>
                         <ul class="features-list">
-                            <li><i class="fas fa-check"></i> Whitelabel embeds</li>
+                            <li><i class="fas fa-check"></i> White label embeds</li>
                             <li><i class="fas fa-check"></i> Multiple client management</li>
                             <li><i class="fas fa-check"></i> Custom domains & branding</li>
+                    
                         </ul>
-                        <button class="btn btn-primary">Join the Waitlist</button>
+                        <button class="btn btn-primary">Start Free Trial</button>
                     </div>
                 </div>
                 <p class="text-center" style="margin-top: 30px;">All plans include a 14-day free trial. No credit card required.</p>
@@ -1290,25 +978,10 @@
         <!-- About Section -->
         <section class="about" id="about" style="background-color: var(--light);">
             <div class="container text-center">
-                <h2>We Believe Creators Deserve Smarter Tools</h2>
-                <p class="text-center" style="max-width: 800px; margin: 0 auto; font-size: 1.2rem;">
-                    Kota is built for modern creators who want to blend affiliate and owned product sales. Our team comes from e‑commerce, content marketing, and AI — and we're building the tools we always wished existed.
+                <h2>About Us</h2>
+                <p class="text-center" style="max-width: 700px; margin: 0 auto; font-size: 1.2rem;">
+                    Kota was built for creators who want smarter affiliate tools. We're a small team with a big mission: help people turn great content into passive income.
                 </p>
-                <div class="features-grid" style="margin-top:30px;">
-                    <div class="feature-card"><h3>Our Values</h3>
-                        <ul style="text-align:left; list-style: none;">
-                            <li>• Transparency over hype</li>
-                            <li>• Performance over clutter</li>
-                            <li>• Empowerment over complexity</li>
-                        </ul>
-                    </div>
-                    <div class="feature-card"><h3>Team</h3>
-                        <p>Founder: [Your Name Here]<br>Tech: [Co‑Founder or Hiring Soon]<br>Community: [email/contact form]</p>
-                    </div>
-                    <div class="feature-card"><h3>Call to Action</h3>
-                        <p>We're growing — want to help? Join us or give feedback!</p>
-                    </div>
-                </div>
             </div>
         </section>
     </div>
@@ -1317,8 +990,8 @@
     <div id="blog-page" style="display: none;">
         <section class="page-content blog">
             <div class="container">
-                <h1 class="text-center">Build Smarter. Sell Smarter.</h1>
-                <p class="text-center">Guides, tutorials, strategies, and use cases to help creators monetize smarter with Kota.</p>
+                <h1 class="text-center">Blog</h1>
+                <p class="text-center">Insights, tips, and success stories from creators just like you</p>
                 
                 <div class="blog-grid">
                     <div class="blog-card">
@@ -1556,6 +1229,25 @@
         </div>
     </div>
 
+    <!-- Password Reset Modal -->
+    <div id="resetPasswordModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close" id="closeResetModal">&times;</span>
+            <h2>Reset Password</h2>
+            <div id="resetMessage" class="form-status" style="display: none; margin-bottom: 20px;"></div>
+            <form id="resetPasswordForm">
+                <div class="form-group">
+                    <label for="resetEmail">Email</label>
+                    <input type="email" id="resetEmail" required placeholder="Enter your email address">
+                </div>
+                <button type="submit" class="btn btn-primary">Send Reset Link</button>
+            </form>
+            <div style="text-align: center; margin-top: 20px;">
+                <a href="#" id="backToLogin">Back to Login</a>
+            </div>
+        </div>
+    </div>
+
     <!-- Login/Signup Modal -->
     <div id="authModal" class="modal" style="display: none;">
         <div class="modal-content">
@@ -1566,7 +1258,8 @@
             </div>
             <div id="loginForm" class="auth-form active">
                 <h2>Welcome Back!</h2>
-                <form id="loginFormInner">
+                <div id="authMessage" class="form-status" style="display: none; margin-bottom: 20px;"></div>
+                <form id="loginFormElement">
                     <div class="form-group">
                         <label for="loginEmail">Email</label>
                         <input type="email" id="loginEmail" required>
@@ -1576,21 +1269,15 @@
                         <input type="password" id="loginPassword" required>
                     </div>
                     <div class="form-group">
-                        <a href="#" class="forgot-password">Forgot Password?</a>
+                        <a href="#" class="forgot-password" id="forgotPasswordLink">Forgot Password?</a>
                     </div>
                     <button type="submit" class="btn btn-primary">Login</button>
-                    <div style="text-align: center; margin: 15px 0; color: var(--gray);">or</div>
-                    <button type="button" class="btn btn-secondary" style="width: 100%;" onclick="alert('Google Sign-In will be available soon!')">
-                        <i class="fab fa-google"></i> Sign in with Google
-                    </button>
-                    <button type="button" class="btn btn-outline" style="width: 100%; margin-top: 10px; font-size: 0.8rem;" onclick="debugDB.showUsers()">
-                        🔍 Show Database
-                    </button>
                 </form>
             </div>
             <div id="signupForm" class="auth-form">
                 <h2>Create Account</h2>
-                <form id="signupFormInner">
+                <div id="signupMessage" class="form-status" style="display: none; margin-bottom: 20px;"></div>
+                <form id="signupFormElement">
                     <div class="form-group">
                         <label for="signupName">Full Name</label>
                         <input type="text" id="signupName" required>
@@ -1601,93 +1288,184 @@
                     </div>
                     <div class="form-group">
                         <label for="signupPassword">Password</label>
-                        <input type="password" id="signupPassword" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="signupWebsite">Website/Blog URL (Optional)</label>
-                        <input type="url" id="signupWebsite" placeholder="https://yourwebsite.com">
-                    </div>
-                    <div class="form-group">
-                        <label>Select Plan</label>
-                        <div id="planCards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-top:10px;">
-                            <div class="card plan-card" data-plan="starter" style="cursor:pointer;border:2px solid #e5e7eb;">
-                                <div style="padding:12px;">
-                                    <div style="font-weight:700;">Starter</div>
-                                    <div class="stat-label">Free • Basic features</div>
-                                </div>
-                            </div>
-                            <div class="card plan-card" data-plan="pro" style="cursor:pointer;border:2px solid #e5e7eb;">
-                                <div style="padding:12px;">
-                                    <div style="font-weight:700;">Pro</div>
-                                    <div class="stat-label">$19/mo • Analytics & more</div>
-                                </div>
-                            </div>
-                            <div class="card plan-card" data-plan="creatorplus" style="cursor:pointer;border:2px solid #e5e7eb;">
-                                <div style="padding:12px;">
-                                    <div style="font-weight:700;">Creator+</div>
-                                    <div class="stat-label">$49/mo • Unlimited, SmartAlerts</div>
-                                </div>
-                            </div>
-                            <div class="card plan-card" data-plan="agency" style="cursor:pointer;border:2px solid #e5e7eb;">
-                                <div style="padding:12px;">
-                                    <div style="font-weight:700;">Agency</div>
-                                    <div class="stat-label">$199/mo • White-label, Multi-client</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div style="font-size: 0.9rem; color: var(--gray); margin: 15px 0;">
-                        By signing up, you agree to our <a href="#" style="color: var(--primary);">Terms of Service</a> and <a href="#" style="color: var(--primary);">Privacy Policy</a>.
+                        <input type="password" id="signupPassword" required minlength="6" placeholder="Minimum 6 characters">
                     </div>
                     <button type="submit" class="btn btn-primary">Sign Up</button>
-                    <div style="text-align: center; margin: 15px 0; color: var(--gray);">or</div>
-                    <button type="button" class="btn btn-secondary" style="width: 100%;" onclick="alert('Google Sign-In will be available soon!')">
-                        <i class="fab fa-google"></i> Sign up with Google
-                    </button>
-                    <div id="lpSignupStatus" style="margin-top:10px;font-size:0.9rem;color:#6b7280;"></div>
                 </form>
             </div>
         </div>
     </div>
 
     <script>
-        // Custom Notification System
-        function showNotification(message, type = 'info', title = null) {
-            // Remove existing notifications
-            const existing = document.querySelectorAll('.notification');
-            existing.forEach(n => n.remove());
-            
-            const notification = document.createElement('div');
-            notification.className = `notification ${type}`;
-            
-            // Set icon based on type
-            let icon = 'fas fa-info-circle';
-            if (type === 'success') icon = 'fas fa-check-circle';
-            if (type === 'error') icon = 'fas fa-exclamation-circle';
-            if (type === 'warning') icon = 'fas fa-exclamation-triangle';
-            
-            // Set title based on type if not provided
-            const displayTitle = title || (type === 'success' ? 'Success' : type === 'error' ? 'Error' : type === 'warning' ? 'Warning' : 'Info');
-            
-            notification.innerHTML = `
-                <i class="${icon} notification-icon"></i>
-                <div class="notification-content">
-                    ${title !== null ? `<div class="notification-title">${displayTitle}</div>` : ''}
-                    <div class="notification-message">${message}</div>
-                </div>
-                <button class="notification-close" onclick="this.closest('.notification').remove()">&times;</button>
-            `;
-            
-            document.body.appendChild(notification);
-            
-            // Auto-remove after duration
-            const duration = type === 'error' ? 5000 : 4000;
+        // ============================================
+        // Firebase Configuration
+        // ============================================
+        // IMPORTANT: Replace these values with your Firebase project configuration
+        // Get these from: Firebase Console > Project Settings > General > Your apps
+        
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_AUTH_DOMAIN",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_STORAGE_BUCKET",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+
+        // ============================================
+        // Firebase Authentication Functions
+        // ============================================
+
+        // Show auth message
+        function showAuthMessage(elementId, message, type) {
+            const messageEl = document.getElementById(elementId);
+            messageEl.textContent = message;
+            messageEl.className = 'form-status ' + type;
+            messageEl.style.display = 'block';
             setTimeout(() => {
-                notification.classList.add('hiding');
-                setTimeout(() => notification.remove(), 300);
-            }, duration);
+                messageEl.style.display = 'none';
+            }, 5000);
         }
 
+        // Handle Login
+        async function handleFirebaseLogin(email, password) {
+            try {
+                const userCredential = await auth.signInWithEmailAndPassword(email, password);
+                const user = userCredential.user;
+                
+                // Get user display name from Firestore or use email
+                const displayName = user.displayName || user.email.split('@')[0];
+                
+                // Store user data in localStorage
+                const userData = {
+                    uid: user.uid,
+                    email: user.email,
+                    displayName: displayName,
+                    emailVerified: user.emailVerified
+                };
+                localStorage.setItem('kotaUser', JSON.stringify(userData));
+                
+                // Close modal and redirect to dashboard
+                closeAuthModal();
+                showAuthMessage('authMessage', 'Login successful! Redirecting...', 'success');
+                
+                // Redirect to dashboard after a short delay
+                setTimeout(() => {
+                    window.location.href = 'dashboard.html';
+                }, 1000);
+            } catch (error) {
+                let errorMessage = 'Login failed. Please try again.';
+                switch (error.code) {
+                    case 'auth/user-not-found':
+                        errorMessage = 'No account found with this email.';
+                        break;
+                    case 'auth/wrong-password':
+                        errorMessage = 'Incorrect password.';
+                        break;
+                    case 'auth/invalid-email':
+                        errorMessage = 'Invalid email address.';
+                        break;
+                    case 'auth/user-disabled':
+                        errorMessage = 'This account has been disabled.';
+                        break;
+                    case 'auth/too-many-requests':
+                        errorMessage = 'Too many failed attempts. Please try again later.';
+                        break;
+                }
+                showAuthMessage('authMessage', errorMessage, 'error');
+            }
+        }
+
+        // Handle Sign Up
+        async function handleFirebaseSignup(name, email, password) {
+            try {
+                const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+                const user = userCredential.user;
+                
+                // Update user profile with display name
+                await user.updateProfile({
+                    displayName: name
+                });
+                
+                // Store user data in localStorage
+                const userData = {
+                    uid: user.uid,
+                    email: user.email,
+                    displayName: name,
+                    emailVerified: user.emailVerified
+                };
+                localStorage.setItem('kotaUser', JSON.stringify(userData));
+                
+                // Close modal and redirect to dashboard
+                closeAuthModal();
+                showAuthMessage('signupMessage', 'Account created successfully! Redirecting...', 'success');
+                
+                // Redirect to dashboard after a short delay
+                setTimeout(() => {
+                    window.location.href = 'dashboard.html';
+                }, 1000);
+            } catch (error) {
+                let errorMessage = 'Sign up failed. Please try again.';
+                switch (error.code) {
+                    case 'auth/email-already-in-use':
+                        errorMessage = 'An account with this email already exists.';
+                        break;
+                    case 'auth/invalid-email':
+                        errorMessage = 'Invalid email address.';
+                        break;
+                    case 'auth/weak-password':
+                        errorMessage = 'Password should be at least 6 characters.';
+                        break;
+                }
+                showAuthMessage('signupMessage', errorMessage, 'error');
+            }
+        }
+
+        // Handle Password Reset
+        async function handlePasswordReset(email) {
+            try {
+                await auth.sendPasswordResetEmail(email);
+                showAuthMessage('resetMessage', 'Password reset email sent! Check your inbox.', 'success');
+                document.getElementById('resetPasswordForm').reset();
+            } catch (error) {
+                let errorMessage = 'Failed to send reset email. Please try again.';
+                switch (error.code) {
+                    case 'auth/user-not-found':
+                        errorMessage = 'No account found with this email.';
+                        break;
+                    case 'auth/invalid-email':
+                        errorMessage = 'Invalid email address.';
+                        break;
+                }
+                showAuthMessage('resetMessage', errorMessage, 'error');
+            }
+        }
+
+        // Check if user is already logged in
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                // User is signed in
+                const userData = {
+                    uid: user.uid,
+                    email: user.email,
+                    displayName: user.displayName || user.email.split('@')[0],
+                    emailVerified: user.emailVerified
+                };
+                localStorage.setItem('kotaUser', JSON.stringify(userData));
+            } else {
+                // User is signed out
+                // Keep localStorage for now, will be cleared on logout
+            }
+        });
+
+        // ============================================
+        // Existing JavaScript Code
+        // ============================================
+        
         // Set current year in footer
         document.getElementById('currentYear').textContent = new Date().getFullYear();
 
@@ -1699,7 +1477,7 @@
 
         // Auth Modal Functions
         const authModal = document.getElementById('authModal');
-        const closeBtns = document.querySelectorAll('#authModal .close');
+        const closeBtn = document.querySelector('.close');
         const authTabs = document.querySelectorAll('.auth-tab');
         const authForms = document.querySelectorAll('.auth-form');
 
@@ -1721,9 +1499,7 @@
         }
 
         // Close button click
-        closeBtns.forEach(btn => {
-            btn.onclick = closeAuthModal;
-        });
+        closeBtn.onclick = closeAuthModal;
 
         // Tab switching
         authTabs.forEach(tab => {
@@ -1757,176 +1533,59 @@
             }
         });
 
-        // Landing auth wiring to backend
-        let API_BASE = 'http://localhost:3000';
-        
-        console.log('API_BASE set to:', API_BASE);
-        console.log('Current location:', location.href);
+        // ============================================
+        // Firebase Auth Form Handlers
+        // ============================================
 
-        async function apiRequest(path, { method = 'GET', body } = {}) {
-            const headers = { 'Content-Type': 'application/json' };
-            const token = localStorage.getItem('kotaToken');
-            if (token) headers['Authorization'] = 'Bearer ' + token;
-            
-            const url = API_BASE + path;
-            console.log(`${method} Request:`, url);
-            if (body) console.log('Body:', body);
-            
-            const controller = new AbortController();
-            const timeout = setTimeout(() => controller.abort(), 10000); // Increased timeout to 10 seconds
-            try {
-                const res = await fetch(url, {
-                    method,
-                    headers,
-                    body: body ? JSON.stringify(body) : undefined,
-                    signal: controller.signal
-                });
-                console.log('Response status:', res.status);
-                if (!res.ok) {
-                    const err = await res.json().catch(() => ({}));
-                    console.error('Error response:', err);
-                    throw new Error(err.error || `HTTP ${res.status}`);
-                }
-                const data = await res.json();
-                console.log('Success:', data);
-                return data;
-            } catch (e) {
-                console.error('Request failed:', e.message);
-                // For login/signup, don't throw immediately - let the calling function handle offline mode
-                if (path.includes('/auth/')) {
-                    throw new Error('OFFLINE_MODE');
-                }
-                throw new Error(e.message === 'The user aborted a request.' ? 'Network timeout contacting API' : (e.message || 'Network error'));
-            } finally {
-                clearTimeout(timeout);
-            }
-        }
-
-        // Handle login (landing modal)
-        document.querySelector('#loginFormInner').addEventListener('submit', async function(e) {
+        // Login form submission
+        document.getElementById('loginFormElement').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const email = document.getElementById('loginEmail').value.trim();
+            const email = document.getElementById('loginEmail').value;
             const password = document.getElementById('loginPassword').value;
-            const btn = this.querySelector('button[type="submit"]');
-            btn.disabled = true; btn.textContent = 'Logging in...';
-            
-            console.log('=== LOGIN ATTEMPT ===');
-            console.log('Email:', email);
-            console.log('Password:', password);
-            
-            try {
-                // Use database to authenticate user
-                const user = window.userDB.authenticateUser(email, password);
-                
-                console.log('✅ LOGIN SUCCESS');
-                console.log('User:', user);
-                
-                // Store current user for dashboard (match dashboard expectations)
-                localStorage.setItem('currentUser', JSON.stringify(user));
-                sessionStorage.setItem('currentUser', JSON.stringify(user));
-                // Also persist under kotaUser/kotaToken so dashboard picks it up
-                localStorage.setItem('kotaUser', JSON.stringify(user));
-                localStorage.setItem('kotaToken', 'db_token_' + btoa(user.email));
-                
-                showNotification('Welcome back ' + user.name + '!', 'success', 'Welcome!');
-                setTimeout(() => {
-                    closeAuthModal();
-                    window.location.href = 'dashboard.html#dashboard';
-                }, 1000);
-                
-            } catch (error) {
-                console.log('❌ Login failed:', error.message);
-                
-                if (error.message === 'User not found') {
-                    showNotification('No account found with email: ' + email + '. Please click "Get Started" to create an account first.', 'error', 'Account Not Found');
-                } else if (error.message === 'Invalid password') {
-                    showNotification('Wrong password. Please try again.', 'error', 'Login Failed');
-                } else {
-                    showNotification('Login failed: ' + error.message, 'error', 'Login Error');
-                }
-                
-                btn.disabled = false; btn.textContent = 'Login';
-            }
+            await handleFirebaseLogin(email, password);
         });
 
-        // Handle signup (landing modal)
-        document.querySelector('#signupFormInner').addEventListener('submit', async function(e) {
+        // Signup form submission
+        document.getElementById('signupFormElement').addEventListener('submit', async (e) => {
             e.preventDefault();
             const name = document.getElementById('signupName').value;
-            const email = document.getElementById('signupEmail').value.trim();
+            const email = document.getElementById('signupEmail').value;
             const password = document.getElementById('signupPassword').value;
-            const website = document.getElementById('signupWebsite').value;
-            
-            console.log('📝 SIGNUP STARTED');
-            console.log('Name:', name);
-            console.log('Email:', email);
-            console.log('Password:', password);
-            
-            // Get selected plan
-            let plan = (document.querySelector('.plan-card[style*="var(--primary)"]')?.getAttribute('data-plan')) || 'starter';
-            const status = document.getElementById('lpSignupStatus');
-            const btn = this.querySelector('button[type="submit"]');
-            
-            if (status) { status.style.color = '#6b7280'; status.textContent = 'Creating your account...'; }
-            btn.disabled = true; btn.textContent = 'Signing up...';
-            
-            try {
-                // Get selected plan
-                let plan = (document.querySelector('.plan-card[style*="var(--primary)"]')?.getAttribute('data-plan')) || 'starter';
-                
-                console.log('🆕 Creating user account');
-                console.log('Name:', name);
-                console.log('Email:', email);
-                console.log('Plan:', plan);
-                
-                // Use database to create user
-                const userData = {
-                    name: name,
-                    email: email.toLowerCase().trim(),
-                    password: password,
-                    website: website || '',
-                    plan: plan,
-                    settings: { notifications: true, theme: 'light' }
-                };
-                
-                const newUser = window.userDB.createUser(userData);
-                
-                console.log('✅ User created successfully');
-                console.log('User:', newUser);
-                
-                // Store current user for dashboard (match dashboard expectations)
-                localStorage.setItem('currentUser', JSON.stringify(newUser));
-                sessionStorage.setItem('currentUser', JSON.stringify(newUser));
-                // Also persist under kotaUser/kotaToken so dashboard picks it up
-                localStorage.setItem('kotaUser', JSON.stringify(newUser));
-                localStorage.setItem('kotaToken', 'db_token_' + btoa(newUser.email));
-                
-                showNotification('Account created successfully! Welcome ' + name + '!', 'success', 'Welcome!');
-                setTimeout(() => {
-                    closeAuthModal();
-                    window.location.href = 'dashboard.html#dashboard';
-                }, 1500);
-                
-            } catch (err) {
-                console.error('Signup error:', err);
-                
-                if (err.message.includes('already exists')) {
-                    showNotification('An account with this email already exists. Please try logging in instead.', 'warning', 'Account Exists');
-                } else {
-                    showNotification('Signup failed: ' + (err.message || 'Unknown error'), 'error', 'Signup Error');
-                }
-            } finally {
-                btn.disabled = false; btn.textContent = 'Sign Up';
-                if (status) { status.textContent = ''; }
-            }
+            await handleFirebaseSignup(name, email, password);
         });
 
-        // Sync plan cards with dropdown (same behavior as dashboard)
-        document.querySelectorAll('.plan-card').forEach(card => {
-            card.addEventListener('click', function() {
-                document.querySelectorAll('.plan-card').forEach(c => c.style.border = '2px solid #e5e7eb');
-                this.style.border = '2px solid var(--primary)';
-            });
+        // Forgot password link
+        document.getElementById('forgotPasswordLink').addEventListener('click', (e) => {
+            e.preventDefault();
+            closeAuthModal();
+            document.getElementById('resetPasswordModal').style.display = 'block';
+        });
+
+        // Password reset form
+        const resetPasswordModal = document.getElementById('resetPasswordModal');
+        document.getElementById('resetPasswordForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('resetEmail').value;
+            await handlePasswordReset(email);
+        });
+
+        // Close reset password modal
+        document.getElementById('closeResetModal').addEventListener('click', () => {
+            resetPasswordModal.style.display = 'none';
+        });
+
+        // Back to login from reset modal
+        document.getElementById('backToLogin').addEventListener('click', (e) => {
+            e.preventDefault();
+            resetPasswordModal.style.display = 'none';
+            showAuthModal();
+        });
+
+        // Close reset modal when clicking outside
+        window.addEventListener('click', (event) => {
+            if (event.target == resetPasswordModal) {
+                resetPasswordModal.style.display = 'none';
+            }
         });
 
         // Simulate real-time price updates
@@ -1961,6 +1620,20 @@
                 }
             }, 50);
         });
+
+        // Page navigation
+        function showPage(pageId) {
+            // Hide all pages
+            document.getElementById('home-page').style.display = 'none';
+            document.getElementById('blog-page').style.display = 'none';
+            document.getElementById('contact-page').style.display = 'none';
+            
+            // Show selected page
+            document.getElementById(pageId).style.display = 'block';
+            
+            // Scroll to top
+            window.scrollTo(0, 0);
+        }
 
         // Smooth scroll to section
         function scrollToSection(sectionId) {
@@ -2069,84 +1742,22 @@
             }, 5000);
         }
 
-        // Debug function to check localStorage
-        function debugLocalStorage() {
-            console.log('=== LOCALSTORAGE DEBUG ===');
-            console.log('All keys:', Object.keys(localStorage));
-            console.log('kotaUser:', localStorage.getItem('kotaUser'));
-            console.log('kotaToken:', localStorage.getItem('kotaToken'));
-            
-            const user = localStorage.getItem('kotaUser');
-            if (user) {
-                try {
-                    const parsed = JSON.parse(user);
-                    console.log('Parsed user:', parsed);
-                    console.log('User email:', parsed.email);
-                    console.log('User password:', parsed.password);
-                } catch (e) {
-                    console.log('Error parsing user:', e);
-                }
-            } else {
-                console.log('❌ NO USER FOUND IN LOCALSTORAGE');
-                console.log('This means either:');
-                console.log('1. You never signed up');
-                console.log('2. localStorage was cleared');
-                console.log('3. Browser is in private/incognito mode');
-            }
-            console.log('=== END DEBUG ===');
-            
-            // Show alert with results
-            if (user) {
-                const parsed = JSON.parse(user);
-                alert('User found!\n\nEmail: ' + parsed.email + '\nPassword: ' + parsed.password + '\n\nUse these exact credentials to login.');
-            } else {
-                alert('No user found in localStorage!\n\nPlease sign up first or check if you\'re in private browsing mode.');
-            }
-        }
-
-        // Create test user for debugging
-        function createTestUser() {
-            const testUser = {
-                id: 'test_user_123',
-                name: 'Test User',
-                email: 'test@test.com',
-                password: 'test123',
-                website: '',
-                plan: 'starter',
-                createdAt: new Date().toISOString(),
-                settings: { notifications: true, theme: 'light' }
-            };
-            
-            localStorage.setItem('kotaUser', JSON.stringify(testUser));
-            localStorage.setItem('kotaToken', 'test_token_123');
-            
-            console.log('✅ Test user created');
-            alert('Test user created!\n\nEmail: test@test.com\nPassword: test123\n\nTry logging in with these credentials.');
-        }
-
         // Show specific page
         function showPage(pageId) {
             // Hide all pages
-            const pages = ['home-page', 'blog-page', 'contact-page'];
-            pages.forEach(id => {
-                const page = document.getElementById(id);
-                if (page) page.style.display = 'none';
-            });
+            document.getElementById('home-page').style.display = 'none';
+            document.getElementById('blog-page').style.display = 'none';
+            document.getElementById('contact-page').style.display = 'none';
             
             // Show selected page
-            const targetPage = document.getElementById(pageId);
-            if (targetPage) {
-                targetPage.style.display = 'block';
-            }
+            document.getElementById(pageId).style.display = 'block';
             
             // Scroll to top
             window.scrollTo({ top: 0, behavior: 'smooth' });
 
             // Close mobile menu if open
-            const navLinks = document.querySelector('.nav-links');
-            const mobileMenuBtn = document.getElementById('mobileMenuBtn');
-            if (navLinks) navLinks.classList.remove('active');
-            if (mobileMenuBtn) mobileMenuBtn.classList.remove('active');
+            document.querySelector('.nav-links').classList.remove('active');
+            document.getElementById('mobileMenuBtn').classList.remove('active');
         }
     </script>
 </body>

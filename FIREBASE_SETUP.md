@@ -1,127 +1,190 @@
-# Firebase Hosting Setup Guide
+# Firebase Authentication Setup Guide
 
-This guide will help you set up Firebase Hosting for your KotaPal Dashboard.
+This guide will help you configure Firebase Authentication for the KOTA PAL application.
 
 ## Prerequisites
 
-1. A Firebase account (sign up at https://firebase.google.com)
-2. Firebase CLI installed locally (optional, for manual deployment)
-3. A Firebase project created
+1. A Google account
+2. Access to Firebase Console (https://console.firebase.google.com/)
 
-## Step 1: Create Firebase Project
+## Step 1: Create a Firebase Project
 
 1. Go to [Firebase Console](https://console.firebase.google.com/)
 2. Click "Add project" or select an existing project
-3. Follow the setup wizard
-4. Note your **Project ID** (you'll need this later)
+3. Follow the setup wizard:
+   - Enter a project name (e.g., "KotaPal")
+   - Choose whether to enable Google Analytics (optional)
+   - Click "Create project"
 
-## Step 2: Configure Firebase Project ID
+## Step 2: Add a Web App to Your Firebase Project
 
-Edit the `.firebaserc` file and replace `your-firebase-project-id` with your actual Firebase project ID:
-
-```json
-{
-  "projects": {
-    "default": "your-actual-project-id"
-  }
-}
-```
-
-## Step 3: Initialize Firebase Hosting (Local Setup)
-
-If you want to deploy manually from your local machine:
-
-```bash
-# Install Firebase CLI globally
-npm install -g firebase-tools
-
-# Login to Firebase
-firebase login
-
-# Initialize hosting (if not already done)
-firebase init hosting
-
-# Deploy
-firebase deploy --only hosting
-```
-
-## Step 4: Set Up GitHub Actions (Automatic Deployment)
-
-### Option A: Using Firebase Service Account (Recommended)
-
-1. **Get Firebase Service Account Key:**
-   - Go to Firebase Console → Project Settings → Service Accounts
-   - Click "Generate new private key"
-   - Save the JSON file (keep it secure!)
-
-2. **Add GitHub Secrets:**
-   - Go to your GitHub repository
-   - Navigate to Settings → Secrets and variables → Actions
-   - Add the following secrets:
-     - `FIREBASE_SERVICE_ACCOUNT`: Paste the entire contents of the service account JSON file
-     - `FIREBASE_PROJECT_ID`: Your Firebase project ID
-
-3. **Deploy:**
-   - The workflow will automatically deploy on push to `main` or `master` branch
-   - Or manually trigger it from the Actions tab
-
-### Option B: Using Firebase Token (Alternative)
-
-1. **Get Firebase Token:**
-   ```bash
-   firebase login:ci
+1. In your Firebase project, click the web icon (`</>`) or "Add app" > "Web"
+2. Register your app:
+   - Enter an app nickname (e.g., "KotaPal Web")
+   - You can skip Firebase Hosting setup for now
+   - Click "Register app"
+3. **Copy the Firebase configuration object** - you'll need these values:
+   ```javascript
+   const firebaseConfig = {
+     apiKey: "AIza...",
+     authDomain: "your-project.firebaseapp.com",
+     projectId: "your-project-id",
+     storageBucket: "your-project.appspot.com",
+     messagingSenderId: "123456789",
+     appId: "1:123456789:web:abcdef"
+   };
    ```
-   Copy the token that's displayed
 
-2. **Add GitHub Secret:**
-   - Go to GitHub repository → Settings → Secrets
-   - Add secret: `FIREBASE_TOKEN` with the token value
+## Step 3: Enable Email/Password Authentication
 
-3. **Update workflow file:**
-   - Edit `.github/workflows/firebase-deploy.yml`
-   - Replace the service account method with token authentication
+1. In Firebase Console, go to **Authentication** > **Sign-in method**
+2. Click on **Email/Password**
+3. Enable the first toggle (Email/Password)
+4. Optionally enable "Email link (passwordless sign-in)" if desired
+5. Click **Save**
 
-## Step 5: Custom Domain (Optional)
+## Step 4: Configure Your Application
 
-If you want to use a custom domain (kotapal.com):
+### Update Firebase Configuration
 
-1. Go to Firebase Console → Hosting → Add custom domain
-2. Enter your domain: `kotapal.com`
-3. Follow the DNS verification steps
-4. Firebase will provide DNS records to add to your domain registrar
+You need to update the Firebase configuration in **two files**:
 
-## Configuration Files
+1. **`index.html`** - Find the `firebaseConfig` object (around line 1277)
+2. **`dashboard.html`** - Find the `firebaseConfig` object (around line 978)
 
-- `firebase.json`: Firebase Hosting configuration
-- `.firebaserc`: Firebase project ID mapping
-- `.firebaseignore`: Files to exclude from deployment
-- `.github/workflows/firebase-deploy.yml`: Automatic deployment workflow
+Replace the placeholder values with your actual Firebase config:
 
-## Manual Deployment
-
-If you prefer to deploy manually:
-
-```bash
-firebase deploy --only hosting
+```javascript
+const firebaseConfig = {
+    apiKey: "YOUR_ACTUAL_API_KEY",
+    authDomain: "YOUR_ACTUAL_AUTH_DOMAIN",
+    projectId: "YOUR_ACTUAL_PROJECT_ID",
+    storageBucket: "YOUR_ACTUAL_STORAGE_BUCKET",
+    messagingSenderId: "YOUR_ACTUAL_MESSAGING_SENDER_ID",
+    appId: "YOUR_ACTUAL_APP_ID"
+};
 ```
+
+### Important Notes
+
+- **Both files must have the same configuration**
+- Keep your API keys secure - never commit them to public repositories
+- For production, consider using environment variables or a config service
+
+## Step 5: Configure Authorized Domains (Optional but Recommended)
+
+1. In Firebase Console, go to **Authentication** > **Settings** > **Authorized domains**
+2. Add your production domain (e.g., `yourdomain.com`)
+3. Localhost is automatically authorized for development
+
+## Step 6: Test the Authentication
+
+1. Open `index.html` in your browser
+2. Click "Login" or "Get Started"
+3. Try creating a new account:
+   - Enter your name, email, and password (minimum 6 characters)
+   - Click "Sign Up"
+4. You should be redirected to the dashboard
+5. Test password reset:
+   - Click "Forgot Password?"
+   - Enter your email
+   - Check your email for the reset link
+
+## Features Implemented
+
+✅ **User Sign Up**
+- Email and password registration
+- Display name support
+- Automatic profile creation
+
+✅ **User Login**
+- Email and password authentication
+- Session persistence
+- Automatic redirect to dashboard
+
+✅ **Password Reset**
+- Email-based password reset
+- Secure reset link generation
+- User-friendly error messages
+
+✅ **Dashboard Protection**
+- Automatic authentication check
+- Redirect to login if not authenticated
+- User profile display
+
+✅ **Logout**
+- Secure sign out
+- Session cleanup
+- Redirect to home page
+
+## Security Best Practices
+
+1. **Never expose your Firebase config in client-side code for production**
+   - Consider using environment variables
+   - Use Firebase App Check for additional security
+
+2. **Enable Firebase App Check** (Recommended)
+   - Go to Firebase Console > App Check
+   - Register your app
+   - This helps protect your backend resources
+
+3. **Set up Firebase Security Rules**
+   - Configure Firestore/Realtime Database rules
+   - Restrict access based on authentication
+
+4. **Use HTTPS in Production**
+   - Firebase requires HTTPS for production domains
+   - Localhost is exempt for development
 
 ## Troubleshooting
 
-### Error: "Project not found"
-- Make sure your `.firebaserc` file has the correct project ID
-- Verify you're logged in: `firebase login`
+### "Firebase: Error (auth/configuration-not-found)"
+- Make sure you've initialized Firebase with the correct config
+- Verify all config values are correct
 
-### Error: "Permission denied"
-- Check that your Firebase account has the correct permissions
-- For GitHub Actions, verify the service account has the right roles
+### "Firebase: Error (auth/email-already-in-use)"
+- The email is already registered
+- Use "Forgot Password" to reset, or use a different email
 
-### Custom Domain Issues
-- Ensure DNS records are properly configured
-- Wait for DNS propagation (can take up to 48 hours)
-- Check Firebase Console for domain verification status
+### "Firebase: Error (auth/weak-password)"
+- Password must be at least 6 characters
+- Add more characters to meet the requirement
 
-## Resources
+### "Firebase: Error (auth/user-not-found)"
+- No account exists with that email
+- Sign up first, or check the email address
 
-- [Firebase Hosting Documentation](https://firebase.google.com/docs/hosting)
-- [Firebase CLI Reference](https://firebase.google.com/docs/cli)
-- [GitHub Actions for Firebase](https://github.com/FirebaseExtended/action-hosting-deploy)
+### Password Reset Email Not Received
+- Check spam/junk folder
+- Verify email address is correct
+- Wait a few minutes (emails can be delayed)
+- Check Firebase Console > Authentication > Users to see if the user exists
+
+## Next Steps
+
+1. **Set up Firestore Database** (Optional)
+   - Store user profiles and preferences
+   - Track user activity and analytics
+
+2. **Add Email Verification** (Optional)
+   - Send verification emails
+   - Require verified emails for certain actions
+
+3. **Implement Social Login** (Optional)
+   - Google Sign-In
+   - Facebook Login
+   - Other providers
+
+4. **Add User Profile Management**
+   - Update display name
+   - Change password
+   - Update email address
+
+## Support
+
+For Firebase-specific issues, refer to:
+- [Firebase Documentation](https://firebase.google.com/docs)
+- [Firebase Auth Documentation](https://firebase.google.com/docs/auth)
+- [Firebase Support](https://firebase.google.com/support)
+
+For application-specific issues, check the browser console for error messages.
