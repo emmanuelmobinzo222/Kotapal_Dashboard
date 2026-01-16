@@ -6,8 +6,7 @@
 .gitignore
 .github
 
-# Documentation
-README.md
+# Documentation (keep site accessible)
 *.md
 
 # Configuration files (keep firebase.json and .firebaserc)
@@ -15,6 +14,11 @@ _config.yml
 
 # Node modules (if any)
 node_modules/
+
+# Development files
+package.json
+package-lock.json
+verify-firebase-setup.js
 
 # Environment files
 .env
@@ -33,3 +37,11 @@ Thumbs.db
 .idea/
 *.swp
 *.swo
+
+# Archive and unnecessary folders
+archive/
+docs/
+src/
+frontend/
+data/
+scripts/
