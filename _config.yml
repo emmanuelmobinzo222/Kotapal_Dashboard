@@ -21,7 +21,6 @@ exclude:
   - simple-server.js
   - *.bat
   - *.sh
-  - user-database.js
   - verify-firebase-setup.js
   - *.json
   - *.md
