@@ -1825,12 +1825,14 @@
                 <!-- Dashboard Page -->
                 <div id="dashboard-page" class="page-content" style="display: block;">
                     <div class="header">
-                        <div>
+                        <div style="display: flex; align-items: center;">
                             <button id="inlineToggle" class="inline-toggle-btn" style="display: none; background: none; border: none; font-size: 1.5rem; cursor: pointer; margin-right: 15px; color: var(--dark);">
                                 <i class="fas fa-bars"></i>
                             </button>
-                            <h1 class="page-title" style="display: inline-block;">Dashboard</h1>
-                            <p id="welcomeMessage" style="color: var(--gray); margin-top: 5px; font-size: 0.95rem;">Welcome back!</p>
+                            <div>
+                                <h1 class="page-title">Dashboard</h1>
+                                <div id="planInfo" style="margin-top: 5px; font-size: 0.9rem; color: var(--gray);"></div>
+                            </div>
                         </div>
                         <button class="btn btn-primary" id="createBlockBtn">Create New Block</button>
                     </div>
@@ -1872,40 +1874,6 @@
                             </div>
                             <div class="stat-value" id="totalBlocks" data-sensitive="true">0</div>
                             <div class="stat-label">Total Blocks</div>
-                        </div>
-                    </div>
-
-                    <!-- Recent Activity -->
-                    <div class="card">
-                        <div class="card-header">
-                            <h3 class="card-title">Recent Activity</h3>
-                        </div>
-                        <div class="table-container">
-                            <table id="activityTable">
-                                <thead>
-                                    <tr>
-                                        <th>Block Name</th>
-                                        <th>Layout</th>
-                                        <th>Clicks</th>
-                                        <th>Revenue</th>
-                                        <th>Status</th>
-                                        <th>Last Updated</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <!-- Data will be loaded here -->
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    <!-- Performance Alerts -->
-                    <div class="card">
-                        <div class="card-header">
-                            <h3 class="card-title">Performance Alerts</h3>
-                        </div>
-                        <div id="alertsContainer">
-                            <!-- Alerts will be loaded here -->
                         </div>
                     </div>
                 </div>
@@ -3291,8 +3259,11 @@
         
         if (auth) {
             auth.onAuthStateChanged((user) => {
-                if (user) {
-                    // User is signed in - show dashboard
+                // Check if user explicitly logged in this session
+                const sessionLogin = sessionStorage.getItem('kotapal_explicit_login');
+                
+                if (user && sessionLogin === 'true') {
+                    // User is signed in AND explicitly logged in this session - show dashboard
                     const userData = {
                         uid: user.uid,
                         email: user.email,
@@ -3323,7 +3294,14 @@
                     // Initialize dashboard
                     initDashboard();
                 } else {
-                    // User is signed out - show landing page
+                    // User is signed out OR hasn't explicitly logged in - show landing page
+                    if (user && sessionLogin !== 'true') {
+                        // User has cached session but hasn't explicitly logged in - sign them out
+                        auth.signOut().catch(err => {
+                            console.log('Auto sign-out:', err.message);
+                        });
+                    }
+                    
                     localStorage.removeItem('kotaUser');
                     sessionStorage.removeItem('kotapal_explicit_login');
                     currentUser = null;
