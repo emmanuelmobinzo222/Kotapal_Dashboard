@@ -2060,58 +2060,56 @@
                         <h1 class="page-title" style="display: inline-block;">Analytics</h1>
                     </div>
                     <div class="card">
-                        <div class="card-header">
-                            <h3 class="card-title">Performance Filters</h3>
-                        </div>
-                        <div style="display: flex; flex-wrap: wrap; gap: 20px; margin-bottom: 20px;">
-                            <select id="dateRangeFilter" class="form-control" style="width: auto;">
-                                <option value="last7days">Last 7 days</option>
-                                <option value="last30days">Last 30 days</option>
-                                <option value="last90days">Last 90 days</option>
-                            </select>
-                            <select id="retailerFilter" class="form-control" style="width: auto;">
-                                <option value="all">All Retailers</option>
-                                <option value="amazon">Amazon</option>
-                                <option value="walmart">Walmart</option>
-                                <option value="shopify">Shopify</option>
-                                <option value="skimlinks">Skimlinks</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="stats-grid">
-                        <div class="stat-card">
-                            <div class="stat-icon stat-primary">
-                                <i class="fas fa-mouse-pointer"></i>
+                        <div class="card-body">
+                            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                                <select id="dateRangeFilter" class="form-control" style="max-width:200px;">
+                                    <option value="7d">Last 7 days</option>
+                                    <option value="30d">Last 30 days</option>
+                                    <option value="90d">Last 90 days</option>
+                                    <option value="ytd">Year to date</option>
+                                    <option value="all">All time</option>
+                                </select>
+                                <select id="retailerFilter" class="form-control" style="max-width:200px;">
+                                    <option value="all">All Retailers</option>
+                                    <option value="amazon">Amazon</option>
+                                    <option value="walmart">Walmart</option>
+                                    <option value="shopify">Shopify</option>
+                                    <option value="skimlinks">Skimlinks</option>
+                                </select>
                             </div>
-                            <div class="stat-value" id="filteredClicks">0</div>
-                            <div class="stat-label">Filtered Clicks</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-icon stat-success">
-                                <i class="fas fa-dollar-sign"></i>
+                            <!-- Global Toggle for Sensitive Data -->
+                            <div style="display: flex; justify-content: center; margin-top: 15px; margin-bottom: 15px;">
+                                <button id="globalSensitiveToggleAnalytics" class="btn btn-secondary" onclick="toggleAllSensitive()" style="display: flex; align-items: center; gap: 8px;">
+                                    <i class="fas fa-eye-slash"></i>
+                                    <span>Show Sensitive Data</span>
+                                </button>
                             </div>
-                            <div class="stat-value" id="filteredRevenue">$0.00</div>
-                            <div class="stat-label">Filtered Revenue</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-icon stat-warning">
-                                <i class="fas fa-percentage"></i>
+                            <div class="stats-grid" style="margin-top:15px;">
+                                <div class="stat-card">
+                                    <div class="stat-icon stat-primary"><i class="fas fa-mouse-pointer"></i></div>
+                                    <div class="stat-value" id="filteredClicks" data-sensitive="true">0</div>
+                                    <div class="stat-label">Clicks</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-icon stat-success"><i class="fas fa-dollar-sign"></i></div>
+                                    <div class="stat-value" id="filteredRevenue" data-sensitive="true">$0.00</div>
+                                    <div class="stat-label">Revenue</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-icon stat-warning"><i class="fas fa-percentage"></i></div>
+                                    <div class="stat-value" id="filteredCTR" data-sensitive="true">0%</div>
+                                    <div class="stat-label">CTR</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-icon stat-info"><i class="fas fa-cubes"></i></div>
+                                    <div class="stat-value" id="blocksShowing">0</div>
+                                    <div class="stat-label">Blocks Showing</div>
+                                </div>
                             </div>
-                            <div class="stat-value" id="filteredCTR">0%</div>
-                            <div class="stat-label">Filtered CTR</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-icon stat-danger">
-                                <i class="fas fa-chart-bar"></i>
-                            </div>
-                            <div class="stat-value" id="blocksShowing">0</div>
-                            <div class="stat-label">Blocks Showing</div>
                         </div>
                     </div>
                     <div class="card">
-                        <div class="card-header">
-                            <h3 class="card-title">Block Performance</h3>
-                        </div>
+                        <div class="card-header"><h3 class="card-title">Block Performance</h3></div>
                         <div class="table-container">
                             <table id="analyticsTable">
                                 <thead>
@@ -2125,12 +2123,33 @@
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
-                                <tbody>
-                                    <!-- Data will be loaded here -->
-                                </tbody>
+                                <tbody></tbody>
                             </table>
                         </div>
                     </div>
+                    <div class="card">
+                        <div class="card-header"><h3 class="card-title">Recent Activity</h3></div>
+                        <div class="table-container">
+                            <table id="activityTable">
+                                <thead>
+                                    <tr>
+                                        <th>Block Name</th>
+                                        <th>Layout</th>
+                                        <th>Clicks</th>
+                                        <th>Revenue</th>
+                                        <th>Status</th>
+                                        <th>Last Updated</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header"><h3 class="card-title">Performance Alerts</h3></div>
+                        <div id="alertsContainer"></div>
+                    </div>
+                    <div id="performanceDataContainer"></div>
                 </div>
 
                 <!-- Settings Page -->
@@ -2141,44 +2160,157 @@
                         </button>
                         <h1 class="page-title" style="display: inline-block;">Settings</h1>
                     </div>
+                    
+                    <!-- Profile Settings -->
                     <div class="card">
                         <div class="card-header">
                             <h3 class="card-title">Profile Settings</h3>
-                            <span id="autoSaveStatus" style="color: var(--success); font-size: 0.9rem; display: none;">
-                                <i class="fas fa-check-circle"></i> Saved
-                            </span>
                         </div>
-                        <form id="profileForm">
+                        <form id="settingsProfileForm">
                             <div class="form-group">
-                                <label for="profileName">Name</label>
-                                <input type="text" id="profileName" class="form-control" required>
+                                <label for="userNameSettings">Name</label>
+                                <input type="text" id="userNameSettings" class="form-control" required>
                             </div>
                             <div class="form-group">
-                                <label for="profileEmail">Email</label>
-                                <input type="email" id="profileEmail" class="form-control" required>
+                                <label for="userEmailSettings">Email</label>
+                                <input type="email" id="userEmailSettings" class="form-control" required>
                             </div>
                             <div class="form-group">
-                                <label for="profileWebsite">Website/Blog URL</label>
-                                <input type="url" id="profileWebsite" class="form-control" placeholder="https://yourwebsite.com">
+                                <label for="userWebsiteSettings">Website/Blog URL</label>
+                                <input type="url" id="userWebsiteSettings" class="form-control">
                             </div>
                             <div class="form-group">
-                                <label for="profilePicture">Profile Picture</label>
-                                <div style="display: flex; align-items: center; gap: 20px; margin-top: 10px;">
-                                    <img id="profilePicturePreview" src="https://i.pravatar.cc/80?img=1" alt="Profile" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid #e5e7eb;">
-                                    <div style="flex: 1;">
-                                        <input type="url" id="profilePictureUrl" class="form-control" placeholder="https://your-cdn.com/avatar.jpg or data:image/..." style="margin-bottom: 10px;">
-                                        <p style="font-size: 0.85rem; color: var(--gray); margin-bottom: 10px;">Paste an image URL or a data URL. This picture will appear in the sidebar.</p>
-                                        <div style="display: flex; align-items: center; gap: 10px;">
-                                            <input type="file" id="profilePictureFile" accept="image/*" style="display: none;">
-                                            <button type="button" class="btn btn-secondary" onclick="document.getElementById('profilePictureFile').click()">Choose File</button>
-                                            <span id="fileName" style="color: var(--gray); font-size: 0.9rem;">No file chosen</span>
-                                        </div>
-                                        <p style="font-size: 0.85rem; color: var(--gray); margin-top: 10px;">Or upload a picture (stored in your browser and, where supported, in your profile).</p>
+                                <label>Profile Picture</label>
+                                <div style="display:flex;align-items:center;gap:15px;flex-wrap:wrap;">
+                                    <img id="settingsAvatarPreview" src="https://i.pravatar.cc/80?img=1" alt="Profile preview" class="user-avatar" style="width:60px;height:60px;border-radius:50%;object-fit:cover;border:2px solid #e5e7eb;" onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2260%22 height=%2260%22%3E%3Ccircle cx=%2230%22 cy=%2230%22 r=%2230%22 fill=%22%233b82f6%22/%3E%3Ctext x=%2230%22 y=%2238%22 font-size=%2224%22 fill=%22white%22 text-anchor=%22middle%22 font-weight=%22bold%22%3EU%3C/text%3E%3C/svg%3E';">
+                                    <div style="flex:1;min-width:220px;">
+                                        <input type="url" id="userAvatarUrlSettings" class="form-control" placeholder="https://your-cdn.com/avatar.jpg or data:image/...">
+                                        <small style="color:var(--gray);font-size:0.85rem;">Paste an image URL or a data URL. This picture will appear in the sidebar.</small>
+                                    </div>
+                                    <div style="flex-basis:100%;margin-top:10px;">
+                                        <input type="file" id="userAvatarFileSettings" accept="image/*" class="form-control">
+                                        <small style="color:var(--gray);font-size:0.85rem;">Or upload a picture (stored in your browser and, where supported, in your profile).</small>
                                     </div>
                                 </div>
                             </div>
-                            <button type="submit" class="btn btn-primary" style="display: none;" id="manualSaveBtn">Save Profile</button>
+                            <button type="submit" class="btn btn-primary">Save Profile</button>
+                            <div id="settingsProfileStatus" style="margin-top:10px;font-size:0.9rem;color:var(--gray);"></div>
                         </form>
+                    </div>
+                    
+                    <!-- Change Password -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Change Password</h3>
+                        </div>
+                        <form id="passwordForm">
+                            <div class="form-group">
+                                <label for="currentPassword">Current Password</label>
+                                <input type="password" id="currentPassword" class="form-control" placeholder="••••••••" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="newPassword">New Password</label>
+                                <input type="password" id="newPassword" class="form-control" placeholder="••••••••" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="confirmPassword">Confirm New Password</label>
+                                <input type="password" id="confirmPassword" class="form-control" placeholder="••••••••" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Update Password</button>
+                            <div id="passwordStatus" style="margin-top:10px;font-size:0.9rem;color:var(--gray);"></div>
+                        </form>
+                    </div>
+
+                    <!-- Affiliate API Keys -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Affiliate API Keys</h3>
+                            <p style="font-size:0.9rem;color:var(--gray);margin:0;">Connect your affiliate accounts to access products and display top performing items</p>
+                        </div>
+                        <form id="affiliateKeysForm">
+                            <div class="form-group">
+                                <label for="amazonApiKey">
+                                    <i class="fab fa-amazon" style="color:#FF9900;margin-right:8px;"></i>
+                                    Amazon Associates API Key / Access Key
+                                </label>
+                                <input type="text" id="amazonApiKey" class="form-control" placeholder="Enter your Amazon Associates API key">
+                                <small style="color:var(--gray);font-size:0.85rem;">Used to access Amazon product data and track top performers</small>
+                            </div>
+                            <div class="form-group">
+                                <label for="amazonSecretKey">Amazon Secret Key</label>
+                                <input type="password" id="amazonSecretKey" class="form-control" placeholder="Enter your Amazon Secret Key">
+                                <small style="color:var(--gray);font-size:0.85rem;">Your Amazon Associates Secret Access Key</small>
+                            </div>
+                            <div class="form-group">
+                                <label for="amazonAssociateTag">Amazon Associate Tag</label>
+                                <input type="text" id="amazonAssociateTag" class="form-control" placeholder="yourname-20">
+                                <small style="color:var(--gray);font-size:0.85rem;">Your Amazon Associates tracking ID</small>
+                            </div>
+                            <div class="form-group">
+                                <label for="amazonSiteStripeLink">Amazon SiteStripe Link</label>
+                                <input type="url" id="amazonSiteStripeLink" class="form-control" placeholder="https://amzn.to/your-link" autocomplete="off">
+                                <small style="color:var(--gray);font-size:0.85rem;">Paste a SiteStripe link (e.g., https://amzn.to/4oFQS2S) to import products directly into your Product Library.</small>
+                                <button type="button" class="btn btn-secondary btn-sm" style="margin-top:10px;" onclick="importSiteStripeFromSettings()">
+                                    <i class="fas fa-link"></i> Import from SiteStripe
+                                </button>
+                            </div>
+
+                            <div class="form-group" style="margin-top:30px;padding-top:30px;border-top:1px solid #e5e7eb;">
+                                <label for="walmartApiKey">
+                                    <i class="fas fa-shopping-bag" style="color:#0071ce;margin-right:8px;"></i>
+                                    Walmart Impact API Key
+                                </label>
+                                <input type="text" id="walmartApiKey" class="form-control" placeholder="Enter your Walmart Impact API key">
+                                <small style="color:var(--gray);font-size:0.85rem;">Used to access Walmart product data and performance metrics</small>
+                            </div>
+                            <div class="form-group">
+                                <label for="walmartImpactId">Walmart Impact ID</label>
+                                <input type="text" id="walmartImpactId" class="form-control" placeholder="Enter your Impact ID">
+                                <small style="color:var(--gray);font-size:0.85rem;">Your Walmart Impact Radius Publisher ID</small>
+                            </div>
+
+                            <div class="form-group" style="margin-top:30px;padding-top:30px;border-top:1px solid #e5e7eb;">
+                                <label for="shopifyApiKey">
+                                    <i class="fab fa-shopify" style="color:#95BF47;margin-right:8px;"></i>
+                                    Shopify API Key
+                                </label>
+                                <input type="text" id="shopifyApiKey" class="form-control" placeholder="Enter your Shopify API key">
+                                <small style="color:var(--gray);font-size:0.85rem;">Used to access your Shopify store products and sales data</small>
+                            </div>
+                            <div class="form-group">
+                                <label for="shopifyStoreUrl">Shopify Store URL</label>
+                                <input type="text" id="shopifyStoreUrl" class="form-control" placeholder="yourstore.myshopify.com">
+                                <small style="color:var(--gray);font-size:0.85rem;">Your Shopify store domain</small>
+                            </div>
+                            <div class="form-group">
+                                <label for="shopifySecretKey">Shopify Secret Key</label>
+                                <input type="password" id="shopifySecretKey" class="form-control" placeholder="Enter your Shopify Secret Key">
+                                <small style="color:var(--gray);font-size:0.85rem;">Your Shopify API Secret Key</small>
+                            </div>
+
+                            <div class="form-group" style="margin-top:30px;padding-top:30px;border-top:1px solid #e5e7eb;">
+                                <label for="skimlinksApiKey">
+                                    <i class="fas fa-link" style="color:#6366f1;margin-right:8px;"></i>
+                                    Skimlinks API Key
+                                </label>
+                                <input type="text" id="skimlinksApiKey" class="form-control" placeholder="Enter your Skimlinks API key">
+                                <small style="color:var(--gray);font-size:0.85rem;">Used to access Skimlinks merchant products and performance data</small>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary">Save API Keys</button>
+                            <div id="apiKeysStatus" style="margin-top:10px;font-size:0.9rem;color:var(--gray);"></div>
+                        </form>
+                    </div>
+
+                    <!-- Top Performing Products (using API Keys) -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Top Performing Products</h3>
+                            <p style="font-size:0.9rem;color:var(--gray);margin:0;">Products fetched from your connected affiliate accounts</p>
+                        </div>
+                        <div id="topProductsContainer" class="card-body">
+                            <p style="color:var(--gray);text-align:center;padding:20px;">Connect your API keys above to see top performing products</p>
+                        </div>
                     </div>
                 </div>
 
@@ -4908,6 +5040,302 @@
             }
         }
 
+        // ============================================
+        // Settings & API Functions
+        // ============================================
+        
+        // Populate settings form with current user data
+        function populateSettingsForm() {
+            if (!currentUser) {
+                const saved = localStorage.getItem('kotaUser');
+                if (saved) {
+                    try {
+                        currentUser = JSON.parse(saved);
+                    } catch (e) {
+                        return;
+                    }
+                } else {
+                    return;
+                }
+            }
+            
+            const n = document.getElementById('userNameSettings');
+            const e = document.getElementById('userEmailSettings');
+            const w = document.getElementById('userWebsiteSettings');
+            const avatarUrlInput = document.getElementById('userAvatarUrlSettings');
+            const avatarPreview = document.getElementById('settingsAvatarPreview');
+            
+            if (n) n.value = currentUser.name || '';
+            if (e) e.value = currentUser.email || '';
+            if (w) w.value = currentUser.website || '';
+            if (avatarUrlInput) avatarUrlInput.value = currentUser.avatarUrl || '';
+            if (avatarPreview) {
+                if (currentUser.avatarUrl) {
+                    avatarPreview.src = currentUser.avatarUrl;
+                } else {
+                    avatarPreview.src = 'https://i.pravatar.cc/80?img=1';
+                }
+            }
+            
+            populateApiKeysForm();
+        }
+        
+        // Populate API keys form with saved keys
+        function populateApiKeysForm() {
+            if (!currentUser) return;
+            const apiKeys = currentUser.apiKeys || {};
+            
+            const amazonKey = document.getElementById('amazonApiKey');
+            const amazonSecret = document.getElementById('amazonSecretKey');
+            const amazonTag = document.getElementById('amazonAssociateTag');
+            const amazonSiteStripe = document.getElementById('amazonSiteStripeLink');
+            const walmartKey = document.getElementById('walmartApiKey');
+            const walmartId = document.getElementById('walmartImpactId');
+            const shopifyKey = document.getElementById('shopifyApiKey');
+            const shopifyUrl = document.getElementById('shopifyStoreUrl');
+            const shopifySecret = document.getElementById('shopifySecretKey');
+            const skimlinksKey = document.getElementById('skimlinksApiKey');
+            
+            if (amazonKey) amazonKey.value = apiKeys.amazonApiKey || '';
+            if (amazonSecret) amazonSecret.value = apiKeys.amazonSecretKey || '';
+            if (amazonTag) amazonTag.value = apiKeys.amazonAssociateTag || '';
+            if (amazonSiteStripe) amazonSiteStripe.value = apiKeys.amazonSiteStripeLink || '';
+            if (walmartKey) walmartKey.value = apiKeys.walmartApiKey || '';
+            if (walmartId) walmartId.value = apiKeys.walmartImpactId || '';
+            if (shopifyKey) shopifyKey.value = apiKeys.shopifyApiKey || '';
+            if (shopifyUrl) shopifyUrl.value = apiKeys.shopifyStoreUrl || '';
+            if (shopifySecret) shopifySecret.value = apiKeys.shopifySecretKey || '';
+            if (skimlinksKey) skimlinksKey.value = apiKeys.skimlinksApiKey || '';
+        }
+        
+        // Handle settings profile update
+        async function handleSettingsProfileUpdate(e) {
+            e.preventDefault();
+            const name = (document.getElementById('userNameSettings')?.value || '').trim();
+            const email = (document.getElementById('userEmailSettings')?.value || '').trim();
+            const website = (document.getElementById('userWebsiteSettings')?.value || '').trim();
+            const avatarUrl = (document.getElementById('userAvatarUrlSettings')?.value || '').trim();
+            
+            const status = document.getElementById('settingsProfileStatus');
+            if (status) { status.style.color = 'var(--gray)'; status.textContent = 'Saving...'; }
+            
+            if (!name || !email) {
+                showNotification('Name and email are required', 'error', 'Validation Error');
+                if (status) { status.style.color = 'var(--danger)'; status.textContent = 'Name and email required'; }
+                return;
+            }
+            
+            try {
+                const updated = await apiRequest('/api/user/profile', { method: 'PUT', body: { name, email, website, avatarUrl }});
+                currentUser = { ...(currentUser || {}), ...(updated || {}), name, email, website, avatarUrl };
+                localStorage.setItem('kotaUser', JSON.stringify(currentUser));
+                updateUserDisplay();
+                populateSettingsForm();
+                showNotification('Profile updated successfully!', 'success', 'Profile Saved');
+                if (status) { status.style.color = '#065f46'; status.textContent = 'Saved'; }
+            } catch (err) {
+                currentUser = { ...(currentUser || {}), name, email, website, avatarUrl };
+                localStorage.setItem('kotaUser', JSON.stringify(currentUser));
+                updateUserDisplay();
+                populateSettingsForm();
+                showNotification('Profile saved locally (backend offline). Changes visible immediately.', 'warning', 'Saved Offline');
+                if (status) { status.style.color = '#065f46'; status.textContent = 'Saved (offline)'; }
+            }
+        }
+        
+        // Handle password change
+        async function handlePasswordChange(e) {
+            if (e) e.preventDefault();
+            const current = document.getElementById('currentPassword')?.value || '';
+            const next = document.getElementById('newPassword')?.value || '';
+            const confirmPw = document.getElementById('confirmPassword')?.value || '';
+            const status = document.getElementById('passwordStatus');
+            if (status) { status.style.color = 'var(--gray)'; status.textContent = 'Updating password...'; }
+            if (!currentUser) { showNotification('Please log in to change your password', 'warning'); if (status) status.textContent=''; return; }
+            if (next.length < 6) { showNotification('New password must be at least 6 characters', 'warning', 'Password Requirements'); if (status) status.textContent=''; return; }
+            if (next !== confirmPw) { showNotification('New passwords do not match', 'error', 'Password Mismatch'); if (status) status.textContent=''; return; }
+            
+            try {
+                await apiRequest('/api/user/password', { method: 'PUT', body: { currentPassword: current, newPassword: next }});
+                currentUser.password = next;
+                localStorage.setItem('kotaUser', JSON.stringify(currentUser));
+                if (status) { status.style.color = '#065f46'; status.textContent = 'Password updated'; }
+                document.getElementById('currentPassword').value='';
+                document.getElementById('newPassword').value='';
+                document.getElementById('confirmPassword').value='';
+                showNotification('Password updated successfully', 'success', 'Password Saved');
+            } catch (_) {
+                currentUser.password = next;
+                localStorage.setItem('kotaUser', JSON.stringify(currentUser));
+                if (status) { status.style.color = '#065f46'; status.textContent = 'Password updated (offline)'; }
+                document.getElementById('currentPassword').value='';
+                document.getElementById('newPassword').value='';
+                document.getElementById('confirmPassword').value='';
+                showNotification('Password saved locally (backend offline)', 'warning', 'Saved Offline');
+            }
+        }
+        
+        // Handle affiliate keys submit
+        async function handleAffiliateKeysSubmit(e) {
+            e.preventDefault();
+            const status = document.getElementById('apiKeysStatus');
+            if (status) { status.style.color = 'var(--gray)'; status.textContent = 'Saving API keys...'; }
+            
+            const apiKeys = {
+                amazonApiKey: document.getElementById('amazonApiKey')?.value || '',
+                amazonSecretKey: document.getElementById('amazonSecretKey')?.value || '',
+                amazonAssociateTag: document.getElementById('amazonAssociateTag')?.value || '',
+                amazonSiteStripeLink: document.getElementById('amazonSiteStripeLink')?.value || '',
+                walmartApiKey: document.getElementById('walmartApiKey')?.value || '',
+                walmartImpactId: document.getElementById('walmartImpactId')?.value || '',
+                shopifyApiKey: document.getElementById('shopifyApiKey')?.value || '',
+                shopifyStoreUrl: document.getElementById('shopifyStoreUrl')?.value || '',
+                shopifySecretKey: document.getElementById('shopifySecretKey')?.value || '',
+                skimlinksApiKey: document.getElementById('skimlinksApiKey')?.value || ''
+            };
+            
+            try {
+                const updated = await apiRequest('/api/user/profile', { method: 'PUT', body: { apiKeys } });
+                currentUser = updated || { ...(currentUser || {}), apiKeys };
+                localStorage.setItem('kotaUser', JSON.stringify(currentUser));
+                updateUserDisplay();
+                showNotification('API keys saved successfully!', 'success', 'Keys Saved');
+                await loadTopPerformingProducts();
+                if (apiKeys.amazonSiteStripeLink) {
+                    await fetchSiteStripeProducts(apiKeys.amazonSiteStripeLink, apiKeys, status);
+                }
+                if (status) { status.style.color = '#065f46'; status.textContent = 'Saved'; }
+            } catch (_) {
+                if (!currentUser) currentUser = {};
+                currentUser.apiKeys = apiKeys;
+                localStorage.setItem('kotaUser', JSON.stringify(currentUser));
+                updateUserDisplay();
+                showNotification('API keys saved (offline mode). Changes visible immediately.', 'warning', 'Keys Saved');
+                await loadTopPerformingProducts();
+                if (apiKeys.amazonSiteStripeLink) {
+                    await fetchSiteStripeProducts(apiKeys.amazonSiteStripeLink, apiKeys, status);
+                }
+                if (status) { status.style.color = '#065f46'; status.textContent = 'Saved (offline)'; }
+            }
+        }
+        
+        // Load top performing products using API keys
+        async function loadTopPerformingProducts() {
+            const container = document.getElementById('topProductsContainer');
+            if (!container) return;
+            
+            if (!currentUser || !currentUser.apiKeys) {
+                container.innerHTML = '<p style="color:var(--gray);text-align:center;padding:20px;">Connect your API keys above to see top performing products</p>';
+                return;
+            }
+            
+            const apiKeys = currentUser.apiKeys;
+            container.innerHTML = '<p style="color:var(--gray);text-align:center;padding:20px;">Loading top products...</p>';
+            
+            try {
+                const products = await apiRequest('/api/products/top-performing', {
+                    method: 'POST',
+                    body: { apiKeys, location: userLocation }
+                });
+                
+                if (products && products.length > 0) {
+                    renderTopProducts(products);
+                } else {
+                    container.innerHTML = '<p style="color:var(--gray);text-align:center;padding:20px;">No top performing products found. Check your API keys and try again.</p>';
+                }
+            } catch (err) {
+                if (apiKeys.amazonApiKey || apiKeys.walmartApiKey || apiKeys.shopifyApiKey) {
+                    const region = userLocation.countryCode || 'US';
+                    const regionName = userLocation.country || 'United States';
+                    let mockProducts = [
+                        { title: 'Sony WH-1000XM5', retailer: 'amazon', price: 299.99, clicks: 1247, revenue: 89.42, image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=500&q=80', region: regionName },
+                        { title: 'Bose QuietComfort 45', retailer: 'amazon', price: 279.99, clicks: 892, revenue: 67.85, image: 'https://images.unsplash.com/photo-1572536147248-ac59a8abfa4b?auto=format&fit=crop&w=500&q=80', region: regionName }
+                    ];
+                    renderTopProducts(mockProducts);
+                } else {
+                    container.innerHTML = '<p style="color:var(--gray);text-align:center;padding:20px;">Connect your API keys above to see top performing products</p>';
+                }
+            }
+        }
+        
+        // Render top performing products
+        function renderTopProducts(products) {
+            const container = document.getElementById('topProductsContainer');
+            if (!container) return;
+            
+            if (products.length === 0) {
+                container.innerHTML = '<p style="color:var(--gray);text-align:center;padding:20px;">No products found</p>';
+                return;
+            }
+            
+            const regionInfo = userLocation.country ? `<div style="background:#f0f9ff;border-left:4px solid var(--primary);padding:12px 15px;margin-bottom:15px;border-radius:4px;"><p style="color:var(--primary);font-size:0.9rem;margin:0;"><i class="fas fa-map-marker-alt" style="margin-right:8px;"></i>Showing products for <strong>${userLocation.country}${userLocation.city ? ', ' + userLocation.city : ''}</strong></p></div>` : '';
+            
+            container.innerHTML = regionInfo + products.map((product, index) => {
+                const productData = JSON.stringify({
+                    title: product.title || '',
+                    retailer: product.retailer || '',
+                    price: product.price || 0,
+                    image: product.image || '',
+                    clicks: product.clicks || 0,
+                    revenue: product.revenue || 0
+                }).replace(/"/g, '&quot;');
+                
+                return `
+                <div style="display:flex;gap:15px;padding:15px;border:1px solid #e5e7eb;border-radius:8px;margin-bottom:15px;background:white;align-items:center;">
+                    <div style="position:relative;">
+                        <span style="position:absolute;top:-8px;left:-8px;background:var(--primary);color:white;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:600;">${index + 1}</span>
+                        <img src="${product.image || 'https://via.placeholder.com/100'}" alt="${product.title}" style="width:100px;height:100px;object-fit:cover;border-radius:8px;" onerror="this.onerror=null; this.src='https://via.placeholder.com/100?text=Product';">
+                    </div>
+                    <div style="flex:1;">
+                        <h4 style="margin:0 0 5px 0;">${product.title}</h4>
+                        <p style="color:var(--gray);font-size:0.9rem;margin:0 0 10px 0;">
+                            <span style="text-transform:capitalize;">${product.retailer || 'Unknown'}</span> • 
+                            <span style="font-weight:600;color:var(--primary);">$${product.price ? product.price.toFixed(2) : '0.00'}</span>
+                        </p>
+                        <div style="display:flex;gap:20px;font-size:0.9rem;">
+                            <span><i class="fas fa-mouse-pointer" style="color:var(--primary);margin-right:5px;"></i>${product.clicks || 0} clicks</span>
+                            <span><i class="fas fa-dollar-sign" style="color:var(--success);margin-right:5px;"></i>$${product.revenue ? product.revenue.toFixed(2) : '0.00'} revenue</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            }).join('');
+        }
+        
+        // Import SiteStripe from settings
+        async function importSiteStripeFromSettings() {
+            const link = document.getElementById('amazonSiteStripeLink')?.value;
+            if (!link) {
+                showNotification('Please enter a SiteStripe link first', 'warning', 'Link Required');
+                return;
+            }
+            const apiKeys = currentUser?.apiKeys || {};
+            const status = document.getElementById('apiKeysStatus');
+            await fetchSiteStripeProducts(link, apiKeys, status);
+        }
+        
+        // Fetch SiteStripe products
+        async function fetchSiteStripeProducts(siteStripeLink, apiKeys, statusEl) {
+            if (statusEl) { statusEl.style.color = 'var(--gray)'; statusEl.textContent = 'Importing products from SiteStripe...'; }
+            try {
+                const products = await apiRequest('/api/products/import-sitestripe', {
+                    method: 'POST',
+                    body: { siteStripeLink, apiKeys }
+                });
+                if (products && products.length > 0) {
+                    const added = addProductsToLibrary(products.map(p => ({ ...p, source: 'sitestripe' }))) || 0;
+                    showNotification(`${added} product(s) imported from SiteStripe`, 'success', 'Import Successful');
+                    if (statusEl) { statusEl.style.color = '#065f46'; statusEl.textContent = `${added} product(s) imported`; }
+                } else {
+                    showNotification('No products found in SiteStripe link', 'warning', 'No Products');
+                    if (statusEl) { statusEl.style.color = 'var(--warning)'; statusEl.textContent = 'No products found'; }
+                }
+            } catch (err) {
+                showNotification('Failed to import from SiteStripe: ' + (err.message || 'Unknown error'), 'error', 'Import Failed');
+                if (statusEl) { statusEl.style.color = 'var(--danger)'; statusEl.textContent = 'Import failed'; }
+            }
+        }
+        
         // Render alerts
         function renderAlerts() {
             const container = document.getElementById('alertsContainer');
@@ -5180,6 +5608,104 @@
                     }
                 });
             }, 100);
+        }
+        
+        // ============================================
+        // Form Handlers Setup
+        // ============================================
+        
+        // Setup all form handlers when DOM is ready
+        function setupAllFormHandlers() {
+            // Settings profile form
+            const settingsProfileForm = document.getElementById('settingsProfileForm');
+            if (settingsProfileForm) {
+                settingsProfileForm.addEventListener('submit', handleSettingsProfileUpdate);
+            }
+            
+            // Password form
+            const passwordForm = document.getElementById('passwordForm');
+            if (passwordForm) {
+                passwordForm.addEventListener('submit', handlePasswordChange);
+            }
+            
+            // Affiliate keys form
+            const affiliateKeysForm = document.getElementById('affiliateKeysForm');
+            if (affiliateKeysForm) {
+                affiliateKeysForm.addEventListener('submit', handleAffiliateKeysSubmit);
+            }
+            
+            // Account profile form (legacy)
+            const profileFormLegacy = document.getElementById('profileFormLegacy');
+            if (profileFormLegacy) {
+                profileFormLegacy.addEventListener('submit', handleProfileUpdate);
+            }
+            
+            // Analytics filters
+            const dateRangeFilter = document.getElementById('dateRangeFilter');
+            const retailerFilter = document.getElementById('retailerFilter');
+            if (dateRangeFilter) {
+                dateRangeFilter.addEventListener('change', () => {
+                    renderAnalytics();
+                    renderActivityTable();
+                    renderAlerts();
+                });
+            }
+            if (retailerFilter) {
+                retailerFilter.addEventListener('change', () => {
+                    renderAnalytics();
+                    renderActivityTable();
+                    renderAlerts();
+                });
+            }
+        }
+        
+        // Initialize dashboard
+        function initDashboard() {
+            // Load user data
+            const savedUser = localStorage.getItem('kotaUser');
+            if (savedUser) {
+                try {
+                    currentUser = JSON.parse(savedUser);
+                } catch (e) {
+                    console.error('Failed to parse saved user:', e);
+                }
+            }
+            
+            // Setup form handlers
+            setupAllFormHandlers();
+            
+            // Populate forms
+            populateSettingsForm();
+            updateAccountForm();
+            
+            // Load data
+            renderBlocks();
+            renderIntegrations();
+            renderAnalytics();
+            renderActivityTable();
+            renderAlerts();
+            updateDashboardStats();
+            
+            // Load top products if API keys are set
+            if (currentUser && currentUser.apiKeys) {
+                loadTopPerformingProducts();
+            }
+            
+            // Detect user location
+            detectUserLocation();
+        }
+        
+        // Call initDashboard when dashboard view is shown
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                if (dashboardView && dashboardView.classList.contains('active')) {
+                    initDashboard();
+                }
+            });
+        } else {
+            if (dashboardView && dashboardView.classList.contains('active')) {
+                initDashboard();
+            }
         }
     </script>
 </body>
