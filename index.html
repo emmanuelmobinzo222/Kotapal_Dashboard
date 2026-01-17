@@ -3354,17 +3354,22 @@
                 const userCredential = await auth.signInWithEmailAndPassword(email.trim(), password);
                 const user = userCredential.user;
                 
-                // Get user display name from Firestore or use email
-                const displayName = user.displayName || user.email.split('@')[0];
+                // Get saved user data or create new
+                const savedUserData = JSON.parse(localStorage.getItem('kotaUser') || '{}');
+                const displayName = user.displayName || savedUserData.displayName || user.email.split('@')[0];
                 
                 // Store user data in localStorage
                 const userData = {
                     uid: user.uid,
                     email: user.email,
                     displayName: displayName,
-                    emailVerified: user.emailVerified
+                    emailVerified: user.emailVerified,
+                    plan: savedUserData.plan || 'starter',
+                    signupDate: savedUserData.signupDate || new Date().toISOString()
                 };
                 localStorage.setItem('kotaUser', JSON.stringify(userData));
+                sessionStorage.setItem('kotapal_explicit_login', 'true');
+                currentUser = userData;
                 
                 // Close modal - dashboard will show automatically via auth.onAuthStateChanged
                 closeAuthModal();
@@ -3416,7 +3421,7 @@
         }
 
         // Handle Sign Up
-        async function handleFirebaseSignup(name, email, password) {
+        async function handleFirebaseSignup(name, email, password, plan) {
             // Check if Firebase is initialized
             if (!auth) {
                 showAuthMessage('signupMessage', 'Firebase is not configured. Please contact support.', 'error');
@@ -3468,9 +3473,12 @@
                     email: user.email,
                     displayName: name.trim(),
                     emailVerified: user.emailVerified,
-                    plan: plan || 'starter'
+                    plan: plan || 'starter',
+                    signupDate: new Date().toISOString()
                 };
                 localStorage.setItem('kotaUser', JSON.stringify(userData));
+                sessionStorage.setItem('kotapal_explicit_login', 'true');
+                currentUser = userData;
                 
                 // Close modal - dashboard will show automatically via auth.onAuthStateChanged
                 closeAuthModal();
@@ -3519,7 +3527,12 @@
         async function handlePasswordReset(email) {
             // Check if Firebase is initialized
             if (!auth) {
-                showAuthMessage('resetMessage', 'Firebase is not configured. Please contact support.', 'error');
+                const resetMsg = document.getElementById('resetMessage');
+                if (resetMsg) {
+                    showAuthMessage('resetMessage', 'Firebase is not configured. Please contact support.', 'error');
+                } else {
+                    alert('Firebase is not configured. Please contact support.');
+                }
                 console.error('Firebase auth not initialized');
                 return;
             }
@@ -3544,8 +3557,17 @@
                     handleCodeInApp: false
                 });
                 
-                showAuthMessage('resetMessage', 'Password reset email sent! Please check your inbox and spam folder. Click the link in the email to reset your password.', 'success');
-                document.getElementById('resetPasswordForm').reset();
+                const resetMsg = document.getElementById('resetMessage');
+                if (resetMsg) {
+                    showAuthMessage('resetMessage', 'Password reset email sent! Please check your inbox and spam folder. Click the link in the email to reset your password.', 'success');
+                } else {
+                    alert('Password reset email sent! Please check your inbox and spam folder.');
+                }
+                
+                const resetForm = document.getElementById('resetPasswordForm');
+                if (resetForm) {
+                    resetForm.reset();
+                }
                 
                 // Re-enable button
                 if (submitBtn) {
@@ -3579,7 +3601,13 @@
                     default:
                         errorMessage = `Failed to send reset email: ${error.message || 'Unknown error'}. Please try again.`;
                 }
-                showAuthMessage('resetMessage', errorMessage, 'error');
+                
+                const resetMsg = document.getElementById('resetMessage');
+                if (resetMsg) {
+                    showAuthMessage('resetMessage', errorMessage, 'error');
+                } else {
+                    alert(errorMessage);
+                }
             }
         }
 
@@ -3595,47 +3623,95 @@
             auth.onAuthStateChanged((user) => {
                 if (user) {
                     // User is signed in - show dashboard
-                        const userData = {
-                            uid: user.uid,
-                            email: user.email,
-                            displayName: user.displayName || user.email.split('@')[0],
-                            emailVerified: user.emailVerified
-                        };
-                        localStorage.setItem('kotaUser', JSON.stringify(userData));
-                        currentUser = userData;
-                        
-                        // Hide landing page, show dashboard
-                        const landingView = document.getElementById('landing-page-view');
-                        const nav = document.querySelector('nav');
-                        const footer = document.querySelector('footer');
-                        const dashboardView = document.getElementById('dashboard-view');
-                        
-                        if (landingView) landingView.style.display = 'none';
-                        if (nav) nav.style.display = 'none';
-                        if (footer) footer.style.display = 'none';
-                        if (dashboardView) dashboardView.classList.add('active');
-                        
-                        // Initialize dashboard
+                    const savedUserData = JSON.parse(localStorage.getItem('kotaUser') || '{}');
+                    const userData = {
+                        uid: user.uid,
+                        email: user.email,
+                        displayName: user.displayName || savedUserData.displayName || user.email.split('@')[0],
+                        emailVerified: user.emailVerified,
+                        plan: savedUserData.plan || 'starter',
+                        signupDate: savedUserData.signupDate || new Date().toISOString()
+                    };
+                    localStorage.setItem('kotaUser', JSON.stringify(userData));
+                    currentUser = userData;
+                    
+                    // Hide landing page, show dashboard
+                    const landingView = document.getElementById('landing-page-view');
+                    const nav = document.querySelector('nav');
+                    const footer = document.querySelector('footer');
+                    const dashboardView = document.getElementById('dashboard-view');
+                    
+                    if (landingView) landingView.style.display = 'none';
+                    if (nav) nav.style.display = 'none';
+                    if (footer) footer.style.display = 'none';
+                    if (dashboardView) {
+                        dashboardView.style.display = 'block';
+                        dashboardView.classList.add('active');
+                    }
+                    
+                    // Initialize dashboard
+                    if (typeof initDashboard === 'function') {
                         initDashboard();
-                    } else {
-                        // User is signed out - show landing page
-                        localStorage.removeItem('kotaUser');
-                        currentUser = null;
-                        
-                        // Hide dashboard, show landing page
-                        const landingView = document.getElementById('landing-page-view');
-                        const nav = document.querySelector('nav');
-                        const footer = document.querySelector('footer');
-                        const dashboardView = document.getElementById('dashboard-view');
-                        
-                        if (dashboardView) dashboardView.classList.remove('active');
-                        if (landingView) landingView.style.display = 'block';
-                        if (nav) nav.style.display = 'flex';
-                        if (footer) footer.style.display = 'block';
+                    }
+                } else {
+                    // User is signed out - show landing page
+                    localStorage.removeItem('kotaUser');
+                    sessionStorage.removeItem('kotapal_explicit_login');
+                    currentUser = null;
+                    
+                    // Hide dashboard, show landing page
+                    const landingView = document.getElementById('landing-page-view');
+                    const nav = document.querySelector('nav');
+                    const footer = document.querySelector('footer');
+                    const dashboardView = document.getElementById('dashboard-view');
+                    
+                    if (dashboardView) {
+                        dashboardView.style.display = 'none';
+                        dashboardView.classList.remove('active');
+                    }
+                    if (landingView) landingView.style.display = 'block';
+                    if (nav) nav.style.display = 'flex';
+                    if (footer) footer.style.display = 'block';
                 }
             });
         } else {
             console.warn('Firebase auth not initialized - authentication features will not work');
+        }
+        
+        // Logout handler
+        const logoutBtn = document.getElementById('logoutBtn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', async (e) => {
+                e.preventDefault();
+                try {
+                    if (auth) {
+                        await auth.signOut();
+                        localStorage.removeItem('kotaUser');
+                        sessionStorage.removeItem('kotapal_explicit_login');
+                        sessionStorage.removeItem('settings_access_granted');
+                        currentUser = null;
+                        
+                        // Show landing page
+                        const landingView = document.getElementById('landing-page-view');
+                        const nav = document.querySelector('nav');
+                        const footer = document.querySelector('footer');
+                        const dashboardView = document.getElementById('dashboard-view');
+                        
+                        if (dashboardView) {
+                            dashboardView.style.display = 'none';
+                            dashboardView.classList.remove('active');
+                        }
+                        if (landingView) landingView.style.display = 'block';
+                        if (nav) nav.style.display = 'flex';
+                        if (footer) footer.style.display = 'block';
+                        
+                        showNotification('Logged out successfully', 'success', 'Logout');
+                    }
+                } catch (error) {
+                    console.error('Logout error:', error);
+                    showNotification('Error logging out. Please try again.', 'error', 'Error');
+                }
+            });
         }
 
         // ============================================
