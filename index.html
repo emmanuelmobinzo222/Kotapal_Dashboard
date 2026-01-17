@@ -3601,13 +3601,34 @@
                     plan: savedUserData.plan || 'starter',
                     signupDate: savedUserData.signupDate || new Date().toISOString()
                 };
-                localStorage.setItem('kotaUser', JSON.stringify(userData));
+                // Set explicit login flag FIRST, before any state changes
                 sessionStorage.setItem('kotapal_explicit_login', 'true');
+                localStorage.setItem('kotaUser', JSON.stringify(userData));
                 currentUser = userData;
                 
                 // Close modal - dashboard will show automatically via auth.onAuthStateChanged
                 closeAuthModal();
                 showAuthMessage('authMessage', 'Login successful! Redirecting to dashboard...', 'success');
+                
+                // Force dashboard to show
+                setTimeout(() => {
+                    const landingView = document.getElementById('landing-page-view');
+                    const nav = document.querySelector('nav');
+                    const footer = document.querySelector('footer');
+                    const dashboardView = document.getElementById('dashboard-view');
+                    
+                    if (landingView) landingView.style.display = 'none';
+                    if (nav) nav.style.display = 'none';
+                    if (footer) footer.style.display = 'none';
+                    if (dashboardView) {
+                        dashboardView.style.display = 'block';
+                        dashboardView.classList.add('active');
+                    }
+                    
+                    if (typeof initDashboard === 'function') {
+                        initDashboard();
+                    }
+                }, 100);
                 
                 // Re-enable button
                 if (submitBtn) {
@@ -3710,13 +3731,34 @@
                     plan: plan || 'starter',
                     signupDate: new Date().toISOString()
                 };
-                localStorage.setItem('kotaUser', JSON.stringify(userData));
+                // Set explicit login flag FIRST, before any state changes
                 sessionStorage.setItem('kotapal_explicit_login', 'true');
+                localStorage.setItem('kotaUser', JSON.stringify(userData));
                 currentUser = userData;
                 
                 // Close modal - dashboard will show automatically via auth.onAuthStateChanged
                 closeAuthModal();
                 showAuthMessage('signupMessage', 'Account created successfully! Redirecting to dashboard...', 'success');
+                
+                // Force dashboard to show
+                setTimeout(() => {
+                    const landingView = document.getElementById('landing-page-view');
+                    const nav = document.querySelector('nav');
+                    const footer = document.querySelector('footer');
+                    const dashboardView = document.getElementById('dashboard-view');
+                    
+                    if (landingView) landingView.style.display = 'none';
+                    if (nav) nav.style.display = 'none';
+                    if (footer) footer.style.display = 'none';
+                    if (dashboardView) {
+                        dashboardView.style.display = 'block';
+                        dashboardView.classList.add('active');
+                    }
+                    
+                    if (typeof initDashboard === 'function') {
+                        initDashboard();
+                    }
+                }, 100);
                 
                 // Re-enable button
                 if (submitBtn) {
@@ -3853,8 +3895,9 @@
         let currentLayout = 'grid';
 
         // FORCE LANDING PAGE ON INITIAL LOAD - NO AUTO LOGIN
+        let isInitialLoad = true;
         window.addEventListener('DOMContentLoaded', () => {
-            // Always show landing page first, regardless of auth state
+            // Always show landing page first on initial load
             const landingView = document.getElementById('landing-page-view');
             const nav = document.querySelector('nav');
             const footer = document.querySelector('footer');
@@ -3868,23 +3911,23 @@
             if (nav) nav.style.display = 'flex';
             if (footer) footer.style.display = 'block';
             
-            // Clear any existing explicit login flag on page load
-            sessionStorage.removeItem('kotapal_explicit_login');
-            
-            // If user is signed in but no explicit login, sign them out
-            if (auth) {
-                auth.onAuthStateChanged((user) => {
-                    const explicitLogin = sessionStorage.getItem('kotapal_explicit_login') === 'true';
-                    if (user && !explicitLogin) {
-                        auth.signOut().catch(err => console.error('Auto signout error:', err));
-                    }
-                });
+            // Only clear explicit login flag if it doesn't exist (first visit)
+            // Don't clear it if user just logged in
+            if (!sessionStorage.getItem('kotapal_explicit_login')) {
+                // This is a fresh page load, ensure landing page is shown
             }
+            
+            isInitialLoad = false;
         });
         
         // Check authentication state and show appropriate view
         if (auth) {
             auth.onAuthStateChanged((user) => {
+                // Skip processing during initial load to prevent conflicts
+                if (isInitialLoad) {
+                    return;
+                }
+                
                 // ALWAYS check for explicit login first - NO AUTO LOGIN
                 const explicitLogin = sessionStorage.getItem('kotapal_explicit_login') === 'true';
                 
@@ -3922,10 +3965,17 @@
                         initDashboard();
                     }
                 } else {
-                    // User is signed out OR not explicitly logged in - ALWAYS show landing page
+                    // User is signed out OR not explicitly logged in - show landing page
+                    // Only sign out if user exists but no explicit login AND not during login process
                     if (user && !explicitLogin) {
-                        // User exists but hasn't explicitly logged in - sign them out immediately
-                        auth.signOut().catch(err => console.error('Sign out error:', err));
+                        // Don't sign out immediately - let the login process complete first
+                        // Only sign out if this is not a fresh login attempt
+                        setTimeout(() => {
+                            const stillNoLogin = sessionStorage.getItem('kotapal_explicit_login') !== 'true';
+                            if (stillNoLogin && user) {
+                                auth.signOut().catch(err => console.error('Sign out error:', err));
+                            }
+                        }, 1000);
                     }
                     
                     // Clear user data if signed out
@@ -3935,7 +3985,7 @@
                         currentUser = null;
                     }
                     
-                    // ALWAYS show landing page if not explicitly logged in
+                    // Show landing page if not explicitly logged in
                     const landingView = document.getElementById('landing-page-view');
                     const nav = document.querySelector('nav');
                     const footer = document.querySelector('footer');
