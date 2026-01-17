@@ -793,6 +793,75 @@
             position: fixed;
             height: 100vh;
             overflow-y: auto;
+            z-index: 999;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar.hidden {
+            transform: translateX(-100%);
+        }
+
+        .sidebar-toggle-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.2rem;
+        }
+
+        .inline-toggle-btn {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            margin-right: 15px;
+            color: var(--dark);
+            padding: 5px 10px;
+        }
+
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 998;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar:not(.hidden) {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .sidebar-toggle-btn {
+                display: block;
+            }
+
+            .sidebar-overlay {
+                display: block;
+            }
+
+            .inline-toggle-btn {
+                display: inline-block;
+            }
         }
 
         .logo-text {
@@ -857,10 +926,76 @@
             text-align: center;
         }
 
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            height: 100vh;
+            width: 250px;
+            background: white;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            z-index: 999;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar.hidden {
+            transform: translateX(-100%);
+        }
+
         .main-content {
             flex: 1;
             margin-left: 250px;
             padding: 20px;
+            transition: margin-left 0.3s ease;
+        }
+
+        .main-content.expanded {
+            margin-left: 0;
+        }
+
+        .sidebar-toggle-btn {
+            display: none;
+        }
+
+        .inline-toggle-btn {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            margin-right: 15px;
+            color: var(--dark);
+            padding: 5px 10px;
+        }
+
+        .sidebar-overlay {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar:not(.hidden) {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .sidebar-toggle-btn {
+                display: block;
+            }
+
+            .sidebar-overlay {
+                display: block;
+            }
+
+            .inline-toggle-btn {
+                display: inline-block;
+            }
         }
 
         .header {
@@ -1657,12 +1792,6 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="#" class="nav-link" data-page="analytics">
-                            <i class="fas fa-chart-line"></i>
-                            Analytics
-                        </a>
-                    </li>
-                    <li class="nav-item">
                         <a href="#" class="nav-link" data-page="settings">
                             <i class="fas fa-cog"></i>
                             Settings
@@ -1685,11 +1814,22 @@
 
             <!-- Main Content -->
             <div class="main-content">
+                <!-- Sidebar Toggle Button (Mobile) -->
+                <button id="sidebarToggle" class="sidebar-toggle-btn" style="display: none; position: fixed; top: 20px; left: 20px; z-index: 1000; background: var(--primary); color: white; border: none; padding: 10px 15px; border-radius: 8px; cursor: pointer; font-size: 1.2rem;">
+                    <i class="fas fa-bars"></i>
+                </button>
+                
+                <!-- Sidebar Overlay (Mobile) -->
+                <div id="sidebarOverlay" class="sidebar-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 998;"></div>
+                
                 <!-- Dashboard Page -->
                 <div id="dashboard-page" class="page-content" style="display: block;">
                     <div class="header">
                         <div>
-                            <h1 class="page-title">Dashboard</h1>
+                            <button id="inlineToggle" class="inline-toggle-btn" style="display: none; background: none; border: none; font-size: 1.5rem; cursor: pointer; margin-right: 15px; color: var(--dark);">
+                                <i class="fas fa-bars"></i>
+                            </button>
+                            <h1 class="page-title" style="display: inline-block;">Dashboard</h1>
                             <p id="welcomeMessage" style="color: var(--gray); margin-top: 5px; font-size: 0.95rem;">Welcome back!</p>
                         </div>
                         <button class="btn btn-primary" id="createBlockBtn">Create New Block</button>
@@ -1765,7 +1905,10 @@
                 <!-- Blocks Page -->
                 <div id="blocks-page" class="page-content" style="display: none;">
                     <div class="header">
-                        <h1 class="page-title">SmartBlocks</h1>
+                        <button id="inlineToggle" class="inline-toggle-btn" style="display: none; background: none; border: none; font-size: 1.5rem; cursor: pointer; margin-right: 15px; color: var(--dark);">
+                            <i class="fas fa-bars"></i>
+                        </button>
+                        <h1 class="page-title" style="display: inline-block;">SmartBlocks</h1>
                         <button class="btn btn-primary" id="newBlockBtn">Create New Block</button>
                     </div>
                     <div id="blocksContainer" class="blocks-grid">
@@ -1776,7 +1919,10 @@
                 <!-- New Block Page -->
                 <div id="new-block-page" class="page-content" style="display: none;">
                     <div class="header">
-                        <h1 class="page-title">Create New SmartBlock</h1>
+                        <button id="inlineToggle" class="inline-toggle-btn" style="display: none; background: none; border: none; font-size: 1.5rem; cursor: pointer; margin-right: 15px; color: var(--dark);">
+                            <i class="fas fa-bars"></i>
+                        </button>
+                        <h1 class="page-title" style="display: inline-block;">Create New SmartBlock</h1>
                         <button class="btn btn-secondary" id="backToBlocksBtn">Back to Blocks</button>
                     </div>
                     <div class="card">
@@ -1832,7 +1978,10 @@
                 <!-- Integrations Page -->
                 <div id="integrations-page" class="page-content" style="display: none;">
                     <div class="header">
-                        <h1 class="page-title">Integrations</h1>
+                        <button id="inlineToggle" class="inline-toggle-btn" style="display: none; background: none; border: none; font-size: 1.5rem; cursor: pointer; margin-right: 15px; color: var(--dark);">
+                            <i class="fas fa-bars"></i>
+                        </button>
+                        <h1 class="page-title" style="display: inline-block;">Integrations</h1>
                     </div>
                     <div class="card">
                         <div class="card-header">
@@ -1878,7 +2027,10 @@
                 <!-- Analytics Page -->
                 <div id="analytics-page" class="page-content" style="display: none;">
                     <div class="header">
-                        <h1 class="page-title">Analytics</h1>
+                        <button id="inlineToggle" class="inline-toggle-btn" style="display: none; background: none; border: none; font-size: 1.5rem; cursor: pointer; margin-right: 15px; color: var(--dark);">
+                            <i class="fas fa-bars"></i>
+                        </button>
+                        <h1 class="page-title" style="display: inline-block;">Analytics</h1>
                     </div>
                     <div class="card">
                         <div class="card-header">
@@ -1957,7 +2109,10 @@
                 <!-- Settings Page -->
                 <div id="settings-page" class="page-content" style="display: none;">
                     <div class="header">
-                        <h1 class="page-title">Settings</h1>
+                        <button id="inlineToggle" class="inline-toggle-btn" style="display: none; background: none; border: none; font-size: 1.5rem; cursor: pointer; margin-right: 15px; color: var(--dark);">
+                            <i class="fas fa-bars"></i>
+                        </button>
+                        <h1 class="page-title" style="display: inline-block;">Settings</h1>
                     </div>
                     <div class="card">
                         <div class="card-header">
@@ -2003,7 +2158,10 @@
                 <!-- Account Page (Legacy - keeping for compatibility) -->
                 <div id="account-page" class="page-content" style="display: none;">
                     <div class="header">
-                        <h1 class="page-title">Account Settings</h1>
+                        <button id="inlineToggle" class="inline-toggle-btn" style="display: none; background: none; border: none; font-size: 1.5rem; cursor: pointer; margin-right: 15px; color: var(--dark);">
+                            <i class="fas fa-bars"></i>
+                        </button>
+                        <h1 class="page-title" style="display: inline-block;">Account Settings</h1>
                     </div>
                     <div class="card">
                         <div class="card-header">
@@ -2094,8 +2252,11 @@
                 <!-- Product Library Page -->
                 <div id="product-library-page" class="page-content" style="display: none;">
                     <div class="header">
-                        <h1 class="page-title">Product Library</h1>
-                        <button class="btn btn-primary">Add New Product</button>
+                        <button id="inlineToggle" class="inline-toggle-btn" style="display: none; background: none; border: none; font-size: 1.5rem; cursor: pointer; margin-right: 15px; color: var(--dark);">
+                            <i class="fas fa-bars"></i>
+                        </button>
+                        <h1 class="page-title" style="display: inline-block;">Product Library</h1>
+                        <button class="btn btn-primary" id="addNewProductBtn">Add New Product</button>
                     </div>
                     <div class="card">
                         <div class="card-header">
@@ -2128,7 +2289,7 @@
                         <div class="card-header">
                             <h3 class="card-title">Products</h3>
                         </div>
-                        <div id="productLibraryContainer" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;">
+                        <div id="productsLibraryContainer" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;">
                             <div class="product-card-dashboard">
                                 <div style="display: flex; align-items: center; gap: 15px; padding: 15px; border: 1px solid #e5e7eb; border-radius: 8px;">
                                     <img src="https://via.placeholder.com/60" alt="Product" style="width: 60px; height: 60px; border-radius: 8px; object-fit: cover;">
@@ -2152,7 +2313,10 @@
                 <!-- AI Assistant Page -->
                 <div id="ai-assistant-page" class="page-content" style="display: none;">
                     <div class="header">
-                        <h1 class="page-title">AI Assistant</h1>
+                        <button id="inlineToggle" class="inline-toggle-btn" style="display: none; background: none; border: none; font-size: 1.5rem; cursor: pointer; margin-right: 15px; color: var(--dark);">
+                            <i class="fas fa-bars"></i>
+                        </button>
+                        <h1 class="page-title" style="display: inline-block;">AI Assistant</h1>
                     </div>
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px;">
                         <!-- Generate Product Blurbs -->
@@ -3655,8 +3819,616 @@
             renderAlerts();
         }
 
+        // ============================================
+        // API Helper Functions (Restored from Original Dashboard)
+        // ============================================
+        
+        // Global variables for API (only declare if not already declared)
+        if (typeof API_BASE === 'undefined') {
+            var API_BASE = window.location.origin || 'http://localhost:3000';
+        }
+        if (typeof authToken === 'undefined') {
+            var authToken = localStorage.getItem('kotaToken') || null;
+        }
+        // Note: currentBlocks, currentIntegrations, and currentUser are already declared above (line 3067-3069)
+        if (typeof productLibrary === 'undefined') {
+            var productLibrary = [];
+        }
+        if (typeof allProducts === 'undefined') {
+            var allProducts = [];
+        }
+        if (typeof currentProductFilter === 'undefined') {
+            var currentProductFilter = 'all';
+        }
+        if (typeof currentProductSort === 'undefined') {
+            var currentProductSort = 'price';
+        }
+        if (typeof activeProductTags === 'undefined') {
+            var activeProductTags = [];
+        }
+        if (typeof userLocation === 'undefined') {
+            var userLocation = { country: '', region: '' };
+        }
+
+        // API Request helper
+        async function apiRequest(endpoint, options = {}) {
+            const url = `${API_BASE}${endpoint}`;
+            const config = {
+                method: options.method || 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(authToken && { 'Authorization': `Bearer ${authToken}` }),
+                    ...(options.headers || {})
+                }
+            };
+            
+            if (options.body) {
+                config.body = JSON.stringify(options.body);
+            }
+            
+            try {
+                const response = await fetch(url, config);
+                if (!response.ok) {
+                    throw new Error(`API error: ${response.status}`);
+                }
+                return await response.json();
+            } catch (error) {
+                console.error('API request failed:', error);
+                throw error;
+            }
+        }
+
+        // Ping backend to check availability
+        async function pingBackend() {
+            try {
+                const response = await fetch(`${API_BASE}/api/health`, { method: 'GET', timeout: 3000 });
+                return response.ok;
+            } catch {
+                return false;
+            }
+        }
+
+        // Detect user location
+        async function detectUserLocation() {
+            try {
+                const response = await fetch('https://ipapi.co/json/');
+                const data = await response.json();
+                userLocation = { country: data.country_name || '', region: data.region || '' };
+            } catch (error) {
+                console.warn('Could not detect user location:', error);
+            }
+        }
+
+        // ============================================
+        // Render Functions (Restored from Original Dashboard)
+        // ============================================
+
+        // Render blocks
+        function renderBlocks() {
+            const container = document.getElementById('blocksContainer');
+            if (!container) return;
+            
+            if (!currentBlocks || currentBlocks.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: var(--gray); padding: 40px;">No blocks created yet. Click "Create New Block" to get started.</p>';
+                return;
+            }
+            
+            container.innerHTML = currentBlocks.map(block => `
+                <div class="block-card">
+                    <div class="block-header">
+                        <h3>${block.title}</h3>
+                        <span class="block-status ${block.status === 'active' ? 'status-active' : 'status-draft'}">${block.status}</span>
+                    </div>
+                    <div class="block-body">
+                        <p><strong>Layout:</strong> ${block.layout}</p>
+                        <p><strong>Products:</strong> ${block.products || 0}</p>
+                        <p><strong>Retailer:</strong> ${block.retailer ? block.retailer.charAt(0).toUpperCase() + block.retailer.slice(1) : 'N/A'}</p>
+                        <div class="block-stats">
+                            <span>Clicks: ${block.clicks || 0}</span>
+                            <span>Revenue: $${(block.revenue || 0).toFixed(2)}</span>
+                            <span>CTR: ${(block.ctr || 0).toFixed(1)}%</span>
+                        </div>
+                    </div>
+                    <div class="block-actions">
+                        <button class="btn btn-secondary btn-sm" onclick="editBlock('${block.id}')">Edit</button>
+                        <button class="btn btn-secondary btn-sm" onclick="viewBlockAnalytics('${block.id}')">Analytics</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Render integrations
+        function renderIntegrations() {
+            const container = document.getElementById('integrationsContainer');
+            if (!container) return;
+            
+            container.innerHTML = '';
+            
+            if (!currentIntegrations || currentIntegrations.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: var(--gray); padding: 40px;">No integrations available.</p>';
+                return;
+            }
+            
+            currentIntegrations.forEach(integration => {
+                const integrationCard = document.createElement('div');
+                integrationCard.className = 'card';
+                integrationCard.innerHTML = `
+                    <div class="card-header">
+                        <h3 class="card-title">${integration.name}</h3>
+                        <span class="block-status ${integration.status === 'connected' ? 'status-active' : 'status-draft'}">
+                            ${integration.status === 'connected' ? 'Connected' : 'Disconnected'}
+                        </span>
+                    </div>
+                    <div class="card-body">
+                        <p>Last synced: ${integration.lastSync}</p>
+                        ${integration.status === 'connected' ? `
+                            <div class="form-group">
+                                <label>Affiliate ID</label>
+                                <input type="text" value="${integration.affiliateId || ''}" class="form-control integration-id" data-id="${integration.id}">
+                            </div>
+                            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                                <button class="btn btn-danger disconnect-btn" data-id="${integration.id}">Disconnect</button>
+                                <button class="btn btn-secondary sync-btn" data-id="${integration.id}">Sync Now</button>
+                            </div>
+                        ` : `
+                            <p>Connect your ${integration.name} account to start creating SmartBlocks with their products.</p>
+                            <button class="btn btn-primary connect-btn" data-id="${integration.id}">Connect Account</button>
+                        `}
+                    </div>
+                `;
+                container.appendChild(integrationCard);
+            });
+            
+            // Add event listeners
+            document.querySelectorAll('.connect-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const integrationId = this.getAttribute('data-id');
+                    connectIntegration(integrationId);
+                });
+            });
+            
+            document.querySelectorAll('.disconnect-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const integrationId = this.getAttribute('data-id');
+                    disconnectIntegration(integrationId);
+                });
+            });
+            
+            document.querySelectorAll('.sync-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const integrationId = this.getAttribute('data-id');
+                    syncIntegration(integrationId);
+                });
+            });
+            
+            document.querySelectorAll('.integration-id').forEach(input => {
+                input.addEventListener('change', function() {
+                    const integrationId = this.getAttribute('data-id');
+                    updateIntegrationAffiliateId(integrationId, this.value);
+                });
+            });
+        }
+
+        // Connect integration
+        async function connectIntegration(integrationId) {
+            try {
+                const updated = await apiRequest(`/api/integrations/${integrationId}/connect`, { method: 'POST', body: {} });
+                const idx = currentIntegrations.findIndex(i => i.id === integrationId);
+                if (idx !== -1) currentIntegrations[idx] = updated;
+                else currentIntegrations.push(updated);
+                renderIntegrations();
+                showNotification('Integration connected successfully!', 'success', 'Connected');
+            } catch (err) {
+                showNotification(err.message || 'Connect failed', 'error', 'Connection Failed');
+            }
+        }
+
+        // Disconnect integration
+        async function disconnectIntegration(integrationId) {
+            try {
+                const updated = await apiRequest(`/api/integrations/${integrationId}/disconnect`, { method: 'POST', body: {} });
+                const idx = currentIntegrations.findIndex(i => i.id === integrationId);
+                if (idx !== -1) currentIntegrations[idx] = updated;
+                renderIntegrations();
+                showNotification('Integration disconnected successfully!', 'success', 'Disconnected');
+            } catch (err) {
+                showNotification(err.message || 'Disconnect failed', 'error', 'Disconnect Failed');
+            }
+        }
+
+        // Sync integration
+        async function syncIntegration(integrationId) {
+            try {
+                const updated = await apiRequest(`/api/integrations/${integrationId}/sync`, { method: 'POST', body: {} });
+                const idx = currentIntegrations.findIndex(i => i.id === integrationId);
+                if (idx !== -1) currentIntegrations[idx] = updated;
+                renderIntegrations();
+                showNotification('Integration synced successfully!', 'success', 'Synced');
+            } catch (err) {
+                showNotification(err.message || 'Sync failed', 'error', 'Sync Failed');
+            }
+        }
+
+        // Update integration affiliate ID
+        async function updateIntegrationAffiliateId(integrationId, affiliateId) {
+            try {
+                const updated = await apiRequest('/api/integrations', { 
+                    method: 'POST', 
+                    body: { id: integrationId, name: integrationId, affiliateId: affiliateId } 
+                });
+                const idx = currentIntegrations.findIndex(i => i.id === integrationId);
+                if (idx !== -1) currentIntegrations[idx] = updated;
+                renderIntegrations();
+                showNotification('Affiliate ID updated successfully!', 'success', 'Updated');
+            } catch (err) {
+                showNotification(err.message || 'Update failed', 'error', 'Update Failed');
+            }
+        }
+
+        // Render activity table
+        function renderActivityTable() {
+            const tbody = document.querySelector('#activityTable tbody');
+            if (!tbody) return;
+            
+            tbody.innerHTML = '';
+            
+            if (!currentBlocks || currentBlocks.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--gray); padding: 40px;">No activity yet.</td></tr>';
+                return;
+            }
+            
+            currentBlocks.slice(0, 5).forEach(block => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${block.title}</td>
+                    <td>${block.layout}</td>
+                    <td>${block.clicks || 0}</td>
+                    <td>$${(block.revenue || 0).toFixed(2)}</td>
+                    <td><span class="block-status ${block.status === 'active' ? 'status-active' : 'status-draft'}">${block.status}</span></td>
+                    <td>${block.lastUpdated || 'N/A'}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Render analytics
+        async function renderAnalytics() {
+            const dateRangeFilter = document.getElementById('dateRangeFilter');
+            const retailerFilter = document.getElementById('retailerFilter');
+            
+            const dateRange = dateRangeFilter ? dateRangeFilter.value : '30d';
+            const retailer = retailerFilter ? retailerFilter.value : 'all';
+            
+            try {
+                const metrics = await apiRequest(`/api/analytics?dateRange=${encodeURIComponent(dateRange)}&retailer=${encodeURIComponent(retailer)}`);
+                const elFC = document.getElementById('filteredClicks');
+                if (elFC) elFC.textContent = (metrics.totalClicks || 0).toLocaleString();
+                const elFR = document.getElementById('filteredRevenue');
+                if (elFR) elFR.textContent = '$' + (metrics.totalRevenue || 0).toFixed(2);
+                const elFCTR = document.getElementById('filteredCTR');
+                if (elFCTR) elFCTR.textContent = (metrics.avgCTR || 0).toFixed(1) + '%';
+                const filteredBlocks = retailer === 'all' ? currentBlocks : currentBlocks.filter(b => b.retailer === retailer);
+                const elBS = document.getElementById('blocksShowing');
+                if (elBS) elBS.textContent = filteredBlocks.length;
+                
+                const tbody = document.querySelector('#analyticsTable tbody');
+                if (tbody) {
+                    tbody.innerHTML = '';
+                    filteredBlocks.forEach(block => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${block.title}</td>
+                            <td>${block.layout}</td>
+                            <td>${block.clicks || 0}</td>
+                            <td>${(block.ctr || 0).toFixed(1)}%</td>
+                            <td>$${(block.revenue || 0).toFixed(2)}</td>
+                            <td><span class="block-status ${block.status === 'active' ? 'status-active' : 'status-draft'}">${block.status}</span></td>
+                            <td>
+                                <button class="btn btn-secondary btn-sm" style="padding: 5px 10px; font-size: 0.8rem;">Edit</button>
+                                <button class="btn btn-secondary btn-sm" style="padding: 5px 10px; font-size: 0.8rem;">Analytics</button>
+                            </td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                }
+            } catch (err) {
+                console.error('Analytics render error:', err);
+                // Fallback to mock data
+                const filteredBlocks = retailer === 'all' ? currentBlocks : currentBlocks.filter(b => b.retailer === retailer);
+                const totalClicks = filteredBlocks.reduce((sum, b) => sum + (b.clicks || 0), 0);
+                const totalRevenue = filteredBlocks.reduce((sum, b) => sum + (b.revenue || 0), 0);
+                const avgCTR = filteredBlocks.length > 0 ? filteredBlocks.reduce((sum, b) => sum + (b.ctr || 0), 0) / filteredBlocks.length : 0;
+                
+                const elFC = document.getElementById('filteredClicks');
+                if (elFC) elFC.textContent = totalClicks.toLocaleString();
+                const elFR = document.getElementById('filteredRevenue');
+                if (elFR) elFR.textContent = '$' + totalRevenue.toFixed(2);
+                const elFCTR = document.getElementById('filteredCTR');
+                if (elFCTR) elFCTR.textContent = avgCTR.toFixed(1) + '%';
+                const elBS = document.getElementById('blocksShowing');
+                if (elBS) elBS.textContent = filteredBlocks.length;
+            }
+        }
+
+        // Render alerts
+        async function renderAlerts() {
+            const container = document.getElementById('alertsContainer');
+            if (!container) return;
+            
+            container.innerHTML = '';
+            try {
+                const alerts = await apiRequest('/api/alerts');
+                alerts.forEach(alert => {
+                    const alertDiv = document.createElement('div');
+                    const cls = alert.type === 'warning' ? 'warning' : (alert.type === 'success' ? 'success' : 'danger');
+                    alertDiv.className = `alert alert-${cls}`;
+                    alertDiv.innerHTML = `
+                        <i class="fas fa-${alert.type === 'warning' ? 'exclamation-triangle' : 'check-circle'}"></i>
+                        <div>
+                            <strong>${alert.title}</strong>
+                            <p>${alert.message}</p>
+                        </div>
+                    `;
+                    container.appendChild(alertDiv);
+                });
+            } catch (err) {
+                console.error('Alerts render error:', err);
+            }
+        }
+
+        // Update dashboard stats
+        function updateDashboardStats() {
+            const totalClicks = currentBlocks.reduce((sum, b) => sum + (b.clicks || 0), 0);
+            const totalRevenue = currentBlocks.reduce((sum, b) => sum + (b.revenue || 0), 0);
+            const avgCTR = currentBlocks.length > 0 ? currentBlocks.reduce((sum, b) => sum + (b.ctr || 0), 0) / currentBlocks.length : 0;
+            
+            const clicksEl = document.getElementById('totalClicks');
+            const revenueEl = document.getElementById('totalRevenue');
+            const ctrEl = document.getElementById('avgCTR');
+            const blocksEl = document.getElementById('totalBlocks');
+            
+            if (clicksEl) clicksEl.textContent = totalClicks.toLocaleString();
+            if (revenueEl) revenueEl.textContent = '$' + totalRevenue.toFixed(2);
+            if (ctrEl) ctrEl.textContent = avgCTR.toFixed(1) + '%';
+            if (blocksEl) blocksEl.textContent = currentBlocks.length;
+        }
+
+        // Search products
+        async function searchProducts(retailer, query) {
+            const searchStatus = document.getElementById('searchStatus');
+            const productsContainer = document.getElementById('productsContainer');
+            
+            if (searchStatus) searchStatus.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+            if (productsContainer) productsContainer.innerHTML = '';
+            
+            try {
+                const products = await apiRequest(`/api/products/search?retailer=${encodeURIComponent(retailer)}&query=${encodeURIComponent(query)}`, {
+                    method: 'POST',
+                    body: { location: userLocation }
+                });
+                const regionMsg = userLocation.country ? ` in ${userLocation.country}` : '';
+                if (searchStatus) searchStatus.textContent = `Found ${products.length} products for "${query}"${regionMsg}`;
+                
+                if (productsContainer && products.length > 0) {
+                    products.forEach(product => {
+                        const productCard = document.createElement('div');
+                        productCard.className = 'product-card';
+                        productCard.innerHTML = `
+                            <img src="${product.image}" alt="${product.title}" class="product-image">
+                            <div class="product-title">${product.title}</div>
+                            <div class="product-price">$${product.price.toFixed(2)}</div>
+                            <div class="product-retailer">${retailer.charAt(0).toUpperCase() + retailer.slice(1)}</div>
+                            <button class="btn btn-primary btn-sm" onclick="selectProduct(${JSON.stringify(product).replace(/"/g, '&quot;')})">Select</button>
+                        `;
+                        productsContainer.appendChild(productCard);
+                    });
+                }
+            } catch (err) {
+                console.error('Product search error:', err);
+                if (searchStatus) searchStatus.textContent = 'Search failed. Please try again.';
+            }
+        }
+
+        // Load product library
+        function loadProductLibrary() {
+            try {
+                const saved = localStorage.getItem('kotaProductLibrary');
+                if (saved) {
+                    productLibrary = JSON.parse(saved);
+                } else {
+                    productLibrary = [];
+                }
+            } catch (e) {
+                console.error('Error loading product library:', e);
+                productLibrary = [];
+            }
+        }
+
+        // Render products library
+        function renderProductsLibrary() {
+            const container = document.getElementById('productsLibraryContainer');
+            if (!container) return;
+            
+            loadProductLibrary();
+            
+            // Get products from all blocks
+            allProducts = [];
+            currentBlocks.forEach(block => {
+                if (block.productsList) {
+                    block.productsList.forEach(product => {
+                        allProducts.push({
+                            ...product,
+                            blockTitle: block.title,
+                            clicks: block.clicks || 0,
+                            source: 'block'
+                        });
+                    });
+                }
+            });
+            
+            // Add products from the global product library
+            productLibrary.forEach(product => {
+                const exists = allProducts.some(p => 
+                    (p.id && product.id && p.id === product.id) ||
+                    (p.title === product.title && p.retailer === product.retailer)
+                );
+                if (!exists) {
+                    allProducts.push({
+                        ...product,
+                        source: product.source || 'library',
+                        blockTitle: product.blockTitle || 'Product Library'
+                    });
+                }
+            });
+            
+            // Apply source filter
+            let filtered = allProducts;
+            if (currentProductFilter !== 'all') {
+                filtered = filtered.filter(p => p.retailer === currentProductFilter);
+            }
+            
+            // Apply sorting
+            filtered.sort((a, b) => {
+                switch(currentProductSort) {
+                    case 'price':
+                        return (b.price || 0) - (a.price || 0);
+                    case 'clicks':
+                        return (b.clicks || 0) - (a.clicks || 0);
+                    case 'rating':
+                        return (b.rating || 0) - (a.rating || 0);
+                    default:
+                        return 0;
+                }
+            });
+            
+            // Render products
+            if (filtered.length === 0) {
+                container.innerHTML = '<p style="color: var(--gray); text-align: center; padding: 40px;">No products found matching your filters.</p>';
+                return;
+            }
+            
+            container.innerHTML = filtered.map(product => {
+                const retailerLabel = product.retailer ? `<span style="text-transform: capitalize;">${product.retailer}</span>` : 'Unknown';
+                const originLabel = product.blockTitle || 'Product Library';
+                const priceLabel = product.price ? product.price.toFixed(2) : '0.00';
+                return `
+                <div style="display: flex; gap: 15px; padding: 15px; border: 1px solid #e5e7eb; border-radius: 8px; margin-bottom: 15px; background: white;">
+                    <img src="${product.image || 'https://via.placeholder.com/100'}" alt="${product.title}" style="width: 100px; height: 100px; object-fit: cover; border-radius: 8px;" onerror="this.onerror=null; this.src='https://via.placeholder.com/100?text=' + encodeURIComponent('${product.title.substring(0, 10)}');">
+                    <div style="flex: 1;">
+                        <h4 style="margin: 0 0 5px 0;">${product.title}</h4>
+                        <p style="color: var(--gray); font-size: 0.9rem; margin: 0 0 10px 0;">
+                            ${retailerLabel} • From: ${originLabel}
+                        </p>
+                        <div style="display: flex; gap: 20px; align-items: center;">
+                            <span style="font-weight: 600; color: var(--primary); font-size: 1.2rem;">$${priceLabel}</span>
+                            <span style="color: var(--gray); font-size: 0.9rem;">Clicks: ${product.clicks || 0}</span>
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        // Helper functions for blocks
+        function editBlock(blockId) {
+            showNotification('Edit block feature coming soon', 'info');
+        }
+
+        function viewBlockAnalytics(blockId) {
+            showNotification('Block analytics feature coming soon', 'info');
+        }
+
+        function selectProduct(product) {
+            showNotification('Product selected: ' + product.title, 'success');
+        }
+
+        // Show notification
+        function showNotification(message, type = 'info', title = null) {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : type === 'warning' ? '#f59e0b' : '#3b82f6'};
+                color: white;
+                padding: 15px 20px;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                z-index: 10000;
+                max-width: 400px;
+                animation: slideIn 0.3s ease;
+            `;
+            notification.innerHTML = title ? `<strong>${title}</strong><br>${message}` : message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => notification.remove(), 300);
+            }, 5000);
+        }
+
+        // Setup sidebar toggle functionality
+        function setupSidebarToggle() {
+            const sidebar = document.querySelector('.sidebar');
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const inlineToggle = document.getElementById('inlineToggle');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+            const mainContent = document.querySelector('.main-content');
+            
+            function toggleSidebar() {
+                if (sidebar) {
+                    sidebar.classList.toggle('hidden');
+                    if (mainContent) {
+                        mainContent.classList.toggle('expanded');
+                    }
+                    if (sidebarOverlay) {
+                        sidebarOverlay.style.display = sidebar.classList.contains('hidden') ? 'none' : 'block';
+                    }
+                    
+                    // Update toggle button icons
+                    const sidebarIcon = sidebarToggle ? sidebarToggle.querySelector('i') : null;
+                    const inlineIcon = inlineToggle ? inlineToggle.querySelector('i') : null;
+                    
+                    if (sidebar.classList.contains('hidden')) {
+                        if (sidebarIcon) sidebarIcon.className = 'fas fa-bars';
+                        if (inlineIcon) inlineIcon.className = 'fas fa-bars';
+                    } else {
+                        if (sidebarIcon) sidebarIcon.className = 'fas fa-times';
+                        if (inlineIcon) inlineIcon.className = 'fas fa-times';
+                    }
+                }
+            }
+            
+            if (sidebarToggle) {
+                sidebarToggle.addEventListener('click', toggleSidebar);
+            }
+            
+            if (inlineToggle) {
+                inlineToggle.addEventListener('click', toggleSidebar);
+            }
+            
+            if (sidebarOverlay) {
+                sidebarOverlay.addEventListener('click', toggleSidebar);
+            }
+            
+            // Add inline toggle buttons to all page headers
+            document.querySelectorAll('.page-content .header').forEach(header => {
+                if (!header.querySelector('.inline-toggle-btn')) {
+                    const toggleBtn = document.createElement('button');
+                    toggleBtn.id = 'inlineToggle';
+                    toggleBtn.className = 'inline-toggle-btn';
+                    toggleBtn.innerHTML = '<i class="fas fa-bars"></i>';
+                    toggleBtn.addEventListener('click', toggleSidebar);
+                    header.insertBefore(toggleBtn, header.firstChild);
+                }
+            });
+        }
+
         // Setup dashboard event listeners
         function setupDashboardEventListeners() {
+            // Setup sidebar toggle
+            setupSidebarToggle();
             // Navigation
             const navLinks = document.querySelectorAll('.nav-link[data-page]');
             navLinks.forEach(link => {
