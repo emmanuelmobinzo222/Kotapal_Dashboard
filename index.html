@@ -993,6 +993,8 @@
             margin: 0 auto;
             display: flex;
             flex-direction: column;
+            align-items: center;
+            text-align: center;
         }
 
         .card {
@@ -1003,16 +1005,30 @@
             padding: 24px;
             margin-bottom: 24px;
             width: 100%;
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
+            text-align: center;
         }
         
-        /* Center content within cards */
+        /* Center ALL content within cards */
         .card-header {
-            text-align: center;
+            text-align: center !important;
             margin-bottom: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
         }
         
         .card-header h3 {
-            text-align: center;
+            text-align: center !important;
+            width: 100%;
+        }
+        
+        .card-title {
+            text-align: center !important;
         }
         
         /* Center stats grid */
@@ -1023,6 +1039,24 @@
             margin: 20px auto;
             max-width: 1200px;
             width: 100%;
+            justify-items: center;
+        }
+        
+        .stat-card {
+            text-align: center;
+            width: 100%;
+        }
+        
+        .stat-content {
+            text-align: center;
+        }
+        
+        .stat-value {
+            text-align: center;
+        }
+        
+        .stat-label {
+            text-align: center;
         }
         
         /* Center tables */
@@ -1030,6 +1064,20 @@
             margin: 0 auto;
             max-width: 100%;
             overflow-x: auto;
+            text-align: center;
+        }
+        
+        table {
+            margin: 0 auto;
+            text-align: center;
+        }
+        
+        table th {
+            text-align: center;
+        }
+        
+        table td {
+            text-align: center;
         }
         
         /* Center product grids */
@@ -1040,40 +1088,131 @@
             margin: 20px auto;
             max-width: 1200px;
             width: 100%;
+            justify-items: center;
+        }
+        
+        .product-card-dashboard {
+            text-align: center;
         }
         
         /* Center form groups */
         .form-group {
             max-width: 600px;
             margin: 0 auto 20px auto;
+            text-align: center;
+        }
+        
+        .form-group label {
+            text-align: center;
+            display: block;
+            margin-bottom: 8px;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            text-align: center;
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
         }
         
         /* Center header content */
         .header {
             display: flex;
-            justify-content: space-between;
+            justify-content: center;
             align-items: center;
             margin-bottom: 24px;
             flex-wrap: wrap;
             gap: 16px;
+            text-align: center;
+            width: 100%;
         }
         
-        .header h1 {
-            flex: 1;
-            text-align: left;
+        .header h1,
+        .page-title {
+            text-align: center !important;
+            width: 100%;
+            margin: 0 auto;
         }
         
-        /* Center main content areas */
+        /* Center ALL main content areas */
         .page-content > .card,
         .page-content > div:not(.header) {
             max-width: 1200px;
             margin-left: auto;
             margin-right: auto;
+            text-align: center;
         }
         
         /* Center dashboard stats */
         #dashboard-page .stats-grid {
             justify-content: center;
+            justify-items: center;
+        }
+        
+        /* Center all buttons */
+        .btn {
+            margin: 10px auto;
+            display: inline-block;
+        }
+        
+        /* Center lists */
+        ul, ol {
+            text-align: center;
+            list-style-position: inside;
+        }
+        
+        /* Center paragraphs and text */
+        .page-content p,
+        .page-content > div:not(.header):not(.card) {
+            text-align: center;
+        }
+        
+        /* Center card body content */
+        .card > * {
+            text-align: center;
+        }
+        
+        .card > form {
+            text-align: center;
+        }
+        
+        /* Center inline elements in cards */
+        .card .form-group {
+            text-align: center;
+        }
+        
+        /* Center all text content */
+        .page-content h1,
+        .page-content h2,
+        .page-content h3,
+        .page-content h4,
+        .page-content h5,
+        .page-content h6 {
+            text-align: center;
+        }
+        
+        /* Center specific dashboard elements */
+        #integrationsContainer,
+        #blocksContainer,
+        #productLibraryContainer,
+        #billingPlansContainer,
+        #reportsTable,
+        #billingHistoryTable,
+        #analyticsTable {
+            margin: 0 auto;
+            text-align: center;
+        }
+        
+        /* Center header buttons */
+        .header > div {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            width: 100%;
         }
         
         /* Center buttons in forms */
@@ -2281,7 +2420,7 @@
     <!-- End Landing Page View -->
 
     <!-- Dashboard View (Hidden by default, shown when authenticated) -->
-    <div id="dashboard-view" class="dashboard-view">
+    <div id="dashboard-view" class="dashboard-view" style="display: none;">
         <!-- Sidebar Toggle Button -->
         <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">
             <i class="fas fa-bars"></i>
@@ -3713,31 +3852,43 @@
         let selectedProductsList = [];
         let currentLayout = 'grid';
 
-        // Check authentication state and show appropriate view
-        // On page load, ensure we show landing page if no explicit login
+        // FORCE LANDING PAGE ON INITIAL LOAD - NO AUTO LOGIN
         window.addEventListener('DOMContentLoaded', () => {
-            const explicitLogin = sessionStorage.getItem('kotapal_explicit_login') === 'true';
-            if (!explicitLogin) {
-                const landingView = document.getElementById('landing-page-view');
-                const nav = document.querySelector('nav');
-                const footer = document.querySelector('footer');
-                const dashboardView = document.getElementById('dashboard-view');
-                
-                if (dashboardView) {
-                    dashboardView.style.display = 'none';
-                    dashboardView.classList.remove('active');
-                }
-                if (landingView) landingView.style.display = 'block';
-                if (nav) nav.style.display = 'flex';
-                if (footer) footer.style.display = 'block';
+            // Always show landing page first, regardless of auth state
+            const landingView = document.getElementById('landing-page-view');
+            const nav = document.querySelector('nav');
+            const footer = document.querySelector('footer');
+            const dashboardView = document.getElementById('dashboard-view');
+            
+            if (dashboardView) {
+                dashboardView.style.display = 'none';
+                dashboardView.classList.remove('active');
+            }
+            if (landingView) landingView.style.display = 'block';
+            if (nav) nav.style.display = 'flex';
+            if (footer) footer.style.display = 'block';
+            
+            // Clear any existing explicit login flag on page load
+            sessionStorage.removeItem('kotapal_explicit_login');
+            
+            // If user is signed in but no explicit login, sign them out
+            if (auth) {
+                auth.onAuthStateChanged((user) => {
+                    const explicitLogin = sessionStorage.getItem('kotapal_explicit_login') === 'true';
+                    if (user && !explicitLogin) {
+                        auth.signOut().catch(err => console.error('Auto signout error:', err));
+                    }
+                });
             }
         });
         
+        // Check authentication state and show appropriate view
         if (auth) {
             auth.onAuthStateChanged((user) => {
-                // Check if user explicitly logged in
+                // ALWAYS check for explicit login first - NO AUTO LOGIN
                 const explicitLogin = sessionStorage.getItem('kotapal_explicit_login') === 'true';
                 
+                // Only show dashboard if user is signed in AND explicitly logged in
                 if (user && explicitLogin) {
                     // User is signed in and explicitly logged in - show dashboard
                     const savedUserData = JSON.parse(localStorage.getItem('kotaUser') || '{}');
@@ -3771,18 +3922,20 @@
                         initDashboard();
                     }
                 } else {
-                    // User is signed out OR not explicitly logged in - show landing page
+                    // User is signed out OR not explicitly logged in - ALWAYS show landing page
+                    if (user && !explicitLogin) {
+                        // User exists but hasn't explicitly logged in - sign them out immediately
+                        auth.signOut().catch(err => console.error('Sign out error:', err));
+                    }
+                    
+                    // Clear user data if signed out
                     if (!user) {
                         localStorage.removeItem('kotaUser');
                         sessionStorage.removeItem('kotapal_explicit_login');
                         currentUser = null;
-                    } else if (user && !explicitLogin) {
-                        // User exists but hasn't explicitly logged in - sign them out
-                        auth.signOut().catch(err => console.error('Sign out error:', err));
-                        return;
                     }
                     
-                    // Hide dashboard, show landing page
+                    // ALWAYS show landing page if not explicitly logged in
                     const landingView = document.getElementById('landing-page-view');
                     const nav = document.querySelector('nav');
                     const footer = document.querySelector('footer');
