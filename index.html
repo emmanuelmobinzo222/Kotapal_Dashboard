@@ -2591,6 +2591,7 @@
             } else {
                 firebase.initializeApp(firebaseConfig);
                 auth = firebase.auth();
+                console.log('Firebase initialized successfully', { auth: !!auth });
             }
         } catch (error) {
             console.error('Firebase initialization error:', error);
@@ -2603,21 +2604,33 @@
 
         // Show auth message
         function showAuthMessage(elementId, message, type) {
+            console.log('showAuthMessage called', { elementId, message, type });
             const messageEl = document.getElementById(elementId);
-            messageEl.textContent = message;
-            messageEl.className = 'form-status ' + type;
-            messageEl.style.display = 'block';
-            setTimeout(() => {
-                messageEl.style.display = 'none';
-            }, 5000);
+            if (messageEl) {
+                messageEl.textContent = message;
+                messageEl.className = 'form-status ' + type;
+                messageEl.style.display = 'block';
+                console.log('Message displayed in', elementId);
+                setTimeout(() => {
+                    messageEl.style.display = 'none';
+                }, 8000); // Show for 8 seconds instead of 5
+            } else {
+                console.error('Message element not found:', elementId);
+                // Fallback: show alert if element not found
+                alert(message);
+            }
         }
 
         // Handle Login
         async function handleFirebaseLogin(email, password) {
+            console.log('handleFirebaseLogin called', { email, auth: !!auth });
+            
             // Check if Firebase is initialized
             if (!auth) {
-                showAuthMessage('authMessage', 'Firebase is not configured. Please contact support.', 'error');
-                console.error('Firebase auth not initialized');
+                const errorMsg = 'Firebase is not configured or not initialized. Please check the console for errors.';
+                showAuthMessage('authMessage', errorMsg, 'error');
+                console.error('Firebase auth not initialized. Check Firebase config.');
+                alert('Firebase authentication is not available. Please check the browser console for details.');
                 return;
             }
 
@@ -2644,8 +2657,9 @@
                 const userCredential = await auth.signInWithEmailAndPassword(email.trim(), password);
                 const user = userCredential.user;
                 
-                // Mark as explicitly logged in this session
+                // Mark as explicitly logged in this session - MUST be set before auth state change processes
                 sessionStorage.setItem('kotapal_explicit_login', 'true');
+                console.log('Login successful, session flag set');
                 
                 // Get user display name from Firestore or use email
                 const displayName = user.displayName || user.email.split('@')[0];
@@ -2662,6 +2676,9 @@
                 // Close modal - dashboard will show automatically via auth.onAuthStateChanged
                 closeAuthModal();
                 showAuthMessage('authMessage', 'Login successful! Redirecting to dashboard...', 'success');
+                
+                // Force trigger auth state change if needed
+                // The auth.onAuthStateChanged should fire automatically, but we ensure it's processed
                 
                 // Re-enable button
                 if (submitBtn) {
@@ -2710,10 +2727,14 @@
 
         // Handle Sign Up
         async function handleFirebaseSignup(name, email, password) {
+            console.log('handleFirebaseSignup called', { name, email, auth: !!auth });
+            
             // Check if Firebase is initialized
             if (!auth) {
-                showAuthMessage('signupMessage', 'Firebase is not configured. Please contact support.', 'error');
-                console.error('Firebase auth not initialized');
+                const errorMsg = 'Firebase is not configured or not initialized. Please check the console for errors.';
+                showAuthMessage('signupMessage', errorMsg, 'error');
+                console.error('Firebase auth not initialized. Check Firebase config.');
+                alert('Firebase authentication is not available. Please check the browser console for details.');
                 return;
             }
 
@@ -3045,13 +3066,10 @@
         if (footer) footer.style.display = 'block';
         if (dashboardView) dashboardView.classList.remove('active');
         
-        // Check if user explicitly logged in this session
-        const sessionLogin = sessionStorage.getItem('kotapal_explicit_login');
-        
         if (auth) {
             auth.onAuthStateChanged((user) => {
-                if (user && sessionLogin === 'true') {
-                    // User is signed in AND explicitly logged in this session - show dashboard
+                if (user) {
+                    // User is signed in - show dashboard
                     const userData = {
                         uid: user.uid,
                         email: user.email,
@@ -3082,16 +3100,11 @@
                     // Initialize dashboard
                     initDashboard();
                 } else {
-                    // User is signed out OR hasn't explicitly logged in - show landing page
-                    if (user && !sessionLogin) {
-                        // User has cached session but hasn't explicitly logged in - sign them out
-                        auth.signOut().catch(err => console.log('Sign out error:', err));
-                    }
-                    
+                    // User is signed out - show landing page
                     localStorage.removeItem('kotaUser');
                     sessionStorage.removeItem('kotapal_explicit_login');
                     currentUser = null;
-                    settingsAccessGranted = false; // Reset settings access
+                    settingsAccessGranted = false;
                     
                     // Hide dashboard, show landing page
                     if (dashboardView) dashboardView.classList.remove('active');
@@ -3179,56 +3192,121 @@
         // Firebase Auth Form Handlers
         // ============================================
 
-        // Login form submission
-        document.getElementById('loginFormElement').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const email = document.getElementById('loginEmail').value;
-            const password = document.getElementById('loginPassword').value;
-            await handleFirebaseLogin(email, password);
-        });
-
-        // Signup form submission
-        document.getElementById('signupFormElement').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const name = document.getElementById('signupName').value;
-            const email = document.getElementById('signupEmail').value;
-            const password = document.getElementById('signupPassword').value;
-            await handleFirebaseSignup(name, email, password);
-        });
-
-        // Forgot password link
-        document.getElementById('forgotPasswordLink').addEventListener('click', (e) => {
-            e.preventDefault();
-            closeAuthModal();
-            document.getElementById('resetPasswordModal').style.display = 'block';
-        });
-
-        // Password reset form
-        const resetPasswordModal = document.getElementById('resetPasswordModal');
-        document.getElementById('resetPasswordForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const email = document.getElementById('resetEmail').value;
-            await handlePasswordReset(email);
-        });
-
-        // Close reset password modal
-        document.getElementById('closeResetModal').addEventListener('click', () => {
-            resetPasswordModal.style.display = 'none';
-        });
-
-        // Back to login from reset modal
-        document.getElementById('backToLogin').addEventListener('click', (e) => {
-            e.preventDefault();
-            resetPasswordModal.style.display = 'none';
-            showAuthModal();
-        });
-
-        // Close reset modal when clicking outside
-        window.addEventListener('click', (event) => {
-            if (event.target == resetPasswordModal) {
-                resetPasswordModal.style.display = 'none';
+        // Wait for DOM to be ready before attaching form handlers
+        function setupAuthFormHandlers() {
+            // Login form submission
+            const loginForm = document.getElementById('loginFormElement');
+            if (loginForm) {
+                console.log('Login form found, attaching handler');
+                loginForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    console.log('Login form submitted');
+                    const email = document.getElementById('loginEmail').value;
+                    const password = document.getElementById('loginPassword').value;
+                    console.log('Attempting login for:', email);
+                    await handleFirebaseLogin(email, password);
+                });
+            } else {
+                console.error('Login form not found! ID: loginFormElement');
             }
-        });
+
+            // Signup form submission
+            const signupForm = document.getElementById('signupFormElement');
+            if (signupForm) {
+                console.log('Signup form found, attaching handler');
+                signupForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    console.log('Signup form submitted');
+                    const name = document.getElementById('signupName').value;
+                    const email = document.getElementById('signupEmail').value;
+                    const password = document.getElementById('signupPassword').value;
+                    console.log('Attempting signup for:', email);
+                    await handleFirebaseSignup(name, email, password);
+                });
+            } else {
+                console.error('Signup form not found! ID: signupFormElement');
+            }
+        }
+
+        // Setup form handlers when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                console.log('DOM loaded, setting up auth form handlers');
+                setupAuthFormHandlers();
+            });
+        } else {
+            console.log('DOM already ready, setting up auth form handlers');
+            setupAuthFormHandlers();
+        }
+
+        // Setup forgot password and reset form handlers
+        function setupPasswordResetHandlers() {
+            // Forgot password link
+            const forgotPasswordLink = document.getElementById('forgotPasswordLink');
+            if (forgotPasswordLink) {
+                forgotPasswordLink.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    closeAuthModal();
+                    const resetModal = document.getElementById('resetPasswordModal');
+                    if (resetModal) resetModal.style.display = 'block';
+                });
+            }
+
+            // Password reset form
+            const resetPasswordModal = document.getElementById('resetPasswordModal');
+            const resetForm = document.getElementById('resetPasswordForm');
+            if (resetForm) {
+                resetForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const email = document.getElementById('resetEmail').value;
+                    await handlePasswordReset(email);
+                });
+            }
+        }
+
+        // Setup password reset handlers when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', setupPasswordResetHandlers);
+        } else {
+            setupPasswordResetHandlers();
+        }
+
+        // Setup reset modal close handlers
+        function setupResetModalHandlers() {
+            const resetPasswordModal = document.getElementById('resetPasswordModal');
+            const closeResetModal = document.getElementById('closeResetModal');
+            const backToLogin = document.getElementById('backToLogin');
+            
+            if (closeResetModal && resetPasswordModal) {
+                closeResetModal.addEventListener('click', () => {
+                    resetPasswordModal.style.display = 'none';
+                });
+            }
+            
+            if (backToLogin && resetPasswordModal) {
+                backToLogin.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    resetPasswordModal.style.display = 'none';
+                    showAuthModal();
+                });
+            }
+            
+            // Close reset modal when clicking outside
+            if (resetPasswordModal) {
+                window.addEventListener('click', (event) => {
+                    if (event.target == resetPasswordModal) {
+                        resetPasswordModal.style.display = 'none';
+                    }
+                });
+            }
+        }
+        
+        // Setup reset modal handlers when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', setupResetModalHandlers);
+        } else {
+            setupResetModalHandlers();
+        }
 
         // Simulate real-time price updates
         const products = document.querySelectorAll('.product-price');
