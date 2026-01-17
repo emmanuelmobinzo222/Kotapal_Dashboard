@@ -3606,12 +3606,16 @@
                 localStorage.setItem('kotaUser', JSON.stringify(userData));
                 currentUser = userData;
                 
-                // Close modal - dashboard will show automatically via auth.onAuthStateChanged
-                closeAuthModal();
+                console.log('Login successful, showing dashboard...');
+                
+                // Show success message before closing modal
                 showAuthMessage('authMessage', 'Login successful! Redirecting to dashboard...', 'success');
                 
-                // Force dashboard to show
+                // Close modal after a brief delay
                 setTimeout(() => {
+                    closeAuthModal();
+                    
+                    // Force dashboard to show
                     const landingView = document.getElementById('landing-page-view');
                     const nav = document.querySelector('nav');
                     const footer = document.querySelector('footer');
@@ -3628,7 +3632,7 @@
                     if (typeof initDashboard === 'function') {
                         initDashboard();
                     }
-                }, 100);
+                }, 500);
                 
                 // Re-enable button
                 if (submitBtn) {
@@ -3736,12 +3740,16 @@
                 localStorage.setItem('kotaUser', JSON.stringify(userData));
                 currentUser = userData;
                 
-                // Close modal - dashboard will show automatically via auth.onAuthStateChanged
-                closeAuthModal();
+                console.log('Signup successful, showing dashboard...');
+                
+                // Show success message before closing modal
                 showAuthMessage('signupMessage', 'Account created successfully! Redirecting to dashboard...', 'success');
                 
-                // Force dashboard to show
+                // Close modal after a brief delay
                 setTimeout(() => {
+                    closeAuthModal();
+                    
+                    // Force dashboard to show
                     const landingView = document.getElementById('landing-page-view');
                     const nav = document.querySelector('nav');
                     const footer = document.querySelector('footer');
@@ -3758,7 +3766,7 @@
                     if (typeof initDashboard === 'function') {
                         initDashboard();
                     }
-                }, 100);
+                }, 500);
                 
                 // Re-enable button
                 if (submitBtn) {
@@ -4055,29 +4063,37 @@
 
         // Auth Modal Functions
         const authModal = document.getElementById('authModal');
-        const closeBtn = document.querySelector('.close');
+        const closeBtn = authModal ? authModal.querySelector('.close') : null;
         const authTabs = document.querySelectorAll('.auth-tab');
         const authForms = document.querySelectorAll('.auth-form');
 
         function showAuthModal() {
-            authModal.style.display = 'block';
-            document.body.style.overflow = 'hidden'; // Prevent scrolling
-        }
-
-        function closeAuthModal() {
-            authModal.style.display = 'none';
-            document.body.style.overflow = ''; // Restore scrolling
-        }
-
-        // Close modal when clicking outside
-        window.onclick = function(event) {
-            if (event.target == authModal) {
-                closeAuthModal();
+            if (authModal) {
+                authModal.style.display = 'block';
+                document.body.style.overflow = 'hidden'; // Prevent scrolling
             }
         }
 
+        function closeAuthModal() {
+            if (authModal) {
+                authModal.style.display = 'none';
+                document.body.style.overflow = ''; // Restore scrolling
+            }
+        }
+
+        // Close modal when clicking outside
+        if (authModal) {
+            authModal.addEventListener('click', function(event) {
+                if (event.target == authModal) {
+                    closeAuthModal();
+                }
+            });
+        }
+
         // Close button click
-        closeBtn.onclick = closeAuthModal;
+        if (closeBtn) {
+            closeBtn.onclick = closeAuthModal;
+        }
 
         // Tab switching
         authTabs.forEach(tab => {
@@ -4094,10 +4110,13 @@
         });
 
         // Login button in nav
-        document.getElementById('loginBtn').addEventListener('click', function(e) {
-            e.preventDefault();
-            showAuthModal();
-        });
+        const loginBtn = document.getElementById('loginBtn');
+        if (loginBtn) {
+            loginBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                showAuthModal();
+            });
+        }
 
         // Get Started and Free Trial buttons
         const authButtons = document.querySelectorAll('.btn-primary');
@@ -4114,40 +4133,93 @@
         // ============================================
         // Firebase Auth Form Handlers
         // ============================================
+        
+        // Wait for DOM to be ready before attaching form handlers
+        function setupAuthFormHandlers() {
+            // Login form submission
+            const loginForm = document.getElementById('loginFormElement');
+            if (loginForm) {
+                loginForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    try {
+                        const email = document.getElementById('loginEmail').value;
+                        const password = document.getElementById('loginPassword').value;
+                        console.log('Login attempt:', email);
+                        await handleFirebaseLogin(email, password);
+                    } catch (error) {
+                        console.error('Login form error:', error);
+                        showAuthMessage('authMessage', 'An error occurred. Please try again.', 'error');
+                    }
+                });
+            } else {
+                console.error('Login form not found!');
+            }
 
-        // Login form submission
-        document.getElementById('loginFormElement').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const email = document.getElementById('loginEmail').value;
-            const password = document.getElementById('loginPassword').value;
-            await handleFirebaseLogin(email, password);
-        });
+            // Signup form submission
+            const signupForm = document.getElementById('signupFormElement');
+            if (signupForm) {
+                signupForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    try {
+                        const name = document.getElementById('signupName').value;
+                        const email = document.getElementById('signupEmail').value;
+                        const password = document.getElementById('signupPassword').value;
+                        const planInput = document.querySelector('input[name="signupPlan"]:checked');
+                        const plan = planInput ? planInput.value : 'starter';
+                        console.log('Signup attempt:', email, plan);
+                        await handleFirebaseSignup(name, email, password, plan);
+                    } catch (error) {
+                        console.error('Signup form error:', error);
+                        showAuthMessage('signupMessage', 'An error occurred. Please try again.', 'error');
+                    }
+                });
+            } else {
+                console.error('Signup form not found!');
+            }
 
-        // Signup form submission
-        document.getElementById('signupFormElement').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const name = document.getElementById('signupName').value;
-            const email = document.getElementById('signupEmail').value;
-            const password = document.getElementById('signupPassword').value;
-            const planInput = document.querySelector('input[name="signupPlan"]:checked');
-            const plan = planInput ? planInput.value : 'starter';
-            await handleFirebaseSignup(name, email, password, plan);
-        });
+            // Forgot password link
+            const forgotPasswordLink = document.getElementById('forgotPasswordLink');
+            if (forgotPasswordLink) {
+                forgotPasswordLink.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    closeAuthModal();
+                    const resetModal = document.getElementById('resetPasswordModal');
+                    if (resetModal) {
+                        resetModal.style.display = 'block';
+                    }
+                });
+            }
 
-        // Forgot password link
-        document.getElementById('forgotPasswordLink').addEventListener('click', (e) => {
-            e.preventDefault();
-            closeAuthModal();
-            document.getElementById('resetPasswordModal').style.display = 'block';
-        });
-
-        // Password reset form
-        const resetPasswordModal = document.getElementById('resetPasswordModal');
-        document.getElementById('resetPasswordForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const email = document.getElementById('resetEmail').value;
-            await handlePasswordReset(email);
-        });
+            // Password reset form
+            const resetPasswordModal = document.getElementById('resetPasswordModal');
+            const resetForm = document.getElementById('resetPasswordForm');
+            if (resetForm) {
+                resetForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    try {
+                        const email = document.getElementById('resetEmail').value;
+                        await handlePasswordReset(email);
+                    } catch (error) {
+                        console.error('Password reset form error:', error);
+                        const resetMsg = document.getElementById('resetMessage');
+                        if (resetMsg) {
+                            showAuthMessage('resetMessage', 'An error occurred. Please try again.', 'error');
+                        }
+                    }
+                });
+            }
+        }
+        
+        // Setup form handlers when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', setupAuthFormHandlers);
+        } else {
+            // DOM is already ready
+            setupAuthFormHandlers();
+        }
 
         // Close reset password modal
         document.getElementById('closeResetModal').addEventListener('click', () => {
