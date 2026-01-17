@@ -276,32 +276,79 @@ class BaseRetailer {
 
 /**
  * Amazon Retailer Adapter
+ * Uses SearchAPI.io for Amazon product search
  */
 class AmazonRetailer extends BaseRetailer {
   constructor(integrationService) {
     super(integrationService);
     this.name = 'amazon';
-    this.apiBaseUrl = process.env.AMAZON_API_URL || 'https://api.amazon.com';
-    this.apiKey = process.env.AMAZON_PA_API_KEY;
-    this.apiSecret = process.env.AMAZON_PA_API_SECRET;
+    // SearchAPI.io Amazon Product Search API
+    this.apiBaseUrl = process.env.SEARCHAPI_AMAZON_URL || 'https://www.searchapi.io/api/v1/search';
+    this.apiKey = process.env.SEARCHAPI_API_KEY || process.env.AMAZON_API_KEY;
+  }
+
+  /**
+   * Search Amazon products using SearchAPI.io
+   */
+  async searchProducts(query, options = {}) {
+    const { limit = 20, page = 1 } = options;
+
+    if (!this.apiKey) {
+      console.warn('SearchAPI.io API key not configured, using mock data');
+      return this.getMockBestSellers(limit);
+    }
+
+    try {
+      const response = await axios.get(this.apiBaseUrl, {
+        params: {
+          engine: 'amazon_product',
+          api_key: this.apiKey,
+          q: query,
+          num: limit,
+          page: page
+        },
+        timeout: this.service.config.requestTimeout
+      });
+
+      if (response.data && response.data.organic_results) {
+        return this.normalizeData(response.data.organic_results);
+      }
+
+      return this.normalizeData(response.data || []);
+    } catch (error) {
+      console.error('Amazon searchProducts error:', error.message);
+      // Fallback to mock data on error
+      return this.getMockBestSellers(limit);
+    }
   }
 
   async fetchBestSellers(options = {}) {
     const { category = 'electronics', limit = 20 } = options;
 
     try {
-      // In production, use actual Amazon Product Advertising API
-      // This is a mock implementation
-      const response = await axios.get(`${this.apiBaseUrl}/bestsellers`, {
-        params: { category, limit },
-        headers: { Authorization: `Bearer ${this.apiKey}` },
-        timeout: this.service.config.requestTimeout
-      }).catch(() => this.getMockBestSellers(limit));
+      // Use SearchAPI.io to search for best sellers in category
+      if (this.apiKey) {
+        const response = await axios.get(this.apiBaseUrl, {
+          params: {
+            engine: 'amazon_product',
+            api_key: this.apiKey,
+            q: `best sellers ${category}`,
+            num: limit
+          },
+          timeout: this.service.config.requestTimeout
+        });
 
-      return this.normalizeData(response.data || response);
+        if (response.data && response.data.organic_results) {
+          return this.normalizeData(response.data.organic_results);
+        }
+      }
+
+      // Fallback to mock data if API key not configured
+      return this.getMockBestSellers(limit);
     } catch (error) {
       console.error('Amazon fetchBestSellers error:', error.message);
-      throw new Error(`Amazon API error: ${error.message}`);
+      // Fallback to mock data on error
+      return this.getMockBestSellers(limit);
     }
   }
 
@@ -372,33 +419,79 @@ class AmazonRetailer extends BaseRetailer {
 
 /**
  * Walmart Retailer Adapter
+ * Uses SearchAPI.io for Walmart product search
  */
 class WalmartRetailer extends BaseRetailer {
   constructor(integrationService) {
     super(integrationService);
     this.name = 'walmart';
-    this.apiBaseUrl = process.env.WALMART_API_URL || 'https://api.walmart.com';
-    this.apiKey = process.env.WALMART_API_KEY;
+    // SearchAPI.io Walmart Search API
+    this.apiBaseUrl = process.env.SEARCHAPI_WALMART_URL || 'https://www.searchapi.io/api/v1/search';
+    this.apiKey = process.env.SEARCHAPI_API_KEY || process.env.WALMART_API_KEY;
+  }
+
+  /**
+   * Search Walmart products using SearchAPI.io
+   */
+  async searchProducts(query, options = {}) {
+    const { limit = 20, page = 1 } = options;
+
+    if (!this.apiKey) {
+      console.warn('SearchAPI.io API key not configured, using mock data');
+      return this.getMockBestSellers(limit);
+    }
+
+    try {
+      const response = await axios.get(this.apiBaseUrl, {
+        params: {
+          engine: 'walmart_search',
+          api_key: this.apiKey,
+          q: query,
+          num: limit,
+          page: page
+        },
+        timeout: this.service.config.requestTimeout
+      });
+
+      if (response.data && response.data.organic_results) {
+        return this.normalizeData(response.data.organic_results);
+      }
+
+      return this.normalizeData(response.data || []);
+    } catch (error) {
+      console.error('Walmart searchProducts error:', error.message);
+      // Fallback to mock data on error
+      return this.getMockBestSellers(limit);
+    }
   }
 
   async fetchBestSellers(options = {}) {
     const { category = 'home-garden', limit = 20 } = options;
 
     try {
-      const response = await axios.get(`${this.apiBaseUrl}/v1/Search`, {
-        params: {
-          query: category,
-          limit,
-          sort: 'bestseller'
-        },
-        headers: { Authorization: `Bearer ${this.apiKey}` },
-        timeout: this.service.config.requestTimeout
-      }).catch(() => this.getMockBestSellers(limit));
+      // Use SearchAPI.io to search for best sellers in category
+      if (this.apiKey) {
+        const response = await axios.get(this.apiBaseUrl, {
+          params: {
+            engine: 'walmart_search',
+            api_key: this.apiKey,
+            q: `best sellers ${category}`,
+            num: limit
+          },
+          timeout: this.service.config.requestTimeout
+        });
 
-      return this.normalizeData(response.data || response);
+        if (response.data && response.data.organic_results) {
+          return this.normalizeData(response.data.organic_results);
+        }
+      }
+
+      // Fallback to mock data if API key not configured
+      return this.getMockBestSellers(limit);
     } catch (error) {
       console.error('Walmart fetchBestSellers error:', error.message);
-      throw error;
+      // Fallback to mock data on error
+      return this.getMockBestSellers(limit);
     }
   }
 
@@ -409,19 +502,32 @@ class WalmartRetailer extends BaseRetailer {
   }
 
   normalizeData(data) {
-    return Array.isArray(data) ? data.map(item => ({
-      id: item.itemId || item.id,
-      title: item.title || item.name,
-      price: item.price || item.salePrice,
-      originalPrice: item.originalPrice || item.msrp,
-      rating: item.rating || item.customerRating,
-      reviews: item.reviews || item.reviewCount,
-      image: item.image || item.imageUrl,
-      availability: item.inStock ? 'In Stock' : 'Out of Stock',
-      category: item.category,
-      retailer: 'walmart',
-      normalizedAt: new Date()
-    })) : data;
+    return Array.isArray(data) ? data.map(item => {
+      // Handle SearchAPI.io response format
+      let price = 0;
+      if (item.price) {
+        const priceStr = typeof item.price === 'string' ? item.price : String(item.price);
+        const priceMatch = priceStr.match(/\$?([\d,]+\.?\d*)/);
+        if (priceMatch) {
+          price = parseFloat(priceMatch[1].replace(/,/g, ''));
+        }
+      }
+      
+      return {
+        id: item.product_id || item.item_id || item.itemId || item.id,
+        title: item.title || item.name || 'Product',
+        price: price || item.price || item.salePrice || 0,
+        originalPrice: item.original_price ? parseFloat(String(item.original_price).replace(/[^0-9.]/g, '')) : (item.originalPrice || item.msrp || price),
+        rating: item.rating ? parseFloat(item.rating) : (item.customerRating || 0),
+        reviews: item.reviews ? parseInt(String(item.reviews).replace(/[^0-9]/g, '')) : (item.reviewCount || 0),
+        image: item.thumbnail || item.image || item.imageUrl || 'https://via.placeholder.com/200',
+        availability: (item.availability || item.in_stock || item.inStock) ? 'In Stock' : 'Out of Stock',
+        category: item.category || '',
+        retailer: 'walmart',
+        link: item.link || item.url || `https://www.walmart.com/ip/${item.product_id || item.item_id || ''}`,
+        normalizedAt: new Date()
+      };
+    }) : data;
   }
 
   generateAffiliateUrl(productId, affiliateId) {
