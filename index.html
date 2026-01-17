@@ -1686,7 +1686,7 @@
             <!-- Main Content -->
             <div class="main-content">
                 <!-- Dashboard Page -->
-                <div id="dashboard-page" class="page-content">
+                <div id="dashboard-page" class="page-content" style="display: block;">
                     <div class="header">
                         <div>
                             <h1 class="page-title">Dashboard</h1>
@@ -1834,8 +1834,44 @@
                     <div class="header">
                         <h1 class="page-title">Integrations</h1>
                     </div>
-                    <div id="integrationsContainer">
-                        <!-- Integrations will be loaded here -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Connected Retailers</h3>
+                        </div>
+                        <div id="integrationsContainer" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+                            <!-- Integrations will be loaded here -->
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Available Integrations</h3>
+                        </div>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+                            <div style="padding: 20px; border: 1px solid #e5e7eb; border-radius: 8px; text-align: center;">
+                                <i class="fab fa-amazon" style="font-size: 3rem; color: #ff9900; margin-bottom: 15px;"></i>
+                                <h4>Amazon Associates</h4>
+                                <p style="color: var(--gray); font-size: 0.9rem; margin: 10px 0;">Connect your Amazon Associates account</p>
+                                <button class="btn btn-primary">Connect</button>
+                            </div>
+                            <div style="padding: 20px; border: 1px solid #e5e7eb; border-radius: 8px; text-align: center;">
+                                <i class="fas fa-store" style="font-size: 3rem; color: #0071ce; margin-bottom: 15px;"></i>
+                                <h4>Walmart Affiliate</h4>
+                                <p style="color: var(--gray); font-size: 0.9rem; margin: 10px 0;">Connect your Walmart affiliate account</p>
+                                <button class="btn btn-primary">Connect</button>
+                            </div>
+                            <div style="padding: 20px; border: 1px solid #e5e7eb; border-radius: 8px; text-align: center;">
+                                <i class="fab fa-shopify" style="font-size: 3rem; color: #96bf48; margin-bottom: 15px;"></i>
+                                <h4>Shopify Partner</h4>
+                                <p style="color: var(--gray); font-size: 0.9rem; margin: 10px 0;">Connect your Shopify store</p>
+                                <button class="btn btn-primary">Connect</button>
+                            </div>
+                            <div style="padding: 20px; border: 1px solid #e5e7eb; border-radius: 8px; text-align: center;">
+                                <i class="fas fa-link" style="font-size: 3rem; color: #8b5cf6; margin-bottom: 15px;"></i>
+                                <h4>Skimlinks</h4>
+                                <p style="color: var(--gray); font-size: 0.9rem; margin: 10px 0;">Connect your Skimlinks account</p>
+                                <button class="btn btn-primary">Connect</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -2062,8 +2098,54 @@
                         <button class="btn btn-primary">Add New Product</button>
                     </div>
                     <div class="card">
-                        <h3>Product Library</h3>
-                        <p>Manage your product library here. This feature is coming soon.</p>
+                        <div class="card-header">
+                            <h3 class="card-title">Filter by Source</h3>
+                        </div>
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px;">
+                            <button class="btn btn-secondary filter-btn active" data-filter="all">All</button>
+                            <button class="btn btn-secondary filter-btn" data-filter="shopify">Shopify</button>
+                            <button class="btn btn-secondary filter-btn" data-filter="amazon">Amazon</button>
+                            <button class="btn btn-secondary filter-btn" data-filter="walmart">Walmart</button>
+                        </div>
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px;">
+                            <label style="display: flex; align-items: center; gap: 5px;">
+                                <span>Sort by:</span>
+                                <select class="form-control" style="width: auto;">
+                                    <option>Price</option>
+                                    <option>Clicks</option>
+                                    <option>Rating</option>
+                                </select>
+                            </label>
+                        </div>
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px;">
+                            <span>Tags:</span>
+                            <button class="btn btn-secondary filter-btn" data-tag="top-pick">Top Pick</button>
+                            <button class="btn btn-secondary filter-btn" data-tag="on-sale">On Sale</button>
+                            <button class="btn btn-secondary filter-btn" data-tag="low-stock">Low Stock</button>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Products</h3>
+                        </div>
+                        <div id="productLibraryContainer" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;">
+                            <div class="product-card-dashboard">
+                                <div style="display: flex; align-items: center; gap: 15px; padding: 15px; border: 1px solid #e5e7eb; border-radius: 8px;">
+                                    <img src="https://via.placeholder.com/60" alt="Product" style="width: 60px; height: 60px; border-radius: 8px; object-fit: cover;">
+                                    <div style="flex: 1;">
+                                        <h4 style="margin: 0 0 5px 0; font-size: 1rem;">Amazon Product 40WBFPJ</h4>
+                                        <p style="margin: 0; color: var(--gray); font-size: 0.85rem;">Amazon • From: Product Library (SiteStripe)</p>
+                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+                                            <span style="color: var(--primary); font-weight: 600;">$59.99</span>
+                                            <span style="color: var(--gray); font-size: 0.9rem;">Clicks: 0</span>
+                                            <span style="color: var(--gray); font-size: 0.9rem;">
+                                                <i class="fas fa-star" style="color: #fbbf24;"></i> 4.5
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -2072,9 +2154,115 @@
                     <div class="header">
                         <h1 class="page-title">AI Assistant</h1>
                     </div>
-                    <div class="card">
-                        <h3>AI Assistant</h3>
-                        <p>Get AI-powered assistance for your content. This feature is coming soon.</p>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px;">
+                        <!-- Generate Product Blurbs -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title">
+                                    <i class="fas fa-file-alt" style="margin-right: 10px;"></i>
+                                    Generate Product Blurbs
+                                </h3>
+                            </div>
+                            <form id="blurbForm">
+                                <div class="form-group">
+                                    <label>Product Name *</label>
+                                    <input type="text" class="form-control" placeholder="e.g., Wireless Earbuds Pro" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Product Details (Optional)</label>
+                                    <textarea class="form-control" rows="3" placeholder="Add key features, specs..."></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label>Tone</label>
+                                    <select class="form-control">
+                                        <option>Professional</option>
+                                        <option>Casual</option>
+                                        <option>Friendly</option>
+                                        <option>Technical</option>
+                                    </select>
+                                </div>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-pen" style="margin-right: 5px;"></i>
+                                    Generate Blurb
+                                </button>
+                            </form>
+                        </div>
+
+                        <!-- Auto-Write Pros & Cons -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title">
+                                    <i class="fas fa-lightbulb" style="margin-right: 10px;"></i>
+                                    Auto-Write Pros & Cons
+                                </h3>
+                            </div>
+                            <form id="prosConsForm">
+                                <div class="form-group">
+                                    <label>Product Name *</label>
+                                    <input type="text" class="form-control" placeholder="e.g., Bluetooth Speaker" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Product Details (Optional)</label>
+                                    <textarea class="form-control" rows="3" placeholder="Add features, specifications..."></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-list" style="margin-right: 5px;"></i>
+                                    Generate Pros & Cons
+                                </button>
+                            </form>
+                        </div>
+
+                        <!-- Suggest Product Alternatives -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title">
+                                    <i class="fas fa-search" style="margin-right: 10px;"></i>
+                                    Suggest Product Alternatives
+                                </h3>
+                            </div>
+                            <form id="alternativesForm">
+                                <div class="form-group">
+                                    <label>Current Product *</label>
+                                    <input type="text" class="form-control" placeholder="e.g., iPhone 15" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Budget (Optional)</label>
+                                    <input type="text" class="form-control" placeholder="e.g., Under $500">
+                                </div>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-lightbulb" style="margin-right: 5px;"></i>
+                                    Suggest Alternatives
+                                </button>
+                            </form>
+                        </div>
+
+                        <!-- AI FAQ Builder -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title">
+                                    <i class="fas fa-question-circle" style="margin-right: 10px;"></i>
+                                    AI FAQ Builder (SEO)
+                                </h3>
+                            </div>
+                            <form id="faqForm">
+                                <div class="form-group">
+                                    <label>Product Name *</label>
+                                    <input type="text" class="form-control" placeholder="e.g., Smart Watch" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Product Details (Optional)</label>
+                                    <textarea class="form-control" rows="3" placeholder="Add product information..."></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label>Number of FAQs</label>
+                                    <input type="number" class="form-control" value="5" min="1" max="10">
+                                </div>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-question" style="margin-right: 5px;"></i>
+                                    Generate FAQs
+                                </button>
+                            </form>
+                        </div>
                     </div>
                 </div>
 
@@ -2084,8 +2272,62 @@
                         <h1 class="page-title">Billing</h1>
                     </div>
                     <div class="card">
-                        <h3>Billing & Subscription</h3>
-                        <p>Manage your billing and subscription here.</p>
+                        <div class="card-header">
+                            <h3 class="card-title">Current Plan</h3>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 20px; border: 2px solid var(--primary); border-radius: 8px; background: #f8fafc; margin-bottom: 20px;">
+                            <div>
+                                <h4 style="margin: 0 0 5px 0; color: var(--primary);">Pro Plan</h4>
+                                <p style="margin: 5px 0; color: var(--gray);">$19/mo • Analytics & more</p>
+                            </div>
+                            <button class="btn btn-secondary">Current Plan</button>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Payment Method</h3>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 20px; border: 1px solid #e5e7eb; border-radius: 8px; background: white;">
+                            <div style="display: flex; align-items: center; gap: 15px;">
+                                <i class="fas fa-credit-card" style="font-size: 24px; color: var(--primary);"></i>
+                                <div>
+                                    <div style="font-weight: 600;">•••• •••• •••• 4242</div>
+                                    <div style="color: var(--gray); font-size: 0.9rem;">Expires 12/25</div>
+                                </div>
+                            </div>
+                            <button class="btn btn-secondary">Update</button>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Billing History</h3>
+                        </div>
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Amount</th>
+                                        <th>Status</th>
+                                        <th>Invoice</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>May 15, 2024</td>
+                                        <td style="font-weight: 600; color: var(--primary);">$19.00</td>
+                                        <td><span style="padding: 4px 8px; background: #10b981; color: white; border-radius: 4px; font-size: 0.8rem;">Paid</span></td>
+                                        <td><a href="#" style="color: var(--primary);">Download</a></td>
+                                    </tr>
+                                    <tr>
+                                        <td>April 15, 2024</td>
+                                        <td style="font-weight: 600; color: var(--primary);">$19.00</td>
+                                        <td><span style="padding: 4px 8px; background: #10b981; color: white; border-radius: 4px; font-size: 0.8rem;">Paid</span></td>
+                                        <td><a href="#" style="color: var(--primary);">Download</a></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -2402,6 +2644,9 @@
                 const userCredential = await auth.signInWithEmailAndPassword(email.trim(), password);
                 const user = userCredential.user;
                 
+                // Mark as explicitly logged in this session
+                sessionStorage.setItem('kotapal_explicit_login', 'true');
+                
                 // Get user display name from Firestore or use email
                 const displayName = user.displayName || user.email.split('@')[0];
                 
@@ -2509,6 +2754,9 @@
                     console.warn('Could not update profile:', profileError);
                     // Continue even if profile update fails
                 }
+                
+                // Mark as explicitly logged in this session
+                sessionStorage.setItem('kotapal_explicit_login', 'true');
                 
                 // Store user data in localStorage
                 const userData = {
@@ -2638,6 +2886,7 @@
         let currentLayout = 'grid';
         let settingsAccessGranted = false;
         let autoSaveTimeout = null;
+        let explicitLoginRequired = true; // Require explicit login, don't auto-login
         const SETTINGS_PASSWORD_KEY = 'kotapal_settings_password';
 
         // Update Welcome Message
@@ -2784,56 +3033,71 @@
         }
 
         // Check authentication state and show appropriate view
+        // Always show landing page first, then check auth
+        const landingView = document.getElementById('landing-page-view');
+        const nav = document.querySelector('nav');
+        const footer = document.querySelector('footer');
+        const dashboardView = document.getElementById('dashboard-view');
+        
+        // Ensure landing page is visible by default
+        if (landingView) landingView.style.display = 'block';
+        if (nav) nav.style.display = 'flex';
+        if (footer) footer.style.display = 'block';
+        if (dashboardView) dashboardView.classList.remove('active');
+        
+        // Check if user explicitly logged in this session
+        const sessionLogin = sessionStorage.getItem('kotapal_explicit_login');
+        
         if (auth) {
             auth.onAuthStateChanged((user) => {
-                if (user) {
-                    // User is signed in - show dashboard
-                        const userData = {
-                            uid: user.uid,
-                            email: user.email,
-                            displayName: user.displayName || user.email.split('@')[0],
-                            emailVerified: user.emailVerified
-                        };
-                        localStorage.setItem('kotaUser', JSON.stringify(userData));
-                        currentUser = userData;
-                        
-                        // Update welcome message
-                        updateWelcomeMessage(userData.displayName);
-                        
-                        // Update sidebar user info
-                        updateSidebarUserInfo(userData);
-                        
-                        // Load saved profile settings
-                        loadProfileSettings();
-                        
-                        // Hide landing page, show dashboard
-                        const landingView = document.getElementById('landing-page-view');
-                        const nav = document.querySelector('nav');
-                        const footer = document.querySelector('footer');
-                        const dashboardView = document.getElementById('dashboard-view');
-                        
-                        if (landingView) landingView.style.display = 'none';
-                        if (nav) nav.style.display = 'none';
-                        if (footer) footer.style.display = 'none';
-                        if (dashboardView) dashboardView.classList.add('active');
-                        
-                        // Initialize dashboard
-                        initDashboard();
-                    } else {
-                        // User is signed out - show landing page
-                        localStorage.removeItem('kotaUser');
-                        currentUser = null;
-                        
-                        // Hide dashboard, show landing page
-                        const landingView = document.getElementById('landing-page-view');
-                        const nav = document.querySelector('nav');
-                        const footer = document.querySelector('footer');
-                        const dashboardView = document.getElementById('dashboard-view');
-                        
-                        if (dashboardView) dashboardView.classList.remove('active');
-                        if (landingView) landingView.style.display = 'block';
-                        if (nav) nav.style.display = 'flex';
-                        if (footer) footer.style.display = 'block';
+                if (user && sessionLogin === 'true') {
+                    // User is signed in AND explicitly logged in this session - show dashboard
+                    const userData = {
+                        uid: user.uid,
+                        email: user.email,
+                        displayName: user.displayName || user.email.split('@')[0],
+                        emailVerified: user.emailVerified
+                    };
+                    localStorage.setItem('kotaUser', JSON.stringify(userData));
+                    currentUser = userData;
+                    
+                    // Update welcome message
+                    updateWelcomeMessage(userData.displayName);
+                    
+                    // Update sidebar user info
+                    updateSidebarUserInfo(userData);
+                    
+                    // Load saved profile settings
+                    loadProfileSettings();
+                    
+                    // Hide landing page, show dashboard
+                    if (landingView) landingView.style.display = 'none';
+                    if (nav) nav.style.display = 'none';
+                    if (footer) footer.style.display = 'none';
+                    if (dashboardView) dashboardView.classList.add('active');
+                    
+                    // Show dashboard page by default
+                    showDashboardPage('dashboard-page');
+                    
+                    // Initialize dashboard
+                    initDashboard();
+                } else {
+                    // User is signed out OR hasn't explicitly logged in - show landing page
+                    if (user && !sessionLogin) {
+                        // User has cached session but hasn't explicitly logged in - sign them out
+                        auth.signOut().catch(err => console.log('Sign out error:', err));
+                    }
+                    
+                    localStorage.removeItem('kotaUser');
+                    sessionStorage.removeItem('kotapal_explicit_login');
+                    currentUser = null;
+                    settingsAccessGranted = false; // Reset settings access
+                    
+                    // Hide dashboard, show landing page
+                    if (dashboardView) dashboardView.classList.remove('active');
+                    if (landingView) landingView.style.display = 'block';
+                    if (nav) nav.style.display = 'flex';
+                    if (footer) footer.style.display = 'block';
                 }
             });
         } else {
@@ -3007,21 +3271,31 @@
                           'ai-assistant-page', 'billing-page'];
             pages.forEach(page => {
                 const pageEl = document.getElementById(page);
-                if (pageEl) pageEl.style.display = 'none';
+                if (pageEl) {
+                    pageEl.style.display = 'none';
+                }
             });
             
             // Show selected page
             const targetPage = document.getElementById(pageId);
             if (targetPage) {
                 targetPage.style.display = 'block';
+            } else {
+                console.warn('Page not found:', pageId);
+                // Fallback to dashboard
+                const dashboardPage = document.getElementById('dashboard-page');
+                if (dashboardPage) dashboardPage.style.display = 'block';
             }
             
             // Update active nav link
             document.querySelectorAll('.nav-link').forEach(link => {
                 link.classList.remove('active');
             });
-            const activeLink = document.querySelector(`[data-page="${pageId.replace('-page', '')}"]`);
-            if (activeLink) activeLink.classList.add('active');
+            const pageName = pageId.replace('-page', '');
+            const activeLink = document.querySelector(`[data-page="${pageName}"]`);
+            if (activeLink) {
+                activeLink.classList.add('active');
+            }
         }
 
         // Landing Page navigation
@@ -3169,6 +3443,9 @@
 
         // Initialize dashboard
         function initDashboard() {
+            // Show dashboard page by default
+            showDashboardPage('dashboard-page');
+            
             updateUserDisplay();
             loadMockData();
             setupDashboardEventListeners();
@@ -3329,7 +3606,9 @@
                 try {
                     await auth.signOut();
                     localStorage.removeItem('kotaUser');
+                    sessionStorage.removeItem('kotapal_explicit_login');
                     currentUser = null;
+                    settingsAccessGranted = false;
                     // View will switch automatically via auth.onAuthStateChanged
                 } catch (error) {
                     console.error('Logout error:', error);
