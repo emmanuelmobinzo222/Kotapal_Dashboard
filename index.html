@@ -3051,7 +3051,12 @@
                     handleCodeInApp: false
                 });
                 
-                showAuthMessage('resetMessage', 'Password reset email sent! Please check your inbox and spam folder. Click the link in the email to reset your password.', 'success');
+                const resetMessageEl = document.getElementById('resetMessage');
+                if (resetMessageEl) {
+                    showAuthMessage('resetMessage', 'Password reset email sent! Please check your inbox and spam folder. Click the link in the email to reset your password.', 'success');
+                } else {
+                    alert('Password reset email sent! Please check your inbox and spam folder.');
+                }
                 document.getElementById('resetPasswordForm').reset();
                 
                 // Re-enable button
@@ -3086,7 +3091,12 @@
                     default:
                         errorMessage = `Failed to send reset email: ${error.message || 'Unknown error'}. Please try again.`;
                 }
-                showAuthMessage('resetMessage', errorMessage, 'error');
+                const resetMessageEl = document.getElementById('resetMessage');
+                if (resetMessageEl) {
+                    showAuthMessage('resetMessage', errorMessage, 'error');
+                } else {
+                    alert(errorMessage);
+                }
             }
         }
 
@@ -3259,11 +3269,8 @@
         
         if (auth) {
             auth.onAuthStateChanged((user) => {
-                // Check if user explicitly logged in this session
-                const sessionLogin = sessionStorage.getItem('kotapal_explicit_login');
-                
-                if (user && sessionLogin === 'true') {
-                    // User is signed in AND explicitly logged in this session - show dashboard
+                if (user) {
+                    // User is signed in - show dashboard
                     const userData = {
                         uid: user.uid,
                         email: user.email,
@@ -3294,16 +3301,8 @@
                     // Initialize dashboard
                     initDashboard();
                 } else {
-                    // User is signed out OR hasn't explicitly logged in - show landing page
-                    if (user && sessionLogin !== 'true') {
-                        // User has cached session but hasn't explicitly logged in - sign them out
-                        auth.signOut().catch(err => {
-                            console.log('Auto sign-out:', err.message);
-                        });
-                    }
-                    
+                    // User is signed out - show landing page
                     localStorage.removeItem('kotaUser');
-                    sessionStorage.removeItem('kotapal_explicit_login');
                     currentUser = null;
                     settingsAccessGranted = false;
                     
