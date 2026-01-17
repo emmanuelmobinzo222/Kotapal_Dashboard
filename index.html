@@ -1835,35 +1835,43 @@
                         <button class="btn btn-primary" id="createBlockBtn">Create New Block</button>
                     </div>
 
+                    <!-- Global Toggle for Sensitive Data -->
+                    <div style="display: flex; justify-content: center; margin-bottom: 15px;">
+                        <button id="globalSensitiveToggle" class="btn btn-secondary" onclick="toggleAllSensitive()" style="display: flex; align-items: center; gap: 8px;">
+                            <i class="fas fa-eye-slash"></i>
+                            <span>Show Sensitive Data</span>
+                        </button>
+                    </div>
+
                     <!-- Stats Cards -->
                     <div class="stats-grid">
                         <div class="stat-card">
                             <div class="stat-icon stat-primary">
                                 <i class="fas fa-mouse-pointer"></i>
                             </div>
-                            <div class="stat-value" id="totalClicks">0</div>
+                            <div class="stat-value" id="totalClicks" data-sensitive="true">0</div>
                             <div class="stat-label">Total Clicks</div>
                         </div>
                         <div class="stat-card">
                             <div class="stat-icon stat-success">
                                 <i class="fas fa-dollar-sign"></i>
                             </div>
-                            <div class="stat-value" id="estimatedRevenue">$0.00</div>
+                            <div class="stat-value" id="estimatedRevenue" data-sensitive="true">$0.00</div>
                             <div class="stat-label">Estimated Revenue</div>
                         </div>
                         <div class="stat-card">
                             <div class="stat-icon stat-warning">
                                 <i class="fas fa-percentage"></i>
                             </div>
-                            <div class="stat-value" id="avgCTR">0%</div>
+                            <div class="stat-value" id="avgCTR" data-sensitive="true">0%</div>
                             <div class="stat-label">Average CTR</div>
                         </div>
                         <div class="stat-card">
-                            <div class="stat-icon stat-danger">
-                                <i class="fas fa-cube"></i>
+                            <div class="stat-icon stat-info">
+                                <i class="fas fa-cubes"></i>
                             </div>
-                            <div class="stat-value" id="activeBlocks">0</div>
-                            <div class="stat-label">Active Blocks</div>
+                            <div class="stat-value" id="totalBlocks" data-sensitive="true">0</div>
+                            <div class="stat-label">Total Blocks</div>
                         </div>
                     </div>
 
@@ -1911,6 +1919,43 @@
                         <h1 class="page-title" style="display: inline-block;">SmartBlocks</h1>
                         <button class="btn btn-primary" id="newBlockBtn">Create New Block</button>
                     </div>
+                    
+                    <!-- SmartBlock Builder Quick Actions -->
+                    <div class="card">
+                        <div class="card-body">
+                            <h3 class="card-title" style="margin-bottom:12px;display:flex;align-items:center;gap:8px;"><i class="fas fa-cubes" style="color:#0ea5e9;"></i> SmartBlock Builder</h3>
+                            <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px;">
+                                <button class="btn btn-primary" id="sbCreateBlockBtn">Create New Block</button>
+                                <button class="btn btn-secondary" id="sbOpenLibraryBtn">Open Product Library</button>
+                            </div>
+                            <div style="margin-bottom:16px;">
+                                <div style="font-weight:600; margin-bottom:8px;">Choose Layout</div>
+                                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                                    <button class="btn btn-secondary sb-layout" data-layout="table">Table</button>
+                                    <button class="btn btn-secondary sb-layout" data-layout="carousel">Carousel</button>
+                                    <button class="btn btn-secondary sb-layout" data-layout="callout">Callout</button>
+                                    <button class="btn btn-secondary sb-layout" data-layout="roundup">Roundup</button>
+                                </div>
+                            </div>
+                            <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px;">
+                                <button class="btn btn-secondary" id="sbAddAffiliateBtn">Add Affiliate Product</button>
+                                <button class="btn btn-secondary" id="sbAddShopifyBtn">Add Shopify Product</button>
+                            </div>
+                            <div style="margin-bottom:16px;">
+                                <div style="font-weight:600; margin-bottom:8px;">Customize</div>
+                                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                                    <button class="btn btn-secondary" id="sbCustomizeColorsBtn">Colors</button>
+                                    <button class="btn btn-secondary" id="sbCustomizeHeadlineBtn">Headline</button>
+                                    <button class="btn btn-secondary" id="sbCustomizeCtaBtn">Button Text</button>
+                                </div>
+                            </div>
+                            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                                <button class="btn btn-secondary" id="sbPreviewBtn">Preview</button>
+                                <button class="btn btn-secondary" id="sbGenerateEmbedBtn">Generate Embed Code</button>
+                            </div>
+                        </div>
+                    </div>
+                    
                     <div id="blocksContainer" class="blocks-grid">
                         <!-- Blocks will be loaded here -->
                     </div>
@@ -1925,6 +1970,20 @@
                         <h1 class="page-title" style="display: inline-block;">Create New SmartBlock</h1>
                         <button class="btn btn-secondary" id="backToBlocksBtn">Back to Blocks</button>
                     </div>
+                    
+                    <!-- Product Library: Requested feature list -->
+                    <div class="card">
+                        <div class="card-body">
+                            <h3 class="card-title" style="margin-bottom:8px;display:flex;align-items:center;gap:8px;"><i class="fas fa-box-open" style="color:#10b981;"></i> Product Library</h3>
+                            <ul style="margin-left:18px;color:#374151;line-height:1.8;">
+                                <li>Filter by: Source (Shopify, Amazon, Walmart)</li>
+                                <li>Sort by: Price, Clicks, Rating</li>
+                                <li>Add new product</li>
+                                <li>Tag: [Top Pick] [On Sale] [Low Stock]</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
                     <div class="card">
                         <form id="newBlockForm">
                             <div class="form-group">
@@ -4183,9 +4242,9 @@
             const avgCTR = currentBlocks.length > 0 ? currentBlocks.reduce((sum, b) => sum + (b.ctr || 0), 0) / currentBlocks.length : 0;
             
             const clicksEl = document.getElementById('totalClicks');
-            const revenueEl = document.getElementById('totalRevenue');
+            const revenueEl = document.getElementById('estimatedRevenue');
             const ctrEl = document.getElementById('avgCTR');
-            const blocksEl = document.getElementById('totalBlocks');
+            const blocksEl = document.getElementById('totalBlocks') || document.getElementById('activeBlocks');
             
             if (clicksEl) clicksEl.textContent = totalClicks.toLocaleString();
             if (revenueEl) revenueEl.textContent = '$' + totalRevenue.toFixed(2);
@@ -4339,6 +4398,33 @@
 
         function selectProduct(product) {
             showNotification('Product selected: ' + product.title, 'success');
+        }
+
+        // Toggle sensitive data visibility
+        function toggleAllSensitive() {
+            const toggleBtn = document.getElementById('globalSensitiveToggle');
+            const sensitiveElements = document.querySelectorAll('[data-sensitive="true"]');
+            const isHidden = sensitiveElements[0]?.style.display === 'none';
+            
+            sensitiveElements.forEach(el => {
+                if (isHidden) {
+                    el.style.display = '';
+                } else {
+                    el.style.display = 'none';
+                }
+            });
+            
+            if (toggleBtn) {
+                const icon = toggleBtn.querySelector('i');
+                const span = toggleBtn.querySelector('span');
+                if (isHidden) {
+                    icon.className = 'fas fa-eye-slash';
+                    span.textContent = 'Show Sensitive Data';
+                } else {
+                    icon.className = 'fas fa-eye';
+                    span.textContent = 'Hide Sensitive Data';
+                }
+            }
         }
 
         // Show notification
