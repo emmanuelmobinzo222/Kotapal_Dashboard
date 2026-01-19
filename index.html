@@ -6379,155 +6379,69 @@
                     }
                 } else if (retailer === 'walmart') {
                     // Use SearchAPI.io Walmart Search API
-                    // Endpoint: https://www.searchapi.io/api/v1/search?engine=walmart_search
-                    // Always use the default API key for Walmart
+                    // No affiliate ID required - just engine and query
+                    // Example: https://www.searchapi.io/api/v1/search?engine=walmart_search&q=chocolate
                     const apiKey = getSearchApiKey();
-                    if (apiKey) {
-                        try {
-                            const apiUrl = `${WALMART_API_URL}?engine=walmart_search&api_key=${apiKey}&q=${encodeURIComponent(query)}&num=20`;
-                            
-                            const response = await fetch(apiUrl, {
-                                method: 'GET',
-                                headers: {
-                                    'Accept': 'application/json'
-                                }
-                            });
-                            
-                            if (!response.ok) {
-                                throw new Error(`API request failed: ${response.status}`);
+                    
+                    try {
+                        // Build URL with parameters (API key may be required in headers or as parameter)
+                        const params = new URLSearchParams({
+                            'engine': 'walmart_search',
+                            'q': query
+                        });
+                        
+                        // Add API key if available (some SearchAPI.io plans require it)
+                        const apiUrl = apiKey 
+                            ? `${WALMART_API_URL}?${params.toString()}&api_key=${apiKey}`
+                            : `${WALMART_API_URL}?${params.toString()}`;
+                        
+                        const response = await fetch(apiUrl, {
+                            method: 'GET',
+                            headers: {
+                                'Accept': 'application/json'
                             }
-                            
-                            const data = await response.json();
-                            
-                            // Parse SearchAPI.io response format
-                            if (data && data.organic_results && Array.isArray(data.organic_results)) {
-                                products = data.organic_results.map((item, index) => {
-                                    // Extract price from price string (e.g., "$29.99" or "$29.99 - $39.99")
-                                    let price = 0;
-                                    if (item.price) {
-                                        const priceMatch = item.price.match(/\$?([\d,]+\.?\d*)/);
-                                        if (priceMatch) {
-                                            price = parseFloat(priceMatch[1].replace(/,/g, ''));
-                                        }
-                                    }
-                                    
-                                    return {
-                                        id: item.product_id || item.item_id || item.id || `wlm_${index}`,
-                                        title: item.title || 'Product',
-                                        image: item.thumbnail || item.image || 'https://via.placeholder.com/200',
-                                        price: price || 0,
-                                        originalPrice: item.original_price ? parseFloat(item.original_price.replace(/[^0-9.]/g, '')) : price,
-                                        rating: item.rating ? parseFloat(item.rating) : 0,
-                                        reviews: item.reviews ? parseInt(item.reviews.replace(/[^0-9]/g, '')) : 0,
-                                        availability: item.availability || item.in_stock ? 'In Stock' : 'Out of Stock',
-                                        itemId: item.product_id || item.item_id,
-                                        link: item.link || item.url || `https://www.walmart.com/ip/${item.product_id || ''}`,
-                                        retailer: 'walmart'
-                                    };
-                                });
+                        });
+                        
+                        if (!response.ok) {
+                            throw new Error(`API request failed: ${response.status}`);
+                        }
+                        
+                        const data = await response.json();
+                        
+                        // Parse SearchAPI.io response format (matching the example structure)
+                        if (data && data.organic_results && Array.isArray(data.organic_results)) {
+                            products = data.organic_results.map((item, index) => {
+                                // Use extracted_price if available (cleaner than parsing price string)
+                                const price = item.extracted_price || (item.price ? parseFloat(item.price.replace(/[^0-9.]/g, '')) : 0);
                                 
-                                searchStatus.textContent = `Found ${products.length} Walmart products for "${query}"`;
-                            } else {
-                                throw new Error('Invalid API response format');
-                            }
-                        } catch (apiError) {
-                            console.error('Walmart API error:', apiError);
-                            searchStatus.textContent = `API Error: ${apiError.message}. Retrying with default key...`;
-                            // Retry with default key
-                            try {
-                                const defaultKey = getSearchApiKey(); // Use function instead of direct constant
-                                const apiUrl = `${WALMART_API_URL}?engine=walmart_search&api_key=${defaultKey}&q=${encodeURIComponent(query)}&num=20`;
-                                const response = await fetch(apiUrl, {
-                                    method: 'GET',
-                                    headers: { 'Accept': 'application/json' }
-                                });
-                                if (response.ok) {
-                                    const data = await response.json();
-                                    if (data && data.organic_results && Array.isArray(data.organic_results)) {
-                                        products = data.organic_results.map((item, index) => {
-                                            let price = 0;
-                                            if (item.price) {
-                                                const priceMatch = item.price.match(/\$?([\d,]+\.?\d*)/);
-                                                if (priceMatch) {
-                                                    price = parseFloat(priceMatch[1].replace(/,/g, ''));
-                                                }
-                                            }
-                                            return {
-                                                id: item.product_id || item.item_id || item.id || `wlm_${index}`,
-                                                title: item.title || 'Product',
-                                                image: item.thumbnail || item.image || 'https://via.placeholder.com/200',
-                                                price: price || 0,
-                                                originalPrice: item.original_price ? parseFloat(item.original_price.replace(/[^0-9.]/g, '')) : price,
-                                                rating: item.rating ? parseFloat(item.rating) : 0,
-                                                reviews: item.reviews ? parseInt(item.reviews.replace(/[^0-9]/g, '')) : 0,
-                                                availability: item.availability || item.in_stock ? 'In Stock' : 'Out of Stock',
-                                                itemId: item.product_id || item.item_id,
-                                                link: item.link || item.url || `https://www.walmart.com/ip/${item.product_id || ''}`,
-                                                retailer: 'walmart'
-                                            };
-                                        });
-                                        
-                                        searchStatus.textContent = `Found ${products.length} Walmart products for "${query}"`;
-                                    } else {
-                                        throw new Error('Invalid API response format');
-                                    }
-                                } else {
-                                    throw new Error(`API request failed: ${response.status}`);
-                                }
-                            } catch (e) {
-                                console.error('Default API key also failed:', e);
-                                searchStatus.textContent = `Unable to fetch products. Please check your API key or try again later. Error: ${e.message}`;
-                                products = [];
-                            }
-                        }
-                    } else {
-                        // Always use default API key if no key is set
-                        searchStatus.textContent = 'Using default API key for Walmart searches...';
-                        try {
-                            const defaultKey = getSearchApiKey(); // Use function instead of direct constant
-                            const apiUrl = `${WALMART_API_URL}?engine=walmart_search&api_key=${defaultKey}&q=${encodeURIComponent(query)}&num=20`;
-                            const response = await fetch(apiUrl, {
-                                method: 'GET',
-                                headers: { 'Accept': 'application/json' }
+                                return {
+                                    id: item.product_id || item.id || `wlm_${index}`,
+                                    title: item.title || 'Product',
+                                    image: item.thumbnail || 'https://via.placeholder.com/200',
+                                    price: price || 0,
+                                    originalPrice: price, // Use same price if no original_price
+                                    rating: item.rating ? parseFloat(item.rating) : 0,
+                                    reviews: item.reviews ? parseInt(item.reviews) : 0,
+                                    availability: item.fulfillment ? 'In Stock' : 'Out of Stock',
+                                    itemId: item.product_id || item.id,
+                                    link: item.link || `https://www.walmart.com/ip/${item.product_id || ''}`,
+                                    retailer: 'walmart',
+                                    // Additional fields from API response
+                                    sellerName: item.seller_name || 'Walmart',
+                                    unitPrice: item.unit_price || null,
+                                    position: item.position || index + 1
+                                };
                             });
-                            if (response.ok) {
-                                const data = await response.json();
-                                if (data && data.organic_results && Array.isArray(data.organic_results)) {
-                                    products = data.organic_results.map((item, index) => {
-                                        let price = 0;
-                                        if (item.price) {
-                                            const priceMatch = item.price.match(/\$?([\d,]+\.?\d*)/);
-                                            if (priceMatch) {
-                                                price = parseFloat(priceMatch[1].replace(/,/g, ''));
-                                            }
-                                        }
-                                        return {
-                                            id: item.product_id || item.item_id || item.id || `wlm_${index}`,
-                                            title: item.title || 'Product',
-                                            image: item.thumbnail || item.image || 'https://via.placeholder.com/200',
-                                            price: price || 0,
-                                            originalPrice: item.original_price ? parseFloat(item.original_price.replace(/[^0-9.]/g, '')) : price,
-                                            rating: item.rating ? parseFloat(item.rating) : 0,
-                                            reviews: item.reviews ? parseInt(item.reviews.replace(/[^0-9]/g, '')) : 0,
-                                            availability: item.availability || item.in_stock ? 'In Stock' : 'Out of Stock',
-                                            itemId: item.product_id || item.item_id,
-                                            link: item.link || item.url || `https://www.walmart.com/ip/${item.product_id || ''}`,
-                                            retailer: 'walmart'
-                                        };
-                                    });
-                                    
-                                    searchStatus.textContent = `Found ${products.length} Walmart products for "${query}"`;
-                                } else {
-                                    throw new Error('Invalid API response format');
-                                }
-                            } else {
-                                throw new Error(`API request failed: ${response.status}`);
-                            }
-                        } catch (e) {
-                            console.error('Default API key failed:', e);
-                            searchStatus.textContent = `Unable to fetch products. Please check your API key or try again later. Error: ${e.message}`;
-                            products = [];
+                            
+                            const totalResults = data.search_information?.total_results || products.length;
+                            searchStatus.textContent = `Found ${products.length} Walmart products for "${query}" (${totalResults.toLocaleString()} total available)`;
+                        } else {
+                            throw new Error('Invalid API response format - no organic_results found');
                         }
+                    } catch (apiError) {
+                        console.error('Walmart API error:', apiError);
+                        searchStatus.textContent = `Error searching products: ${apiError.message}. Please try again.`;
+                        products = [];
                     }
                 } else if (retailer === 'shopify') {
                     products = [
@@ -7043,6 +6957,161 @@
                 alert(`Product: ${product.title}\nPrice: $${product.price.toFixed(2)}\nRetailer: ${product.retailer}\n\nClick "Add Product" to add more products to your library.`);
             }
         }
+        
+        // Setup Product Library event listeners
+        function setupProductLibraryListeners() {
+            const productLibraryFilter = document.getElementById('productLibraryFilter');
+            const productLibrarySort = document.getElementById('productLibrarySort');
+            const productLibrarySearch = document.getElementById('productLibrarySearch');
+            
+            if (productLibraryFilter && !productLibraryFilter.hasAttribute('data-listener-added')) {
+                productLibraryFilter.setAttribute('data-listener-added', 'true');
+                productLibraryFilter.addEventListener('change', loadProductLibrary);
+            }
+            if (productLibrarySort && !productLibrarySort.hasAttribute('data-listener-added')) {
+                productLibrarySort.setAttribute('data-listener-added', 'true');
+                productLibrarySort.addEventListener('change', loadProductLibrary);
+            }
+            if (productLibrarySearch && !productLibrarySearch.hasAttribute('data-listener-added')) {
+                productLibrarySearch.setAttribute('data-listener-added', 'true');
+                productLibrarySearch.addEventListener('input', (e) => {
+                    const searchTerm = e.target.value.toLowerCase();
+                    const container = document.getElementById('productLibraryContainer');
+                    if (!container) return;
+                    
+                    const products = JSON.parse(localStorage.getItem('kotaProductLibrary') || '[]');
+                    const filtered = products.filter(p => 
+                        p.title.toLowerCase().includes(searchTerm)
+                    );
+                    
+                    if (filtered.length === 0 && searchTerm) {
+                        container.innerHTML = '<p style="text-align: center; color: var(--gray); padding: 40px;">No products match your search.</p>';
+                        return;
+                    }
+                    
+                    if (searchTerm) {
+                        container.innerHTML = filtered.map(product => `
+                            <div class="product-card-dashboard" style="cursor: pointer;" onclick="viewProductDetails('${product.id}')">
+                                <img src="${product.image || 'https://via.placeholder.com/200'}" alt="${product.title}" class="product-image-dashboard" onerror="this.src='https://via.placeholder.com/200'">
+                                <div class="product-title">${product.title || 'Untitled Product'}</div>
+                                <div class="product-price">$${(product.price || 0).toFixed(2)}</div>
+                                <div class="product-retailer">${(product.retailer || 'Unknown').charAt(0).toUpperCase() + (product.retailer || 'Unknown').slice(1)}</div>
+                            </div>
+                        `).join('');
+                    } else {
+                        loadProductLibrary();
+                    }
+                });
+            }
+        }
+        
+        // Load Product Library
+        function loadProductLibrary() {
+            const container = document.getElementById('productLibraryContainer');
+            if (!container) return;
+            
+            // Get products from localStorage or use default products
+            let products = JSON.parse(localStorage.getItem('kotaProductLibrary') || '[]');
+            
+            // If no products in library, initialize with sample products
+            if (products.length === 0) {
+                products = [
+                    { id: 'lib_1', title: 'Sony WH-1000XM5 Headphones', image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=200', price: 299.99, retailer: 'amazon', addedDate: new Date(Date.now() - 86400000).toISOString() },
+                    { id: 'lib_2', title: 'Bose QuietComfort 45', image: 'https://images.unsplash.com/photo-1572536147248-ac59a8abfa4b?w=200', price: 279.99, retailer: 'amazon', addedDate: new Date(Date.now() - 172800000).toISOString() },
+                    { id: 'lib_3', title: 'Apple AirPods Max', image: 'https://images.unsplash.com/photo-1613040809024-b4ef7ba99bc3?w=200', price: 549.00, retailer: 'amazon', addedDate: new Date(Date.now() - 259200000).toISOString() },
+                    { id: 'lib_4', title: 'Samsung 55" Smart TV', image: 'https://images.unsplash.com/photo-1593305841991-05c297ba4575?w=200', price: 499.99, retailer: 'walmart', addedDate: new Date(Date.now() - 345600000).toISOString() },
+                    { id: 'lib_5', title: 'Bose QuietComfort 45', image: 'https://images.unsplash.com/photo-1572536147248-ac59a8abfa4b?w=200', price: 279.99, retailer: 'amazon', addedDate: new Date(Date.now() - 345600000).toISOString() },
+                    { id: 'lib_6', title: 'Dyson V11 Vacuum', image: 'https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=200', price: 599.00, retailer: 'walmart', addedDate: new Date(Date.now() - 432000000).toISOString() }
+                ];
+                
+                localStorage.setItem('kotaProductLibrary', JSON.stringify(products));
+            }
+            
+            // Apply filters
+            const filter = document.getElementById('productLibraryFilter')?.value || 'all';
+            const sort = document.getElementById('productLibrarySort')?.value || 'recent';
+            
+            let filteredProducts = products;
+            if (filter !== 'all') {
+                filteredProducts = products.filter(p => p.retailer === filter);
+            }
+            
+            // Apply sorting
+            filteredProducts.sort((a, b) => {
+                switch(sort) {
+                    case 'price-low':
+                        return (a.price || 0) - (b.price || 0);
+                    case 'price-high':
+                        return (b.price || 0) - (a.price || 0);
+                    case 'name':
+                        return (a.title || '').localeCompare(b.title || '');
+                    default: // recent
+                        return new Date(b.addedDate || 0) - new Date(a.addedDate || 0);
+                }
+            });
+            
+            if (filteredProducts.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: var(--gray); padding: 40px;">No products found. Add products from your blocks or search for new ones.</p>';
+                return;
+            }
+            
+            container.innerHTML = filteredProducts.map(product => `
+                <div class="product-card-dashboard" style="cursor: pointer;" onclick="viewProductDetails('${product.id}')">
+                    <img src="${product.image || 'https://via.placeholder.com/200'}" alt="${product.title}" class="product-image-dashboard" onerror="this.src='https://via.placeholder.com/200'">
+                    <div class="product-title">${product.title || 'Untitled Product'}</div>
+                    <div class="product-price">$${(product.price || 0).toFixed(2)}</div>
+                    <div class="product-retailer">${(product.retailer || 'Unknown').charAt(0).toUpperCase() + (product.retailer || 'Unknown').slice(1)}</div>
+                </div>
+            `).join('');
+        }
+        
+        function viewProductDetails(productId) {
+            const products = JSON.parse(localStorage.getItem('kotaProductLibrary') || '[]');
+            const product = products.find(p => p.id === productId);
+            if (product) {
+                alert(`Product: ${product.title}\nPrice: $${product.price.toFixed(2)}\nRetailer: ${product.retailer}\n\nClick "Add Product" to add more products to your library.`);
+            }
+        }
+        
+        // Add event listeners for Product Library filters
+        document.addEventListener('DOMContentLoaded', () => {
+            const productLibraryFilter = document.getElementById('productLibraryFilter');
+            const productLibrarySort = document.getElementById('productLibrarySort');
+            const productLibrarySearch = document.getElementById('productLibrarySearch');
+            
+            if (productLibraryFilter) {
+                productLibraryFilter.addEventListener('change', loadProductLibrary);
+            }
+            if (productLibrarySort) {
+                productLibrarySort.addEventListener('change', loadProductLibrary);
+            }
+            if (productLibrarySearch) {
+                productLibrarySearch.addEventListener('input', (e) => {
+                    const searchTerm = e.target.value.toLowerCase();
+                    const container = document.getElementById('productLibraryContainer');
+                    if (!container) return;
+                    
+                    const products = JSON.parse(localStorage.getItem('kotaProductLibrary') || '[]');
+                    const filtered = products.filter(p => 
+                        p.title.toLowerCase().includes(searchTerm)
+                    );
+                    
+                    if (filtered.length === 0) {
+                        container.innerHTML = '<p style="text-align: center; color: var(--gray); padding: 40px;">No products match your search.</p>';
+                        return;
+                    }
+                    
+                    container.innerHTML = filtered.map(product => `
+                        <div class="product-card-dashboard" style="cursor: pointer;" onclick="viewProductDetails('${product.id}')">
+                            <img src="${product.image || 'https://via.placeholder.com/200'}" alt="${product.title}" class="product-image-dashboard" onerror="this.src='https://via.placeholder.com/200'">
+                            <div class="product-title">${product.title || 'Untitled Product'}</div>
+                            <div class="product-price">$${(product.price || 0).toFixed(2)}</div>
+                            <div class="product-retailer">${(product.retailer || 'Unknown').charAt(0).toUpperCase() + (product.retailer || 'Unknown').slice(1)}</div>
+                        </div>
+                    `).join('');
+                });
+            }
+        });
         
         // Update Current Subscription Display
         function updateCurrentSubscription() {
@@ -7645,26 +7714,47 @@
                 
                 // Load product library when product-library page is shown
                 if (pageName === 'product-library') {
-                    loadProductLibrary();
+                    setTimeout(() => {
+                        if (typeof loadProductLibrary === 'function') {
+                            loadProductLibrary();
+                        }
+                        if (typeof setupProductLibraryListeners === 'function') {
+                            setupProductLibraryListeners();
+                        }
+                    }, 100);
                 }
                 
                 // Update current subscription when billing page is shown
                 if (pageName === 'billing') {
-                    updateCurrentSubscription();
+                    setTimeout(() => {
+                        if (typeof updateCurrentSubscription === 'function') {
+                            updateCurrentSubscription();
+                        }
+                    }, 100);
                 }
                 
                 // Load reports when reports page is shown
                 if (pageName === 'reports') {
-                    loadReports();
+                    setTimeout(() => {
+                        if (typeof loadReports === 'function') {
+                            loadReports();
+                        }
+                    }, 100);
                 }
                 
                 // Initialize AI Assistant page
                 if (pageName === 'ai-assistant') {
                     // AI Assistant is already initialized, just ensure chat is ready
-                    const aiChatWelcome = document.getElementById('aiChatWelcome');
-                    if (aiChatWelcome && !aiChatContainer.querySelector('.message')) {
-                        aiChatWelcome.style.display = 'block';
-                    }
+                    setTimeout(() => {
+                        const aiChatContainer = document.getElementById('aiChatContainer');
+                        const aiChatWelcome = document.getElementById('aiChatWelcome');
+                        if (aiChatContainer && aiChatWelcome) {
+                            const hasMessages = aiChatContainer.querySelectorAll('[style*="margin-bottom: 15px"]').length > 0;
+                            if (!hasMessages) {
+                                aiChatWelcome.style.display = 'block';
+                            }
+                        }
+                    }, 100);
                 }
                 
                 // Help & Support page doesn't need initialization - content is static
