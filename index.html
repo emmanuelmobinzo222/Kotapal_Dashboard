@@ -4451,6 +4451,47 @@
             }, 5000);
         }
 
+        // Utility function to remove all blocking overlays and modals
+        function removeAllOverlays() {
+            // Close all modals
+            const allModals = document.querySelectorAll('.modal, [class*="modal"], [id*="modal"], [id*="Modal"]');
+            allModals.forEach(modal => {
+                modal.style.display = 'none';
+                modal.classList.remove('active', 'show', 'open');
+            });
+            
+            // Remove backdrop/overlay elements
+            const backdrops = document.querySelectorAll('.modal-backdrop, .overlay, [class*="backdrop"], [class*="overlay"]');
+            backdrops.forEach(backdrop => {
+                backdrop.remove();
+            });
+            
+            // Remove fixed/absolute positioned overlays with high z-index and grey/transparent backgrounds
+            const allElements = document.querySelectorAll('*');
+            allElements.forEach(element => {
+                const style = window.getComputedStyle(element);
+                const zIndex = parseInt(style.zIndex);
+                const position = style.position;
+                const bgColor = style.backgroundColor;
+                const display = style.display;
+                
+                if ((position === 'fixed' || position === 'absolute') && 
+                    zIndex > 1000 && 
+                    display !== 'none' &&
+                    (bgColor.includes('rgba') || 
+                     bgColor.includes('rgb(128') || 
+                     bgColor.includes('rgb(0, 0, 0') ||
+                     bgColor.includes('rgb(0,0,0'))) {
+                    element.style.display = 'none';
+                }
+            });
+            
+            // Remove modal classes from body
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+        }
+
         // Handle Login
         async function handleFirebaseLogin(email, password) {
             // Check if Firebase is initialized
@@ -4506,9 +4547,16 @@
                 // Show success message before closing modal
                 showAuthMessage('authMessage', 'Login successful! Redirecting to dashboard...', 'success');
                 
-                // Close modal after a brief delay
-                setTimeout(() => {
+                // Close modal and remove overlays immediately
+                removeAllOverlays();
+                if (typeof closeAuthModal === 'function') {
                     closeAuthModal();
+                }
+                
+                // Close modal after a brief delay to ensure everything is cleaned up
+                setTimeout(() => {
+                    // Remove all overlays again to be safe
+                    removeAllOverlays();
                     
                     // Force dashboard to show
                     const landingView = document.getElementById('landing-page-view');
@@ -4640,9 +4688,16 @@
                 // Show success message before closing modal
                 showAuthMessage('signupMessage', 'Account created successfully! Redirecting to dashboard...', 'success');
                 
-                // Close modal after a brief delay
-                setTimeout(() => {
+                // Close modal and remove overlays immediately
+                removeAllOverlays();
+                if (typeof closeAuthModal === 'function') {
                     closeAuthModal();
+                }
+                
+                // Close modal after a brief delay to ensure everything is cleaned up
+                setTimeout(() => {
+                    // Remove all overlays again to be safe
+                    removeAllOverlays();
                     
                     // Force dashboard to show
                     const landingView = document.getElementById('landing-page-view');
