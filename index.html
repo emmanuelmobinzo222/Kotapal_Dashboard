@@ -4409,6 +4409,13 @@
             appId: "1:487227333489:web:a370f5e07b9e4c3d79f4d0",
             measurementId: "G-8GQ7JGDZ7P"
         };
+        
+        // ============================================
+        // SearchAPI.io API Configuration
+        // ============================================
+        // Default API key for Amazon and Walmart product searches
+        // MUST be declared at the top before any functions that use it
+        const DEFAULT_AMAZON_API_KEY = 'WceNe5Tmok9RVw5Y4Qn6PnLM';
 
         // Initialize Firebase
         let auth;
@@ -6128,13 +6135,10 @@
             alert('Block created successfully!');
         }
 
-        // SearchAPI.io API Configuration
-        // Default API key for Amazon product searches
-        const DEFAULT_AMAZON_API_KEY = 'WceNe5Tmok9RVw5Y4Qn6PnLM';
-        
         // Get your API key from https://www.searchapi.io/
         // Store it in localStorage or set it here
         // Same API key works for both Amazon and Walmart
+        // DEFAULT_AMAZON_API_KEY is declared at the top of the script (after Firebase config)
         function getSearchApiKey() {
             // Priority: 1. User-saved key, 2. Default Amazon API key
             return localStorage.getItem('searchapi_key') || 
@@ -6284,7 +6288,8 @@
                             searchStatus.textContent = `API Error: ${apiError.message}. Retrying with default key...`;
                             // Retry with default key
                             try {
-                                const apiUrl = `${AMAZON_API_URL}?engine=amazon_search&api_key=${DEFAULT_AMAZON_API_KEY}&q=${encodeURIComponent(query)}&num=20`;
+                                const defaultKey = getSearchApiKey(); // Use function instead of direct constant
+                                const apiUrl = `${AMAZON_API_URL}?engine=amazon_search&api_key=${defaultKey}&q=${encodeURIComponent(query)}&num=20`;
                                 const response = await fetch(apiUrl, {
                                     method: 'GET',
                                     headers: { 'Accept': 'application/json' }
@@ -6332,7 +6337,8 @@
                         searchStatus.textContent = 'Using default API key for Amazon searches.';
                         // Try with default key
                         try {
-                            const apiUrl = `${AMAZON_API_URL}?engine=amazon_search&api_key=${DEFAULT_AMAZON_API_KEY}&q=${encodeURIComponent(query)}&num=20`;
+                            const defaultKey = getSearchApiKey(); // Use function instead of direct constant
+                            const apiUrl = `${AMAZON_API_URL}?engine=amazon_search&api_key=${defaultKey}&q=${encodeURIComponent(query)}&num=20`;
                             const response = await fetch(apiUrl, {
                                 method: 'GET',
                                 headers: { 'Accept': 'application/json' }
@@ -6429,7 +6435,8 @@
                             searchStatus.textContent = `API Error: ${apiError.message}. Retrying with default key...`;
                             // Retry with default key
                             try {
-                                const apiUrl = `${WALMART_API_URL}?engine=walmart_search&api_key=${DEFAULT_AMAZON_API_KEY}&q=${encodeURIComponent(query)}&num=20`;
+                                const defaultKey = getSearchApiKey(); // Use function instead of direct constant
+                                const apiUrl = `${WALMART_API_URL}?engine=walmart_search&api_key=${defaultKey}&q=${encodeURIComponent(query)}&num=20`;
                                 const response = await fetch(apiUrl, {
                                     method: 'GET',
                                     headers: { 'Accept': 'application/json' }
@@ -6477,7 +6484,8 @@
                         // Always use default API key if no key is set
                         searchStatus.textContent = 'Using default API key for Walmart searches...';
                         try {
-                            const apiUrl = `${WALMART_API_URL}?engine=walmart_search&api_key=${DEFAULT_AMAZON_API_KEY}&q=${encodeURIComponent(query)}&num=20`;
+                            const defaultKey = getSearchApiKey(); // Use function instead of direct constant
+                            const apiUrl = `${WALMART_API_URL}?engine=walmart_search&api_key=${defaultKey}&q=${encodeURIComponent(query)}&num=20`;
                             const response = await fetch(apiUrl, {
                                 method: 'GET',
                                 headers: { 'Accept': 'application/json' }
@@ -7649,6 +7657,18 @@
                 if (pageName === 'reports') {
                     loadReports();
                 }
+                
+                // Initialize AI Assistant page
+                if (pageName === 'ai-assistant') {
+                    // AI Assistant is already initialized, just ensure chat is ready
+                    const aiChatWelcome = document.getElementById('aiChatWelcome');
+                    if (aiChatWelcome && !aiChatContainer.querySelector('.message')) {
+                        aiChatWelcome.style.display = 'block';
+                    }
+                }
+                
+                // Help & Support page doesn't need initialization - content is static
+                // Product Library, Billing, and Settings are already handled above
             }
             
             // Add active class to nav link
