@@ -2633,23 +2633,352 @@
             100% { transform: rotate(360deg); }
         }
 
+        /* Mobile Responsive Styles for iOS and Android */
+        @media (max-width: 1024px) {
+            .container {
+                padding: 0 16px;
+            }
+            
+            h1 {
+                font-size: 2.5rem;
+            }
+            
+            h2 {
+                font-size: 2rem;
+            }
+            
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+            
+            .hero p {
+                font-size: 1.2rem;
+            }
+            
+            .features-grid,
+            .pricing-grid,
+            .blog-grid {
+                grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+                gap: 20px;
+            }
+        }
+        
         @media (max-width: 768px) {
+            /* Navigation */
+            nav {
+                height: 56px;
+                padding: 0 12px;
+            }
+            
+            .nav-container {
+                padding: 0 12px;
+            }
+            
+            .logo img {
+                height: 50px !important;
+                width: 140px !important;
+            }
+            
+            .nav-links {
+                display: none;
+                position: absolute;
+                top: 56px;
+                left: 0;
+                width: 100%;
+                background: white;
+                flex-direction: column;
+                padding: 20px;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                z-index: 999;
+            }
+            
+            .nav-links.active {
+                display: flex;
+            }
+            
+            .nav-links li {
+                margin: 10px 0;
+                width: 100%;
+            }
+            
+            .nav-links a {
+                display: block;
+                padding: 10px;
+                width: 100%;
+            }
+            
+            .mobile-menu-btn {
+                display: flex;
+                position: absolute;
+                right: 20px;
+            }
+            
+            /* Hero Section */
+            .hero {
+                padding-top: 80px;
+                min-height: 90vh;
+            }
+            
+            .hero-content {
+                padding: 0 16px;
+            }
+            
+            .hero h1 {
+                font-size: 2rem;
+                margin-bottom: 16px;
+            }
+            
+            .hero p {
+                font-size: 1.1rem;
+                margin-bottom: 30px;
+            }
+            
+            .hero-buttons {
+                flex-direction: column;
+                width: 100%;
+                gap: 12px;
+            }
+            
+            .hero-buttons .btn {
+                width: 100%;
+                padding: 14px 24px;
+            }
+            
+            /* Sections */
+            section {
+                padding: 60px 0;
+            }
+            
+            .container {
+                padding: 0 16px;
+            }
+            
+            h2 {
+                font-size: 1.75rem;
+            }
+            
+            h3 {
+                font-size: 1.5rem;
+            }
+            
+            /* Features */
+            .features-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+                margin-top: 30px;
+            }
+            
+            .feature-card {
+                padding: 24px;
+            }
+            
+            /* Pricing */
+            .pricing-grid {
+                grid-template-columns: 1fr;
+                gap: 24px;
+                margin-top: 30px;
+            }
+            
+            .pricing-card {
+                padding: 30px 20px;
+            }
+            
+            .price {
+                font-size: 2.5rem;
+            }
+            
+            /* Blog */
+            .blog-grid {
+                grid-template-columns: 1fr;
+                gap: 24px;
+            }
+            
+            /* Dashboard */
             .dashboard {
                 flex-direction: column;
             }
+            
             .sidebar {
                 width: 100%;
                 height: auto;
                 position: relative;
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
             }
+            
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            
             .main-content {
                 margin-left: 0;
+                width: 100%;
             }
+            
             .stats-grid {
                 grid-template-columns: 1fr;
+                gap: 16px;
             }
+            
             .blocks-grid {
                 grid-template-columns: 1fr;
+                gap: 16px;
+            }
+            
+            .page-content {
+                padding: 16px;
+            }
+            
+            /* Cards */
+            .card {
+                padding: 16px;
+                margin-bottom: 16px;
+            }
+            
+            .card-header {
+                padding: 12px 16px;
+            }
+            
+            /* Tables */
+            .table-container {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            
+            table {
+                font-size: 0.875rem;
+            }
+            
+            th, td {
+                padding: 10px 8px;
+            }
+            
+            /* Forms */
+            .form-control {
+                padding: 12px 14px;
+                font-size: 16px; /* Prevents zoom on iOS */
+            }
+            
+            /* Buttons */
+            .btn {
+                padding: 12px 20px;
+                font-size: 0.9375rem;
+                min-height: 44px; /* Touch target size */
+            }
+            
+            /* Product Grid */
+            .product-grid {
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+                gap: 12px;
+            }
+        }
+        
+        /* Small Mobile Devices (iPhone SE, etc.) */
+        @media (max-width: 375px) {
+            .hero h1 {
+                font-size: 1.75rem;
+            }
+            
+            .hero p {
+                font-size: 1rem;
+            }
+            
+            h2 {
+                font-size: 1.5rem;
+            }
+            
+            h3 {
+                font-size: 1.25rem;
+            }
+            
+            .feature-card,
+            .pricing-card,
+            .blog-card {
+                padding: 20px;
+            }
+            
+            .price {
+                font-size: 2rem;
+            }
+            
+            .container {
+                padding: 0 12px;
+            }
+            
+            section {
+                padding: 40px 0;
+            }
+        }
+        
+        /* iOS Specific Fixes */
+        @supports (-webkit-touch-callout: none) {
+            /* iOS Safari specific styles */
+            .hero {
+                background-attachment: scroll;
+                -webkit-background-attachment: scroll;
+            }
+            
+            input,
+            textarea,
+            select {
+                font-size: 16px; /* Prevents zoom on focus */
+            }
+            
+            .sidebar,
+            .main-content {
+                -webkit-overflow-scrolling: touch;
+            }
+        }
+        
+        /* Android Specific Fixes */
+        @media screen and (-webkit-min-device-pixel-ratio: 0) {
+            /* Android Chrome specific styles */
+            .hero {
+                background-attachment: scroll;
+            }
+        }
+        
+        /* Landscape Orientation */
+        @media (max-width: 768px) and (orientation: landscape) {
+            .hero {
+                min-height: 100vh;
+                padding-top: 60px;
+            }
+            
+            .hero h1 {
+                font-size: 2rem;
+            }
+            
+            section {
+                padding: 40px 0;
+            }
+        }
+        
+        /* Touch-friendly elements */
+        @media (hover: none) and (pointer: coarse) {
+            /* Touch devices */
+            button,
+            .btn,
+            a {
+                min-height: 44px;
+                min-width: 44px;
+            }
+            
+            .nav-links a {
+                padding: 14px;
+            }
+            
+            .feature-card,
+            .pricing-card {
+                cursor: pointer;
+            }
+        }
+        
+        /* High DPI Displays */
+        @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+            .logo img {
+                image-rendering: -webkit-optimize-contrast;
+                image-rendering: crisp-edges;
             }
         }
     </style>
@@ -2795,71 +3124,6 @@
             </div>
         </section>
 
-        <!-- Products Section -->
-        <section class="products">
-            <div class="container">
-                <h2 class="text-center">Best Selling Products</h2>
-                <p class="text-center">Real-time pricing from Amazon, Walmart, and Shopify</p>
-                
-                <div class="products-scroll-container">
-                    <div class="product-card">
-                        <div class="product-image">
-                            <img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8aGVhZHBob25lc3xlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&w=500&q=80" alt="Sony Headphones">
-                        </div>
-                        <div class="product-info">
-                            <h3 class="product-title">Sony WH-1000XM5</h3>
-                            <div class="product-price">$299.99</div>
-                            <div style="display: flex; justify-content: space-between; margin-top: 10px;">
-                                <span>Amazon</span>
-                                <span style="color: var(--success);"><i class="fas fa-arrow-up"></i> 2.3%</span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="product-card">
-                        <div class="product-image">
-                            <img src="https://images.unsplash.com/photo-1572536147248-ac59a8abfa4b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTF8fGhlYWRwaG9uZXN8ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&w=500&q=80" alt="Bose Headphones">
-                        </div>
-                        <div class="product-info">
-                            <h3 class="product-title">Bose QuietComfort 45</h3>
-                            <div class="product-price">$279.99</div>
-                            <div style="display: flex; justify-content: space-between; margin-top: 10px;">
-                                <span>Amazon</span>
-                                <span style="color: var(--success);"><i class="fas fa-arrow-up"></i> 1.7%</span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="product-card">
-                        <div class="product-image">
-                            <img src="https://images.unsplash.com/photo-1613040809024-b4ef7ba99bc3?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTd8fGhlYWRwaG9uZXN8ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&w=500&q=80" alt="Apple AirPods Max">
-                        </div>
-                        <div class="product-info">
-                            <h3 class="product-title">Apple AirPods Max</h3>
-                            <div class="product-price">$549.00</div>
-                            <div style="display: flex; justify-content: space-between; margin-top: 10px;">
-                                <span>Apple</span>
-                                <span style="color: #ef4444;"><i class="fas fa-arrow-down"></i> 0.8%</span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="product-card">
-                        <div class="product-image">
-                            <img src="https://images.unsplash.com/photo-1593305841991-05c297ba4575?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTB8fHR2fGVufDB8fDB8fHww&auto=format&fit=crop&w=500&q=80" alt="Smart TV">
-                        </div>
-                        <div class="product-info">
-                            <h3 class="product-title">Walmart Smart TV</h3>
-                            <div class="product-price">$499.99</div>
-                            <div style="display: flex; justify-content: space-between; margin-top: 10px;">
-                                <span>Walmart</span>
-                                <span style="color: var(--success);"><i class="fas fa-arrow-up"></i> 3.1%</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
 
         <!-- About Section -->
         <section class="about" id="about" style="background-color: var(--light);">
@@ -3501,6 +3765,40 @@
                                     <p style="color: var(--gray); margin: 10px 0;">Get AI-generated content ideas for your niche</p>
                                     <button class="btn btn-primary">Get Ideas</button>
                                 </div>
+                            </div>
+                        </div>
+                        <!-- AI Response Display Areas -->
+                        <div id="aiProductDescriptionResult" class="card" style="margin-top: 24px; display: none;">
+                            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                                <h3 class="card-title">Generated Product Description</h3>
+                                <button class="btn btn-secondary btn-sm" onclick="document.getElementById('aiProductDescriptionResult').style.display='none'">
+                                    <i class="fas fa-times"></i> Close
+                                </button>
+                            </div>
+                            <div style="padding: 20px;">
+                                <div id="aiProductDescriptionContent" style="white-space: pre-wrap; line-height: 1.6;"></div>
+                            </div>
+                        </div>
+                        <div id="aiPerformanceResult" class="card" style="margin-top: 24px; display: none;">
+                            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                                <h3 class="card-title">Performance Optimization Recommendations</h3>
+                                <button class="btn btn-secondary btn-sm" onclick="document.getElementById('aiPerformanceResult').style.display='none'">
+                                    <i class="fas fa-times"></i> Close
+                                </button>
+                            </div>
+                            <div style="padding: 20px;">
+                                <div id="aiPerformanceContent" style="white-space: pre-wrap; line-height: 1.6;"></div>
+                            </div>
+                        </div>
+                        <div id="aiContentIdeasResult" class="card" style="margin-top: 24px; display: none;">
+                            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                                <h3 class="card-title">AI-Generated Content Ideas</h3>
+                                <button class="btn btn-secondary btn-sm" onclick="document.getElementById('aiContentIdeasResult').style.display='none'">
+                                    <i class="fas fa-times"></i> Close
+                                </button>
+                            </div>
+                            <div style="padding: 20px;">
+                                <div id="aiContentIdeasContent" style="white-space: pre-wrap; line-height: 1.6;"></div>
                             </div>
                         </div>
                     </div>
@@ -5928,9 +6226,51 @@
                             }
                         } catch (apiError) {
                             console.error('Amazon API error:', apiError);
-                            searchStatus.textContent = `API Error: ${apiError.message}. Using sample products.`;
-                            // Fallback to mock data
-                            products = getMockAmazonProducts(query);
+                            searchStatus.textContent = `API Error: ${apiError.message}. Retrying with default key...`;
+                            // Retry with default key
+                            try {
+                                const apiUrl = `${AMAZON_API_URL}?engine=amazon_search&api_key=${DEFAULT_AMAZON_API_KEY}&q=${encodeURIComponent(query)}&num=20`;
+                                const response = await fetch(apiUrl, {
+                                    method: 'GET',
+                                    headers: { 'Accept': 'application/json' }
+                                });
+                                if (response.ok) {
+                                    const data = await response.json();
+                                    if (data && data.organic_results && Array.isArray(data.organic_results)) {
+                                        products = data.organic_results.map((item, index) => {
+                                            let price = 0;
+                                            if (item.price) {
+                                                const priceMatch = item.price.match(/\$?([\d,]+\.?\d*)/);
+                                                if (priceMatch) {
+                                                    price = parseFloat(priceMatch[1].replace(/,/g, ''));
+                                                }
+                                            }
+                                            return {
+                                                id: item.asin || item.product_id || `amz_${index}`,
+                                                title: item.title || 'Product',
+                                                image: item.thumbnail || item.image || 'https://via.placeholder.com/200',
+                                                price: price || 0,
+                                                originalPrice: item.original_price ? parseFloat(item.original_price.replace(/[^0-9.]/g, '')) : price,
+                                                rating: item.rating ? parseFloat(item.rating) : 0,
+                                                reviews: item.reviews ? parseInt(item.reviews.replace(/[^0-9]/g, '')) : 0,
+                                                availability: item.availability || 'In Stock',
+                                                asin: item.asin,
+                                                link: item.link || `https://www.amazon.com/dp/${item.asin || ''}`,
+                                                retailer: 'amazon'
+                                            };
+                                        });
+                                        searchStatus.textContent = `Found ${products.length} Amazon products for "${query}"`;
+                                    } else {
+                                        throw new Error('Invalid API response format');
+                                    }
+                                } else {
+                                    throw new Error(`API request failed: ${response.status}`);
+                                }
+                            } catch (e) {
+                                console.error('Default API key also failed:', e);
+                                searchStatus.textContent = `Unable to fetch products. Please check your API key or try again later. Error: ${e.message}`;
+                                products = [];
+                            }
                         }
                     } else {
                         // This should not happen as we have a default API key, but fallback just in case
@@ -5972,7 +6312,8 @@
                             }
                         } catch (e) {
                             console.error('Default API key also failed:', e);
-                            products = getMockAmazonProducts(query);
+                            searchStatus.textContent = `Unable to fetch products. Please check your API key or try again later. Error: ${e.message}`;
+                            products = [];
                         }
                     }
                 } else if (retailer === 'walmart') {
@@ -6030,14 +6371,100 @@
                             }
                         } catch (apiError) {
                             console.error('Walmart API error:', apiError);
-                            searchStatus.textContent = `API Error: ${apiError.message}. Using sample products.`;
-                            // Fallback to mock data
-                            products = getMockWalmartProducts(query);
+                            searchStatus.textContent = `API Error: ${apiError.message}. Retrying with default key...`;
+                            // Retry with default key
+                            try {
+                                const apiUrl = `${WALMART_API_URL}?engine=walmart_search&api_key=${DEFAULT_AMAZON_API_KEY}&q=${encodeURIComponent(query)}&num=20`;
+                                const response = await fetch(apiUrl, {
+                                    method: 'GET',
+                                    headers: { 'Accept': 'application/json' }
+                                });
+                                if (response.ok) {
+                                    const data = await response.json();
+                                    if (data && data.organic_results && Array.isArray(data.organic_results)) {
+                                        products = data.organic_results.map((item, index) => {
+                                            let price = 0;
+                                            if (item.price) {
+                                                const priceMatch = item.price.match(/\$?([\d,]+\.?\d*)/);
+                                                if (priceMatch) {
+                                                    price = parseFloat(priceMatch[1].replace(/,/g, ''));
+                                                }
+                                            }
+                                            return {
+                                                id: item.product_id || item.item_id || item.id || `wlm_${index}`,
+                                                title: item.title || 'Product',
+                                                image: item.thumbnail || item.image || 'https://via.placeholder.com/200',
+                                                price: price || 0,
+                                                originalPrice: item.original_price ? parseFloat(item.original_price.replace(/[^0-9.]/g, '')) : price,
+                                                rating: item.rating ? parseFloat(item.rating) : 0,
+                                                reviews: item.reviews ? parseInt(item.reviews.replace(/[^0-9]/g, '')) : 0,
+                                                availability: item.availability || item.in_stock ? 'In Stock' : 'Out of Stock',
+                                                itemId: item.product_id || item.item_id,
+                                                link: item.link || item.url || `https://www.walmart.com/ip/${item.product_id || ''}`,
+                                                retailer: 'walmart'
+                                            };
+                                        });
+                                        
+                                        searchStatus.textContent = `Found ${products.length} Walmart products for "${query}"`;
+                                    } else {
+                                        throw new Error('Invalid API response format');
+                                    }
+                                } else {
+                                    throw new Error(`API request failed: ${response.status}`);
+                                }
+                            } catch (e) {
+                                console.error('Default API key also failed:', e);
+                                searchStatus.textContent = `Unable to fetch products. Please check your API key or try again later. Error: ${e.message}`;
+                                products = [];
+                            }
                         }
                     } else {
-                        // No API key configured, use mock data
-                        searchStatus.textContent = 'API key not configured. Using sample products. Add your SearchAPI.io key in settings.';
-                        products = getMockWalmartProducts(query);
+                        // Always use default API key if no key is set
+                        searchStatus.textContent = 'Using default API key for Walmart searches...';
+                        try {
+                            const apiUrl = `${WALMART_API_URL}?engine=walmart_search&api_key=${DEFAULT_AMAZON_API_KEY}&q=${encodeURIComponent(query)}&num=20`;
+                            const response = await fetch(apiUrl, {
+                                method: 'GET',
+                                headers: { 'Accept': 'application/json' }
+                            });
+                            if (response.ok) {
+                                const data = await response.json();
+                                if (data && data.organic_results && Array.isArray(data.organic_results)) {
+                                    products = data.organic_results.map((item, index) => {
+                                        let price = 0;
+                                        if (item.price) {
+                                            const priceMatch = item.price.match(/\$?([\d,]+\.?\d*)/);
+                                            if (priceMatch) {
+                                                price = parseFloat(priceMatch[1].replace(/,/g, ''));
+                                            }
+                                        }
+                                        return {
+                                            id: item.product_id || item.item_id || item.id || `wlm_${index}`,
+                                            title: item.title || 'Product',
+                                            image: item.thumbnail || item.image || 'https://via.placeholder.com/200',
+                                            price: price || 0,
+                                            originalPrice: item.original_price ? parseFloat(item.original_price.replace(/[^0-9.]/g, '')) : price,
+                                            rating: item.rating ? parseFloat(item.rating) : 0,
+                                            reviews: item.reviews ? parseInt(item.reviews.replace(/[^0-9]/g, '')) : 0,
+                                            availability: item.availability || item.in_stock ? 'In Stock' : 'Out of Stock',
+                                            itemId: item.product_id || item.item_id,
+                                            link: item.link || item.url || `https://www.walmart.com/ip/${item.product_id || ''}`,
+                                            retailer: 'walmart'
+                                        };
+                                    });
+                                    
+                                    searchStatus.textContent = `Found ${products.length} Walmart products for "${query}"`;
+                                } else {
+                                    throw new Error('Invalid API response format');
+                                }
+                            } else {
+                                throw new Error(`API request failed: ${response.status}`);
+                            }
+                        } catch (e) {
+                            console.error('Default API key failed:', e);
+                            searchStatus.textContent = `Unable to fetch products. Please check your API key or try again later. Error: ${e.message}`;
+                            products = [];
+                        }
                     }
                 } else if (retailer === 'shopify') {
                     products = [
@@ -6646,8 +7073,16 @@
                     }
                     
                     if (aiContent) {
-                        const formattedContent = aiContent.substring(0, 500) + '...\n\n(Generated by Google AI)';
-                        alert(`AI-Generated Product Description:\n\n${formattedContent}\n\nYou can customize this description in your product settings.`);
+                        // Display in-app instead of alert
+                        const resultDiv = document.getElementById('aiProductDescriptionResult');
+                        const contentDiv = document.getElementById('aiProductDescriptionContent');
+                        if (resultDiv && contentDiv) {
+                            contentDiv.textContent = aiContent + '\n\n(Generated by Google AI)\n\nYou can customize this description in your product settings.';
+                            resultDiv.style.display = 'block';
+                            resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                        } else {
+                            alert(`AI-Generated Product Description:\n\n${aiContent.substring(0, 500)}...\n\n(Generated by Google AI)\n\nYou can customize this description in your product settings.`);
+                        }
                     } else {
                         throw new Error('No AI content found in response');
                     }
@@ -6656,8 +7091,16 @@
                 }
             } catch (error) {
                 console.error('Google AI error:', error);
-                // Fallback to default message
-                alert('AI-Generated Product Description:\n\n"Experience premium quality with this exceptional product. Designed for modern lifestyles, it combines style and functionality to deliver outstanding performance. Perfect for everyday use, this product offers unmatched value and reliability."\n\nYou can customize this description in your product settings.');
+                // Display error in-app
+                const resultDiv = document.getElementById('aiProductDescriptionResult');
+                const contentDiv = document.getElementById('aiProductDescriptionContent');
+                if (resultDiv && contentDiv) {
+                    contentDiv.textContent = 'Experience premium quality with this exceptional product. Designed for modern lifestyles, it combines style and functionality to deliver outstanding performance. Perfect for everyday use, this product offers unmatched value and reliability.\n\n(Note: Using fallback content. Please check your API key configuration.)';
+                    resultDiv.style.display = 'block';
+                    resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                } else {
+                    alert('AI-Generated Product Description:\n\n"Experience premium quality with this exceptional product. Designed for modern lifestyles, it combines style and functionality to deliver outstanding performance. Perfect for everyday use, this product offers unmatched value and reliability."\n\nYou can customize this description in your product settings.');
+                }
             }
         }
         
@@ -6691,8 +7134,16 @@
                     }
                     
                     if (recommendations) {
-                        const formattedRecs = recommendations.substring(0, 800) + '...\n\n(Generated by Google AI)';
-                        alert(`Performance Optimization Recommendations:\n\n${formattedRecs}`);
+                        // Display in-app instead of alert
+                        const resultDiv = document.getElementById('aiPerformanceResult');
+                        const contentDiv = document.getElementById('aiPerformanceContent');
+                        if (resultDiv && contentDiv) {
+                            contentDiv.textContent = recommendations + '\n\n(Generated by Google AI)';
+                            resultDiv.style.display = 'block';
+                            resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                        } else {
+                            alert(`Performance Optimization Recommendations:\n\n${recommendations.substring(0, 800)}...\n\n(Generated by Google AI)`);
+                        }
                     } else {
                         throw new Error('No recommendations found');
                     }
@@ -6701,8 +7152,16 @@
                 }
             } catch (error) {
                 console.error('Google AI error:', error);
-                // Fallback to default recommendations
-                alert('Performance Optimization Recommendations:\n\n1. Update product images for better visual appeal\n2. Optimize CTA text to increase click-through rates\n3. Consider A/B testing different layouts\n4. Add more relevant products to increase engagement\n5. Monitor peak traffic times and adjust accordingly');
+                // Display error in-app
+                const resultDiv = document.getElementById('aiPerformanceResult');
+                const contentDiv = document.getElementById('aiPerformanceContent');
+                if (resultDiv && contentDiv) {
+                    contentDiv.textContent = '1. Update product images for better visual appeal\n2. Optimize CTA text to increase click-through rates\n3. Consider A/B testing different layouts\n4. Add more relevant products to increase engagement\n5. Monitor peak traffic times and adjust accordingly\n\n(Note: Using fallback recommendations. Please check your API key configuration.)';
+                    resultDiv.style.display = 'block';
+                    resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                } else {
+                    alert('Performance Optimization Recommendations:\n\n1. Update product images for better visual appeal\n2. Optimize CTA text to increase click-through rates\n3. Consider A/B testing different layouts\n4. Add more relevant products to increase engagement\n5. Monitor peak traffic times and adjust accordingly');
+                }
             }
         }
         
@@ -6736,8 +7195,16 @@
                     }
                     
                     if (ideas) {
-                        const formattedIdeas = ideas.substring(0, 600) + '...\n\n(Generated by Google AI)';
-                        alert(`AI-Generated Content Ideas:\n\n${formattedIdeas}\n\nUse these ideas to create engaging content around your products!`);
+                        // Display in-app instead of alert
+                        const resultDiv = document.getElementById('aiContentIdeasResult');
+                        const contentDiv = document.getElementById('aiContentIdeasContent');
+                        if (resultDiv && contentDiv) {
+                            contentDiv.textContent = ideas + '\n\n(Generated by Google AI)\n\nUse these ideas to create engaging content around your products!';
+                            resultDiv.style.display = 'block';
+                            resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                        } else {
+                            alert(`AI-Generated Content Ideas:\n\n${ideas.substring(0, 600)}...\n\n(Generated by Google AI)\n\nUse these ideas to create engaging content around your products!`);
+                        }
                     } else {
                         throw new Error('No content ideas found');
                     }
@@ -6746,8 +7213,16 @@
                 }
             } catch (error) {
                 console.error('Google AI error:', error);
-                // Fallback to default ideas
-                alert('AI-Generated Content Ideas:\n\n1. "Top 10 Must-Have Products for [Your Niche]"\n2. "Product Review: [Product Name] - Is It Worth It?"\n3. "Best Deals This Week: [Category]"\n4. "How to Choose the Right [Product Type]"\n5. "Product Comparison: [Product A] vs [Product B]"\n\nUse these ideas to create engaging content around your products!');
+                // Display error in-app
+                const resultDiv = document.getElementById('aiContentIdeasResult');
+                const contentDiv = document.getElementById('aiContentIdeasContent');
+                if (resultDiv && contentDiv) {
+                    contentDiv.textContent = '1. "Top 10 Must-Have Products for [Your Niche]"\n2. "Product Review: [Product Name] - Is It Worth It?"\n3. "Best Deals This Week: [Category]"\n4. "How to Choose the Right [Product Type]"\n5. "Product Comparison: [Product A] vs [Product B]"\n\n(Note: Using fallback ideas. Please check your API key configuration.)\n\nUse these ideas to create engaging content around your products!';
+                    resultDiv.style.display = 'block';
+                    resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                } else {
+                    alert('AI-Generated Content Ideas:\n\n1. "Top 10 Must-Have Products for [Your Niche]"\n2. "Product Review: [Product Name] - Is It Worth It?"\n3. "Best Deals This Week: [Category]"\n4. "How to Choose the Right [Product Type]"\n5. "Product Comparison: [Product A] vs [Product B]"\n\nUse these ideas to create engaging content around your products!');
+                }
             }
         }
         
@@ -6884,6 +7359,50 @@
                             sendAIChatMessage(message);
                             aiChatInput.value = '';
                         }
+                    }
+                });
+            }
+            
+            // Mobile Menu Toggle
+            const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+            const navLinks = document.querySelector('.nav-links');
+            
+            if (mobileMenuBtn && navLinks) {
+                mobileMenuBtn.addEventListener('click', () => {
+                    navLinks.classList.toggle('active');
+                    // Animate hamburger icon
+                    const spans = mobileMenuBtn.querySelectorAll('span');
+                    if (navLinks.classList.contains('active')) {
+                        spans[0].style.transform = 'rotate(45deg) translate(5px, 5px)';
+                        spans[1].style.opacity = '0';
+                        spans[2].style.transform = 'rotate(-45deg) translate(7px, -6px)';
+                    } else {
+                        spans[0].style.transform = 'none';
+                        spans[1].style.opacity = '1';
+                        spans[2].style.transform = 'none';
+                    }
+                });
+                
+                // Close menu when clicking on a link
+                const navLinksItems = navLinks.querySelectorAll('a');
+                navLinksItems.forEach(link => {
+                    link.addEventListener('click', () => {
+                        navLinks.classList.remove('active');
+                        const spans = mobileMenuBtn.querySelectorAll('span');
+                        spans[0].style.transform = 'none';
+                        spans[1].style.opacity = '1';
+                        spans[2].style.transform = 'none';
+                    });
+                });
+                
+                // Close menu when clicking outside
+                document.addEventListener('click', (e) => {
+                    if (!mobileMenuBtn.contains(e.target) && !navLinks.contains(e.target)) {
+                        navLinks.classList.remove('active');
+                        const spans = mobileMenuBtn.querySelectorAll('span');
+                        spans[0].style.transform = 'none';
+                        spans[1].style.opacity = '1';
+                        spans[2].style.transform = 'none';
                     }
                 });
             }
