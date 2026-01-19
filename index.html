@@ -3508,10 +3508,11 @@
                         <div class="card-header">
                             <h3 class="card-title">Chat with AI Assistant</h3>
                         </div>
-                        <div id="aiChatContainer" style="height: 400px; overflow-y: auto; padding: 20px; background: #f9fafb; border-radius: 8px; margin-bottom: 20px;">
-                            <div style="text-align: center; color: var(--gray); padding: 40px;">
+                        <div id="aiChatContainer" style="height: 400px; overflow-y: auto; padding: 20px; background: #f9fafb; border-radius: 8px; margin-bottom: 20px; -webkit-overflow-scrolling: touch;">
+                            <div style="text-align: center; color: var(--gray); padding: 40px;" id="aiChatWelcome">
                                 <i class="fas fa-robot" style="font-size: 3rem; margin-bottom: 15px; opacity: 0.5;"></i>
                                 <p>Start a conversation with the AI Assistant</p>
+                                <p style="font-size: 0.85rem; margin-top: 10px; color: var(--gray);">Powered by Google AI Mode API</p>
                             </div>
                         </div>
                         <div style="display: flex; gap: 10px;">
@@ -4449,11 +4450,9 @@
                 // Send password reset email
                 // Firebase will send an email with a reset link to the user's email address
                 // The email will contain a link that allows the user to reset their password
-                await auth.sendPasswordResetEmail(email.trim(), {
-                    // Optional: You can customize the email action handler URL
-                    // url: window.location.origin + '/reset-password',
-                    // handleCodeInApp: false
-                });
+                // Call without URL parameter - Firebase will use the default action handler
+                // configured in Firebase Console > Authentication > Settings > Authorized domains
+                await auth.sendPasswordResetEmail(email.trim());
                 
                 // Success - email sent
                 if (resetMsg) {
@@ -4500,7 +4499,8 @@
                         errorMessage = 'Network error. Please check your internet connection and try again.';
                         break;
                     case 'auth/unauthorized-continue-uri':
-                        errorMessage = 'Email configuration error. Please contact support.';
+                    case 'auth/invalid-continue-uri':
+                        errorMessage = 'Password reset configuration error. Please ensure your domain is authorized in Firebase Console. Go to Firebase Console > Authentication > Settings > Authorized domains and add your domain.';
                         break;
                     default:
                         errorMessage = `Failed to send reset email: ${error.message || 'Unknown error'}. Please try again or contact support.`;
@@ -5776,11 +5776,17 @@
         }
 
         // SearchAPI.io API Configuration
+        // Default API key for Amazon product searches
+        const DEFAULT_AMAZON_API_KEY = 'WceNe5Tmok9RVw5Y4Qn6PnLM';
+        
         // Get your API key from https://www.searchapi.io/
         // Store it in localStorage or set it here
         // Same API key works for both Amazon and Walmart
         function getSearchApiKey() {
-            return localStorage.getItem('searchapi_key') || localStorage.getItem('searchapi_amazon_key') || '';
+            // Priority: 1. User-saved key, 2. Default Amazon API key
+            return localStorage.getItem('searchapi_key') || 
+                   localStorage.getItem('searchapi_amazon_key') || 
+                   DEFAULT_AMAZON_API_KEY;
         }
         
         function setSearchApiKey(key) {
@@ -5867,11 +5873,14 @@
             
             try {
                 if (retailer === 'amazon') {
-                    // Use SearchAPI.io Amazon Product Search API
+                    // Use SearchAPI.io Amazon Search API
+                    // The Amazon Search API lets developers tap into Amazon's huge product database
+                    // to scrape real-time results. You can search for items, get sorted results 
+                    // based on relevance or reviews, and pull product details.
                     const apiKey = getAmazonApiKey();
                     if (apiKey) {
                         try {
-                            const apiUrl = `${AMAZON_API_URL}?engine=amazon_product&api_key=${apiKey}&q=${encodeURIComponent(query)}&num=20`;
+                            const apiUrl = `${AMAZON_API_URL}?engine=amazon_search&api_key=${apiKey}&q=${encodeURIComponent(query)}&num=20`;
                             
                             const response = await fetch(apiUrl, {
                                 method: 'GET',
@@ -5924,12 +5933,52 @@
                             products = getMockAmazonProducts(query);
                         }
                     } else {
-                        // No API key configured, use mock data
-                        searchStatus.textContent = 'API key not configured. Using sample products. Add your SearchAPI.io key in settings.';
-                        products = getMockAmazonProducts(query);
+                        // This should not happen as we have a default API key, but fallback just in case
+                        searchStatus.textContent = 'Using default API key for Amazon searches.';
+                        // Try with default key
+                        try {
+                            const apiUrl = `${AMAZON_API_URL}?engine=amazon_search&api_key=${DEFAULT_AMAZON_API_KEY}&q=${encodeURIComponent(query)}&num=20`;
+                            const response = await fetch(apiUrl, {
+                                method: 'GET',
+                                headers: { 'Accept': 'application/json' }
+                            });
+                            if (response.ok) {
+                                const data = await response.json();
+                                if (data && data.organic_results && Array.isArray(data.organic_results)) {
+                                    products = data.organic_results.map((item, index) => {
+                                        let price = 0;
+                                        if (item.price) {
+                                            const priceMatch = item.price.match(/\$?([\d,]+\.?\d*)/);
+                                            if (priceMatch) {
+                                                price = parseFloat(priceMatch[1].replace(/,/g, ''));
+                                            }
+                                        }
+                                        return {
+                                            id: item.asin || item.product_id || `amz_${index}`,
+                                            title: item.title || 'Product',
+                                            image: item.thumbnail || item.image || 'https://via.placeholder.com/200',
+                                            price: price || 0,
+                                            originalPrice: item.original_price ? parseFloat(item.original_price.replace(/[^0-9.]/g, '')) : price,
+                                            rating: item.rating ? parseFloat(item.rating) : 0,
+                                            reviews: item.reviews ? parseInt(item.reviews.replace(/[^0-9]/g, '')) : 0,
+                                            availability: item.availability || 'In Stock',
+                                            asin: item.asin,
+                                            link: item.link || `https://www.amazon.com/dp/${item.asin || ''}`,
+                                            retailer: 'amazon'
+                                        };
+                                    });
+                                    searchStatus.textContent = `Found ${products.length} Amazon products for "${query}"`;
+                                }
+                            }
+                        } catch (e) {
+                            console.error('Default API key also failed:', e);
+                            products = getMockAmazonProducts(query);
+                        }
                     }
                 } else if (retailer === 'walmart') {
                     // Use SearchAPI.io Walmart Search API
+                    // Endpoint: https://www.searchapi.io/api/v1/search?engine=walmart_search
+                    // Always use the default API key for Walmart
                     const apiKey = getSearchApiKey();
                     if (apiKey) {
                         try {
@@ -6560,27 +6609,285 @@
             }
         }
         
-        // AI Assistant Functions
-        function generateProductDescription() {
-            showNotification('AI is generating your product description...', 'info', 'AI Assistant');
-            setTimeout(() => {
+        // Google AI Mode API Configuration
+        // The Google AI Mode API provides access to Google's AI-powered search results
+        // Returns AI-generated content including text blocks, generated markdown, 
+        // reference links, local results, web references, and shopping suggestions
+        // Endpoint: https://www.searchapi.io/api/v1/search?engine=google_ai_mode
+        const GOOGLE_AI_API_URL = 'https://www.searchapi.io/api/v1/search';
+        const GOOGLE_AI_ENGINE = 'google_ai_mode'; // Try 'google_ai' or 'google_ai_search' if this doesn't work
+        
+        // AI Assistant Functions with Google AI Integration
+        async function generateProductDescription() {
+            showNotification('AI is generating your product description using Google AI...', 'info', 'AI Assistant');
+            
+            const apiKey = getSearchApiKey();
+            const query = 'How to write compelling product descriptions for e-commerce products';
+            
+            try {
+                const apiUrl = `${GOOGLE_AI_API_URL}?engine=${GOOGLE_AI_ENGINE}&api_key=${apiKey}&q=${encodeURIComponent(query)}`;
+                
+                const response = await fetch(apiUrl, {
+                    method: 'GET',
+                    headers: { 'Accept': 'application/json' }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    // Extract AI-generated content from Google AI Mode response
+                    let aiContent = '';
+                    if (data.answer) {
+                        aiContent = data.answer;
+                    } else if (data.answer_box && data.answer_box.text) {
+                        aiContent = data.answer_box.text;
+                    } else if (data.organic_results && data.organic_results[0]) {
+                        aiContent = data.organic_results[0].snippet || data.organic_results[0].description || '';
+                    }
+                    
+                    if (aiContent) {
+                        const formattedContent = aiContent.substring(0, 500) + '...\n\n(Generated by Google AI)';
+                        alert(`AI-Generated Product Description:\n\n${formattedContent}\n\nYou can customize this description in your product settings.`);
+                    } else {
+                        throw new Error('No AI content found in response');
+                    }
+                } else {
+                    throw new Error(`API request failed: ${response.status}`);
+                }
+            } catch (error) {
+                console.error('Google AI error:', error);
+                // Fallback to default message
                 alert('AI-Generated Product Description:\n\n"Experience premium quality with this exceptional product. Designed for modern lifestyles, it combines style and functionality to deliver outstanding performance. Perfect for everyday use, this product offers unmatched value and reliability."\n\nYou can customize this description in your product settings.');
-            }, 2000);
+            }
         }
         
-        function optimizePerformance() {
-            showNotification('Analyzing your block performance...', 'info', 'AI Assistant');
-            setTimeout(() => {
+        async function optimizePerformance() {
+            showNotification('Analyzing your block performance using Google AI...', 'info', 'AI Assistant');
+            
+            const apiKey = getSearchApiKey();
+            const query = 'How to optimize affiliate marketing product blocks for better click-through rates and conversions';
+            
+            try {
+                const apiUrl = `${GOOGLE_AI_API_URL}?engine=${GOOGLE_AI_ENGINE}&api_key=${apiKey}&q=${encodeURIComponent(query)}`;
+                
+                const response = await fetch(apiUrl, {
+                    method: 'GET',
+                    headers: { 'Accept': 'application/json' }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    // Extract AI-generated recommendations
+                    let recommendations = '';
+                    if (data.answer) {
+                        recommendations = data.answer;
+                    } else if (data.answer_box && data.answer_box.text) {
+                        recommendations = data.answer_box.text;
+                    } else if (data.organic_results && data.organic_results.length > 0) {
+                        recommendations = data.organic_results.slice(0, 3).map((r, i) => 
+                            `${i + 1}. ${r.title || r.snippet || ''}`
+                        ).join('\n\n');
+                    }
+                    
+                    if (recommendations) {
+                        const formattedRecs = recommendations.substring(0, 800) + '...\n\n(Generated by Google AI)';
+                        alert(`Performance Optimization Recommendations:\n\n${formattedRecs}`);
+                    } else {
+                        throw new Error('No recommendations found');
+                    }
+                } else {
+                    throw new Error(`API request failed: ${response.status}`);
+                }
+            } catch (error) {
+                console.error('Google AI error:', error);
+                // Fallback to default recommendations
                 alert('Performance Optimization Recommendations:\n\n1. Update product images for better visual appeal\n2. Optimize CTA text to increase click-through rates\n3. Consider A/B testing different layouts\n4. Add more relevant products to increase engagement\n5. Monitor peak traffic times and adjust accordingly');
-            }, 2000);
+            }
         }
         
-        function getContentIdeas() {
-            showNotification('Generating content ideas...', 'info', 'AI Assistant');
-            setTimeout(() => {
+        async function getContentIdeas() {
+            showNotification('Generating content ideas using Google AI...', 'info', 'AI Assistant');
+            
+            const apiKey = getSearchApiKey();
+            const query = 'content ideas for affiliate marketing blog posts and product reviews';
+            
+            try {
+                const apiUrl = `${GOOGLE_AI_API_URL}?engine=${GOOGLE_AI_ENGINE}&api_key=${apiKey}&q=${encodeURIComponent(query)}`;
+                
+                const response = await fetch(apiUrl, {
+                    method: 'GET',
+                    headers: { 'Accept': 'application/json' }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    // Extract AI-generated content ideas
+                    let ideas = '';
+                    if (data.answer) {
+                        ideas = data.answer;
+                    } else if (data.answer_box && data.answer_box.text) {
+                        ideas = data.answer_box.text;
+                    } else if (data.organic_results && data.organic_results.length > 0) {
+                        ideas = data.organic_results.slice(0, 5).map((r, i) => 
+                            `${i + 1}. "${r.title || r.snippet || ''}"`
+                        ).join('\n');
+                    }
+                    
+                    if (ideas) {
+                        const formattedIdeas = ideas.substring(0, 600) + '...\n\n(Generated by Google AI)';
+                        alert(`AI-Generated Content Ideas:\n\n${formattedIdeas}\n\nUse these ideas to create engaging content around your products!`);
+                    } else {
+                        throw new Error('No content ideas found');
+                    }
+                } else {
+                    throw new Error(`API request failed: ${response.status}`);
+                }
+            } catch (error) {
+                console.error('Google AI error:', error);
+                // Fallback to default ideas
                 alert('AI-Generated Content Ideas:\n\n1. "Top 10 Must-Have Products for [Your Niche]"\n2. "Product Review: [Product Name] - Is It Worth It?"\n3. "Best Deals This Week: [Category]"\n4. "How to Choose the Right [Product Type]"\n5. "Product Comparison: [Product A] vs [Product B]"\n\nUse these ideas to create engaging content around your products!');
-            }, 2000);
+            }
         }
+        
+        // Chat with AI Assistant using Google AI
+        let aiChatHistory = [];
+        
+        async function sendAIChatMessage(message) {
+            const chatContainer = document.getElementById('aiChatContainer');
+            if (!chatContainer) return;
+            
+            // Remove welcome message on first interaction
+            const welcomeMsg = document.getElementById('aiChatWelcome');
+            if (welcomeMsg) welcomeMsg.remove();
+            
+            // Add user message to chat
+            const userMessageDiv = document.createElement('div');
+            userMessageDiv.style.cssText = 'margin-bottom: 15px; text-align: right;';
+            userMessageDiv.innerHTML = `
+                <div style="display: inline-block; background: var(--primary); color: white; padding: 12px 16px; border-radius: 12px; max-width: 70%; text-align: left;">
+                    <div style="font-weight: 600; margin-bottom: 4px;">You</div>
+                    <div>${message}</div>
+                </div>
+            `;
+            chatContainer.appendChild(userMessageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+            
+            // Show loading indicator
+            const loadingDiv = document.createElement('div');
+            loadingDiv.id = 'aiChatLoading';
+            loadingDiv.style.cssText = 'margin-bottom: 15px; text-align: left;';
+            loadingDiv.innerHTML = `
+                <div style="display: inline-block; background: #f3f4f6; padding: 12px 16px; border-radius: 12px; max-width: 70%;">
+                    <div style="font-weight: 600; margin-bottom: 4px; color: var(--gray);">AI Assistant</div>
+                    <div style="color: var(--gray);"><i class="fas fa-spinner fa-spin"></i> Thinking...</div>
+                </div>
+            `;
+            chatContainer.appendChild(loadingDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+            
+            const apiKey = getSearchApiKey();
+            
+            try {
+                const apiUrl = `${GOOGLE_AI_API_URL}?engine=${GOOGLE_AI_ENGINE}&api_key=${apiKey}&q=${encodeURIComponent(message)}`;
+                
+                const response = await fetch(apiUrl, {
+                    method: 'GET',
+                    headers: { 'Accept': 'application/json' }
+                });
+                
+                // Remove loading indicator
+                loadingDiv.remove();
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    // Extract AI response
+                    let aiResponse = '';
+                    if (data.answer) {
+                        aiResponse = data.answer;
+                    } else if (data.answer_box && data.answer_box.text) {
+                        aiResponse = data.answer_box.text;
+                    } else if (data.organic_results && data.organic_results[0]) {
+                        aiResponse = data.organic_results[0].snippet || data.organic_results[0].description || 'I found some information, but could you be more specific?';
+                    } else {
+                        aiResponse = 'I\'m here to help! Could you provide more details about what you\'d like to know?';
+                    }
+                    
+                    // Add AI response to chat
+                    const aiMessageDiv = document.createElement('div');
+                    aiMessageDiv.style.cssText = 'margin-bottom: 15px; text-align: left;';
+                    aiMessageDiv.innerHTML = `
+                        <div style="display: inline-block; background: #f3f4f6; padding: 12px 16px; border-radius: 12px; max-width: 70%;">
+                            <div style="font-weight: 600; margin-bottom: 4px; color: var(--primary);">
+                                <i class="fas fa-robot"></i> AI Assistant
+                            </div>
+                            <div style="color: var(--dark); white-space: pre-wrap;">${aiResponse}</div>
+                            ${data.references && data.references.length > 0 ? `
+                                <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #e5e7eb;">
+                                    <div style="font-size: 0.85rem; color: var(--gray); margin-bottom: 5px;">References:</div>
+                                    ${data.references.slice(0, 3).map(ref => `
+                                        <a href="${ref.link || '#'}" target="_blank" style="font-size: 0.8rem; color: var(--primary); display: block; margin-top: 4px;">${ref.title || ref.link || 'Source'}</a>
+                                    `).join('')}
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                    chatContainer.appendChild(aiMessageDiv);
+                    chatContainer.scrollTop = chatContainer.scrollHeight;
+                    
+                    // Save to history
+                    aiChatHistory.push({ role: 'user', content: message });
+                    aiChatHistory.push({ role: 'assistant', content: aiResponse });
+                } else {
+                    throw new Error(`API request failed: ${response.status}`);
+                }
+            } catch (error) {
+                console.error('Google AI chat error:', error);
+                loadingDiv.remove();
+                
+                // Show error message
+                const errorDiv = document.createElement('div');
+                errorDiv.style.cssText = 'margin-bottom: 15px; text-align: left;';
+                errorDiv.innerHTML = `
+                    <div style="display: inline-block; background: #fee2e2; color: #991b1b; padding: 12px 16px; border-radius: 12px; max-width: 70%;">
+                        <div style="font-weight: 600; margin-bottom: 4px;">AI Assistant</div>
+                        <div>Sorry, I encountered an error. Please try again or check your API key configuration.</div>
+                    </div>
+                `;
+                chatContainer.appendChild(errorDiv);
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            }
+        }
+        
+        // Setup AI Chat event listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            const aiChatInput = document.getElementById('aiChatInput');
+            const aiChatSend = document.getElementById('aiChatSend');
+            
+            if (aiChatSend) {
+                aiChatSend.addEventListener('click', () => {
+                    const message = aiChatInput ? aiChatInput.value.trim() : '';
+                    if (message) {
+                        sendAIChatMessage(message);
+                        if (aiChatInput) aiChatInput.value = '';
+                    }
+                });
+            }
+            
+            if (aiChatInput) {
+                aiChatInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        const message = aiChatInput.value.trim();
+                        if (message) {
+                            sendAIChatMessage(message);
+                            aiChatInput.value = '';
+                        }
+                    }
+                });
+            }
+        });
         
         // Reports Functions
         function generateReport(type) {

@@ -276,32 +276,36 @@ class BaseRetailer {
 
 /**
  * Amazon Retailer Adapter
- * Uses SearchAPI.io for Amazon product search
+ * Uses SearchAPI.io Amazon Search API to access Amazon's product database
+ * The Amazon Search API lets developers tap into Amazon's huge product database 
+ * to scrape real-time results. You can search for items, get sorted results based 
+ * on relevance or reviews, and pull product details.
  */
 class AmazonRetailer extends BaseRetailer {
   constructor(integrationService) {
     super(integrationService);
     this.name = 'amazon';
-    // SearchAPI.io Amazon Product Search API
+    // SearchAPI.io Amazon Search API
+    // Endpoint: https://www.searchapi.io/api/v1/search?engine=amazon_search
     this.apiBaseUrl = process.env.SEARCHAPI_AMAZON_URL || 'https://www.searchapi.io/api/v1/search';
-    this.apiKey = process.env.SEARCHAPI_API_KEY || process.env.AMAZON_API_KEY;
+    // Default API key for Amazon product searches
+    this.apiKey = process.env.SEARCHAPI_API_KEY || 
+                  process.env.AMAZON_API_KEY || 
+                  'WceNe5Tmok9RVw5Y4Qn6PnLM';
   }
 
   /**
-   * Search Amazon products using SearchAPI.io
+   * Search Amazon products using SearchAPI.io Amazon Search API
+   * Provides real-time results from Amazon's product database
    */
   async searchProducts(query, options = {}) {
     const { limit = 20, page = 1 } = options;
 
-    if (!this.apiKey) {
-      console.warn('SearchAPI.io API key not configured, using mock data');
-      return this.getMockBestSellers(limit);
-    }
-
+    // API key is always available (default is set in constructor)
     try {
       const response = await axios.get(this.apiBaseUrl, {
         params: {
-          engine: 'amazon_product',
+          engine: 'amazon_search',
           api_key: this.apiKey,
           q: query,
           num: limit,
@@ -327,23 +331,22 @@ class AmazonRetailer extends BaseRetailer {
 
     try {
       // Use SearchAPI.io to search for best sellers in category
-      if (this.apiKey) {
-        const response = await axios.get(this.apiBaseUrl, {
-          params: {
-            engine: 'amazon_product',
-            api_key: this.apiKey,
-            q: `best sellers ${category}`,
-            num: limit
-          },
-          timeout: this.service.config.requestTimeout
-        });
+      // Always use the configured API key (default is set in constructor)
+      const response = await axios.get(this.apiBaseUrl, {
+        params: {
+          engine: 'amazon_search',
+          api_key: this.apiKey,
+          q: `best sellers ${category}`,
+          num: limit
+        },
+        timeout: this.service.config.requestTimeout
+      });
 
-        if (response.data && response.data.organic_results) {
-          return this.normalizeData(response.data.organic_results);
-        }
+      if (response.data && response.data.organic_results) {
+        return this.normalizeData(response.data.organic_results);
       }
 
-      // Fallback to mock data if API key not configured
+      // Fallback to mock data if no results
       return this.getMockBestSellers(limit);
     } catch (error) {
       console.error('Amazon fetchBestSellers error:', error.message);
@@ -420,6 +423,7 @@ class AmazonRetailer extends BaseRetailer {
 /**
  * Walmart Retailer Adapter
  * Uses SearchAPI.io for Walmart product search
+ * Endpoint: https://www.searchapi.io/api/v1/search?engine=walmart_search
  */
 class WalmartRetailer extends BaseRetailer {
   constructor(integrationService) {
@@ -427,7 +431,10 @@ class WalmartRetailer extends BaseRetailer {
     this.name = 'walmart';
     // SearchAPI.io Walmart Search API
     this.apiBaseUrl = process.env.SEARCHAPI_WALMART_URL || 'https://www.searchapi.io/api/v1/search';
-    this.apiKey = process.env.SEARCHAPI_API_KEY || process.env.WALMART_API_KEY;
+    // Default API key for Walmart product searches (same as Amazon)
+    this.apiKey = process.env.SEARCHAPI_API_KEY || 
+                  process.env.WALMART_API_KEY || 
+                  'WceNe5Tmok9RVw5Y4Qn6PnLM';
   }
 
   /**
@@ -436,11 +443,7 @@ class WalmartRetailer extends BaseRetailer {
   async searchProducts(query, options = {}) {
     const { limit = 20, page = 1 } = options;
 
-    if (!this.apiKey) {
-      console.warn('SearchAPI.io API key not configured, using mock data');
-      return this.getMockBestSellers(limit);
-    }
-
+    // API key is always available (default is set in constructor)
     try {
       const response = await axios.get(this.apiBaseUrl, {
         params: {
@@ -470,23 +473,22 @@ class WalmartRetailer extends BaseRetailer {
 
     try {
       // Use SearchAPI.io to search for best sellers in category
-      if (this.apiKey) {
-        const response = await axios.get(this.apiBaseUrl, {
-          params: {
-            engine: 'walmart_search',
-            api_key: this.apiKey,
-            q: `best sellers ${category}`,
-            num: limit
-          },
-          timeout: this.service.config.requestTimeout
-        });
+      // Always use the configured API key (default is set in constructor)
+      const response = await axios.get(this.apiBaseUrl, {
+        params: {
+          engine: 'walmart_search',
+          api_key: this.apiKey,
+          q: `best sellers ${category}`,
+          num: limit
+        },
+        timeout: this.service.config.requestTimeout
+      });
 
-        if (response.data && response.data.organic_results) {
-          return this.normalizeData(response.data.organic_results);
-        }
+      if (response.data && response.data.organic_results) {
+        return this.normalizeData(response.data.organic_results);
       }
 
-      // Fallback to mock data if API key not configured
+      // Fallback to mock data if no results
       return this.getMockBestSellers(limit);
     } catch (error) {
       console.error('Walmart fetchBestSellers error:', error.message);
