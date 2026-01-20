@@ -5160,6 +5160,29 @@
                     // Initialize dashboard
                     updateSidebarUserInfo();
                     showPage('dashboard');
+                    
+                    // Initialize navigation event listeners
+                    setTimeout(() => {
+                        const navLinks = document.querySelectorAll('.nav-link');
+                        navLinks.forEach(link => {
+                            // Remove existing listeners by cloning
+                            const newLink = link.cloneNode(true);
+                            link.parentNode.replaceChild(newLink, link);
+                            
+                            // Add new listener
+                            newLink.addEventListener('click', (e) => {
+                                e.preventDefault();
+                                const pageName = newLink.getAttribute('data-page');
+                                if (pageName) {
+                                    showPage(pageName);
+                                }
+                                if (window.innerWidth <= 1024) {
+                                    closeSidebar();
+                                }
+                            });
+                        });
+                    }, 100);
+                    
                     if (typeof initDashboard === 'function') {
                         initDashboard();
                     }
@@ -6864,10 +6887,15 @@
             sidebarOverlay.addEventListener('click', closeSidebar);
         }
         
-        // Close sidebar when clicking nav links on mobile
+        // Close sidebar when clicking nav links on mobile AND handle navigation
         const navLinks = document.querySelectorAll('.nav-link');
         navLinks.forEach(link => {
-            link.addEventListener('click', () => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const pageName = link.getAttribute('data-page');
+                if (pageName) {
+                    showPage(pageName);
+                }
                 if (window.innerWidth <= 1024) {
                     closeSidebar();
                 }
@@ -8056,11 +8084,17 @@
                 // Load product library when product-library page is shown
                 if (pageName === 'product-library') {
                     setTimeout(() => {
-                        if (typeof loadProductLibrary === 'function') {
-                            loadProductLibrary();
-                        }
-                        if (typeof setupProductLibraryListeners === 'function') {
-                            setupProductLibraryListeners();
+                        try {
+                            if (typeof loadProductLibrary === 'function') {
+                                loadProductLibrary();
+                            } else {
+                                console.error('loadProductLibrary function not found');
+                            }
+                            if (typeof setupProductLibraryListeners === 'function') {
+                                setupProductLibraryListeners();
+                            }
+                        } catch (error) {
+                            console.error('Error loading product library:', error);
                         }
                     }, 100);
                 }
@@ -8068,8 +8102,14 @@
                 // Update current subscription when billing page is shown
                 if (pageName === 'billing') {
                     setTimeout(() => {
-                        if (typeof updateCurrentSubscription === 'function') {
-                            updateCurrentSubscription();
+                        try {
+                            if (typeof updateCurrentSubscription === 'function') {
+                                updateCurrentSubscription();
+                            } else {
+                                console.error('updateCurrentSubscription function not found');
+                            }
+                        } catch (error) {
+                            console.error('Error loading billing:', error);
                         }
                     }, 100);
                 }
@@ -8077,8 +8117,14 @@
                 // Load reports when reports page is shown
                 if (pageName === 'reports') {
                     setTimeout(() => {
-                        if (typeof loadReports === 'function') {
-                            loadReports();
+                        try {
+                            if (typeof loadReports === 'function') {
+                                loadReports();
+                            } else {
+                                console.error('loadReports function not found');
+                            }
+                        } catch (error) {
+                            console.error('Error loading reports:', error);
                         }
                     }, 100);
                 }
