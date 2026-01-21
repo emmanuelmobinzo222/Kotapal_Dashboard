@@ -5174,12 +5174,26 @@
                                 e.preventDefault();
                                 const pageName = newLink.getAttribute('data-page');
                                 if (pageName) {
+                                    console.log('Navigating to:', pageName);
                                     showPage(pageName);
                                 }
                                 if (window.innerWidth <= 1024) {
                                     closeSidebar();
                                 }
                             });
+                        });
+                        
+                        // Pre-initialize all pages to ensure they have content
+                        console.log('Pre-initializing pages...');
+                        ['product-library', 'billing', 'reports', 'settings'].forEach(page => {
+                            const pageEl = document.getElementById(page + '-page');
+                            if (pageEl) {
+                                // Ensure page exists and is ready
+                                pageEl.style.display = 'none'; // Hide it first
+                                console.log('Found page:', page, pageEl);
+                            } else {
+                                console.error('Page not found:', page + '-page');
+                            }
                         });
                     }, 100);
                     
@@ -8167,6 +8181,8 @@
         
         // Page Navigation Function
         function showPage(pageName) {
+            console.log('showPage called with:', pageName);
+            
             // Redirect account to settings (they're the same)
             if (pageName === 'account') {
                 pageName = 'settings';
@@ -8174,13 +8190,14 @@
             
             // Check settings access before showing settings page
             if (pageName === 'settings') {
-                if (!checkSettingsAccess()) {
+                if (typeof checkSettingsAccess === 'function' && !checkSettingsAccess()) {
                     return; // Access denied, modal will be shown
                 }
             }
             
             // Hide all pages
             const pages = document.querySelectorAll('.page-content');
+            console.log('Found', pages.length, 'pages to hide');
             pages.forEach(page => {
                 page.style.display = 'none';
             });
@@ -8193,8 +8210,24 @@
             
             // Show requested page
             const targetPage = document.getElementById(pageName + '-page');
-            if (targetPage) {
-                targetPage.style.display = 'block';
+            if (!targetPage) {
+                console.error('Page not found:', pageName + '-page');
+                alert('Page not found: ' + pageName + '. Please check the console for errors.');
+                return;
+            }
+            
+            // Force page to be visible
+            targetPage.style.display = 'block';
+            targetPage.style.visibility = 'visible';
+            targetPage.style.opacity = '1';
+            targetPage.style.position = 'relative';
+            console.log('Showing page:', pageName, targetPage);
+            
+            // Verify page has content
+            const pageContent = targetPage.innerHTML.trim();
+            if (pageContent.length < 100) {
+                console.warn('Page appears to be empty:', pageName, 'Content length:', pageContent.length);
+            }
                 
                 // Render billing plans when settings page is shown
                 if (pageName === 'settings') {
@@ -8206,12 +8239,24 @@
                 
                 // Load product library when product-library page is shown
                 if (pageName === 'product-library') {
-                    setTimeout(() => {
+                    // Force immediate display
+                    targetPage.style.display = 'block';
+                    targetPage.style.visibility = 'visible';
+                    targetPage.style.opacity = '1';
+                    
+                    // Load content immediately and with retry
+                    const loadContent = () => {
                         try {
+                            console.log('Loading Product Library...');
                             if (typeof loadProductLibrary === 'function') {
                                 loadProductLibrary();
                             } else {
                                 console.error('loadProductLibrary function not found');
+                                // Fallback: show message
+                                const container = document.getElementById('productLibraryContainer');
+                                if (container) {
+                                    container.innerHTML = '<div style="text-align: center; padding: 40px;"><p>Product Library is loading...</p></div>';
+                                }
                             }
                             if (typeof setupProductLibraryListeners === 'function') {
                                 setupProductLibraryListeners();
@@ -8219,37 +8264,73 @@
                         } catch (error) {
                             console.error('Error loading product library:', error);
                         }
-                    }, 100);
+                    };
+                    
+                    // Try immediately
+                    loadContent();
+                    // Also try after a short delay
+                    setTimeout(loadContent, 50);
+                    setTimeout(loadContent, 200);
                 }
                 
                 // Update current subscription when billing page is shown
                 if (pageName === 'billing') {
-                    setTimeout(() => {
+                    // Force immediate display
+                    targetPage.style.display = 'block';
+                    targetPage.style.visibility = 'visible';
+                    targetPage.style.opacity = '1';
+                    
+                    const loadContent = () => {
                         try {
+                            console.log('Loading Billing...');
                             if (typeof updateCurrentSubscription === 'function') {
                                 updateCurrentSubscription();
                             } else {
                                 console.error('updateCurrentSubscription function not found');
+                                // Fallback: show message
+                                const container = document.getElementById('currentSubscriptionCard');
+                                if (container) {
+                                    container.innerHTML = '<div style="text-align: center; padding: 40px;"><p>Billing information is loading...</p></div>';
+                                }
                             }
                         } catch (error) {
                             console.error('Error loading billing:', error);
                         }
-                    }, 100);
+                    };
+                    
+                    loadContent();
+                    setTimeout(loadContent, 50);
+                    setTimeout(loadContent, 200);
                 }
                 
                 // Load reports when reports page is shown
                 if (pageName === 'reports') {
-                    setTimeout(() => {
+                    // Force immediate display
+                    targetPage.style.display = 'block';
+                    targetPage.style.visibility = 'visible';
+                    targetPage.style.opacity = '1';
+                    
+                    const loadContent = () => {
                         try {
+                            console.log('Loading Reports...');
                             if (typeof loadReports === 'function') {
                                 loadReports();
                             } else {
                                 console.error('loadReports function not found');
+                                // Fallback: show message
+                                const table = document.getElementById('reportsTable');
+                                if (table) {
+                                    table.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 40px;">Reports are loading...</td></tr>';
+                                }
                             }
                         } catch (error) {
                             console.error('Error loading reports:', error);
                         }
-                    }, 100);
+                    };
+                    
+                    loadContent();
+                    setTimeout(loadContent, 50);
+                    setTimeout(loadContent, 200);
                 }
                 
                 // Initialize AI Assistant page
