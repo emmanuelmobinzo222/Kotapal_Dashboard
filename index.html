@@ -8244,33 +8244,51 @@
                     targetPage.style.visibility = 'visible';
                     targetPage.style.opacity = '1';
                     
+                    // Check if container exists
+                    const container = document.getElementById('productLibraryContainer');
+                    console.log('Product Library container:', container);
+                    
+                    if (!container) {
+                        console.error('productLibraryContainer not found!');
+                        alert('Product Library container not found. Please check the HTML structure.');
+                        return;
+                    }
+                    
                     // Load content immediately and with retry
                     const loadContent = () => {
                         try {
-                            console.log('Loading Product Library...');
+                            console.log('Loading Product Library...', typeof loadProductLibrary);
                             if (typeof loadProductLibrary === 'function') {
                                 loadProductLibrary();
                             } else {
                                 console.error('loadProductLibrary function not found');
-                                // Fallback: show message
-                                const container = document.getElementById('productLibraryContainer');
-                                if (container) {
-                                    container.innerHTML = '<div style="text-align: center; padding: 40px;"><p>Product Library is loading...</p></div>';
-                                }
+                                // Fallback: show message and try to load anyway
+                                container.innerHTML = '<div style="text-align: center; padding: 40px;"><i class="fas fa-spinner fa-spin" style="font-size: 2rem; margin-bottom: 15px; display: block;"></i><p>Loading products from API...</p></div>';
+                                // Try to call it anyway - maybe it's defined later
+                                setTimeout(() => {
+                                    if (typeof loadProductLibrary === 'function') {
+                                        loadProductLibrary();
+                                    }
+                                }, 500);
                             }
                             if (typeof setupProductLibraryListeners === 'function') {
                                 setupProductLibraryListeners();
                             }
                         } catch (error) {
                             console.error('Error loading product library:', error);
+                            container.innerHTML = '<div style="text-align: center; padding: 40px; color: red;"><p>Error: ' + error.message + '</p></div>';
                         }
                     };
                     
+                    // Show loading state immediately
+                    container.innerHTML = '<div style="text-align: center; padding: 40px;"><i class="fas fa-spinner fa-spin" style="font-size: 2rem; margin-bottom: 15px; display: block;"></i><p>Loading products...</p></div>';
+                    
                     // Try immediately
                     loadContent();
-                    // Also try after a short delay
+                    // Also try after delays
                     setTimeout(loadContent, 50);
                     setTimeout(loadContent, 200);
+                    setTimeout(loadContent, 500);
                 }
                 
                 // Update current subscription when billing page is shown
@@ -8280,27 +8298,41 @@
                     targetPage.style.visibility = 'visible';
                     targetPage.style.opacity = '1';
                     
+                    const container = document.getElementById('currentSubscriptionCard');
+                    console.log('Billing container:', container);
+                    
+                    if (!container) {
+                        console.error('currentSubscriptionCard not found!');
+                        return;
+                    }
+                    
                     const loadContent = () => {
                         try {
-                            console.log('Loading Billing...');
+                            console.log('Loading Billing...', typeof updateCurrentSubscription);
                             if (typeof updateCurrentSubscription === 'function') {
                                 updateCurrentSubscription();
                             } else {
                                 console.error('updateCurrentSubscription function not found');
-                                // Fallback: show message
-                                const container = document.getElementById('currentSubscriptionCard');
-                                if (container) {
-                                    container.innerHTML = '<div style="text-align: center; padding: 40px;"><p>Billing information is loading...</p></div>';
-                                }
+                                container.innerHTML = '<div style="text-align: center; padding: 40px;"><i class="fas fa-spinner fa-spin" style="font-size: 2rem; margin-bottom: 15px; display: block;"></i><p>Loading billing information...</p></div>';
+                                setTimeout(() => {
+                                    if (typeof updateCurrentSubscription === 'function') {
+                                        updateCurrentSubscription();
+                                    }
+                                }, 500);
                             }
                         } catch (error) {
                             console.error('Error loading billing:', error);
+                            container.innerHTML = '<div style="text-align: center; padding: 40px; color: red;"><p>Error: ' + error.message + '</p></div>';
                         }
                     };
+                    
+                    // Show loading state
+                    container.innerHTML = '<div style="text-align: center; padding: 40px;"><i class="fas fa-spinner fa-spin" style="font-size: 2rem; margin-bottom: 15px; display: block;"></i><p>Loading subscription...</p></div>';
                     
                     loadContent();
                     setTimeout(loadContent, 50);
                     setTimeout(loadContent, 200);
+                    setTimeout(loadContent, 500);
                 }
                 
                 // Load reports when reports page is shown
@@ -8310,27 +8342,41 @@
                     targetPage.style.visibility = 'visible';
                     targetPage.style.opacity = '1';
                     
+                    const table = document.getElementById('reportsTable');
+                    console.log('Reports table:', table);
+                    
+                    if (!table) {
+                        console.error('reportsTable not found!');
+                        return;
+                    }
+                    
                     const loadContent = () => {
                         try {
-                            console.log('Loading Reports...');
+                            console.log('Loading Reports...', typeof loadReports);
                             if (typeof loadReports === 'function') {
                                 loadReports();
                             } else {
                                 console.error('loadReports function not found');
-                                // Fallback: show message
-                                const table = document.getElementById('reportsTable');
-                                if (table) {
-                                    table.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 40px;">Reports are loading...</td></tr>';
-                                }
+                                table.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 40px;"><i class="fas fa-spinner fa-spin" style="font-size: 1.5rem; margin-bottom: 10px; display: block;"></i>Loading reports...</td></tr>';
+                                setTimeout(() => {
+                                    if (typeof loadReports === 'function') {
+                                        loadReports();
+                                    }
+                                }, 500);
                             }
                         } catch (error) {
                             console.error('Error loading reports:', error);
+                            table.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 40px; color: red;">Error: ' + error.message + '</td></tr>';
                         }
                     };
+                    
+                    // Show loading state
+                    table.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 40px;"><i class="fas fa-spinner fa-spin" style="font-size: 1.5rem; margin-bottom: 10px; display: block;"></i>Loading reports...</td></tr>';
                     
                     loadContent();
                     setTimeout(loadContent, 50);
                     setTimeout(loadContent, 200);
+                    setTimeout(loadContent, 500);
                 }
                 
                 // Initialize AI Assistant page
