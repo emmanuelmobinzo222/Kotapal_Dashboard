@@ -506,11 +506,8 @@ class WalmartRetailer extends BaseRetailer {
   normalizeData(data) {
     return Array.isArray(data) ? data.map(item => {
       // Handle SearchAPI.io response format
-      // Use extracted_price if available (more reliable than parsing price string)
       let price = 0;
-      if (item.extracted_price !== undefined && item.extracted_price !== null) {
-        price = parseFloat(item.extracted_price);
-      } else if (item.price) {
+      if (item.price) {
         const priceStr = typeof item.price === 'string' ? item.price : String(item.price);
         const priceMatch = priceStr.match(/\$?([\d,]+\.?\d*)/);
         if (priceMatch) {
