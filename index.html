@@ -4645,6 +4645,40 @@
             } else {
                 firebase.initializeApp(firebaseConfig);
                 auth = firebase.auth();
+                
+                // Set up auth state listener to maintain login state
+                auth.onAuthStateChanged((user) => {
+                    if (user) {
+                        console.log('✅ Auth state: User is logged in', user.email);
+                        // User is signed in, restore session
+                        const savedUserData = JSON.parse(localStorage.getItem('kotaUser') || '{}');
+                        const userData = {
+                            uid: user.uid,
+                            email: user.email,
+                            displayName: user.displayName || savedUserData.displayName || user.email.split('@')[0],
+                            emailVerified: user.emailVerified,
+                            plan: savedUserData.plan || 'starter',
+                            signupDate: savedUserData.signupDate || new Date().toISOString()
+                        };
+                        localStorage.setItem('kotaUser', JSON.stringify(userData));
+                        currentUser = userData;
+                        
+                        // Show dashboard if on landing page
+                        const landingView = document.getElementById('landing-page-view');
+                        const dashboardView = document.getElementById('dashboard-view');
+                        if (landingView && dashboardView && landingView.style.display !== 'none') {
+                            landingView.style.display = 'none';
+                            dashboardView.style.display = 'block';
+                            if (typeof initDashboard === 'function') {
+                                initDashboard();
+                            }
+                        }
+                    } else {
+                        console.log('ℹ️ Auth state: User is logged out');
+                        // User is signed out
+                        currentUser = null;
+                    }
+                });
             }
         } catch (error) {
             console.error('Firebase initialization error:', error);
@@ -4739,6 +4773,12 @@
                 const userCredential = await auth.signInWithEmailAndPassword(email.trim(), password);
                 const user = userCredential.user;
                 
+                console.log('✅ Login successful:', {
+                    uid: user.uid,
+                    email: user.email,
+                    emailVerified: user.emailVerified
+                });
+                
                 // Get saved user data or create new
                 const savedUserData = JSON.parse(localStorage.getItem('kotaUser') || '{}');
                 const displayName = user.displayName || savedUserData.displayName || user.email.split('@')[0];
@@ -4757,7 +4797,7 @@
                 localStorage.setItem('kotaUser', JSON.stringify(userData));
                 currentUser = userData;
                 
-                console.log('Login successful, showing dashboard...');
+                console.log('✅ User data stored, showing dashboard...');
                 
                 // Show success message before closing modal
                 showAuthMessage('authMessage', 'Login successful! Redirecting to dashboard...', 'success');
@@ -6497,6 +6537,14 @@
                             
                             const data = await response.json();
                             
+                            // Log API response for debugging
+                            console.log('✅ Amazon API Response:', {
+                                query: query,
+                                totalResults: data.search_information?.total_results || 0,
+                                resultsCount: data.organic_results?.length || 0,
+                                response: data
+                            });
+                            
                             // Parse SearchAPI.io response format
                             if (data && data.organic_results && Array.isArray(data.organic_results)) {
                                 products = data.organic_results.map((item, index) => {
@@ -6524,7 +6572,7 @@
                                     };
                                 });
                                 
-                                searchStatus.textContent = `Found ${products.length} Amazon products for "${query}"`;
+                                searchStatus.innerHTML = `<span style="color: var(--success);">✅ Found ${products.length} Amazon products for "${query}"</span><br><small style="color: var(--gray);">Live API response received from Amazon</small>`;
                             } else {
                                 throw new Error('Invalid API response format');
                             }
@@ -6653,6 +6701,14 @@
                         
                         const data = await response.json();
                         
+                        // Log API response for debugging
+                        console.log('✅ Walmart API Response:', {
+                            query: query,
+                            totalResults: data.search_information?.total_results || 0,
+                            resultsCount: data.organic_results?.length || 0,
+                            response: data
+                        });
+                        
                         // Parse SearchAPI.io response format (matching the example structure)
                         if (data && data.organic_results && Array.isArray(data.organic_results)) {
                             products = data.organic_results.map((item, index) => {
@@ -6679,7 +6735,7 @@
                             });
                             
                             const totalResults = data.search_information?.total_results || products.length;
-                            searchStatus.textContent = `Found ${products.length} Walmart products for "${query}" (${totalResults.toLocaleString()} total available)`;
+                            searchStatus.innerHTML = `<span style="color: var(--success);">✅ Found ${products.length} Walmart products for "${query}" (${totalResults.toLocaleString()} total available)</span><br><small style="color: var(--gray);">Live API response received from Walmart</small>`;
                         } else {
                             throw new Error('Invalid API response format - no organic_results found');
                         }
@@ -7284,6 +7340,11 @@
                     
                     if (amazonResponse.ok) {
                         const amazonData = await amazonResponse.json();
+                        console.log('✅ Amazon Product Library API Response:', {
+                            totalResults: amazonData.search_information?.total_results || 0,
+                            resultsCount: amazonData.organic_results?.length || 0,
+                            response: amazonData
+                        });
                         if (amazonData && amazonData.organic_results && Array.isArray(amazonData.organic_results)) {
                             const amazonProducts = amazonData.organic_results.slice(0, 10).map((item, index) => ({
                                 id: `amz_${item.product_id || item.asin || index}`,
@@ -7320,6 +7381,11 @@
                     
                     if (walmartResponse.ok) {
                         const walmartData = await walmartResponse.json();
+                        console.log('✅ Walmart Product Library API Response:', {
+                            totalResults: walmartData.search_information?.total_results || 0,
+                            resultsCount: walmartData.organic_results?.length || 0,
+                            response: walmartData
+                        });
                         if (walmartData && walmartData.organic_results && Array.isArray(walmartData.organic_results)) {
                             const walmartProducts = walmartData.organic_results.slice(0, 10).map((item, index) => ({
                                 id: `wlm_${item.product_id || item.id || index}`,
@@ -7341,6 +7407,7 @@
                 
                 // If we got products from API, save them and use them
                 if (allProducts.length > 0) {
+                    console.log(`✅ Product Library: Loaded ${allProducts.length} products from Amazon and Walmart APIs`);
                     // Merge with existing saved products (avoid duplicates)
                     const savedProducts = JSON.parse(localStorage.getItem('kotaProductLibrary') || '[]');
                     const existingIds = new Set(savedProducts.map(p => p.id));
@@ -7354,6 +7421,8 @@
                     if (allProducts.length === 0) {
                         container.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--gray);"><p>No products found. Please configure your SearchAPI.io API key in Settings to load live products.</p><button class="btn btn-primary" onclick="showPage(\'settings\')" style="margin-top: 15px;">Go to Settings</button></div>';
                         return;
+                    } else {
+                        console.log(`⚠️ Using cached products (${allProducts.length} items). API may not have returned results.`);
                     }
                 }
                 
