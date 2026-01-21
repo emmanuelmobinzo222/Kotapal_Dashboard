@@ -5692,19 +5692,7 @@
             }, 50);
         });
 
-        // Page navigation
-        function showPage(pageId) {
-            // Hide all pages
-            document.getElementById('home-page').style.display = 'none';
-            document.getElementById('blog-page').style.display = 'none';
-            document.getElementById('contact-page').style.display = 'none';
-            
-            // Show selected page
-            document.getElementById(pageId).style.display = 'block';
-            
-            // Scroll to top
-            window.scrollTo(0, 0);
-        }
+        // Page navigation (landing page) - handled by main showPage function below
 
         // Smooth scroll to section
         function scrollToSection(sectionId) {
@@ -5813,23 +5801,7 @@
             }, 5000);
         }
 
-        // Show specific page (for landing page navigation)
-        function showPage(pageId) {
-            // Hide all pages
-            document.getElementById('home-page').style.display = 'none';
-            document.getElementById('blog-page').style.display = 'none';
-            document.getElementById('contact-page').style.display = 'none';
-            
-            // Show selected page
-            document.getElementById(pageId).style.display = 'block';
-            
-            // Scroll to top
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-
-            // Close mobile menu if open
-            document.querySelector('.nav-links').classList.remove('active');
-            document.getElementById('mobileMenuBtn').classList.remove('active');
-        }
+        // Landing page navigation - handled by main showPage function below
 
         // ============================================
         // Dashboard Functions
@@ -5840,6 +5812,23 @@
             updateUserDisplay();
             loadMockData();
             setupDashboardEventListeners();
+        }
+        
+        // Setup dashboard event listeners
+        function setupDashboardEventListeners() {
+            // Create Block button
+            const createBlockBtn = document.getElementById('createBlockBtn');
+            if (createBlockBtn) {
+                createBlockBtn.addEventListener('click', () => {
+                    showPage('new-block');
+                });
+            }
+            
+            // Update dashboard stats
+            updateDashboardStats();
+            renderBlocks();
+            renderIntegrations();
+            renderActivityTable();
         }
 
         // Load mock data
@@ -8248,9 +8237,33 @@
             `).join('');
         }
         
-        // Page Navigation Function
+        // Page Navigation Function (handles both landing page and dashboard navigation)
         function showPage(pageName) {
             console.log('showPage called with:', pageName);
+            
+            // Handle landing page navigation (home-page, blog-page, contact-page)
+            if (pageName === 'home-page' || pageName === 'blog-page' || pageName === 'contact-page') {
+                // Hide all landing pages
+                const landingPages = ['home-page', 'blog-page', 'contact-page'];
+                landingPages.forEach(pageId => {
+                    const page = document.getElementById(pageId);
+                    if (page) page.style.display = 'none';
+                });
+                
+                // Show selected landing page
+                const targetPage = document.getElementById(pageName);
+                if (targetPage) {
+                    targetPage.style.display = 'block';
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                    
+                    // Close mobile menu if open
+                    const navLinks = document.querySelector('.nav-links');
+                    const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+                    if (navLinks) navLinks.classList.remove('active');
+                    if (mobileMenuBtn) mobileMenuBtn.classList.remove('active');
+                }
+                return;
+            }
             
             // Redirect account to settings (they're the same)
             if (pageName === 'account') {
@@ -8264,7 +8277,7 @@
                 }
             }
             
-            // Hide all pages
+            // Hide all dashboard pages
             const pages = document.querySelectorAll('.page-content');
             console.log('Found', pages.length, 'pages to hide');
             pages.forEach(page => {
@@ -8550,6 +8563,124 @@
                 };
                 const plan = userData.plan || currentUser?.plan || 'starter';
                 sidebarPlan.textContent = `${planNames[plan] || 'Starter'} Plan`;
+            }
+        }
+        
+        // Check Settings Access (password protection)
+        function checkSettingsAccess() {
+            const accessGranted = sessionStorage.getItem('settings_access_granted') === 'true';
+            if (accessGranted) {
+                return true;
+            }
+            
+            // Show password modal
+            const modal = document.getElementById('settingsPasswordModal');
+            if (modal) {
+                modal.style.display = 'block';
+                const input = document.getElementById('settingsPasswordInput');
+                if (input) {
+                    input.focus();
+                    input.value = '';
+                }
+            }
+            return false;
+        }
+        
+        // Verify Settings Password
+        function verifySettingsPassword() {
+            const input = document.getElementById('settingsPasswordInput');
+            const password = input ? input.value : '';
+            
+            // Default password is user's email (for demo purposes)
+            // In production, this should be a secure password
+            const userData = JSON.parse(localStorage.getItem('kotaUser') || '{}');
+            const expectedPassword = userData.email || 'demo';
+            
+            if (password === expectedPassword || password === 'demo' || password === 'password') {
+                sessionStorage.setItem('settings_access_granted', 'true');
+                hideSettingsPasswordModal();
+                showPage('settings');
+                showNotification('Settings access granted', 'success', 'Access');
+            } else {
+                showNotification('Incorrect password. Please try again.', 'error', 'Access Denied');
+                if (input) {
+                    input.value = '';
+                    input.focus();
+                }
+            }
+        }
+        
+        // Hide Settings Password Modal
+        function hideSettingsPasswordModal() {
+            const modal = document.getElementById('settingsPasswordModal');
+            if (modal) {
+                modal.style.display = 'none';
+            }
+        }
+        
+        // Load Amazon API Key from settings
+        function loadAmazonApiKey() {
+            const apiKeyInput = document.getElementById('amazonApiKey');
+            if (apiKeyInput) {
+                const savedKey = localStorage.getItem('kotaAmazonApiKey') || DEFAULT_AMAZON_API_KEY;
+                apiKeyInput.value = savedKey;
+            }
+        }
+        
+        // Update Current Subscription Display
+        function updateCurrentSubscription() {
+            const container = document.getElementById('currentSubscriptionCard');
+            if (!container) return;
+            
+            const userPlan = currentUser?.plan || 'starter';
+            const planNames = {
+                'starter': { name: 'Starter', price: '$19', features: ['5 blocks', 'Amazon only', 'Basic analytics'] },
+                'pro': { name: 'Pro', price: '$49', features: ['50 blocks', 'All retailers', 'Full analytics'] },
+                'creatorplus': { name: 'Creator+', price: '$99', features: ['Unlimited blocks', 'AI features', 'Priority support'] },
+                'agency': { name: 'Agency', price: '$199+', features: ['White label', 'Multi-client', 'Custom branding'] }
+            };
+            
+            const plan = planNames[userPlan] || planNames['starter'];
+            
+            container.innerHTML = `
+                <div class="card" style="border: 2px solid var(--primary);">
+                    <div style="text-align: center; padding: 30px;">
+                        <h3 style="margin-bottom: 15px;">Current Plan: ${plan.name}</h3>
+                        <div style="font-size: 2rem; font-weight: 700; color: var(--primary); margin-bottom: 10px;">${plan.price}</div>
+                        <div style="color: var(--gray); margin-bottom: 20px;">per month</div>
+                        <ul style="list-style: none; padding: 0; text-align: left; max-width: 300px; margin: 0 auto;">
+                            ${plan.features.map(f => `<li style="margin-bottom: 10px;"><i class="fas fa-check" style="color: var(--success); margin-right: 10px;"></i> ${f}</li>`).join('')}
+                        </ul>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Setup Product Library Listeners
+        function setupProductLibraryListeners() {
+            const filter = document.getElementById('productLibraryFilter');
+            const sort = document.getElementById('productLibrarySort');
+            const search = document.getElementById('productLibrarySearch');
+            
+            if (filter) {
+                filter.addEventListener('change', loadProductLibrary);
+            }
+            if (sort) {
+                sort.addEventListener('change', loadProductLibrary);
+            }
+            if (search) {
+                search.addEventListener('input', (e) => {
+                    const searchTerm = e.target.value.toLowerCase();
+                    const products = document.querySelectorAll('#productLibraryContainer .product-card-dashboard');
+                    products.forEach(product => {
+                        const title = product.querySelector('.product-title')?.textContent.toLowerCase() || '';
+                        if (title.includes(searchTerm)) {
+                            product.style.display = 'block';
+                        } else {
+                            product.style.display = 'none';
+                        }
+                    });
+                });
             }
         }
         
