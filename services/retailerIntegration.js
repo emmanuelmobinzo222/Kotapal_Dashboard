@@ -439,26 +439,20 @@ class WalmartRetailer extends BaseRetailer {
 
   /**
    * Search Walmart products using SearchAPI.io
-   * No affiliate ID required - just engine and query
-   * Example: https://www.searchapi.io/api/v1/search?engine=walmart_search&q=chocolate
    */
   async searchProducts(query, options = {}) {
     const { limit = 20, page = 1 } = options;
 
     // API key is always available (default is set in constructor)
     try {
-      const params = {
-        engine: 'walmart_search',
-        q: query
-      };
-      
-      // Add API key if available (some SearchAPI.io plans require it)
-      if (this.apiKey) {
-        params.api_key = this.apiKey;
-      }
-      
       const response = await axios.get(this.apiBaseUrl, {
-        params: params,
+        params: {
+          engine: 'walmart_search',
+          api_key: this.apiKey,
+          q: query,
+          num: limit,
+          page: page
+        },
         timeout: this.service.config.requestTimeout
       });
 
@@ -479,19 +473,14 @@ class WalmartRetailer extends BaseRetailer {
 
     try {
       // Use SearchAPI.io to search for best sellers in category
-      // No affiliate ID required - just engine and query
-      const params = {
-        engine: 'walmart_search',
-        q: `best sellers ${category}`
-      };
-      
-      // Add API key if available
-      if (this.apiKey) {
-        params.api_key = this.apiKey;
-      }
-      
+      // Always use the configured API key (default is set in constructor)
       const response = await axios.get(this.apiBaseUrl, {
-        params: params,
+        params: {
+          engine: 'walmart_search',
+          api_key: this.apiKey,
+          q: `best sellers ${category}`,
+          num: limit
+        },
         timeout: this.service.config.requestTimeout
       });
 
@@ -516,8 +505,8 @@ class WalmartRetailer extends BaseRetailer {
 
   normalizeData(data) {
     return Array.isArray(data) ? data.map(item => {
-      // Handle SearchAPI.io response format (matching the example structure)
-      // Use extracted_price if available (cleaner than parsing price string)
+      // Handle SearchAPI.io response format
+      // Use extracted_price if available (more reliable than parsing price string)
       let price = 0;
       if (item.extracted_price !== undefined && item.extracted_price !== null) {
         price = parseFloat(item.extracted_price);
@@ -530,21 +519,17 @@ class WalmartRetailer extends BaseRetailer {
       }
       
       return {
-        id: item.product_id || item.id,
+        id: item.product_id || item.item_id || item.itemId || item.id,
         title: item.title || item.name || 'Product',
         price: price || item.price || item.salePrice || 0,
-        originalPrice: price, // Use same price if no original_price (matching example structure)
+        originalPrice: item.original_price ? parseFloat(String(item.original_price).replace(/[^0-9.]/g, '')) : (item.originalPrice || item.msrp || price),
         rating: item.rating ? parseFloat(item.rating) : (item.customerRating || 0),
-        reviews: item.reviews ? parseInt(item.reviews) : (item.reviewCount || 0),
+        reviews: item.reviews ? parseInt(String(item.reviews).replace(/[^0-9]/g, '')) : (item.reviewCount || 0),
         image: item.thumbnail || item.image || item.imageUrl || 'https://via.placeholder.com/200',
-        availability: item.fulfillment ? 'In Stock' : ((item.availability || item.in_stock || item.inStock) ? 'In Stock' : 'Out of Stock'),
+        availability: (item.availability || item.in_stock || item.inStock) ? 'In Stock' : 'Out of Stock',
         category: item.category || '',
         retailer: 'walmart',
-        link: item.link || item.url || `https://www.walmart.com/ip/${item.product_id || item.id || ''}`,
-        // Additional fields from API response (matching example)
-        sellerName: item.seller_name || 'Walmart',
-        unitPrice: item.unit_price || null,
-        position: item.position || null,
+        link: item.link || item.url || `https://www.walmart.com/ip/${item.product_id || item.item_id || ''}`,
         normalizedAt: new Date()
       };
     }) : data;

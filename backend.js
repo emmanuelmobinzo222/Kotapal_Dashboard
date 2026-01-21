@@ -6,6 +6,7 @@ const bodyParser = require('body-parser');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { v4: uuidv4 } = require('uuid');
+const { RetailerIntegrationService } = require('./services/retailerIntegration');
 require('dotenv').config();
 
 const app = express();
@@ -18,6 +19,14 @@ app.use(express.static('public'));
 
 // Secret key for JWT
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+
+// Initialize Retailer Integration Service
+const retailerService = new RetailerIntegrationService({
+  cacheStdTTL: 3600, // 1 hour cache
+  maxRetries: 3,
+  retryDelay: 1000,
+  requestTimeout: 10000
+});
 
 // Mock database (in production, use Firebase, MongoDB, or PostgreSQL)
 let users = [
@@ -485,164 +494,34 @@ app.post('/api/integrations/:id/sync', authenticateToken, (req, res) => {
   }
 });
 
-// Search products from retailers
+// Search products from retailers using SearchAPI.io
+// Users do not need to enter their affiliate ID to search for products
 app.get('/api/products/search', authenticateToken, async (req, res) => {
   try {
-    const { retailer, query } = req.query;
+    const { retailer, query, limit = 20, page = 1 } = req.query;
 
     // Validate input
     if (!retailer || !query) {
       return res.status(400).json({ error: 'Retailer and query are required' });
     }
 
-    // Mock product search - in production, integrate with actual APIs
-    let products = [];
+    // Get the retailer adapter
+    const retailerAdapter = retailerService.getRetailer(retailer);
+    
+    // Search products using SearchAPI.io (no affiliate ID required)
+    const products = await retailerAdapter.searchProducts(query, {
+      limit: parseInt(limit),
+      page: parseInt(page)
+    });
 
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    switch (retailer) {
-      case 'amazon':
-        products = [
-          {
-            id: 'amz_1',
-            title: 'Sony WH-1000XM5 Wireless Noise Canceling Headphones',
-            image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8aGVhZHBob25lc3xlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&w=500&q=80',
-            price: 299.99,
-            originalPrice: 349.99,
-            rating: 4.8,
-            reviews: 12478,
-            availability: 'In Stock',
-            asin: 'B09XYZ1234',
-            category: 'Electronics',
-            retailer: 'amazon'
-          },
-          {
-            id: 'amz_2',
-            title: 'Bose QuietComfort 45 Headphones',
-            image: 'https://images.unsplash.com/photo-1572536147248-ac59a8abfa4b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTF8fGhlYWRwaG9uZXN8ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&w=500&q=80',
-            price: 279.99,
-            originalPrice: 329.99,
-            rating: 4.7,
-            reviews: 8923,
-            availability: 'In Stock',
-            asin: 'B08XYZ5678',
-            category: 'Electronics',
-            retailer: 'amazon'
-          },
-          {
-            id: 'amz_3',
-            title: 'Apple AirPods Max',
-            image: 'https://images.unsplash.com/photo-1613040809024-b4ef7ba99bc3?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTd8fGhlYWRwaG9uZXN8ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&w=500&q=80',
-            price: 549.00,
-            originalPrice: 549.00,
-            rating: 4.6,
-            reviews: 6789,
-            availability: 'In Stock',
-            asin: 'B09XYZ9012',
-            category: 'Electronics',
-            retailer: 'amazon'
-          }
-        ].filter(p => p.title.toLowerCase().includes(query.toLowerCase()));
-        break;
-      case 'walmart':
-        products = [
-          {
-            id: 'wlm_1',
-            title: 'Samsung 55" Class Crystal UHD TU-8000 Series',
-            image: 'https://images.unsplash.com/photo-1593305841991-05c297ba4575?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTB8fHR2fGVufDB8fDB8fHww&auto=format&fit=crop&w=500&q=80',
-            price: 499.99,
-            originalPrice: 599.99,
-            rating: 4.5,
-            reviews: 3456,
-            availability: 'In Stock',
-            itemId: '123456789',
-            category: 'TV & Home Theater',
-            retailer: 'walmart'
-          },
-          {
-            id: 'wlm_2',
-            title: 'Dyson V11 Cordless Vacuum Cleaner',
-            image: 'https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8dmFjdXVtfGVufDB8fDB8fHww&auto=format&fit=crop&w=500&q=80',
-            price: 599.00,
-            originalPrice: 699.00,
-            rating: 4.7,
-            reviews: 2345,
-            availability: 'In Stock',
-            itemId: '987654321',
-            category: 'Home & Kitchen',
-            retailer: 'walmart'
-          }
-        ].filter(p => p.title.toLowerCase().includes(query.toLowerCase()));
-        break;
-      case 'shopify':
-        products = [
-          {
-            id: 'shp_1',
-            title: 'Premium Yoga Mat - Eco Friendly',
-            image: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8eW9nYSUyMG1hdHxlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&w=500&q=80',
-            price: 49.99,
-            originalPrice: 69.99,
-            rating: 4.9,
-            reviews: 1234,
-            availability: 'In Stock',
-            productId: 'prod_123',
-            category: 'Fitness',
-            retailer: 'shopify'
-          },
-          {
-            id: 'shp_2',
-            title: 'Organic Cotton T-Shirt - Unisex',
-            image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8dCUyMHNoaXJ0fGVufDB8fDB8fHww&auto=format&fit=crop&w=500&q=80',
-            price: 29.99,
-            originalPrice: 39.99,
-            rating: 4.6,
-            reviews: 890,
-            availability: 'In Stock',
-            productId: 'prod_456',
-            category: 'Clothing',
-            retailer: 'shopify'
-          }
-        ].filter(p => p.title.toLowerCase().includes(query.toLowerCase()));
-        break;
-      case 'skimlinks':
-        products = [
-          {
-            id: 'skm_1',
-            title: 'Nike Air Max 270',
-            image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8c25lYWtlcnN8ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&w=500&q=80',
-            price: 150.00,
-            originalPrice: 160.00,
-            rating: 4.5,
-            reviews: 4567,
-            availability: 'In Stock',
-            productId: 'nike_123',
-            category: 'Footwear',
-            retailer: 'skimlinks'
-          },
-          {
-            id: 'skm_2',
-            title: 'Instant Pot Duo 7-in-1',
-            image: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8aW5zdGFudCUyMHBvdHxlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&w=500&q=80',
-            price: 89.99,
-            originalPrice: 99.99,
-            rating: 4.8,
-            reviews: 15678,
-            availability: 'In Stock',
-            productId: 'ip_456',
-            category: 'Kitchen',
-            retailer: 'skimlinks'
-          }
-        ].filter(p => p.title.toLowerCase().includes(query.toLowerCase()));
-        break;
-      default:
-        return res.status(400).json({ error: 'Unsupported retailer' });
-    }
-
-    res.json(products);
+    // Return normalized products
+    res.json(Array.isArray(products) ? products : (products.data || []));
   } catch (error) {
     console.error('Search products error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ 
+      error: 'Internal server error',
+      message: error.message 
+    });
   }
 });
 
