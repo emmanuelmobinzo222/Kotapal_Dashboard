@@ -2633,352 +2633,23 @@
             100% { transform: rotate(360deg); }
         }
 
-        /* Mobile Responsive Styles for iOS and Android */
-        @media (max-width: 1024px) {
-            .container {
-                padding: 0 16px;
-            }
-            
-            h1 {
-                font-size: 2.5rem;
-            }
-            
-            h2 {
-                font-size: 2rem;
-            }
-            
-            .hero h1 {
-                font-size: 2.5rem;
-            }
-            
-            .hero p {
-                font-size: 1.2rem;
-            }
-            
-            .features-grid,
-            .pricing-grid,
-            .blog-grid {
-                grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-                gap: 20px;
-            }
-        }
-        
         @media (max-width: 768px) {
-            /* Navigation */
-            nav {
-                height: 56px;
-                padding: 0 12px;
-            }
-            
-            .nav-container {
-                padding: 0 12px;
-            }
-            
-            .logo img {
-                height: 50px !important;
-                width: 140px !important;
-            }
-            
-            .nav-links {
-                display: none;
-                position: absolute;
-                top: 56px;
-                left: 0;
-                width: 100%;
-                background: white;
-                flex-direction: column;
-                padding: 20px;
-                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-                z-index: 999;
-            }
-            
-            .nav-links.active {
-                display: flex;
-            }
-            
-            .nav-links li {
-                margin: 10px 0;
-                width: 100%;
-            }
-            
-            .nav-links a {
-                display: block;
-                padding: 10px;
-                width: 100%;
-            }
-            
-            .mobile-menu-btn {
-                display: flex;
-                position: absolute;
-                right: 20px;
-            }
-            
-            /* Hero Section */
-            .hero {
-                padding-top: 80px;
-                min-height: 90vh;
-            }
-            
-            .hero-content {
-                padding: 0 16px;
-            }
-            
-            .hero h1 {
-                font-size: 2rem;
-                margin-bottom: 16px;
-            }
-            
-            .hero p {
-                font-size: 1.1rem;
-                margin-bottom: 30px;
-            }
-            
-            .hero-buttons {
-                flex-direction: column;
-                width: 100%;
-                gap: 12px;
-            }
-            
-            .hero-buttons .btn {
-                width: 100%;
-                padding: 14px 24px;
-            }
-            
-            /* Sections */
-            section {
-                padding: 60px 0;
-            }
-            
-            .container {
-                padding: 0 16px;
-            }
-            
-            h2 {
-                font-size: 1.75rem;
-            }
-            
-            h3 {
-                font-size: 1.5rem;
-            }
-            
-            /* Features */
-            .features-grid {
-                grid-template-columns: 1fr;
-                gap: 20px;
-                margin-top: 30px;
-            }
-            
-            .feature-card {
-                padding: 24px;
-            }
-            
-            /* Pricing */
-            .pricing-grid {
-                grid-template-columns: 1fr;
-                gap: 24px;
-                margin-top: 30px;
-            }
-            
-            .pricing-card {
-                padding: 30px 20px;
-            }
-            
-            .price {
-                font-size: 2.5rem;
-            }
-            
-            /* Blog */
-            .blog-grid {
-                grid-template-columns: 1fr;
-                gap: 24px;
-            }
-            
-            /* Dashboard */
             .dashboard {
                 flex-direction: column;
             }
-            
             .sidebar {
                 width: 100%;
                 height: auto;
                 position: relative;
-                transform: translateX(-100%);
-                transition: transform 0.3s ease;
             }
-            
-            .sidebar.active {
-                transform: translateX(0);
-            }
-            
             .main-content {
                 margin-left: 0;
-                width: 100%;
             }
-            
             .stats-grid {
                 grid-template-columns: 1fr;
-                gap: 16px;
             }
-            
             .blocks-grid {
                 grid-template-columns: 1fr;
-                gap: 16px;
-            }
-            
-            .page-content {
-                padding: 16px;
-            }
-            
-            /* Cards */
-            .card {
-                padding: 16px;
-                margin-bottom: 16px;
-            }
-            
-            .card-header {
-                padding: 12px 16px;
-            }
-            
-            /* Tables */
-            .table-container {
-                overflow-x: auto;
-                -webkit-overflow-scrolling: touch;
-            }
-            
-            table {
-                font-size: 0.875rem;
-            }
-            
-            th, td {
-                padding: 10px 8px;
-            }
-            
-            /* Forms */
-            .form-control {
-                padding: 12px 14px;
-                font-size: 16px; /* Prevents zoom on iOS */
-            }
-            
-            /* Buttons */
-            .btn {
-                padding: 12px 20px;
-                font-size: 0.9375rem;
-                min-height: 44px; /* Touch target size */
-            }
-            
-            /* Product Grid */
-            .product-grid {
-                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-                gap: 12px;
-            }
-        }
-        
-        /* Small Mobile Devices (iPhone SE, etc.) */
-        @media (max-width: 375px) {
-            .hero h1 {
-                font-size: 1.75rem;
-            }
-            
-            .hero p {
-                font-size: 1rem;
-            }
-            
-            h2 {
-                font-size: 1.5rem;
-            }
-            
-            h3 {
-                font-size: 1.25rem;
-            }
-            
-            .feature-card,
-            .pricing-card,
-            .blog-card {
-                padding: 20px;
-            }
-            
-            .price {
-                font-size: 2rem;
-            }
-            
-            .container {
-                padding: 0 12px;
-            }
-            
-            section {
-                padding: 40px 0;
-            }
-        }
-        
-        /* iOS Specific Fixes */
-        @supports (-webkit-touch-callout: none) {
-            /* iOS Safari specific styles */
-            .hero {
-                background-attachment: scroll;
-                -webkit-background-attachment: scroll;
-            }
-            
-            input,
-            textarea,
-            select {
-                font-size: 16px; /* Prevents zoom on focus */
-            }
-            
-            .sidebar,
-            .main-content {
-                -webkit-overflow-scrolling: touch;
-            }
-        }
-        
-        /* Android Specific Fixes */
-        @media screen and (-webkit-min-device-pixel-ratio: 0) {
-            /* Android Chrome specific styles */
-            .hero {
-                background-attachment: scroll;
-            }
-        }
-        
-        /* Landscape Orientation */
-        @media (max-width: 768px) and (orientation: landscape) {
-            .hero {
-                min-height: 100vh;
-                padding-top: 60px;
-            }
-            
-            .hero h1 {
-                font-size: 2rem;
-            }
-            
-            section {
-                padding: 40px 0;
-            }
-        }
-        
-        /* Touch-friendly elements */
-        @media (hover: none) and (pointer: coarse) {
-            /* Touch devices */
-            button,
-            .btn,
-            a {
-                min-height: 44px;
-                min-width: 44px;
-            }
-            
-            .nav-links a {
-                padding: 14px;
-            }
-            
-            .feature-card,
-            .pricing-card {
-                cursor: pointer;
-            }
-        }
-        
-        /* High DPI Displays */
-        @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
-            .logo img {
-                image-rendering: -webkit-optimize-contrast;
-                image-rendering: crisp-edges;
             }
         }
     </style>
@@ -3124,6 +2795,71 @@
             </div>
         </section>
 
+        <!-- Products Section -->
+        <section class="products">
+            <div class="container">
+                <h2 class="text-center">Best Selling Products</h2>
+                <p class="text-center">Real-time pricing from Amazon, Walmart, and Shopify</p>
+                
+                <div class="products-scroll-container">
+                    <div class="product-card">
+                        <div class="product-image">
+                            <img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8aGVhZHBob25lc3xlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&w=500&q=80" alt="Sony Headphones">
+                        </div>
+                        <div class="product-info">
+                            <h3 class="product-title">Sony WH-1000XM5</h3>
+                            <div class="product-price">$299.99</div>
+                            <div style="display: flex; justify-content: space-between; margin-top: 10px;">
+                                <span>Amazon</span>
+                                <span style="color: var(--success);"><i class="fas fa-arrow-up"></i> 2.3%</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="product-card">
+                        <div class="product-image">
+                            <img src="https://images.unsplash.com/photo-1572536147248-ac59a8abfa4b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTF8fGhlYWRwaG9uZXN8ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&w=500&q=80" alt="Bose Headphones">
+                        </div>
+                        <div class="product-info">
+                            <h3 class="product-title">Bose QuietComfort 45</h3>
+                            <div class="product-price">$279.99</div>
+                            <div style="display: flex; justify-content: space-between; margin-top: 10px;">
+                                <span>Amazon</span>
+                                <span style="color: var(--success);"><i class="fas fa-arrow-up"></i> 1.7%</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="product-card">
+                        <div class="product-image">
+                            <img src="https://images.unsplash.com/photo-1613040809024-b4ef7ba99bc3?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTd8fGhlYWRwaG9uZXN8ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&w=500&q=80" alt="Apple AirPods Max">
+                        </div>
+                        <div class="product-info">
+                            <h3 class="product-title">Apple AirPods Max</h3>
+                            <div class="product-price">$549.00</div>
+                            <div style="display: flex; justify-content: space-between; margin-top: 10px;">
+                                <span>Apple</span>
+                                <span style="color: #ef4444;"><i class="fas fa-arrow-down"></i> 0.8%</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="product-card">
+                        <div class="product-image">
+                            <img src="https://images.unsplash.com/photo-1593305841991-05c297ba4575?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTB8fHR2fGVufDB8fDB8fHww&auto=format&fit=crop&w=500&q=80" alt="Smart TV">
+                        </div>
+                        <div class="product-info">
+                            <h3 class="product-title">Walmart Smart TV</h3>
+                            <div class="product-price">$499.99</div>
+                            <div style="display: flex; justify-content: space-between; margin-top: 10px;">
+                                <span>Walmart</span>
+                                <span style="color: var(--success);"><i class="fas fa-arrow-up"></i> 3.1%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
 
         <!-- About Section -->
         <section class="about" id="about" style="background-color: var(--light);">
@@ -4409,13 +4145,6 @@
             appId: "1:487227333489:web:a370f5e07b9e4c3d79f4d0",
             measurementId: "G-8GQ7JGDZ7P"
         };
-        
-        // ============================================
-        // SearchAPI.io API Configuration
-        // ============================================
-        // Default API key for Amazon and Walmart product searches
-        // MUST be declared at the top before any functions that use it
-        const DEFAULT_AMAZON_API_KEY = 'WceNe5Tmok9RVw5Y4Qn6PnLM';
 
         // Initialize Firebase
         let auth;
@@ -4456,47 +4185,6 @@
             setTimeout(() => {
                 messageEl.style.display = 'none';
             }, 5000);
-        }
-
-        // Utility function to remove all blocking overlays and modals
-        function removeAllOverlays() {
-            // Close all modals
-            const allModals = document.querySelectorAll('.modal, [class*="modal"], [id*="modal"], [id*="Modal"]');
-            allModals.forEach(modal => {
-                modal.style.display = 'none';
-                modal.classList.remove('active', 'show', 'open');
-            });
-            
-            // Remove backdrop/overlay elements
-            const backdrops = document.querySelectorAll('.modal-backdrop, .overlay, [class*="backdrop"], [class*="overlay"]');
-            backdrops.forEach(backdrop => {
-                backdrop.remove();
-            });
-            
-            // Remove fixed/absolute positioned overlays with high z-index and grey/transparent backgrounds
-            const allElements = document.querySelectorAll('*');
-            allElements.forEach(element => {
-                const style = window.getComputedStyle(element);
-                const zIndex = parseInt(style.zIndex);
-                const position = style.position;
-                const bgColor = style.backgroundColor;
-                const display = style.display;
-                
-                if ((position === 'fixed' || position === 'absolute') && 
-                    zIndex > 1000 && 
-                    display !== 'none' &&
-                    (bgColor.includes('rgba') || 
-                     bgColor.includes('rgb(128') || 
-                     bgColor.includes('rgb(0, 0, 0') ||
-                     bgColor.includes('rgb(0,0,0'))) {
-                    element.style.display = 'none';
-                }
-            });
-            
-            // Remove modal classes from body
-            document.body.classList.remove('modal-open');
-            document.body.style.overflow = '';
-            document.body.style.paddingRight = '';
         }
 
         // Handle Login
@@ -4554,16 +4242,9 @@
                 // Show success message before closing modal
                 showAuthMessage('authMessage', 'Login successful! Redirecting to dashboard...', 'success');
                 
-                // Close modal and remove overlays immediately
-                removeAllOverlays();
-                if (typeof closeAuthModal === 'function') {
-                    closeAuthModal();
-                }
-                
-                // Close modal after a brief delay to ensure everything is cleaned up
+                // Close modal after a brief delay
                 setTimeout(() => {
-                    // Remove all overlays again to be safe
-                    removeAllOverlays();
+                    closeAuthModal();
                     
                     // Force dashboard to show
                     const landingView = document.getElementById('landing-page-view');
@@ -4695,16 +4376,9 @@
                 // Show success message before closing modal
                 showAuthMessage('signupMessage', 'Account created successfully! Redirecting to dashboard...', 'success');
                 
-                // Close modal and remove overlays immediately
-                removeAllOverlays();
-                if (typeof closeAuthModal === 'function') {
-                    closeAuthModal();
-                }
-                
-                // Close modal after a brief delay to ensure everything is cleaned up
+                // Close modal after a brief delay
                 setTimeout(() => {
-                    // Remove all overlays again to be safe
-                    removeAllOverlays();
+                    closeAuthModal();
                     
                     // Force dashboard to show
                     const landingView = document.getElementById('landing-page-view');
@@ -6135,10 +5809,13 @@
             alert('Block created successfully!');
         }
 
+        // SearchAPI.io API Configuration
+        // Default API key for Amazon product searches
+        const DEFAULT_AMAZON_API_KEY = 'WceNe5Tmok9RVw5Y4Qn6PnLM';
+        
         // Get your API key from https://www.searchapi.io/
         // Store it in localStorage or set it here
         // Same API key works for both Amazon and Walmart
-        // DEFAULT_AMAZON_API_KEY is declared at the top of the script (after Firebase config)
         function getSearchApiKey() {
             // Priority: 1. User-saved key, 2. Default Amazon API key
             return localStorage.getItem('searchapi_key') || 
@@ -6288,8 +5965,7 @@
                             searchStatus.textContent = `API Error: ${apiError.message}. Retrying with default key...`;
                             // Retry with default key
                             try {
-                                const defaultKey = getSearchApiKey(); // Use function instead of direct constant
-                                const apiUrl = `${AMAZON_API_URL}?engine=amazon_search&api_key=${defaultKey}&q=${encodeURIComponent(query)}&num=20`;
+                                const apiUrl = `${AMAZON_API_URL}?engine=amazon_search&api_key=${DEFAULT_AMAZON_API_KEY}&q=${encodeURIComponent(query)}&num=20`;
                                 const response = await fetch(apiUrl, {
                                     method: 'GET',
                                     headers: { 'Accept': 'application/json' }
@@ -6337,8 +6013,7 @@
                         searchStatus.textContent = 'Using default API key for Amazon searches.';
                         // Try with default key
                         try {
-                            const defaultKey = getSearchApiKey(); // Use function instead of direct constant
-                            const apiUrl = `${AMAZON_API_URL}?engine=amazon_search&api_key=${defaultKey}&q=${encodeURIComponent(query)}&num=20`;
+                            const apiUrl = `${AMAZON_API_URL}?engine=amazon_search&api_key=${DEFAULT_AMAZON_API_KEY}&q=${encodeURIComponent(query)}&num=20`;
                             const response = await fetch(apiUrl, {
                                 method: 'GET',
                                 headers: { 'Accept': 'application/json' }
@@ -6435,8 +6110,7 @@
                             searchStatus.textContent = `API Error: ${apiError.message}. Retrying with default key...`;
                             // Retry with default key
                             try {
-                                const defaultKey = getSearchApiKey(); // Use function instead of direct constant
-                                const apiUrl = `${WALMART_API_URL}?engine=walmart_search&api_key=${defaultKey}&q=${encodeURIComponent(query)}&num=20`;
+                                const apiUrl = `${WALMART_API_URL}?engine=walmart_search&api_key=${DEFAULT_AMAZON_API_KEY}&q=${encodeURIComponent(query)}&num=20`;
                                 const response = await fetch(apiUrl, {
                                     method: 'GET',
                                     headers: { 'Accept': 'application/json' }
@@ -6484,8 +6158,7 @@
                         // Always use default API key if no key is set
                         searchStatus.textContent = 'Using default API key for Walmart searches...';
                         try {
-                            const defaultKey = getSearchApiKey(); // Use function instead of direct constant
-                            const apiUrl = `${WALMART_API_URL}?engine=walmart_search&api_key=${defaultKey}&q=${encodeURIComponent(query)}&num=20`;
+                            const apiUrl = `${WALMART_API_URL}?engine=walmart_search&api_key=${DEFAULT_AMAZON_API_KEY}&q=${encodeURIComponent(query)}&num=20`;
                             const response = await fetch(apiUrl, {
                                 method: 'GET',
                                 headers: { 'Accept': 'application/json' }
@@ -7044,161 +6717,6 @@
             }
         }
         
-        // Setup Product Library event listeners
-        function setupProductLibraryListeners() {
-            const productLibraryFilter = document.getElementById('productLibraryFilter');
-            const productLibrarySort = document.getElementById('productLibrarySort');
-            const productLibrarySearch = document.getElementById('productLibrarySearch');
-            
-            if (productLibraryFilter && !productLibraryFilter.hasAttribute('data-listener-added')) {
-                productLibraryFilter.setAttribute('data-listener-added', 'true');
-                productLibraryFilter.addEventListener('change', loadProductLibrary);
-            }
-            if (productLibrarySort && !productLibrarySort.hasAttribute('data-listener-added')) {
-                productLibrarySort.setAttribute('data-listener-added', 'true');
-                productLibrarySort.addEventListener('change', loadProductLibrary);
-            }
-            if (productLibrarySearch && !productLibrarySearch.hasAttribute('data-listener-added')) {
-                productLibrarySearch.setAttribute('data-listener-added', 'true');
-                productLibrarySearch.addEventListener('input', (e) => {
-                    const searchTerm = e.target.value.toLowerCase();
-                    const container = document.getElementById('productLibraryContainer');
-                    if (!container) return;
-                    
-                    const products = JSON.parse(localStorage.getItem('kotaProductLibrary') || '[]');
-                    const filtered = products.filter(p => 
-                        p.title.toLowerCase().includes(searchTerm)
-                    );
-                    
-                    if (filtered.length === 0 && searchTerm) {
-                        container.innerHTML = '<p style="text-align: center; color: var(--gray); padding: 40px;">No products match your search.</p>';
-                        return;
-                    }
-                    
-                    if (searchTerm) {
-                        container.innerHTML = filtered.map(product => `
-                            <div class="product-card-dashboard" style="cursor: pointer;" onclick="viewProductDetails('${product.id}')">
-                                <img src="${product.image || 'https://via.placeholder.com/200'}" alt="${product.title}" class="product-image-dashboard" onerror="this.src='https://via.placeholder.com/200'">
-                                <div class="product-title">${product.title || 'Untitled Product'}</div>
-                                <div class="product-price">$${(product.price || 0).toFixed(2)}</div>
-                                <div class="product-retailer">${(product.retailer || 'Unknown').charAt(0).toUpperCase() + (product.retailer || 'Unknown').slice(1)}</div>
-                            </div>
-                        `).join('');
-                    } else {
-                        loadProductLibrary();
-                    }
-                });
-            }
-        }
-        
-        // Load Product Library
-        function loadProductLibrary() {
-            const container = document.getElementById('productLibraryContainer');
-            if (!container) return;
-            
-            // Get products from localStorage or use default products
-            let products = JSON.parse(localStorage.getItem('kotaProductLibrary') || '[]');
-            
-            // If no products in library, initialize with sample products
-            if (products.length === 0) {
-                products = [
-                    { id: 'lib_1', title: 'Sony WH-1000XM5 Headphones', image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=200', price: 299.99, retailer: 'amazon', addedDate: new Date(Date.now() - 86400000).toISOString() },
-                    { id: 'lib_2', title: 'Bose QuietComfort 45', image: 'https://images.unsplash.com/photo-1572536147248-ac59a8abfa4b?w=200', price: 279.99, retailer: 'amazon', addedDate: new Date(Date.now() - 172800000).toISOString() },
-                    { id: 'lib_3', title: 'Apple AirPods Max', image: 'https://images.unsplash.com/photo-1613040809024-b4ef7ba99bc3?w=200', price: 549.00, retailer: 'amazon', addedDate: new Date(Date.now() - 259200000).toISOString() },
-                    { id: 'lib_4', title: 'Samsung 55" Smart TV', image: 'https://images.unsplash.com/photo-1593305841991-05c297ba4575?w=200', price: 499.99, retailer: 'walmart', addedDate: new Date(Date.now() - 345600000).toISOString() },
-                    { id: 'lib_5', title: 'Bose QuietComfort 45', image: 'https://images.unsplash.com/photo-1572536147248-ac59a8abfa4b?w=200', price: 279.99, retailer: 'amazon', addedDate: new Date(Date.now() - 345600000).toISOString() },
-                    { id: 'lib_6', title: 'Dyson V11 Vacuum', image: 'https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=200', price: 599.00, retailer: 'walmart', addedDate: new Date(Date.now() - 432000000).toISOString() }
-                ];
-                
-                localStorage.setItem('kotaProductLibrary', JSON.stringify(products));
-            }
-            
-            // Apply filters
-            const filter = document.getElementById('productLibraryFilter')?.value || 'all';
-            const sort = document.getElementById('productLibrarySort')?.value || 'recent';
-            
-            let filteredProducts = products;
-            if (filter !== 'all') {
-                filteredProducts = products.filter(p => p.retailer === filter);
-            }
-            
-            // Apply sorting
-            filteredProducts.sort((a, b) => {
-                switch(sort) {
-                    case 'price-low':
-                        return (a.price || 0) - (b.price || 0);
-                    case 'price-high':
-                        return (b.price || 0) - (a.price || 0);
-                    case 'name':
-                        return (a.title || '').localeCompare(b.title || '');
-                    default: // recent
-                        return new Date(b.addedDate || 0) - new Date(a.addedDate || 0);
-                }
-            });
-            
-            if (filteredProducts.length === 0) {
-                container.innerHTML = '<p style="text-align: center; color: var(--gray); padding: 40px;">No products found. Add products from your blocks or search for new ones.</p>';
-                return;
-            }
-            
-            container.innerHTML = filteredProducts.map(product => `
-                <div class="product-card-dashboard" style="cursor: pointer;" onclick="viewProductDetails('${product.id}')">
-                    <img src="${product.image || 'https://via.placeholder.com/200'}" alt="${product.title}" class="product-image-dashboard" onerror="this.src='https://via.placeholder.com/200'">
-                    <div class="product-title">${product.title || 'Untitled Product'}</div>
-                    <div class="product-price">$${(product.price || 0).toFixed(2)}</div>
-                    <div class="product-retailer">${(product.retailer || 'Unknown').charAt(0).toUpperCase() + (product.retailer || 'Unknown').slice(1)}</div>
-                </div>
-            `).join('');
-        }
-        
-        function viewProductDetails(productId) {
-            const products = JSON.parse(localStorage.getItem('kotaProductLibrary') || '[]');
-            const product = products.find(p => p.id === productId);
-            if (product) {
-                alert(`Product: ${product.title}\nPrice: $${product.price.toFixed(2)}\nRetailer: ${product.retailer}\n\nClick "Add Product" to add more products to your library.`);
-            }
-        }
-        
-        // Add event listeners for Product Library filters
-        document.addEventListener('DOMContentLoaded', () => {
-            const productLibraryFilter = document.getElementById('productLibraryFilter');
-            const productLibrarySort = document.getElementById('productLibrarySort');
-            const productLibrarySearch = document.getElementById('productLibrarySearch');
-            
-            if (productLibraryFilter) {
-                productLibraryFilter.addEventListener('change', loadProductLibrary);
-            }
-            if (productLibrarySort) {
-                productLibrarySort.addEventListener('change', loadProductLibrary);
-            }
-            if (productLibrarySearch) {
-                productLibrarySearch.addEventListener('input', (e) => {
-                    const searchTerm = e.target.value.toLowerCase();
-                    const container = document.getElementById('productLibraryContainer');
-                    if (!container) return;
-                    
-                    const products = JSON.parse(localStorage.getItem('kotaProductLibrary') || '[]');
-                    const filtered = products.filter(p => 
-                        p.title.toLowerCase().includes(searchTerm)
-                    );
-                    
-                    if (filtered.length === 0) {
-                        container.innerHTML = '<p style="text-align: center; color: var(--gray); padding: 40px;">No products match your search.</p>';
-                        return;
-                    }
-                    
-                    container.innerHTML = filtered.map(product => `
-                        <div class="product-card-dashboard" style="cursor: pointer;" onclick="viewProductDetails('${product.id}')">
-                            <img src="${product.image || 'https://via.placeholder.com/200'}" alt="${product.title}" class="product-image-dashboard" onerror="this.src='https://via.placeholder.com/200'">
-                            <div class="product-title">${product.title || 'Untitled Product'}</div>
-                            <div class="product-price">$${(product.price || 0).toFixed(2)}</div>
-                            <div class="product-retailer">${(product.retailer || 'Unknown').charAt(0).toUpperCase() + (product.retailer || 'Unknown').slice(1)}</div>
-                        </div>
-                    `).join('');
-                });
-            }
-        });
-        
         // Update Current Subscription Display
         function updateCurrentSubscription() {
             const container = document.getElementById('currentSubscriptionCard');
@@ -7580,50 +7098,6 @@
                     }
                 });
             }
-            
-            // Mobile Menu Toggle
-            const mobileMenuBtn = document.getElementById('mobileMenuBtn');
-            const navLinks = document.querySelector('.nav-links');
-            
-            if (mobileMenuBtn && navLinks) {
-                mobileMenuBtn.addEventListener('click', () => {
-                    navLinks.classList.toggle('active');
-                    // Animate hamburger icon
-                    const spans = mobileMenuBtn.querySelectorAll('span');
-                    if (navLinks.classList.contains('active')) {
-                        spans[0].style.transform = 'rotate(45deg) translate(5px, 5px)';
-                        spans[1].style.opacity = '0';
-                        spans[2].style.transform = 'rotate(-45deg) translate(7px, -6px)';
-                    } else {
-                        spans[0].style.transform = 'none';
-                        spans[1].style.opacity = '1';
-                        spans[2].style.transform = 'none';
-                    }
-                });
-                
-                // Close menu when clicking on a link
-                const navLinksItems = navLinks.querySelectorAll('a');
-                navLinksItems.forEach(link => {
-                    link.addEventListener('click', () => {
-                        navLinks.classList.remove('active');
-                        const spans = mobileMenuBtn.querySelectorAll('span');
-                        spans[0].style.transform = 'none';
-                        spans[1].style.opacity = '1';
-                        spans[2].style.transform = 'none';
-                    });
-                });
-                
-                // Close menu when clicking outside
-                document.addEventListener('click', (e) => {
-                    if (!mobileMenuBtn.contains(e.target) && !navLinks.contains(e.target)) {
-                        navLinks.classList.remove('active');
-                        const spans = mobileMenuBtn.querySelectorAll('span');
-                        spans[0].style.transform = 'none';
-                        spans[1].style.opacity = '1';
-                        spans[2].style.transform = 'none';
-                    }
-                });
-            }
         });
         
         // Reports Functions
@@ -7800,51 +7274,18 @@
                 
                 // Load product library when product-library page is shown
                 if (pageName === 'product-library') {
-                    setTimeout(() => {
-                        if (typeof loadProductLibrary === 'function') {
-                            loadProductLibrary();
-                        }
-                        if (typeof setupProductLibraryListeners === 'function') {
-                            setupProductLibraryListeners();
-                        }
-                    }, 100);
+                    loadProductLibrary();
                 }
                 
                 // Update current subscription when billing page is shown
                 if (pageName === 'billing') {
-                    setTimeout(() => {
-                        if (typeof updateCurrentSubscription === 'function') {
-                            updateCurrentSubscription();
-                        }
-                    }, 100);
+                    updateCurrentSubscription();
                 }
                 
                 // Load reports when reports page is shown
                 if (pageName === 'reports') {
-                    setTimeout(() => {
-                        if (typeof loadReports === 'function') {
-                            loadReports();
-                        }
-                    }, 100);
+                    loadReports();
                 }
-                
-                // Initialize AI Assistant page
-                if (pageName === 'ai-assistant') {
-                    // AI Assistant is already initialized, just ensure chat is ready
-                    setTimeout(() => {
-                        const aiChatContainer = document.getElementById('aiChatContainer');
-                        const aiChatWelcome = document.getElementById('aiChatWelcome');
-                        if (aiChatContainer && aiChatWelcome) {
-                            const hasMessages = aiChatContainer.querySelectorAll('[style*="margin-bottom: 15px"]').length > 0;
-                            if (!hasMessages) {
-                                aiChatWelcome.style.display = 'block';
-                            }
-                        }
-                    }, 100);
-                }
-                
-                // Help & Support page doesn't need initialization - content is static
-                // Product Library, Billing, and Settings are already handled above
             }
             
             // Add active class to nav link
