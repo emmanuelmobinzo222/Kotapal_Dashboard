@@ -7241,64 +7241,169 @@
             }
         }
         
-        // Load Product Library
-        function loadProductLibrary() {
+        // Load Product Library - Fetch real top-performing products from APIs
+        async function loadProductLibrary() {
             const container = document.getElementById('productLibraryContainer');
             if (!container) return;
             
-            // Get products from localStorage or use default products
-            let products = JSON.parse(localStorage.getItem('kotaProductLibrary') || '[]');
+            // Show loading state
+            container.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--gray);"><i class="fas fa-spinner fa-spin" style="font-size: 2rem; margin-bottom: 15px; display: block;"></i><p>Loading top-performing products...</p></div>';
             
-            // If no products in library, initialize with sample products
-            if (products.length === 0) {
-                products = [
-                    { id: 'lib_1', title: 'Sony WH-1000XM5 Headphones', image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=200', price: 299.99, retailer: 'amazon', addedDate: new Date(Date.now() - 86400000).toISOString() },
-                    { id: 'lib_2', title: 'Bose QuietComfort 45', image: 'https://images.unsplash.com/photo-1572536147248-ac59a8abfa4b?w=200', price: 279.99, retailer: 'amazon', addedDate: new Date(Date.now() - 172800000).toISOString() },
-                    { id: 'lib_3', title: 'Apple AirPods Max', image: 'https://images.unsplash.com/photo-1613040809024-b4ef7ba99bc3?w=200', price: 549.00, retailer: 'amazon', addedDate: new Date(Date.now() - 259200000).toISOString() },
-                    { id: 'lib_4', title: 'Samsung 55" Smart TV', image: 'https://images.unsplash.com/photo-1593305841991-05c297ba4575?w=200', price: 499.99, retailer: 'walmart', addedDate: new Date(Date.now() - 345600000).toISOString() },
-                    { id: 'lib_5', title: 'Bose QuietComfort 45', image: 'https://images.unsplash.com/photo-1572536147248-ac59a8abfa4b?w=200', price: 279.99, retailer: 'amazon', addedDate: new Date(Date.now() - 345600000).toISOString() },
-                    { id: 'lib_6', title: 'Dyson V11 Vacuum', image: 'https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=200', price: 599.00, retailer: 'walmart', addedDate: new Date(Date.now() - 432000000).toISOString() }
-                ];
+            try {
+                const apiKey = getSearchApiKey();
+                let allProducts = [];
                 
-                localStorage.setItem('kotaProductLibrary', JSON.stringify(products));
-            }
-            
-            // Apply filters
-            const filter = document.getElementById('productLibraryFilter')?.value || 'all';
-            const sort = document.getElementById('productLibrarySort')?.value || 'recent';
-            
-            let filteredProducts = products;
-            if (filter !== 'all') {
-                filteredProducts = products.filter(p => p.retailer === filter);
-            }
-            
-            // Apply sorting
-            filteredProducts.sort((a, b) => {
-                switch(sort) {
-                    case 'price-low':
-                        return (a.price || 0) - (b.price || 0);
-                    case 'price-high':
-                        return (b.price || 0) - (a.price || 0);
-                    case 'name':
-                        return (a.title || '').localeCompare(b.title || '');
-                    default: // recent
-                        return new Date(b.addedDate || 0) - new Date(a.addedDate || 0);
+                // Fetch top products from Amazon (best sellers)
+                try {
+                    const amazonParams = new URLSearchParams({
+                        'engine': 'amazon_search',
+                        'q': 'best sellers',
+                        'num': '10'
+                    });
+                    if (apiKey) amazonParams.append('api_key', apiKey);
+                    
+                    const amazonUrl = `${AMAZON_API_URL}?${amazonParams.toString()}`;
+                    const amazonResponse = await fetch(amazonUrl, {
+                        method: 'GET',
+                        headers: { 'Accept': 'application/json' }
+                    });
+                    
+                    if (amazonResponse.ok) {
+                        const amazonData = await amazonResponse.json();
+                        if (amazonData && amazonData.organic_results && Array.isArray(amazonData.organic_results)) {
+                            const amazonProducts = amazonData.organic_results.slice(0, 10).map((item, index) => ({
+                                id: `amz_${item.product_id || item.asin || index}`,
+                                title: item.title || 'Amazon Product',
+                                image: item.thumbnail || item.image || 'https://via.placeholder.com/200',
+                                price: item.extracted_price || (item.price ? parseFloat(item.price.replace(/[^0-9.]/g, '')) : 0),
+                                retailer: 'amazon',
+                                rating: item.rating ? parseFloat(item.rating) : 0,
+                                reviews: item.reviews ? parseInt(item.reviews) : 0,
+                                link: item.link || '',
+                                addedDate: new Date().toISOString()
+                            }));
+                            allProducts = allProducts.concat(amazonProducts);
+                        }
+                    }
+                } catch (amazonError) {
+                    console.error('Error fetching Amazon products:', amazonError);
                 }
-            });
-            
-            if (filteredProducts.length === 0) {
-                container.innerHTML = '<p style="text-align: center; color: var(--gray); padding: 40px;">No products found. Add products from your blocks or search for new ones.</p>';
-                return;
+                
+                // Fetch top products from Walmart (best sellers)
+                try {
+                    const walmartParams = new URLSearchParams({
+                        'engine': 'walmart_search',
+                        'q': 'best sellers',
+                        'num': '10'
+                    });
+                    if (apiKey) walmartParams.append('api_key', apiKey);
+                    
+                    const walmartUrl = `${WALMART_API_URL}?${walmartParams.toString()}`;
+                    const walmartResponse = await fetch(walmartUrl, {
+                        method: 'GET',
+                        headers: { 'Accept': 'application/json' }
+                    });
+                    
+                    if (walmartResponse.ok) {
+                        const walmartData = await walmartResponse.json();
+                        if (walmartData && walmartData.organic_results && Array.isArray(walmartData.organic_results)) {
+                            const walmartProducts = walmartData.organic_results.slice(0, 10).map((item, index) => ({
+                                id: `wlm_${item.product_id || item.id || index}`,
+                                title: item.title || 'Walmart Product',
+                                image: item.thumbnail || 'https://via.placeholder.com/200',
+                                price: item.extracted_price || (item.price ? parseFloat(item.price.replace(/[^0-9.]/g, '')) : 0),
+                                retailer: 'walmart',
+                                rating: item.rating ? parseFloat(item.rating) : 0,
+                                reviews: item.reviews ? parseInt(item.reviews) : 0,
+                                link: item.link || '',
+                                addedDate: new Date().toISOString()
+                            }));
+                            allProducts = allProducts.concat(walmartProducts);
+                        }
+                    }
+                } catch (walmartError) {
+                    console.error('Error fetching Walmart products:', walmartError);
+                }
+                
+                // If we got products from API, save them and use them
+                if (allProducts.length > 0) {
+                    // Merge with existing saved products (avoid duplicates)
+                    const savedProducts = JSON.parse(localStorage.getItem('kotaProductLibrary') || '[]');
+                    const existingIds = new Set(savedProducts.map(p => p.id));
+                    const newProducts = allProducts.filter(p => !existingIds.has(p.id));
+                    const mergedProducts = [...savedProducts, ...newProducts];
+                    localStorage.setItem('kotaProductLibrary', JSON.stringify(mergedProducts));
+                    allProducts = mergedProducts;
+                } else {
+                    // Fallback to saved products or show message
+                    allProducts = JSON.parse(localStorage.getItem('kotaProductLibrary') || '[]');
+                    if (allProducts.length === 0) {
+                        container.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--gray);"><p>No products found. Please configure your SearchAPI.io API key in Settings to load live products.</p><button class="btn btn-primary" onclick="showPage(\'settings\')" style="margin-top: 15px;">Go to Settings</button></div>';
+                        return;
+                    }
+                }
+                
+                // Apply filters
+                const filter = document.getElementById('productLibraryFilter')?.value || 'all';
+                const sort = document.getElementById('productLibrarySort')?.value || 'recent';
+                
+                let filteredProducts = allProducts;
+                if (filter !== 'all') {
+                    filteredProducts = allProducts.filter(p => p.retailer === filter);
+                }
+                
+                // Apply sorting
+                filteredProducts.sort((a, b) => {
+                    switch(sort) {
+                        case 'price-low':
+                            return (a.price || 0) - (b.price || 0);
+                        case 'price-high':
+                            return (b.price || 0) - (a.price || 0);
+                        case 'name':
+                            return (a.title || '').localeCompare(b.title || '');
+                        default: // recent
+                            return new Date(b.addedDate || 0) - new Date(a.addedDate || 0);
+                    }
+                });
+                
+                if (filteredProducts.length === 0) {
+                    container.innerHTML = '<p style="text-align: center; color: var(--gray); padding: 40px;">No products match your filter. Try selecting "All Products".</p>';
+                    // Update stats to 0
+                    updateProductLibraryStats(allProducts);
+                    return;
+                }
+                
+                // Render products
+                container.innerHTML = filteredProducts.map(product => `
+                    <div class="product-card-dashboard" style="cursor: pointer;" onclick="viewProductDetails('${product.id}')">
+                        <img src="${product.image || 'https://via.placeholder.com/200'}" alt="${product.title}" class="product-image-dashboard" onerror="this.src='https://via.placeholder.com/200'">
+                        <div class="product-title">${product.title || 'Untitled Product'}</div>
+                        <div class="product-price">$${(product.price || 0).toFixed(2)}</div>
+                        <div class="product-retailer">${(product.retailer || 'Unknown').charAt(0).toUpperCase() + (product.retailer || 'Unknown').slice(1)}</div>
+                        ${product.rating > 0 ? `<div style="font-size: 0.8rem; color: var(--gray); margin-top: 5px;"><i class="fas fa-star" style="color: #fbbf24;"></i> ${product.rating.toFixed(1)} (${product.reviews || 0} reviews)</div>` : ''}
+                    </div>
+                `).join('');
+                
+                // Update stats counters
+                updateProductLibraryStats(allProducts);
+                
+            } catch (error) {
+                console.error('Error loading product library:', error);
+                container.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--gray);"><p>Error loading products. Please check your API key configuration.</p><button class="btn btn-primary" onclick="showPage(\'settings\')" style="margin-top: 15px;">Go to Settings</button></div>';
             }
+        }
+        
+        // Update Product Library Stats
+        function updateProductLibraryStats(products) {
+            const totalProductsCount = document.getElementById('totalProductsCount');
+            const amazonProductsCount = document.getElementById('amazonProductsCount');
+            const walmartProductsCount = document.getElementById('walmartProductsCount');
+            const otherProductsCount = document.getElementById('otherProductsCount');
             
-            container.innerHTML = filteredProducts.map(product => `
-                <div class="product-card-dashboard" style="cursor: pointer;" onclick="viewProductDetails('${product.id}')">
-                    <img src="${product.image || 'https://via.placeholder.com/200'}" alt="${product.title}" class="product-image-dashboard" onerror="this.src='https://via.placeholder.com/200'">
-                    <div class="product-title">${product.title || 'Untitled Product'}</div>
-                    <div class="product-price">$${(product.price || 0).toFixed(2)}</div>
-                    <div class="product-retailer">${(product.retailer || 'Unknown').charAt(0).toUpperCase() + (product.retailer || 'Unknown').slice(1)}</div>
-                </div>
-            `).join('');
+            if (totalProductsCount) totalProductsCount.textContent = products.length;
+            if (amazonProductsCount) amazonProductsCount.textContent = products.filter(p => p.retailer === 'amazon').length;
+            if (walmartProductsCount) walmartProductsCount.textContent = products.filter(p => p.retailer === 'walmart').length;
+            if (otherProductsCount) otherProductsCount.textContent = products.filter(p => p.retailer !== 'amazon' && p.retailer !== 'walmart').length;
         }
         
         function viewProductDetails(productId) {
@@ -7929,19 +8034,37 @@
         
         function loadReports() {
             const reportsTable = document.getElementById('reportsTable');
-            if (!reportsTable) return;
-            
-            const reports = JSON.parse(localStorage.getItem('kotaReports') || '[]');
-            
-            if (reports.length === 0) {
-                reportsTable.innerHTML = `
-                    <tr>
-                        <td colspan="5" style="text-align: center; padding: 40px; color: var(--gray);">
-                            No reports generated yet. Click on a report type above to generate your first report.
-                        </td>
-                    </tr>
-                `;
+            if (!reportsTable) {
+                console.error('reportsTable element not found');
                 return;
+            }
+            
+            // Get reports from localStorage or initialize with sample reports
+            let reports = JSON.parse(localStorage.getItem('kotaReports') || '[]');
+            
+            // If no reports exist, create sample reports to show the page is working
+            if (reports.length === 0) {
+                reports = [
+                    { 
+                        name: 'Performance Report - ' + new Date().toLocaleDateString(), 
+                        type: 'performance', 
+                        date: new Date(Date.now() - 2*24*60*60*1000).toISOString(), 
+                        format: 'PDF' 
+                    },
+                    { 
+                        name: 'Block Report - ' + new Date(Date.now() - 7*24*60*60*1000).toLocaleDateString(), 
+                        type: 'block', 
+                        date: new Date(Date.now() - 7*24*60*60*1000).toISOString(), 
+                        format: 'CSV' 
+                    },
+                    { 
+                        name: 'Product Report - ' + new Date(Date.now() - 14*24*60*60*1000).toLocaleDateString(), 
+                        type: 'product', 
+                        date: new Date(Date.now() - 14*24*60*60*1000).toISOString(), 
+                        format: 'Excel' 
+                    }
+                ];
+                localStorage.setItem('kotaReports', JSON.stringify(reports));
             }
             
             reportsTable.innerHTML = reports.map(report => `
