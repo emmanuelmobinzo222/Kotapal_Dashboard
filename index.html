@@ -6147,21 +6147,30 @@
                     fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:6055',message:'Walmart search started',data:{query,hasApiKey:!!apiKey,apiKeyLength:apiKey?.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
                     // #endregion
                     
-                    if (!apiKey) {
+                    // Use default API key if user hasn't configured one
+                    const finalApiKey = apiKey || DEFAULT_AMAZON_API_KEY;
+                    
+                    if (!finalApiKey) {
                         // #region agent log
-                        fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:6061',message:'Walmart API key missing',data:{query},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+                        fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:6150',message:'Walmart API key missing - no default available',data:{query,hasUserApiKey:!!apiKey},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
                         // #endregion
                         searchStatus.textContent = 'API key required. Please configure your SearchAPI.io API key in Settings.';
                         products = [];
                         return;
                     }
                     
+                    // #region agent log
+                    if (!apiKey) {
+                        fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:6157',message:'Using default API key for Walmart',data:{query,usingDefault:true},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+                    }
+                    // #endregion
+                    
                     try {
                         // Build URL with all supported parameters
                         const params = new URLSearchParams({
                             'engine': 'walmart_search',
                             'q': query,
-                            'api_key': apiKey,
+                            'api_key': finalApiKey,
                             'num': '20' // Limit results
                         });
                         
@@ -6620,12 +6629,22 @@
         
         // Check settings access before showing settings page
         function checkSettingsAccess() {
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:6622',message:'checkSettingsAccess called',data:{hasCurrentUser:!!currentUser,hasAuth:!!auth,explicitLogin:sessionStorage.getItem('kotapal_explicit_login')},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'F'})}).catch(()=>{});
+            // #endregion
+            
             const sessionAccess = sessionStorage.getItem('settings_access_granted');
             if (sessionAccess === 'true') {
                 settingsAccessGranted = true;
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:6625',message:'Settings access granted',data:{sessionAccess},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'F'})}).catch(()=>{});
+                // #endregion
                 return true;
             }
             
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:6629',message:'Settings access denied - showing password modal',data:{sessionAccess},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'F'})}).catch(()=>{});
+            // #endregion
             showSettingsPasswordModal();
             return false;
         }
@@ -7331,6 +7350,9 @@
             // Show requested page
             const targetPage = document.getElementById(pageName + '-page');
             if (targetPage) {
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:7351',message:'Showing page',data:{pageName,hasCurrentUser:!!currentUser,explicitLogin:sessionStorage.getItem('kotapal_explicit_login')},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'F'})}).catch(()=>{});
+                // #endregion
                 targetPage.style.display = 'block';
                 
                 // Render billing plans when settings page is shown
