@@ -6054,153 +6054,108 @@
                     }
                 } else if (retailer === 'walmart') {
                     // Use SearchAPI.io Walmart Search API
+                    // Full API implementation with all parameters
                     // Endpoint: https://www.searchapi.io/api/v1/search?engine=walmart_search
-                    // Always use the default API key for Walmart
                     const apiKey = getSearchApiKey();
-                    if (apiKey) {
-                        try {
-                            const apiUrl = `${WALMART_API_URL}?engine=walmart_search&api_key=${apiKey}&q=${encodeURIComponent(query)}&num=20`;
-                            
-                            const response = await fetch(apiUrl, {
-                                method: 'GET',
-                                headers: {
-                                    'Accept': 'application/json'
-                                }
-                            });
-                            
-                            if (!response.ok) {
-                                throw new Error(`API request failed: ${response.status}`);
+                    
+                    if (!apiKey) {
+                        searchStatus.textContent = 'API key required. Please configure your SearchAPI.io API key in Settings.';
+                        products = [];
+                        return;
+                    }
+                    
+                    try {
+                        // Build URL with all supported parameters
+                        const params = new URLSearchParams({
+                            'engine': 'walmart_search',
+                            'q': query,
+                            'api_key': apiKey,
+                            'num': '20' // Limit results
+                        });
+                        
+                        // Optional parameters can be added here:
+                        // params.append('category_id', '976759'); // Filter by category
+                        // params.append('store_id', '3081'); // Filter by store (default: 3081)
+                        // params.append('price_min', '10'); // Minimum price
+                        // params.append('price_max', '100'); // Maximum price
+                        // params.append('filters', 'brand:Samsung||price:5-10'); // Multiple filters
+                        // params.append('sort_by', 'best_match'); // Sort: best_match, price_low_to_high, price_high_to_low, best_seller
+                        // params.append('page', '1'); // Pagination
+                        
+                        const apiUrl = `${WALMART_API_URL}?${params.toString()}`;
+                        
+                        const response = await fetch(apiUrl, {
+                            method: 'GET',
+                            headers: {
+                                'Accept': 'application/json'
                             }
-                            
-                            const data = await response.json();
-                            
-                            // Parse SearchAPI.io response format
-                            if (data && data.organic_results && Array.isArray(data.organic_results)) {
-                                products = data.organic_results.map((item, index) => {
-                                    // Extract price from price string (e.g., "$29.99" or "$29.99 - $39.99")
-                                    let price = 0;
-                                    if (item.price) {
-                                        const priceMatch = item.price.match(/\$?([\d,]+\.?\d*)/);
-                                        if (priceMatch) {
-                                            price = parseFloat(priceMatch[1].replace(/,/g, ''));
-                                        }
-                                    }
-                                    
-                                    return {
-                                        id: item.product_id || item.item_id || item.id || `wlm_${index}`,
-                                        title: item.title || 'Product',
-                                        image: item.thumbnail || item.image || 'https://via.placeholder.com/200',
-                                        price: price || 0,
-                                        originalPrice: item.original_price ? parseFloat(item.original_price.replace(/[^0-9.]/g, '')) : price,
-                                        rating: item.rating ? parseFloat(item.rating) : 0,
-                                        reviews: item.reviews ? parseInt(item.reviews.replace(/[^0-9]/g, '')) : 0,
-                                        availability: item.availability || item.in_stock ? 'In Stock' : 'Out of Stock',
-                                        itemId: item.product_id || item.item_id,
-                                        link: item.link || item.url || `https://www.walmart.com/ip/${item.product_id || ''}`,
-                                        retailer: 'walmart'
-                                    };
-                                });
+                        });
+                        
+                        if (!response.ok) {
+                            throw new Error(`API request failed: ${response.status} ${response.statusText}`);
+                        }
+                        
+                        const data = await response.json();
+                        
+                        // Parse SearchAPI.io response format
+                        // Handle both organic_results and other_options
+                        let allResults = [];
+                        
+                        if (data && data.organic_results && Array.isArray(data.organic_results)) {
+                            allResults = allResults.concat(data.organic_results);
+                        }
+                        
+                        if (data && data.other_options && Array.isArray(data.other_options)) {
+                            allResults = allResults.concat(data.other_options);
+                        }
+                        
+                        if (allResults.length > 0) {
+                            products = allResults.map((item, index) => {
+                                // Use extracted_price if available (cleaner than parsing price string)
+                                const price = item.extracted_price !== undefined && item.extracted_price !== null
+                                    ? parseFloat(item.extracted_price)
+                                    : (item.price ? parseFloat(String(item.price).replace(/[^0-9.]/g, '')) : 0);
                                 
-                                searchStatus.textContent = `Found ${products.length} Walmart products for "${query}"`;
-                            } else {
-                                throw new Error('Invalid API response format');
-                            }
-                        } catch (apiError) {
-                            console.error('Walmart API error:', apiError);
-                            searchStatus.textContent = `API Error: ${apiError.message}. Retrying with default key...`;
-                            // Retry with default key
-                            try {
-                                const apiUrl = `${WALMART_API_URL}?engine=walmart_search&api_key=${DEFAULT_AMAZON_API_KEY}&q=${encodeURIComponent(query)}&num=20`;
-                                const response = await fetch(apiUrl, {
-                                    method: 'GET',
-                                    headers: { 'Accept': 'application/json' }
-                                });
-                                if (response.ok) {
-                                    const data = await response.json();
-                                    if (data && data.organic_results && Array.isArray(data.organic_results)) {
-                                        products = data.organic_results.map((item, index) => {
-                                            let price = 0;
-                                            if (item.price) {
-                                                const priceMatch = item.price.match(/\$?([\d,]+\.?\d*)/);
-                                                if (priceMatch) {
-                                                    price = parseFloat(priceMatch[1].replace(/,/g, ''));
-                                                }
-                                            }
-                                            return {
-                                                id: item.product_id || item.item_id || item.id || `wlm_${index}`,
-                                                title: item.title || 'Product',
-                                                image: item.thumbnail || item.image || 'https://via.placeholder.com/200',
-                                                price: price || 0,
-                                                originalPrice: item.original_price ? parseFloat(item.original_price.replace(/[^0-9.]/g, '')) : price,
-                                                rating: item.rating ? parseFloat(item.rating) : 0,
-                                                reviews: item.reviews ? parseInt(item.reviews.replace(/[^0-9]/g, '')) : 0,
-                                                availability: item.availability || item.in_stock ? 'In Stock' : 'Out of Stock',
-                                                itemId: item.product_id || item.item_id,
-                                                link: item.link || item.url || `https://www.walmart.com/ip/${item.product_id || ''}`,
-                                                retailer: 'walmart'
-                                            };
-                                        });
-                                        
-                                        searchStatus.textContent = `Found ${products.length} Walmart products for "${query}"`;
-                                    } else {
-                                        throw new Error('Invalid API response format');
-                                    }
-                                } else {
-                                    throw new Error(`API request failed: ${response.status}`);
-                                }
-                            } catch (e) {
-                                console.error('Default API key also failed:', e);
-                                searchStatus.textContent = `Unable to fetch products. Please check your API key or try again later. Error: ${e.message}`;
-                                products = [];
-                            }
-                        }
-                    } else {
-                        // Always use default API key if no key is set
-                        searchStatus.textContent = 'Using default API key for Walmart searches...';
-                        try {
-                            const apiUrl = `${WALMART_API_URL}?engine=walmart_search&api_key=${DEFAULT_AMAZON_API_KEY}&q=${encodeURIComponent(query)}&num=20`;
-                            const response = await fetch(apiUrl, {
-                                method: 'GET',
-                                headers: { 'Accept': 'application/json' }
+                                // Handle price_range for variants
+                                const priceRange = item.price_range?.extracted_from_price || price;
+                                
+                                return {
+                                    id: item.product_id || item.id || `wlm_${index}`,
+                                    title: item.title || 'Product',
+                                    image: item.thumbnail || 'https://via.placeholder.com/200',
+                                    price: price || priceRange || 0,
+                                    originalPrice: price || priceRange, // Use same price if no original_price
+                                    rating: item.rating ? parseFloat(item.rating) : 0,
+                                    reviews: item.reviews ? parseInt(item.reviews) : 0,
+                                    availability: item.fulfillment ? 'In Stock' : 'Out of Stock',
+                                    itemId: item.product_id || item.id,
+                                    link: item.link || `https://www.walmart.com/ip/${item.product_id || item.id || ''}`,
+                                    retailer: 'walmart',
+                                    // Additional fields from API response
+                                    sellerName: item.seller_name || 'Walmart',
+                                    sellerId: item.seller_id || null,
+                                    unitPrice: item.unit_price || item.extracted_unit_price || null,
+                                    position: item.position || index + 1,
+                                    description: item.description || null,
+                                    brand: item.brand || null,
+                                    badges: item.badges || [],
+                                    fulfillment: item.fulfillment || null,
+                                    variants: item.variants || null,
+                                    stock: item.stock || null,
+                                    isFreeShipping: item.is_free_shipping || item.is_free_shipping_with_walmart_plus || false
+                                };
                             });
-                            if (response.ok) {
-                                const data = await response.json();
-                                if (data && data.organic_results && Array.isArray(data.organic_results)) {
-                                    products = data.organic_results.map((item, index) => {
-                                        let price = 0;
-                                        if (item.price) {
-                                            const priceMatch = item.price.match(/\$?([\d,]+\.?\d*)/);
-                                            if (priceMatch) {
-                                                price = parseFloat(priceMatch[1].replace(/,/g, ''));
-                                            }
-                                        }
-                                        return {
-                                            id: item.product_id || item.item_id || item.id || `wlm_${index}`,
-                                            title: item.title || 'Product',
-                                            image: item.thumbnail || item.image || 'https://via.placeholder.com/200',
-                                            price: price || 0,
-                                            originalPrice: item.original_price ? parseFloat(item.original_price.replace(/[^0-9.]/g, '')) : price,
-                                            rating: item.rating ? parseFloat(item.rating) : 0,
-                                            reviews: item.reviews ? parseInt(item.reviews.replace(/[^0-9]/g, '')) : 0,
-                                            availability: item.availability || item.in_stock ? 'In Stock' : 'Out of Stock',
-                                            itemId: item.product_id || item.item_id,
-                                            link: item.link || item.url || `https://www.walmart.com/ip/${item.product_id || ''}`,
-                                            retailer: 'walmart'
-                                        };
-                                    });
-                                    
-                                    searchStatus.textContent = `Found ${products.length} Walmart products for "${query}"`;
-                                } else {
-                                    throw new Error('Invalid API response format');
-                                }
-                            } else {
-                                throw new Error(`API request failed: ${response.status}`);
-                            }
-                        } catch (e) {
-                            console.error('Default API key failed:', e);
-                            searchStatus.textContent = `Unable to fetch products. Please check your API key or try again later. Error: ${e.message}`;
-                            products = [];
+                            
+                            const totalResults = data.search_information?.total_results || products.length;
+                            searchStatus.textContent = `Found ${products.length} Walmart products for "${query}" (${totalResults.toLocaleString()} total available)`;
+                        } else {
+                            throw new Error('No products found in API response');
                         }
+                    } catch (apiError) {
+                        console.error('Walmart API error:', apiError);
+                        searchStatus.textContent = `Error searching products: ${apiError.message}. Please check your API key and try again.`;
+                        products = [];
+                        // NO MOCK DATA FALLBACK - Show error instead
                     }
                 } else if (retailer === 'shopify') {
                     products = [
@@ -6304,32 +6259,8 @@
             ];
         }
         
-        // Mock Walmart products (fallback)
-        function getMockWalmartProducts(query) {
-            return [
-                {
-                    id: 'wlm_1',
-                    title: 'Samsung 55" Class Crystal UHD TU-8000 Series',
-                    image: 'https://images.unsplash.com/photo-1593305841991-05c297ba4575?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTB8fHR2fGVufDB8fDB8fHww&auto=format&fit=crop&w=500&q=80',
-                    price: 499.99,
-                    retailer: 'walmart'
-                },
-                {
-                    id: 'wlm_2',
-                    title: 'Dyson V11 Cordless Vacuum Cleaner',
-                    image: 'https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8dmFjdXVtfGVufDB8fDB8fHww&auto=format&fit=crop&w=500&q=80',
-                    price: 599.00,
-                    retailer: 'walmart'
-                },
-                {
-                    id: 'wlm_3',
-                    title: 'Instant Pot Duo 7-in-1 Electric Pressure Cooker',
-                    image: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8aW5zdGFudCUyMHBvdHxlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&w=500&q=80',
-                    price: 89.99,
-                    retailer: 'walmart'
-                }
-            ];
-        }
+        // Mock Walmart products REMOVED - Using real API only
+        // All Walmart products now come from SearchAPI.io Walmart Search API
 
         // Update selected products display
         function updateSelectedProducts() {

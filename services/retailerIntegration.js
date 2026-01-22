@@ -505,9 +505,12 @@ class WalmartRetailer extends BaseRetailer {
 
   normalizeData(data) {
     return Array.isArray(data) ? data.map(item => {
-      // Handle SearchAPI.io response format
+      // Handle SearchAPI.io response format (matching the example structure)
+      // Use extracted_price if available (cleaner than parsing price string)
       let price = 0;
-      if (item.price) {
+      if (item.extracted_price !== undefined && item.extracted_price !== null) {
+        price = parseFloat(item.extracted_price);
+      } else if (item.price) {
         const priceStr = typeof item.price === 'string' ? item.price : String(item.price);
         const priceMatch = priceStr.match(/\$?([\d,]+\.?\d*)/);
         if (priceMatch) {
@@ -515,18 +518,33 @@ class WalmartRetailer extends BaseRetailer {
         }
       }
       
+      // Handle price_range for variants
+      const priceRange = item.price_range?.extracted_from_price || price;
+      
       return {
-        id: item.product_id || item.item_id || item.itemId || item.id,
+        id: item.product_id || item.id,
         title: item.title || item.name || 'Product',
-        price: price || item.price || item.salePrice || 0,
-        originalPrice: item.original_price ? parseFloat(String(item.original_price).replace(/[^0-9.]/g, '')) : (item.originalPrice || item.msrp || price),
+        price: price || priceRange || 0,
+        originalPrice: price || priceRange, // Use same price if no original_price
         rating: item.rating ? parseFloat(item.rating) : (item.customerRating || 0),
-        reviews: item.reviews ? parseInt(String(item.reviews).replace(/[^0-9]/g, '')) : (item.reviewCount || 0),
+        reviews: item.reviews ? parseInt(item.reviews) : (item.reviewCount || 0),
         image: item.thumbnail || item.image || item.imageUrl || 'https://via.placeholder.com/200',
-        availability: (item.availability || item.in_stock || item.inStock) ? 'In Stock' : 'Out of Stock',
+        availability: item.fulfillment ? 'In Stock' : ((item.availability || item.in_stock || item.inStock) ? 'In Stock' : 'Out of Stock'),
         category: item.category || '',
         retailer: 'walmart',
-        link: item.link || item.url || `https://www.walmart.com/ip/${item.product_id || item.item_id || ''}`,
+        link: item.link || item.url || `https://www.walmart.com/ip/${item.product_id || item.id || ''}`,
+        // Additional fields from API response
+        sellerName: item.seller_name || 'Walmart',
+        sellerId: item.seller_id || null,
+        unitPrice: item.unit_price || item.extracted_unit_price || null,
+        position: item.position || null,
+        description: item.description || null,
+        brand: item.brand || null,
+        badges: item.badges || [],
+        fulfillment: item.fulfillment || null,
+        variants: item.variants || null,
+        stock: item.stock || null,
+        isFreeShipping: item.is_free_shipping || item.is_free_shipping_with_walmart_plus || false,
         normalizedAt: new Date()
       };
     }) : data;
@@ -536,23 +554,11 @@ class WalmartRetailer extends BaseRetailer {
     return `https://www.walmart.com/ip/${productId}?affid=${affiliateId}`;
   }
 
-  getMockBestSellers(limit) {
-    return {
-      data: Array.from({ length: limit }, (_, i) => ({
-        itemId: String(Math.floor(Math.random() * 1000000000)),
-        title: `Walmart Item #${i + 1}`,
-        price: Math.floor(Math.random() * 500) + 10,
-        originalPrice: Math.floor(Math.random() * 600) + 20,
-        rating: (Math.random() * 2 + 3).toFixed(1),
-        reviews: Math.floor(Math.random() * 8000),
-        image: `https://images.unsplash.com/photo-${Math.floor(Math.random() * 1000000)}`,
-        inStock: true,
-        category: 'home-garden'
-      }))
-    };
-  }
-
+  // Mock data functions REMOVED - Using real API only
+  // All Walmart products now come from SearchAPI.io Walmart Search API
+  
   getMockAnalytics() {
+    // Analytics can still use mock data as it's not product-related
     return {
       totalClicks: Math.floor(Math.random() * 4000),
       clicksToday: Math.floor(Math.random() * 400),
