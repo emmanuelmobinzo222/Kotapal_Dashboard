@@ -4166,6 +4166,19 @@
             } else {
                 firebase.initializeApp(firebaseConfig);
                 auth = firebase.auth();
+                
+                // Set persistence to LOCAL so users stay logged in across browser sessions
+                // This ensures the session persists even after closing the browser
+                auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch((error) => {
+                    console.error('Error setting auth persistence:', error);
+                    // #region agent log
+                    fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:4168',message:'Error setting auth persistence',data:{error:error.message},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'G'})}).catch(()=>{});
+                    // #endregion
+                });
+                
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:4168',message:'Firebase auth initialized with LOCAL persistence',data:{hasAuth:!!auth},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'G'})}).catch(()=>{});
+                // #endregion
             }
         } catch (error) {
             console.error('Firebase initialization error:', error);
@@ -4232,10 +4245,12 @@
                     plan: savedUserData.plan || 'starter',
                     signupDate: savedUserData.signupDate || new Date().toISOString()
                 };
-                // Set explicit login flag FIRST, before any state changes
+                // Set explicit login flag in BOTH sessionStorage AND localStorage for maximum persistence
                 sessionStorage.setItem('kotapal_explicit_login', 'true');
+                localStorage.setItem('kotapal_explicit_login', 'true'); // Backup in localStorage
+                
                 // #region agent log
-                fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:4756',message:'Setting explicit login flag after login',data:{userId:user.uid,explicitLoginFlag:sessionStorage.getItem('kotapal_explicit_login')},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+                fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:4236',message:'Setting explicit login flag after login',data:{userId:user.uid,explicitLoginFlag:sessionStorage.getItem('kotapal_explicit_login'),hasLocalStorageFlag:!!localStorage.getItem('kotapal_explicit_login')},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
                 // #endregion
                 
                 localStorage.setItem('kotaUser', JSON.stringify(userData));
@@ -4620,18 +4635,20 @@
                 }
                 
                 // ALWAYS check for explicit login first - NO AUTO LOGIN
-                // But also check localStorage for persistent session
-                let explicitLogin = sessionStorage.getItem('kotapal_explicit_login') === 'true';
+                // Check BOTH sessionStorage and localStorage for maximum persistence
+                let explicitLogin = sessionStorage.getItem('kotapal_explicit_login') === 'true' || 
+                                   localStorage.getItem('kotapal_explicit_login') === 'true';
                 
-                // If no explicit login flag but user is authenticated, check localStorage
+                // If no explicit login flag but user is authenticated, check localStorage for user data
                 if (!explicitLogin && user) {
                     const savedUserData = JSON.parse(localStorage.getItem('kotaUser') || '{}');
                     if (savedUserData.uid === user.uid) {
-                        // Restore the session flag immediately
+                        // Restore the session flag immediately in BOTH storages
                         sessionStorage.setItem('kotapal_explicit_login', 'true');
+                        localStorage.setItem('kotapal_explicit_login', 'true');
                         explicitLogin = true;
                         // #region agent log
-                        fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:4610',message:'Restored explicit login flag from localStorage',data:{userId:user.uid},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+                        fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:4609',message:'Restored explicit login flag from localStorage',data:{userId:user.uid,hasSavedUserData:!!savedUserData.uid},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
                         // #endregion
                     }
                 }
@@ -4697,6 +4714,7 @@
                         fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:4688',message:'Clearing user data - user signed out',data:{hadUserData:!!localStorage.getItem('kotaUser'),hadExplicitLogin:!!sessionStorage.getItem('kotapal_explicit_login')},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
                         // #endregion
                         localStorage.removeItem('kotaUser');
+                        localStorage.removeItem('kotapal_explicit_login'); // Also remove from localStorage
                         sessionStorage.removeItem('kotapal_explicit_login');
                         currentUser = null;
                         // #region agent log
@@ -4741,6 +4759,7 @@
                         fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:4726',message:'User signed out via Firebase',data:{hadUserData:!!localStorage.getItem('kotaUser'),hadExplicitLogin:!!sessionStorage.getItem('kotapal_explicit_login')},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
                         // #endregion
                         localStorage.removeItem('kotaUser');
+                        localStorage.removeItem('kotapal_explicit_login'); // Also remove from localStorage
                         sessionStorage.removeItem('kotapal_explicit_login');
                         sessionStorage.removeItem('settings_access_granted');
                         currentUser = null;
