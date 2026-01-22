@@ -4592,24 +4592,52 @@
         
         // Check authentication state and show appropriate view
         if (auth) {
+            // Track if we're currently processing an auth state change to prevent race conditions
+            let isProcessingAuthState = false;
+            
             auth.onAuthStateChanged((user) => {
                 // #region agent log
-                fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:5121',message:'auth.onAuthStateChanged triggered',data:{hasUser:!!user,userId:user?.uid,email:user?.email,isInitialLoad,explicitLoginFlag:sessionStorage.getItem('kotapal_explicit_login')},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+                fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:4595',message:'auth.onAuthStateChanged triggered',data:{hasUser:!!user,userId:user?.uid,email:user?.email,isInitialLoad,isProcessingAuthState,explicitLoginFlag:sessionStorage.getItem('kotapal_explicit_login')},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
                 // #endregion
                 
-                // Skip processing during initial load to prevent conflicts
-                if (isInitialLoad) {
+                // Prevent concurrent processing
+                if (isProcessingAuthState) {
                     // #region agent log
-                    fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:5125',message:'Skipping auth state change - initial load',data:{isInitialLoad},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+                    fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:4600',message:'Skipping - already processing auth state',data:{hasUser:!!user},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
                     // #endregion
                     return;
                 }
                 
+                isProcessingAuthState = true;
+                
+                // Skip processing during initial load to prevent conflicts
+                if (isInitialLoad) {
+                    // #region agent log
+                    fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:4601',message:'Skipping auth state change - initial load',data:{isInitialLoad},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+                    // #endregion
+                    isProcessingAuthState = false;
+                    return;
+                }
+                
                 // ALWAYS check for explicit login first - NO AUTO LOGIN
-                const explicitLogin = sessionStorage.getItem('kotapal_explicit_login') === 'true';
+                // But also check localStorage for persistent session
+                let explicitLogin = sessionStorage.getItem('kotapal_explicit_login') === 'true';
+                
+                // If no explicit login flag but user is authenticated, check localStorage
+                if (!explicitLogin && user) {
+                    const savedUserData = JSON.parse(localStorage.getItem('kotaUser') || '{}');
+                    if (savedUserData.uid === user.uid) {
+                        // Restore the session flag immediately
+                        sessionStorage.setItem('kotapal_explicit_login', 'true');
+                        explicitLogin = true;
+                        // #region agent log
+                        fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:4610',message:'Restored explicit login flag from localStorage',data:{userId:user.uid},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+                        // #endregion
+                    }
+                }
                 
                 // #region agent log
-                fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:5130',message:'Checking explicit login flag',data:{hasUser:!!user,explicitLogin,explicitLoginRaw:sessionStorage.getItem('kotapal_explicit_login'),allSessionKeys:Object.keys(sessionStorage)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+                fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:4613',message:'Checking explicit login flag',data:{hasUser:!!user,explicitLogin,explicitLoginRaw:sessionStorage.getItem('kotapal_explicit_login'),allSessionKeys:Object.keys(sessionStorage)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
                 // #endregion
                 
                 // Only show dashboard if user is signed in AND explicitly logged in
@@ -4650,63 +4678,18 @@
                     if (typeof initDashboard === 'function') {
                         initDashboard();
                     }
+                    
+                    // Mark processing complete
+                    isProcessingAuthState = false;
                 } else {
                     // #region agent log
                     fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:5167',message:'User not authenticated or no explicit login - showing landing page',data:{hasUser:!!user,explicitLogin,explicitLoginRaw:sessionStorage.getItem('kotapal_explicit_login')},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
                     // #endregion
                     
-                    // User is signed out OR not explicitly logged in - show landing page
-                    // If user is authenticated but no explicit login flag, restore it from localStorage
-                    // This handles page refreshes where sessionStorage might be cleared but user is still authenticated
-                    if (user && !explicitLogin) {
-                        // Check if user data exists in localStorage (user was previously logged in)
-                        const savedUserData = JSON.parse(localStorage.getItem('kotaUser') || '{}');
-                        if (savedUserData.uid === user.uid) {
-                            // #region agent log
-                            fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:4660',message:'Restoring explicit login flag from localStorage',data:{userId:user.uid,hasSavedUserData:!!savedUserData.uid},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-                            // #endregion
-                            // User was previously logged in - restore the session
-                            sessionStorage.setItem('kotapal_explicit_login', 'true');
-                            // Update user data
-                            const userData = {
-                                uid: user.uid,
-                                email: user.email,
-                                displayName: user.displayName || savedUserData.displayName || user.email.split('@')[0],
-                                emailVerified: user.emailVerified,
-                                plan: savedUserData.plan || 'starter',
-                                signupDate: savedUserData.signupDate || new Date().toISOString()
-                            };
-                            localStorage.setItem('kotaUser', JSON.stringify(userData));
-                            currentUser = userData;
-                            
-                            // Show dashboard
-                            const landingView = document.getElementById('landing-page-view');
-                            const nav = document.querySelector('nav');
-                            const footer = document.querySelector('footer');
-                            const dashboardView = document.getElementById('dashboard-view');
-                            
-                            if (landingView) landingView.style.display = 'none';
-                            if (nav) nav.style.display = 'none';
-                            if (footer) footer.style.display = 'none';
-                            if (dashboardView) {
-                                dashboardView.style.display = 'block';
-                                dashboardView.classList.add('active');
-                            }
-                            
-                            // Initialize dashboard
-                            updateSidebarUserInfo();
-                            showPage('dashboard');
-                            if (typeof initDashboard === 'function') {
-                                initDashboard();
-                            }
-                            // #region agent log
-                            fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:4685',message:'Session restored - dashboard shown',data:{userId:user.uid},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-                            // #endregion
-                            return; // Exit early - don't show landing page
-                        }
-                        // If no saved user data, this is a stale auth state - don't auto-signout, just show landing page
-                        // The user will need to log in again
-                    }
+                    // User is signed out OR not explicitly logged in
+                    // If user is authenticated but no explicit login flag, we already tried to restore it above
+                    // If restoration failed, show landing page but DON'T sign out the user
+                    // This prevents accidental logouts during navigation
                     
                     // Clear user data if signed out
                     if (!user) {
@@ -4734,6 +4717,9 @@
                     if (landingView) landingView.style.display = 'block';
                     if (nav) nav.style.display = 'flex';
                     if (footer) footer.style.display = 'block';
+                    
+                    // Mark processing complete
+                    isProcessingAuthState = false;
                 }
             });
         } else {
