@@ -6186,7 +6186,7 @@
                         const apiUrl = `${WALMART_API_URL}?${params.toString()}`;
                         
                         // #region agent log
-                        fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:6085',message:'Walmart API request starting',data:{apiUrl:apiUrl.replace(apiKey,'[REDACTED]'),query,engine:'walmart_search'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+                        fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:6186',message:'Walmart API request starting',data:{apiUrl:apiUrl.replace(finalApiKey,'[REDACTED]'),query,engine:'walmart_search',hasFinalApiKey:!!finalApiKey},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
                         // #endregion
                         
                         const response = await fetch(apiUrl, {
@@ -6197,14 +6197,27 @@
                         });
                         
                         // #region agent log
-                        fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:6094',message:'Walmart API response received',data:{status:response.status,statusText:response.statusText,ok:response.ok},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+                        fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:6192',message:'Walmart API response received',data:{status:response.status,statusText:response.statusText,ok:response.ok,url:apiUrl.replace(finalApiKey,'[REDACTED]')},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
                         // #endregion
                         
                         if (!response.ok) {
-                            throw new Error(`API request failed: ${response.status} ${response.statusText}`);
+                            const errorText = await response.text();
+                            // #region agent log
+                            fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:6203',message:'Walmart API response not OK',data:{status:response.status,statusText:response.statusText,errorText:errorText.substring(0,200)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+                            // #endregion
+                            throw new Error(`API request failed: ${response.status} ${response.statusText}. ${errorText.substring(0,100)}`);
                         }
                         
                         const data = await response.json();
+                        
+                        // #region agent log
+                        fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:6207',message:'Walmart API JSON parsed',data:{hasData:!!data,dataKeys:data?Object.keys(data):[],hasError:!!data?.error,errorMessage:data?.error},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+                        // #endregion
+                        
+                        // Check for API errors in response
+                        if (data && data.error) {
+                            throw new Error(`API Error: ${data.error.message || data.error}`);
+                        }
                         
                         // #region agent log
                         fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:6098',message:'Walmart API data parsed',data:{hasData:!!data,hasOrganicResults:!!data?.organic_results,organicResultsCount:data?.organic_results?.length,hasOtherOptions:!!data?.other_options,otherOptionsCount:data?.other_options?.length,totalResults:data?.search_information?.total_results},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
@@ -6284,7 +6297,7 @@
                     } catch (apiError) {
                         console.error('Walmart API error:', apiError);
                         // #region agent log
-                        fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:6154',message:'Walmart API error caught',data:{error:apiError.message,errorStack:apiError.stack,query},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+                        fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:6276',message:'Walmart API error caught',data:{error:apiError.message,errorStack:apiError.stack?.substring(0,500),query,hasFinalApiKey:!!finalApiKey,finalApiKeyLength:finalApiKey?.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
                         // #endregion
                         searchStatus.textContent = `Error searching products: ${apiError.message}. Please check your API key and try again.`;
                         products = [];
