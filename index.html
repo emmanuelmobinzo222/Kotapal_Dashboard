@@ -4656,32 +4656,56 @@
                     // #endregion
                     
                     // User is signed out OR not explicitly logged in - show landing page
-                    // Only sign out if user exists but no explicit login AND not during login process
+                    // If user is authenticated but no explicit login flag, restore it from localStorage
+                    // This handles page refreshes where sessionStorage might be cleared but user is still authenticated
                     if (user && !explicitLogin) {
-                        // #region agent log
-                        fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:5170',message:'User exists but no explicit login - scheduling sign out',data:{userId:user.uid},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-                        // #endregion
-                        
-                        // Don't sign out immediately - let the login process complete first
-                        // Only sign out if this is not a fresh login attempt
-                        setTimeout(() => {
-                            const stillNoLogin = sessionStorage.getItem('kotapal_explicit_login') !== 'true';
+                        // Check if user data exists in localStorage (user was previously logged in)
+                        const savedUserData = JSON.parse(localStorage.getItem('kotaUser') || '{}');
+                        if (savedUserData.uid === user.uid) {
                             // #region agent log
-                            fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:5175',message:'Checking if still no login after timeout',data:{stillNoLogin,explicitLoginRaw:sessionStorage.getItem('kotapal_explicit_login'),hasUser:!!user},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+                            fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:4660',message:'Restoring explicit login flag from localStorage',data:{userId:user.uid,hasSavedUserData:!!savedUserData.uid},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
                             // #endregion
+                            // User was previously logged in - restore the session
+                            sessionStorage.setItem('kotapal_explicit_login', 'true');
+                            // Update user data
+                            const userData = {
+                                uid: user.uid,
+                                email: user.email,
+                                displayName: user.displayName || savedUserData.displayName || user.email.split('@')[0],
+                                emailVerified: user.emailVerified,
+                                plan: savedUserData.plan || 'starter',
+                                signupDate: savedUserData.signupDate || new Date().toISOString()
+                            };
+                            localStorage.setItem('kotaUser', JSON.stringify(userData));
+                            currentUser = userData;
                             
-                            if (stillNoLogin && user) {
-                                // #region agent log
-                                fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:5178',message:'Signing out user - no explicit login flag',data:{userId:user.uid},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-                                // #endregion
-                                auth.signOut().catch(err => {
-                                    console.error('Sign out error:', err);
-                                    // #region agent log
-                                    fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:5181',message:'Sign out error',data:{error:err.message},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-                                    // #endregion
-                                });
+                            // Show dashboard
+                            const landingView = document.getElementById('landing-page-view');
+                            const nav = document.querySelector('nav');
+                            const footer = document.querySelector('footer');
+                            const dashboardView = document.getElementById('dashboard-view');
+                            
+                            if (landingView) landingView.style.display = 'none';
+                            if (nav) nav.style.display = 'none';
+                            if (footer) footer.style.display = 'none';
+                            if (dashboardView) {
+                                dashboardView.style.display = 'block';
+                                dashboardView.classList.add('active');
                             }
-                        }, 1000);
+                            
+                            // Initialize dashboard
+                            updateSidebarUserInfo();
+                            showPage('dashboard');
+                            if (typeof initDashboard === 'function') {
+                                initDashboard();
+                            }
+                            // #region agent log
+                            fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:4685',message:'Session restored - dashboard shown',data:{userId:user.uid},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+                            // #endregion
+                            return; // Exit early - don't show landing page
+                        }
+                        // If no saved user data, this is a stale auth state - don't auto-signout, just show landing page
+                        // The user will need to log in again
                     }
                     
                     // Clear user data if signed out
