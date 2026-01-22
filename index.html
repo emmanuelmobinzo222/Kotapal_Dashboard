@@ -4234,10 +4234,17 @@
                 };
                 // Set explicit login flag FIRST, before any state changes
                 sessionStorage.setItem('kotapal_explicit_login', 'true');
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:4756',message:'Setting explicit login flag after login',data:{userId:user.uid,explicitLoginFlag:sessionStorage.getItem('kotapal_explicit_login')},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+                // #endregion
+                
                 localStorage.setItem('kotaUser', JSON.stringify(userData));
                 currentUser = userData;
                 
                 console.log('Login successful, showing dashboard...');
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:4760',message:'Login successful - user data stored',data:{userId:user.uid,email:user.email,hasCurrentUser:!!currentUser},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+                // #endregion
                 
                 // Show success message before closing modal
                 showAuthMessage('authMessage', 'Login successful! Redirecting to dashboard...', 'success');
@@ -4586,16 +4593,30 @@
         // Check authentication state and show appropriate view
         if (auth) {
             auth.onAuthStateChanged((user) => {
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:5121',message:'auth.onAuthStateChanged triggered',data:{hasUser:!!user,userId:user?.uid,email:user?.email,isInitialLoad,explicitLoginFlag:sessionStorage.getItem('kotapal_explicit_login')},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+                // #endregion
+                
                 // Skip processing during initial load to prevent conflicts
                 if (isInitialLoad) {
+                    // #region agent log
+                    fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:5125',message:'Skipping auth state change - initial load',data:{isInitialLoad},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+                    // #endregion
                     return;
                 }
                 
                 // ALWAYS check for explicit login first - NO AUTO LOGIN
                 const explicitLogin = sessionStorage.getItem('kotapal_explicit_login') === 'true';
                 
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:5130',message:'Checking explicit login flag',data:{hasUser:!!user,explicitLogin,explicitLoginRaw:sessionStorage.getItem('kotapal_explicit_login'),allSessionKeys:Object.keys(sessionStorage)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+                // #endregion
+                
                 // Only show dashboard if user is signed in AND explicitly logged in
                 if (user && explicitLogin) {
+                    // #region agent log
+                    fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:5133',message:'User authenticated and explicitly logged in - showing dashboard',data:{userId:user.uid,email:user.email},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+                    // #endregion
                     // User is signed in and explicitly logged in - show dashboard
                     const savedUserData = JSON.parse(localStorage.getItem('kotaUser') || '{}');
                     const userData = {
@@ -4630,24 +4651,50 @@
                         initDashboard();
                     }
                 } else {
+                    // #region agent log
+                    fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:5167',message:'User not authenticated or no explicit login - showing landing page',data:{hasUser:!!user,explicitLogin,explicitLoginRaw:sessionStorage.getItem('kotapal_explicit_login')},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+                    // #endregion
+                    
                     // User is signed out OR not explicitly logged in - show landing page
                     // Only sign out if user exists but no explicit login AND not during login process
                     if (user && !explicitLogin) {
+                        // #region agent log
+                        fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:5170',message:'User exists but no explicit login - scheduling sign out',data:{userId:user.uid},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+                        // #endregion
+                        
                         // Don't sign out immediately - let the login process complete first
                         // Only sign out if this is not a fresh login attempt
                         setTimeout(() => {
                             const stillNoLogin = sessionStorage.getItem('kotapal_explicit_login') !== 'true';
+                            // #region agent log
+                            fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:5175',message:'Checking if still no login after timeout',data:{stillNoLogin,explicitLoginRaw:sessionStorage.getItem('kotapal_explicit_login'),hasUser:!!user},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+                            // #endregion
+                            
                             if (stillNoLogin && user) {
-                                auth.signOut().catch(err => console.error('Sign out error:', err));
+                                // #region agent log
+                                fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:5178',message:'Signing out user - no explicit login flag',data:{userId:user.uid},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+                                // #endregion
+                                auth.signOut().catch(err => {
+                                    console.error('Sign out error:', err);
+                                    // #region agent log
+                                    fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:5181',message:'Sign out error',data:{error:err.message},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+                                    // #endregion
+                                });
                             }
                         }, 1000);
                     }
                     
                     // Clear user data if signed out
                     if (!user) {
+                        // #region agent log
+                        fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:4688',message:'Clearing user data - user signed out',data:{hadUserData:!!localStorage.getItem('kotaUser'),hadExplicitLogin:!!sessionStorage.getItem('kotapal_explicit_login')},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+                        // #endregion
                         localStorage.removeItem('kotaUser');
                         sessionStorage.removeItem('kotapal_explicit_login');
                         currentUser = null;
+                        // #region agent log
+                        fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:4691',message:'User data cleared',data:{hasUserData:!!localStorage.getItem('kotaUser'),hasExplicitLogin:!!sessionStorage.getItem('kotapal_explicit_login'),hasCurrentUser:!!currentUser},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+                        // #endregion
                     }
                     
                     // Show landing page if not explicitly logged in
@@ -4674,13 +4721,22 @@
         if (logoutBtn) {
             logoutBtn.addEventListener('click', async (e) => {
                 e.preventDefault();
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:4722',message:'Logout button clicked',data:{hasAuth:!!auth,hasCurrentUser:!!currentUser},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+                // #endregion
                 try {
                     if (auth) {
                         await auth.signOut();
+                        // #region agent log
+                        fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:4726',message:'User signed out via Firebase',data:{hadUserData:!!localStorage.getItem('kotaUser'),hadExplicitLogin:!!sessionStorage.getItem('kotapal_explicit_login')},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+                        // #endregion
                         localStorage.removeItem('kotaUser');
                         sessionStorage.removeItem('kotapal_explicit_login');
                         sessionStorage.removeItem('settings_access_granted');
                         currentUser = null;
+                        // #region agent log
+                        fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:4730',message:'Session data cleared after logout',data:{hasUserData:!!localStorage.getItem('kotaUser'),hasExplicitLogin:!!sessionStorage.getItem('kotapal_explicit_login'),hasCurrentUser:!!currentUser},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+                        // #endregion
                         
                         // Show landing page
                         const landingView = document.getElementById('landing-page-view');
@@ -5818,9 +5874,14 @@
         // Same API key works for both Amazon and Walmart
         function getSearchApiKey() {
             // Priority: 1. User-saved key, 2. Default Amazon API key
-            return localStorage.getItem('searchapi_key') || 
+            const key = localStorage.getItem('searchapi_key') || 
                    localStorage.getItem('searchapi_amazon_key') || 
                    DEFAULT_AMAZON_API_KEY;
+            
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:6373',message:'getSearchApiKey called',data:{hasKey:!!key,keyLength:key?.length,hasLocalStorageKey:!!localStorage.getItem('searchapi_key'),hasDefaultKey:!!DEFAULT_AMAZON_API_KEY},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+            // #endregion
+            return key;
         }
         
         function setSearchApiKey(key) {
@@ -6058,7 +6119,14 @@
                     // Endpoint: https://www.searchapi.io/api/v1/search?engine=walmart_search
                     const apiKey = getSearchApiKey();
                     
+                    // #region agent log
+                    fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:6055',message:'Walmart search started',data:{query,hasApiKey:!!apiKey,apiKeyLength:apiKey?.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+                    // #endregion
+                    
                     if (!apiKey) {
+                        // #region agent log
+                        fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:6061',message:'Walmart API key missing',data:{query},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+                        // #endregion
                         searchStatus.textContent = 'API key required. Please configure your SearchAPI.io API key in Settings.';
                         products = [];
                         return;
@@ -6084,6 +6152,10 @@
                         
                         const apiUrl = `${WALMART_API_URL}?${params.toString()}`;
                         
+                        // #region agent log
+                        fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:6085',message:'Walmart API request starting',data:{apiUrl:apiUrl.replace(apiKey,'[REDACTED]'),query,engine:'walmart_search'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+                        // #endregion
+                        
                         const response = await fetch(apiUrl, {
                             method: 'GET',
                             headers: {
@@ -6091,11 +6163,19 @@
                             }
                         });
                         
+                        // #region agent log
+                        fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:6094',message:'Walmart API response received',data:{status:response.status,statusText:response.statusText,ok:response.ok},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+                        // #endregion
+                        
                         if (!response.ok) {
                             throw new Error(`API request failed: ${response.status} ${response.statusText}`);
                         }
                         
                         const data = await response.json();
+                        
+                        // #region agent log
+                        fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:6098',message:'Walmart API data parsed',data:{hasData:!!data,hasOrganicResults:!!data?.organic_results,organicResultsCount:data?.organic_results?.length,hasOtherOptions:!!data?.other_options,otherOptionsCount:data?.other_options?.length,totalResults:data?.search_information?.total_results},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+                        // #endregion
                         
                         // Parse SearchAPI.io response format
                         // Handle both organic_results and other_options
@@ -6103,11 +6183,21 @@
                         
                         if (data && data.organic_results && Array.isArray(data.organic_results)) {
                             allResults = allResults.concat(data.organic_results);
+                            // #region agent log
+                            fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:6104',message:'Added organic_results to allResults',data:{organicResultsCount:data.organic_results.length,allResultsCount:allResults.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+                            // #endregion
                         }
                         
                         if (data && data.other_options && Array.isArray(data.other_options)) {
                             allResults = allResults.concat(data.other_options);
+                            // #region agent log
+                            fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:6108',message:'Added other_options to allResults',data:{otherOptionsCount:data.other_options.length,allResultsCount:allResults.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+                            // #endregion
                         }
+                        
+                        // #region agent log
+                        fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:6112',message:'Before processing allResults',data:{allResultsCount:allResults.length,hasResults:allResults.length>0},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+                        // #endregion
                         
                         if (allResults.length > 0) {
                             products = allResults.map((item, index) => {
@@ -6148,11 +6238,21 @@
                             
                             const totalResults = data.search_information?.total_results || products.length;
                             searchStatus.textContent = `Found ${products.length} Walmart products for "${query}" (${totalResults.toLocaleString()} total available)`;
+                            
+                            // #region agent log
+                            fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:6149',message:'Walmart products processed successfully',data:{productsCount:products.length,totalResults,query},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+                            // #endregion
                         } else {
+                            // #region agent log
+                            fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:6152',message:'No products found in API response',data:{allResultsCount:allResults.length,hasOrganicResults:!!data?.organic_results,hasOtherOptions:!!data?.other_options,dataKeys:data?Object.keys(data):[]},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+                            // #endregion
                             throw new Error('No products found in API response');
                         }
                     } catch (apiError) {
                         console.error('Walmart API error:', apiError);
+                        // #region agent log
+                        fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:6154',message:'Walmart API error caught',data:{error:apiError.message,errorStack:apiError.stack,query},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+                        // #endregion
                         searchStatus.textContent = `Error searching products: ${apiError.message}. Please check your API key and try again.`;
                         products = [];
                         // NO MOCK DATA FALLBACK - Show error instead
@@ -6195,7 +6295,11 @@
                 
                 searchStatus.textContent = `Found ${products.length} products for "${query}"`;
                 
-                products.forEach(product => {
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:6281',message:'Rendering products to UI',data:{productsCount:products.length,retailer,query,hasProductsContainer:!!productsContainer},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+                // #endregion
+                
+                products.forEach((product, index) => {
                     const productCard = document.createElement('div');
                     productCard.className = 'product-card-dashboard';
                     productCard.innerHTML = `
@@ -6224,7 +6328,17 @@
                         updateSelectedProducts();
                     });
                     productsContainer.appendChild(productCard);
+                    
+                    // #region agent log
+                    if (index === 0 || index === products.length - 1) {
+                        fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:6311',message:'Product card appended to DOM',data:{productIndex:index,productId:product.id,productTitle:product.title,retailer,containerChildrenCount:productsContainer.children.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+                    }
+                    // #endregion
                 });
+                
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:6312',message:'All products rendered',data:{productsCount:products.length,containerChildrenCount:productsContainer.children.length,retailer},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+                // #endregion
             } catch (error) {
                 console.error('Search products error:', error);
                 searchStatus.textContent = `Error searching products: ${error.message}`;
