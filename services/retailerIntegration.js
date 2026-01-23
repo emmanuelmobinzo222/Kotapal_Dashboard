@@ -297,32 +297,56 @@ class AmazonRetailer extends BaseRetailer {
   /**
    * Search Amazon products using SearchAPI.io Amazon Search API
    * Provides real-time results from Amazon's product database
+   * Supports all Amazon API parameters: amazon_domain, language, delivery_country,
+   * rh (filters), sort_by, price_min, price_max, page
    */
   async searchProducts(query, options = {}) {
-    const { limit = 20, page = 1 } = options;
+    const { 
+      limit = 20, 
+      page = 1, 
+      amazon_domain, 
+      language, 
+      delivery_country, 
+      rh, 
+      sort_by, 
+      price_min, 
+      price_max 
+    } = options;
 
     // API key is always available (default is set in constructor)
     try {
+      const params = {
+        engine: 'amazon_search',
+        api_key: this.apiKey,
+        q: query,
+        num: limit,
+        page: page
+      };
+
+      // Add optional parameters if provided
+      if (amazon_domain) params.amazon_domain = amazon_domain;
+      if (language) params.language = language;
+      if (delivery_country) params.delivery_country = delivery_country;
+      if (rh) params.rh = rh;
+      if (sort_by) params.sort_by = sort_by;
+      if (price_min) params.price_min = price_min;
+      if (price_max) params.price_max = price_max;
+
       const response = await axios.get(this.apiBaseUrl, {
-        params: {
-          engine: 'amazon_search',
-          api_key: this.apiKey,
-          q: query,
-          num: limit,
-          page: page
-        },
+        params: params,
         timeout: this.service.config.requestTimeout
       });
 
+      // Handle organic_results from Amazon API response
+      let allResults = [];
       if (response.data && response.data.organic_results) {
-        return this.normalizeData(response.data.organic_results);
+        allResults = allResults.concat(response.data.organic_results);
       }
 
-      return this.normalizeData(response.data || []);
+      return this.normalizeData(allResults);
     } catch (error) {
       console.error('Amazon searchProducts error:', error.message);
-      // Fallback to mock data on error
-      return this.getMockBestSellers(limit);
+      throw new Error(`Amazon search failed: ${error.message}`);
     }
   }
 
@@ -332,26 +356,27 @@ class AmazonRetailer extends BaseRetailer {
     try {
       // Use SearchAPI.io to search for best sellers in category
       // Always use the configured API key (default is set in constructor)
+      // Use sort_by=bestsellers to get best-selling items
       const response = await axios.get(this.apiBaseUrl, {
         params: {
           engine: 'amazon_search',
           api_key: this.apiKey,
           q: `best sellers ${category}`,
-          num: limit
+          num: limit,
+          sort_by: 'bestsellers'
         },
         timeout: this.service.config.requestTimeout
       });
 
+      let allResults = [];
       if (response.data && response.data.organic_results) {
-        return this.normalizeData(response.data.organic_results);
+        allResults = allResults.concat(response.data.organic_results);
       }
 
-      // Fallback to mock data if no results
-      return this.getMockBestSellers(limit);
+      return this.normalizeData(allResults);
     } catch (error) {
       console.error('Amazon fetchBestSellers error:', error.message);
-      // Fallback to mock data on error
-      return this.getMockBestSellers(limit);
+      throw new Error(`Amazon best sellers fetch failed: ${error.message}`);
     }
   }
 
@@ -374,40 +399,63 @@ class AmazonRetailer extends BaseRetailer {
   }
 
   normalizeData(data) {
-    return Array.isArray(data) ? data.map(item => ({
-      id: item.asin || item.id,
-      title: item.title,
-      price: item.price,
-      originalPrice: item.originalPrice,
-      rating: item.rating,
-      reviews: item.reviews,
-      image: item.image,
-      availability: item.availability,
-      category: item.category,
-      retailer: 'amazon',
-      normalizedAt: new Date()
-    })) : data;
+    return Array.isArray(data) ? data.map(item => {
+      // Handle price extraction - use extracted_price if available (cleaner than parsing price string)
+      const price = item.extracted_price !== undefined && item.extracted_price !== null
+        ? parseFloat(item.extracted_price)
+        : (item.price ? parseFloat(String(item.price).replace(/[^0-9.]/g, '')) : 0);
+      
+      const originalPrice = item.extracted_original_price !== undefined && item.extracted_original_price !== null
+        ? parseFloat(item.extracted_original_price)
+        : (item.original_price ? parseFloat(String(item.original_price).replace(/[^0-9.]/g, '')) : price);
+
+      // Handle fulfillment/availability
+      const hasFulfillment = item.fulfillment && (
+        item.fulfillment.standard_delivery || 
+        item.fulfillment.fastest_delivery
+      );
+      const availability = hasFulfillment ? 'In Stock' : (item.availability || 'Out of Stock');
+
+      return {
+        id: item.asin || item.id,
+        title: item.title || 'Product',
+        price: price || 0,
+        originalPrice: originalPrice || price,
+        rating: item.rating ? parseFloat(item.rating) : 0,
+        reviews: item.reviews ? parseInt(String(item.reviews).replace(/[^0-9]/g, '')) : 0,
+        image: item.thumbnail || item.image || 'https://via.placeholder.com/200',
+        availability: availability,
+        category: item.category || '',
+        retailer: 'amazon',
+        link: item.link || `https://www.amazon.com/dp/${item.asin || item.id || ''}`,
+        normalizedAt: new Date(),
+        // Additional fields from Amazon API response
+        asin: item.asin || null,
+        brand: item.brand || null,
+        position: item.position || null,
+        recentSales: item.recent_sales || null,
+        fulfillment: item.fulfillment || null,
+        moreOffers: item.more_offers || null,
+        attributes: item.attributes || [],
+        isPrime: item.is_prime || false,
+        isOverallPick: item.is_overall_pick || false,
+        tags: item.tags || [],
+        media: item.media || null,
+        authors: item.authors || [],
+        credits: item.credits || null,
+        prices: item.prices || [],
+        otherFormats: item.other_formats || [],
+        pricePer: item.price_per || null
+      };
+    }) : data;
   }
 
   generateAffiliateUrl(productId, affiliateId) {
     return `https://www.amazon.com/dp/${productId}?tag=${affiliateId}`;
   }
 
-  getMockBestSellers(limit) {
-    return {
-      data: Array.from({ length: limit }, (_, i) => ({
-        asin: `B${String(i).padStart(10, '0')}`,
-        title: `Amazon Product #${i + 1}`,
-        price: Math.floor(Math.random() * 500) + 10,
-        originalPrice: Math.floor(Math.random() * 600) + 20,
-        rating: (Math.random() * 2 + 3).toFixed(1),
-        reviews: Math.floor(Math.random() * 10000),
-        image: `https://images.unsplash.com/photo-${Math.floor(Math.random() * 1000000)}`,
-        availability: 'In Stock',
-        category: 'electronics'
-      }))
-    };
-  }
+  // Mock data functions REMOVED - Using real API only
+  // All Amazon products now come from SearchAPI.io Amazon Search API
 
   getMockAnalytics() {
     return {

@@ -158,6 +158,24 @@
             padding: 12px 28px;
             font-weight: 600;
             transition: all 0.3s ease;
+            /* Ensure all buttons have visible text and background */
+            color: inherit;
+            background: inherit;
+        }
+
+        /* Fallback: Ensure buttons without classes are visible */
+        button:not(.btn-primary):not(.btn-secondary):not(.btn-secondary-hero):not(.block-btn):not(.sensitive-toggle):not(.sidebar-toggle):not(.inline-toggle-btn) {
+            background: var(--primary);
+            color: white;
+            border: 1px solid var(--primary-dark);
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 500;
+        }
+
+        button:not(.btn-primary):not(.btn-secondary):not(.btn-secondary-hero):not(.block-btn):not(.sensitive-toggle):not(.sidebar-toggle):not(.inline-toggle-btn):hover {
+            background: var(--primary-dark);
+            border-color: var(--primary-dark);
         }
 
         .btn-primary {
@@ -188,13 +206,16 @@
             border-color: #9ca3af;
         }
 
-        .btn-secondary {
+        /* Secondary button variant for dark backgrounds (hero section) */
+        .hero .btn-secondary,
+        .btn-secondary-hero {
             background: transparent;
             border: 2px solid white;
             color: white;
         }
 
-        .btn-secondary:hover {
+        .hero .btn-secondary:hover,
+        .btn-secondary-hero:hover {
             background: rgba(255, 255, 255, 0.1);
         }
 
@@ -1800,6 +1821,23 @@
             color: var(--dark);
         }
 
+        /* Ensure all buttons have minimum contrast and visibility */
+        button, .btn {
+            min-height: 44px;
+            min-width: 44px;
+        }
+
+        /* Ensure button text is always visible - only apply if no explicit color is set */
+        button:not(.btn-primary):not(.btn-secondary-hero):not(.hero .btn-secondary):not(.block-btn):not(.sensitive-toggle):not(.sidebar-toggle):not(.inline-toggle-btn) {
+            color: #1f2937;
+        }
+
+        /* Ensure buttons have visible borders or backgrounds if not explicitly styled */
+        button:not(.btn-primary):not(.btn-secondary):not(.btn-secondary-hero):not(.hero .btn-secondary):not(.block-btn):not(.sensitive-toggle):not(.sidebar-toggle):not(.inline-toggle-btn) {
+            background-color: #f3f4f6;
+            border: 1px solid #d1d5db;
+        }
+
         @media (max-width: 1024px) {
             .sidebar {
                 transform: translateX(-100%);
@@ -2471,26 +2509,52 @@
 
         .block-btn {
             flex: 1;
-            padding: 8px;
+            padding: 8px 12px;
             border-radius: 5px;
             font-size: 0.8rem;
             text-align: center;
             cursor: pointer;
+            border: 1px solid transparent;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .block-btn:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
         }
 
         .btn-edit {
             background: #dbeafe;
             color: #1d4ed8;
+            border: 1px solid #93c5fd;
+        }
+
+        .btn-edit:hover {
+            background: #bfdbfe;
+            border-color: #60a5fa;
         }
 
         .btn-publish {
             background: #dcfce7;
             color: #16a34a;
+            border: 1px solid #86efac;
+        }
+
+        .btn-publish:hover {
+            background: #bbf7d0;
+            border-color: #4ade80;
         }
 
         .btn-delete {
             background: #fee2e2;
             color: #dc2626;
+            border: 1px solid #fca5a5;
+        }
+
+        .btn-delete:hover {
+            background: #fecaca;
+            border-color: #f87171;
         }
 
         .table-container {
@@ -6043,30 +6107,41 @@
                             
                             const data = await response.json();
                             
-                            // Parse SearchAPI.io response format
+                            // Parse SearchAPI.io Amazon API response format
                             if (data && data.organic_results && Array.isArray(data.organic_results)) {
                                 products = data.organic_results.map((item, index) => {
-                                    // Extract price from price string (e.g., "$29.99" or "$29.99 - $39.99")
-                                    let price = 0;
-                                    if (item.price) {
-                                        const priceMatch = item.price.match(/\$?([\d,]+\.?\d*)/);
-                                        if (priceMatch) {
-                                            price = parseFloat(priceMatch[1].replace(/,/g, ''));
-                                        }
-                                    }
+                                    // Use extracted_price if available (cleaner than parsing price string)
+                                    const price = item.extracted_price !== undefined && item.extracted_price !== null
+                                        ? parseFloat(item.extracted_price)
+                                        : (item.price ? parseFloat(String(item.price).replace(/[^0-9.]/g, '')) : 0);
+                                    
+                                    const originalPrice = item.extracted_original_price !== undefined && item.extracted_original_price !== null
+                                        ? parseFloat(item.extracted_original_price)
+                                        : (item.original_price ? parseFloat(String(item.original_price).replace(/[^0-9.]/g, '')) : price);
+                                    
+                                    // Handle fulfillment/availability
+                                    const hasFulfillment = item.fulfillment && (
+                                        item.fulfillment.standard_delivery || 
+                                        item.fulfillment.fastest_delivery
+                                    );
+                                    const availability = hasFulfillment ? 'In Stock' : (item.availability || 'Out of Stock');
                                     
                                     return {
                                         id: item.asin || item.product_id || `amz_${index}`,
                                         title: item.title || 'Product',
                                         image: item.thumbnail || item.image || 'https://via.placeholder.com/200',
                                         price: price || 0,
-                                        originalPrice: item.original_price ? parseFloat(item.original_price.replace(/[^0-9.]/g, '')) : price,
+                                        originalPrice: originalPrice || price,
                                         rating: item.rating ? parseFloat(item.rating) : 0,
-                                        reviews: item.reviews ? parseInt(item.reviews.replace(/[^0-9]/g, '')) : 0,
-                                        availability: item.availability || 'In Stock',
+                                        reviews: item.reviews ? parseInt(String(item.reviews).replace(/[^0-9]/g, '')) : 0,
+                                        availability: availability,
                                         asin: item.asin,
                                         link: item.link || `https://www.amazon.com/dp/${item.asin || ''}`,
-                                        retailer: 'amazon'
+                                        retailer: 'amazon',
+                                        brand: item.brand || null,
+                                        recentSales: item.recent_sales || null,
+                                        isPrime: item.is_prime || false,
+                                        isOverallPick: item.is_overall_pick || false
                                     };
                                 });
                                 
@@ -6088,25 +6163,38 @@
                                     const data = await response.json();
                                     if (data && data.organic_results && Array.isArray(data.organic_results)) {
                                         products = data.organic_results.map((item, index) => {
-                                            let price = 0;
-                                            if (item.price) {
-                                                const priceMatch = item.price.match(/\$?([\d,]+\.?\d*)/);
-                                                if (priceMatch) {
-                                                    price = parseFloat(priceMatch[1].replace(/,/g, ''));
-                                                }
-                                            }
+                                            // Use extracted_price if available (cleaner than parsing price string)
+                                            const price = item.extracted_price !== undefined && item.extracted_price !== null
+                                                ? parseFloat(item.extracted_price)
+                                                : (item.price ? parseFloat(String(item.price).replace(/[^0-9.]/g, '')) : 0);
+                                            
+                                            const originalPrice = item.extracted_original_price !== undefined && item.extracted_original_price !== null
+                                                ? parseFloat(item.extracted_original_price)
+                                                : (item.original_price ? parseFloat(String(item.original_price).replace(/[^0-9.]/g, '')) : price);
+                                            
+                                            // Handle fulfillment/availability
+                                            const hasFulfillment = item.fulfillment && (
+                                                item.fulfillment.standard_delivery || 
+                                                item.fulfillment.fastest_delivery
+                                            );
+                                            const availability = hasFulfillment ? 'In Stock' : (item.availability || 'Out of Stock');
+                                            
                                             return {
                                                 id: item.asin || item.product_id || `amz_${index}`,
                                                 title: item.title || 'Product',
                                                 image: item.thumbnail || item.image || 'https://via.placeholder.com/200',
                                                 price: price || 0,
-                                                originalPrice: item.original_price ? parseFloat(item.original_price.replace(/[^0-9.]/g, '')) : price,
+                                                originalPrice: originalPrice || price,
                                                 rating: item.rating ? parseFloat(item.rating) : 0,
-                                                reviews: item.reviews ? parseInt(item.reviews.replace(/[^0-9]/g, '')) : 0,
-                                                availability: item.availability || 'In Stock',
+                                                reviews: item.reviews ? parseInt(String(item.reviews).replace(/[^0-9]/g, '')) : 0,
+                                                availability: availability,
                                                 asin: item.asin,
                                                 link: item.link || `https://www.amazon.com/dp/${item.asin || ''}`,
-                                                retailer: 'amazon'
+                                                retailer: 'amazon',
+                                                brand: item.brand || null,
+                                                recentSales: item.recent_sales || null,
+                                                isPrime: item.is_prime || false,
+                                                isOverallPick: item.is_overall_pick || false
                                             };
                                         });
                                         searchStatus.textContent = `Found ${products.length} Amazon products for "${query}"`;
