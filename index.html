@@ -4202,8 +4202,15 @@
 
         // Handle Login
         async function handleFirebaseLogin(email, password) {
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:4204',message:'handleFirebaseLogin called',data:{hasAuth:!!auth,email:email?.substring(0,10)+'...',hasPassword:!!password},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H'})}).catch(()=>{});
+            // #endregion
+            
             // Check if Firebase is initialized
             if (!auth) {
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:4206',message:'Firebase auth not initialized',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H'})}).catch(()=>{});
+                // #endregion
                 showAuthMessage('authMessage', 'Firebase is not configured. Please contact support.', 'error');
                 console.error('Firebase auth not initialized');
                 return;
@@ -4211,11 +4218,17 @@
 
             // Validate inputs
             if (!email || !email.trim()) {
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:4213',message:'Email validation failed',data:{hasEmail:!!email},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H'})}).catch(()=>{});
+                // #endregion
                 showAuthMessage('authMessage', 'Please enter your email address.', 'error');
                 return;
             }
 
             if (!password) {
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:4218',message:'Password validation failed',data:{hasPassword:!!password},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H'})}).catch(()=>{});
+                // #endregion
                 showAuthMessage('authMessage', 'Please enter your password.', 'error');
                 return;
             }
@@ -4228,6 +4241,10 @@
                     submitBtn.disabled = true;
                     submitBtn.textContent = 'Logging in...';
                 }
+
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:4232',message:'Calling Firebase signInWithEmailAndPassword',data:{email:email.trim().substring(0,10)+'...',hasPassword:!!password},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H'})}).catch(()=>{});
+                // #endregion
 
                 const userCredential = await auth.signInWithEmailAndPassword(email.trim(), password);
                 const user = userCredential.user;
@@ -4246,15 +4263,18 @@
                     signupDate: savedUserData.signupDate || new Date().toISOString()
                 };
                 // Set explicit login flag in BOTH sessionStorage AND localStorage for maximum persistence
+                // Set these IMMEDIATELY before any async operations to prevent race conditions
                 sessionStorage.setItem('kotapal_explicit_login', 'true');
                 localStorage.setItem('kotapal_explicit_login', 'true'); // Backup in localStorage
-                
-                // #region agent log
-                fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:4236',message:'Setting explicit login flag after login',data:{userId:user.uid,explicitLoginFlag:sessionStorage.getItem('kotapal_explicit_login'),hasLocalStorageFlag:!!localStorage.getItem('kotapal_explicit_login')},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-                // #endregion
-                
                 localStorage.setItem('kotaUser', JSON.stringify(userData));
                 currentUser = userData;
+                
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:4248',message:'Setting explicit login flag after login',data:{userId:user.uid,explicitLoginFlag:sessionStorage.getItem('kotapal_explicit_login'),hasLocalStorageFlag:!!localStorage.getItem('kotapal_explicit_login'),hasCurrentUser:!!currentUser},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+                // #endregion
+                
+                // Small delay to ensure auth state listener processes the change after flags are set
+                await new Promise(resolve => setTimeout(resolve, 100));
                 
                 console.log('Login successful, showing dashboard...');
                 // #region agent log
@@ -4294,6 +4314,10 @@
                 }
             } catch (error) {
                 console.error('Login error:', error);
+                
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:4312',message:'Login error caught',data:{errorCode:error.code,errorMessage:error.message,errorStack:error.stack?.substring(0,300)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H'})}).catch(()=>{});
+                // #endregion
                 
                 // Re-enable button
                 const submitBtn = document.querySelector('#loginFormElement button[type="submit"]');
