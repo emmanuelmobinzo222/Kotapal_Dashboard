@@ -3289,6 +3289,7 @@
                                     <option value="">Select a retailer</option>
                                     <option value="amazon">Amazon</option>
                                     <option value="walmart">Walmart</option>
+                                    <option value="ebay">eBay</option>
                                     <option value="shopify">Shopify</option>
                                     <option value="skimlinks">Skimlinks</option>
                                 </select>
@@ -3344,6 +3345,7 @@
                                 <option value="all">All Retailers</option>
                                 <option value="amazon">Amazon</option>
                                 <option value="walmart">Walmart</option>
+                                    <option value="ebay">eBay</option>
                                 <option value="shopify">Shopify</option>
                                 <option value="skimlinks">Skimlinks</option>
                             </select>
@@ -3492,6 +3494,52 @@
                                 <button class="btn btn-primary" id="saveAmazonApiKey">Save</button>
                             </div>
                             <p id="amazonApiKeyStatus" style="margin-top: 10px; font-size: 0.85rem; color: var(--gray);"></p>
+                            </div>
+                            <div class="form-group">
+                                <label>SearchAPI.io Engines (Amazon, Walmart, eBay, Google AI Mode)</label>
+                                <p style="margin: 10px 0; color: var(--gray); font-size: 0.9rem;">
+                                    These engines all use the same SearchAPI.io API key. Below is a quick reference for the eBay Search API and Google AI Mode API that power real-time product search and the AI Assistant inside KOTAPAL.
+                                </p>
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px;">
+                                    <div style="background: #f9fafb; border-radius: 8px; padding: 12px 14px;">
+                                        <h4 style="font-size: 1rem; margin-bottom: 6px;">eBay Search API</h4>
+                                        <p style="font-size: 0.85rem; color: var(--gray); margin-bottom: 8px;">
+                                            Real-time product search across eBay using <code style="font-size: 0.8rem;">engine=ebay_search</code>.
+                                        </p>
+                                        <p style="font-size: 0.8rem; color: var(--gray); margin-bottom: 4px;"><strong>Endpoint</strong>: <code>GET /api/v1/search?engine=ebay_search</code></p>
+                                        <p style="font-size: 0.8rem; color: var(--gray); margin-bottom: 4px;"><strong>Core query params</strong>:</p>
+                                        <ul style="font-size: 0.8rem; color: var(--gray); padding-left: 18px; margin-bottom: 4px;">
+                                            <li><code>q</code> – search query (words, groups like <code>(ring,earrings)</code>, exclusions like <code>-wood</code>)</li>
+                                            <li><code>category_id</code> – restrict to a specific eBay category</li>
+                                            <li><code>ebay_domain</code>, <code>country</code>, <code>delivery_country</code>, <code>postal_code</code>, <code>distance_radius</code></li>
+                                            <li><code>price_min</code>, <code>price_max</code>, <code>condition</code>, <code>buying_format</code></li>
+                                            <li><code>filters</code>, <code>advanced_filters</code> (e.g. <code>Size=XS|S,Brand=adidas</code>)</li>
+                                            <li><code>sort_by</code> (best_match, price_low_to_high, distance_nearest, etc.)</li>
+                                            <li><code>layout</code>, <code>num</code>, <code>page</code> for pagination</li>
+                                            <li><code>engine</code> (always <code>ebay_search</code>), <code>api_key</code>, optional <code>zero_retention</code></li>
+                                        </ul>
+                                        <p style="font-size: 0.8rem; color: var(--gray);">
+                                            KOTAPAL uses this API to fetch eBay products directly into the dashboard, and renders all responses inside the app UI.
+                                        </p>
+                                    </div>
+                                    <div style="background: #f9fafb; border-radius: 8px; padding: 12px 14px;">
+                                        <h4 style="font-size: 1rem; margin-bottom: 6px;">Google AI Mode API</h4>
+                                        <p style="font-size: 0.85rem; color: var(--gray); margin-bottom: 8px;">
+                                            AI-generated answers and structured results from Google’s experimental AI search using <code style="font-size: 0.8rem;">engine=google_ai_mode</code>.
+                                        </p>
+                                        <p style="font-size: 0.8rem; color: var(--gray); margin-bottom: 4px;"><strong>Endpoint</strong>: <code>GET /api/v1/search?engine=google_ai_mode</code></p>
+                                        <p style="font-size: 0.8rem; color: var(--gray); margin-bottom: 4px;"><strong>Core query params</strong>:</p>
+                                        <ul style="font-size: 0.8rem; color: var(--gray); padding-left: 18px; margin-bottom: 4px;">
+                                            <li><code>q</code> – natural language question or prompt (language of the query controls response language)</li>
+                                            <li><code>url</code> – optional image URL to analyze (can be combined with <code>q</code>)</li>
+                                            <li><code>location</code> or <code>uule</code> – geographic targeting</li>
+                                            <li><code>engine</code> (always <code>google_ai_mode</code>), <code>api_key</code>, optional <code>zero_retention</code></li>
+                                        </ul>
+                                        <p style="font-size: 0.8rem; color: var(--gray);">
+                                            The AI Assistant page in KOTAPAL calls this API and displays all AI responses, markdown, and references directly in the chat and result cards—no external popups.
+                                        </p>
+                                    </div>
+                                </div>
                         </div>
                     </div>
                 </div>
@@ -6018,6 +6066,7 @@
         const SEARCHAPI_URL = 'https://www.searchapi.io/api/v1/search';
         const AMAZON_API_URL = SEARCHAPI_URL;
         const WALMART_API_URL = SEARCHAPI_URL;
+        const EBAY_API_URL = SEARCHAPI_URL;
         
         // Load API key when settings page is shown
         function loadAmazonApiKey() {
@@ -6419,6 +6468,76 @@
                         searchStatus.textContent = `Error searching products: ${apiError.message}. Please check your API key and try again.`;
                         products = [];
                         // NO MOCK DATA FALLBACK - Show error instead
+                    }
+                } else if (retailer === 'ebay') {
+                    // Use SearchAPI.io eBay Search API
+                    // Endpoint: https://www.searchapi.io/api/v1/search?engine=ebay_search
+                    const apiKey = getSearchApiKey();
+                    
+                    if (!apiKey) {
+                        searchStatus.textContent = 'API key required. Please configure your SearchAPI.io API key in Settings.';
+                        products = [];
+                        return;
+                    }
+
+                    try {
+                        const params = new URLSearchParams({
+                            engine: 'ebay_search',
+                            q: query,
+                            api_key: apiKey,
+                            num: '20'
+                        });
+
+                        const apiUrl = `${EBAY_API_URL}?${params.toString()}`;
+
+                        const response = await fetch(apiUrl, {
+                            method: 'GET',
+                            headers: {
+                                'Accept': 'application/json'
+                            }
+                        });
+
+                        if (!response.ok) {
+                            const errorText = await response.text();
+                            throw new Error(`API request failed: ${response.status} ${response.statusText}. ${errorText.substring(0, 120)}`);
+                        }
+
+                        const data = await response.json();
+
+                        if (data && data.organic_results && Array.isArray(data.organic_results) && data.organic_results.length > 0) {
+                            products = data.organic_results.map((item, index) => {
+                                // Prefer extracted_price / extracted_original_price when available
+                                const price = (item.extracted_price !== undefined && item.extracted_price !== null)
+                                    ? parseFloat(item.extracted_price)
+                                    : (item.price ? parseFloat(String(item.price).replace(/[^0-9.]/g, '')) : 0);
+
+                                const originalPrice = (item.extracted_original_price !== undefined && item.extracted_original_price !== null)
+                                    ? parseFloat(item.extracted_original_price)
+                                    : (item.original_price ? parseFloat(String(item.original_price).replace(/[^0-9.]/g, '')) : price);
+
+                                return {
+                                    id: item.item_id || `ebay_${index}`,
+                                    title: item.title || 'Product',
+                                    image: item.thumbnail || 'https://via.placeholder.com/200',
+                                    price: price || 0,
+                                    originalPrice: originalPrice || price,
+                                    rating: item.rating ? parseFloat(item.rating) : 0,
+                                    reviews: item.reviews ? parseInt(String(item.reviews).replace(/[^0-9]/g, '')) : 0,
+                                    availability: item.condition || 'In Stock',
+                                    link: item.link || '',
+                                    retailer: 'ebay'
+                                };
+                            });
+
+                            const totalResults = data.search_information?.total_results || products.length;
+                            searchStatus.textContent = `Found ${products.length} eBay products for "${query}" (${totalResults.toLocaleString()} total available)`;
+                        } else {
+                            throw new Error('No products found in eBay API response');
+                        }
+                    } catch (apiError) {
+                        console.error('eBay API error:', apiError);
+                        searchStatus.textContent = `Error searching eBay products: ${apiError.message}. Please check your API key and try again.`;
+                        products = [];
                     }
                 } else if (retailer === 'shopify') {
                     products = [
