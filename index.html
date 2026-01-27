@@ -4367,29 +4367,34 @@
                 fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:4232',message:'Calling Firebase signInWithEmailAndPassword',data:{email:email.trim().substring(0,10)+'...',hasPassword:!!password},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H'})}).catch(()=>{});
                 // #endregion
 
+                console.log('[Login] 🔐 Calling Firebase signInWithEmailAndPassword...');
                 const userCredential = await auth.signInWithEmailAndPassword(email.trim(), password);
                 const user = userCredential.user;
                 
-                console.log('[Login] Firebase authentication successful:', user.uid, user.email);
+                console.log('[Login] ✅ Firebase authentication successful!');
+                console.log('[Login] User ID:', user.uid);
+                console.log('[Login] User Email:', user.email);
                 
                 // CRITICAL: Set explicit login flag IMMEDIATELY and synchronously
                 // This must happen BEFORE the auth state listener can interfere
                 sessionStorage.setItem('kotapal_explicit_login', 'true');
-                console.log('[Login] Explicit login flag set in sessionStorage:', sessionStorage.getItem('kotapal_explicit_login'));
-                
-                // Also set a flag to tell auth state listener to skip sign-out
+                localStorage.setItem('kotapal_explicit_login', 'true'); // Also set in localStorage as backup
                 window._loginJustCompleted = true;
+                console.log('[Login] ✅ Explicit login flag set in sessionStorage:', sessionStorage.getItem('kotapal_explicit_login'));
+                console.log('[Login] ✅ All login flags set - auth state listener will not interfere');
                 
                 // Get saved user data or create new
                 const savedUserData = JSON.parse(localStorage.getItem('kotaUser') || '{}');
                 // Prioritize Firebase displayName, then saved displayName, then email prefix
                 const displayName = user.displayName || savedUserData.displayName || user.email.split('@')[0];
                 
-                // Store user data in localStorage - preserve registration data if it exists
+                // Store user data in localStorage - preserve ALL registration data
+                // This ensures all information entered during registration is remembered
                 const registrationName = savedUserData.registrationName || savedUserData.displayName || savedUserData.name || displayName;
                 const registrationEmail = savedUserData.registrationEmail || user.email;
                 const registrationPlan = savedUserData.registrationPlan || savedUserData.plan || 'starter';
                 
+                // Build complete user data object with ALL information
                 const userData = {
                     uid: user.uid,
                     email: user.email,
@@ -4398,15 +4403,33 @@
                     emailVerified: user.emailVerified,
                     plan: savedUserData.plan || registrationPlan || 'starter',
                     signupDate: savedUserData.signupDate || new Date().toISOString(),
-                    // Preserve original registration data
+                    // Preserve original registration data - CRITICAL for remembering user info
                     registrationName: registrationName,
                     registrationEmail: registrationEmail,
-                    registrationPlan: registrationPlan
+                    registrationPlan: registrationPlan,
+                    // Preserve any other registration data
+                    website: savedUserData.website || '',
+                    profilePicture: savedUserData.profilePicture || '',
+                    // Last login timestamp
+                    lastLogin: new Date().toISOString()
                 };
+                
+                // Save to localStorage - this is the single source of truth
                 localStorage.setItem('kotaUser', JSON.stringify(userData));
                 currentUser = userData;
                 
-                console.log('[Login] User data stored:', { uid: user.uid, email: user.email, displayName });
+                console.log('[Login] ✅ User data saved to localStorage:', {
+                    uid: user.uid,
+                    email: user.email,
+                    displayName: displayName,
+                    registrationName: registrationName,
+                    plan: userData.plan
+                });
+                console.log('[Login] ✅ All registration information preserved:', {
+                    registrationName: registrationName,
+                    registrationEmail: registrationEmail,
+                    registrationPlan: registrationPlan
+                });
                 
                 // #region agent log
                 fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:4248',message:'Setting explicit login flag after login',data:{userId:user.uid,explicitLoginFlag:sessionStorage.getItem('kotapal_explicit_login'),hasLocalStorageFlag:!!localStorage.getItem('kotapal_explicit_login'),hasCurrentUser:!!currentUser},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
@@ -4444,13 +4467,16 @@
                     initDashboard();
                 }
                 
-                // Clear the login in progress flag after a delay
+                // Clear the login in progress flags after a delay
                 setTimeout(() => {
                     window._loginJustCompleted = false;
+                    window._isLoginInProgress = false;
                     isLoginInProgress = false;
-                }, 1000);
+                    console.log('[Login] Login flags cleared');
+                }, 2000);
                 
-                console.log('[Login] Dashboard displayed successfully');
+                console.log('[Login] ✅ Dashboard displayed successfully');
+                console.log('[Login] ✅ Login process complete');
                 
                 // #region agent log
                 fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:4760',message:'Login successful - user data stored',data:{userId:user.uid,email:user.email,hasCurrentUser:!!currentUser},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
@@ -4461,14 +4487,16 @@
                     submitBtn.disabled = false;
                     submitBtn.textContent = originalText;
                 }
-                
-                // Clear login in progress flag
-                isLoginInProgress = false;
             } catch (error) {
-                console.error('Login error:', error);
+                console.error('[Login] ❌ LOGIN ERROR:', error);
+                console.error('[Login] Error code:', error.code);
+                console.error('[Login] Error message:', error.message);
+                console.error('[Login] Full error:', JSON.stringify(error, null, 2));
                 
-                // Clear login in progress flag on error
+                // Clear login in progress flags on error
                 isLoginInProgress = false;
+                window._loginJustCompleted = false;
+                window._isLoginInProgress = false;
                 
                 // #region agent log
                 fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:4312',message:'Login error caught',data:{errorCode:error.code,errorMessage:error.message,errorStack:error.stack?.substring(0,300)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H'})}).catch(()=>{});
@@ -4559,6 +4587,7 @@
                 }
                 
                 // Store user data in localStorage - ensure ALL registration data is preserved
+                // THIS IS CRITICAL - all information entered during registration is saved here
                 const userData = {
                     uid: user.uid,
                     email: user.email,
@@ -4567,51 +4596,79 @@
                     emailVerified: user.emailVerified,
                     plan: plan || 'starter',
                     signupDate: new Date().toISOString(),
-                    // Store original registration data for syncing
+                    // Store original registration data - THIS REMEMBERS YOUR INFO
                     registrationName: name.trim(),
                     registrationEmail: user.email,
-                    registrationPlan: plan || 'starter'
+                    registrationPlan: plan || 'starter',
+                    // Additional fields
+                    website: '',
+                    profilePicture: '',
+                    signupTimestamp: new Date().toISOString()
                 };
-                // Set explicit login flag ONLY in sessionStorage (not localStorage)
-                // sessionStorage is cleared when tab closes, ensuring users must log in each session
+                
+                // Set explicit login flag in BOTH sessionStorage and localStorage
                 sessionStorage.setItem('kotapal_explicit_login', 'true');
+                localStorage.setItem('kotapal_explicit_login', 'true');
+                
+                // Save user data - THIS REMEMBERS ALL YOUR INFORMATION
                 localStorage.setItem('kotaUser', JSON.stringify(userData));
                 currentUser = userData;
                 
+                console.log('[Signup] ✅ User account created and ALL information saved:', {
+                    registrationName: userData.registrationName,
+                    registrationEmail: userData.registrationEmail,
+                    registrationPlan: userData.registrationPlan,
+                    displayName: userData.displayName,
+                    email: userData.email
+                });
+                
+                // Set flags to prevent auth state listener from interfering
+                window._loginJustCompleted = true;
+                window._isLoginInProgress = true;
+                isLoginInProgress = true;
+                
                 // Immediately sync user info everywhere
+                updateUserDisplay();
                 updateSidebarUserInfo();
                 syncUserPlan();
                 
-                console.log('Signup successful, showing dashboard...');
+                console.log('[Signup] ✅ Signup successful, showing dashboard...');
                 
-                // Show success message before closing modal
+                // Show success message
                 showAuthMessage('signupMessage', 'Account created successfully! Redirecting to dashboard...', 'success');
                 
-                // Close modal after a brief delay
+                // Close modal immediately
+                closeAuthModal();
+                
+                // Force dashboard to show IMMEDIATELY
+                const landingView = document.getElementById('landing-page-view');
+                const nav = document.querySelector('nav');
+                const footer = document.querySelector('footer');
+                const dashboardView = document.getElementById('dashboard-view');
+                
+                if (landingView) landingView.style.display = 'none';
+                if (nav) nav.style.display = 'none';
+                if (footer) footer.style.display = 'none';
+                if (dashboardView) {
+                    dashboardView.style.display = 'block';
+                    dashboardView.classList.add('active');
+                }
+                
+                updateUserDisplay();
+                updateSidebarUserInfo(); // Update sidebar with user name and plan immediately
+                syncUserPlan(); // Ensure plan is synced everywhere
+                showPage('dashboard');
+                if (typeof initDashboard === 'function') {
+                    initDashboard();
+                }
+                
+                // Clear flags after delay
                 setTimeout(() => {
-                    closeAuthModal();
-                    
-                    // Force dashboard to show
-                    const landingView = document.getElementById('landing-page-view');
-                    const nav = document.querySelector('nav');
-                    const footer = document.querySelector('footer');
-                    const dashboardView = document.getElementById('dashboard-view');
-                    
-                    if (landingView) landingView.style.display = 'none';
-                    if (nav) nav.style.display = 'none';
-                    if (footer) footer.style.display = 'none';
-                    if (dashboardView) {
-                        dashboardView.style.display = 'block';
-                        dashboardView.classList.add('active');
-                    }
-                    
-                    updateSidebarUserInfo(); // Update sidebar with user name and plan immediately
-                    syncUserPlan(); // Ensure plan is synced everywhere
-                    showPage('dashboard');
-                    if (typeof initDashboard === 'function') {
-                        initDashboard();
-                    }
-                }, 500);
+                    window._loginJustCompleted = false;
+                    window._isLoginInProgress = false;
+                    isLoginInProgress = false;
+                    console.log('[Signup] ✅ Signup complete - flags cleared');
+                }, 2000);
                 
                 // Re-enable button
                 if (submitBtn) {
@@ -4865,27 +4922,26 @@
                 fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:4613',message:'Checking explicit login flag (sessionStorage only)',data:{hasUser:!!user,explicitLogin,explicitLoginRaw:sessionStorage.getItem('kotapal_explicit_login'),localStorageFlag:localStorage.getItem('kotapal_explicit_login'),allSessionKeys:Object.keys(sessionStorage)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
                 // #endregion
                 
-                // CRITICAL: If user exists but no explicit login flag, sign them out
-                // This prevents auto-login from Firebase persistence
-                // BUT: Don't interfere if login just completed (login function handles dashboard display)
-                if (user && !explicitLogin) {
-                    // Check if login just completed (login function sets this flag)
-                    if (isLoginInProgress || window._loginJustCompleted) {
-                        console.log('[AuthState] Login in progress or just completed - skipping sign-out');
-                        isProcessingAuthState = false;
-                        return;
-                    } else {
-                        // Not a login - sign out immediately to prevent auto-login
-                        console.log('[AuthState] User authenticated but no explicit login flag - signing out to prevent auto-login');
-                        auth.signOut().catch(err => console.error('Error signing out:', err));
-                        isProcessingAuthState = false;
-                        return;
-                    }
+                // CRITICAL: If login is in progress or just completed, DO NOT INTERFERE AT ALL
+                // Let the login function handle everything - completely skip this listener
+                if (isLoginInProgress || window._loginJustCompleted || window._isLoginInProgress) {
+                    console.log('[AuthState] ⚠️ Login in progress - COMPLETELY SKIPPING auth state processing');
+                    console.log('[AuthState] Flags:', {
+                        isLoginInProgress,
+                        _loginJustCompleted: window._loginJustCompleted,
+                        _isLoginInProgress: window._isLoginInProgress
+                    });
+                    isProcessingAuthState = false;
+                    return; // Exit immediately - don't process anything
                 }
                 
-                // If user is logged in and has explicit flag, but login just completed, let login function handle it
-                if (user && explicitLogin && window._loginJustCompleted) {
-                    console.log('[AuthState] Login just completed - login function is handling dashboard display');
+                // CRITICAL: If user exists but no explicit login flag, sign them out
+                // This prevents auto-login from Firebase persistence
+                // BUT: Only do this if login is NOT in progress
+                if (user && !explicitLogin) {
+                    // Not a login - sign out immediately to prevent auto-login
+                    console.log('[AuthState] User authenticated but no explicit login flag - signing out to prevent auto-login');
+                    auth.signOut().catch(err => console.error('Error signing out:', err));
                     isProcessingAuthState = false;
                     return;
                 }
@@ -5150,24 +5206,69 @@
         
         // Wait for DOM to be ready before attaching form handlers
         function setupAuthFormHandlers() {
+            console.log('[Setup] Setting up auth form handlers...');
+            
             // Login form submission
             const loginForm = document.getElementById('loginFormElement');
             if (loginForm) {
-                loginForm.addEventListener('submit', async (e) => {
+                // Remove any existing listeners first
+                const newLoginForm = loginForm.cloneNode(true);
+                loginForm.parentNode.replaceChild(newLoginForm, loginForm);
+                
+                // Attach event listener to the new form
+                newLoginForm.addEventListener('submit', async (e) => {
                     e.preventDefault();
                     e.stopPropagation();
+                    console.log('[Login Form] ✅ FORM SUBMITTED - Login button clicked!');
                     try {
-                        const email = document.getElementById('loginEmail').value;
-                        const password = document.getElementById('loginPassword').value;
-                        console.log('Login attempt:', email);
+                        const emailInput = document.getElementById('loginEmail');
+                        const passwordInput = document.getElementById('loginPassword');
+                        
+                        console.log('[Login Form] Inputs found:', {
+                            emailInput: !!emailInput,
+                            passwordInput: !!passwordInput
+                        });
+                        
+                        if (!emailInput || !passwordInput) {
+                            console.error('[Login Form] ❌ Email or password input not found!');
+                            showAuthMessage('authMessage', 'Form error. Please refresh the page.', 'error');
+                            return;
+                        }
+                        
+                        const email = emailInput.value;
+                        const password = passwordInput.value;
+                        
+                        console.log('[Login Form] Values:', {
+                            email: email ? email.substring(0, 10) + '...' : 'EMPTY',
+                            hasPassword: !!password
+                        });
+                        
+                        if (!email || !email.trim()) {
+                            console.error('[Login Form] ❌ Email is empty');
+                            showAuthMessage('authMessage', 'Please enter your email address.', 'error');
+                            return;
+                        }
+                        
+                        if (!password) {
+                            console.error('[Login Form] ❌ Password is empty');
+                            showAuthMessage('authMessage', 'Please enter your password.', 'error');
+                            return;
+                        }
+                        
+                        console.log('[Login Form] ✅ Calling handleFirebaseLogin...');
                         await handleFirebaseLogin(email, password);
                     } catch (error) {
-                        console.error('Login form error:', error);
-                        showAuthMessage('authMessage', 'An error occurred. Please try again.', 'error');
+                        console.error('[Login Form] ❌ ERROR:', error);
+                        console.error('[Login Form] Error stack:', error.stack);
+                        showAuthMessage('authMessage', `Error: ${error.message || 'An error occurred. Please try again.'}`, 'error');
                     }
                 });
+                
+                newLoginForm.setAttribute('data-handler-attached', 'true');
+                console.log('[Login Form] ✅ Event listener attached successfully to loginFormElement');
             } else {
-                console.error('Login form not found!');
+                console.error('[Login Form] ❌ Login form element not found! ID: loginFormElement');
+                console.error('[Login Form] Available forms:', document.querySelectorAll('form').length);
             }
 
             // Signup form submission
@@ -5228,12 +5329,27 @@
         }
         
         // Setup form handlers when DOM is ready
+        function initializeAuthHandlers() {
+            console.log('[Init] Setting up auth form handlers...');
+            setupAuthFormHandlers();
+            console.log('[Init] Auth form handlers setup complete');
+        }
+        
         if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', setupAuthFormHandlers);
+            document.addEventListener('DOMContentLoaded', initializeAuthHandlers);
         } else {
             // DOM is already ready
-            setupAuthFormHandlers();
+            initializeAuthHandlers();
         }
+        
+        // Also try to setup handlers after a short delay as backup
+        setTimeout(() => {
+            const loginForm = document.getElementById('loginFormElement');
+            if (loginForm && !loginForm.hasAttribute('data-handler-attached')) {
+                console.log('[Init] Backup: Re-attaching login form handler...');
+                setupAuthFormHandlers();
+            }
+        }, 1000);
         
         // Mobile Optimizations
         (function() {
