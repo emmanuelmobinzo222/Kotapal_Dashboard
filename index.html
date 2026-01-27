@@ -6515,10 +6515,14 @@
                     // Implemented EXACTLY the same way as Walmart and Amazon
                     const apiKey = getSearchApiKey();
                     
-                    // Use default API key if user hasn't configured one (same as Walmart)
+                    // getSearchApiKey() already returns DEFAULT_AMAZON_API_KEY if no user key is set
+                    // So finalApiKey should always have a value
                     const finalApiKey = apiKey || DEFAULT_AMAZON_API_KEY;
                     
+                    console.log('[eBay] Starting search:', { query, hasApiKey: !!finalApiKey, apiKeyLength: finalApiKey?.length });
+                    
                     if (!finalApiKey) {
+                        console.error('[eBay] No API key available!');
                         searchStatus.textContent = 'API key required. Please configure your SearchAPI.io API key in Settings.';
                         products = [];
                         return;
@@ -6535,7 +6539,9 @@
 
                         const apiUrl = `${EBAY_API_URL}?${params.toString()}`;
                         
-                        console.log('eBay API Request:', apiUrl.replace(finalApiKey, '[REDACTED]'));
+                        console.log('[eBay] API Request URL:', apiUrl.replace(finalApiKey, '[REDACTED]'));
+                        console.log('[eBay] Query:', query);
+                        console.log('[eBay] Has API Key:', !!finalApiKey);
 
                         const response = await fetch(apiUrl, {
                             method: 'GET',
@@ -6544,21 +6550,24 @@
                             }
                         });
 
-                        console.log('eBay API Response Status:', response.status, response.statusText);
+                        console.log('[eBay] Response Status:', response.status, response.statusText);
+                        console.log('[eBay] Response OK:', response.ok);
 
                         if (!response.ok) {
                             const errorText = await response.text();
-                            console.error('eBay API Error Response:', errorText);
-                            throw new Error(`API request failed: ${response.status} ${response.statusText}. ${errorText.substring(0, 120)}`);
+                            console.error('[eBay] Error Response Text:', errorText);
+                            throw new Error(`API request failed: ${response.status} ${response.statusText}. ${errorText.substring(0, 200)}`);
                         }
 
                         const data = await response.json();
-                        console.log('eBay API Response Data:', data);
+                        console.log('[eBay] Full Response Data:', JSON.stringify(data, null, 2));
+                        console.log('[eBay] Response Keys:', Object.keys(data || {}));
 
                         // Check for API errors in response (same as Walmart)
                         if (data && data.error) {
-                            console.error('eBay API Error in response:', data.error);
-                            throw new Error(`API Error: ${data.error.message || data.error}`);
+                            console.error('[eBay] API Error in response:', data.error);
+                            const errorMsg = typeof data.error === 'string' ? data.error : (data.error.message || JSON.stringify(data.error));
+                            throw new Error(`API Error: ${errorMsg}`);
                         }
 
                         // Parse SearchAPI.io response format (EXACT same pattern as Walmart)
@@ -6566,52 +6575,65 @@
                         let allResults = [];
                         
                         if (data && data.organic_results && Array.isArray(data.organic_results)) {
-                            console.log('eBay organic_results found:', data.organic_results.length);
+                            console.log('[eBay] Found organic_results:', data.organic_results.length);
                             allResults = allResults.concat(data.organic_results);
+                        } else {
+                            console.log('[eBay] No organic_results found or not an array');
                         }
                         
                         if (data && data.other_options && Array.isArray(data.other_options)) {
-                            console.log('eBay other_options found:', data.other_options.length);
+                            console.log('[eBay] Found other_options:', data.other_options.length);
                             allResults = allResults.concat(data.other_options);
                         }
                         
                         // Also check for sections (eBay sometimes returns results in sections)
                         if (data && data.sections && Array.isArray(data.sections)) {
-                            console.log('eBay sections found:', data.sections.length);
-                            data.sections.forEach(section => {
+                            console.log('[eBay] Found sections:', data.sections.length);
+                            data.sections.forEach((section, idx) => {
                                 if (section.results && Array.isArray(section.results)) {
+                                    console.log(`[eBay] Section ${idx} has ${section.results.length} results`);
                                     allResults = allResults.concat(section.results);
                                 }
                             });
                         }
 
-                        console.log('eBay Total results to process:', allResults.length);
+                        console.log('[eBay] Total results collected:', allResults.length);
+                        console.log('[eBay] Sample result structure:', allResults.length > 0 ? allResults[0] : 'No results');
 
                         if (allResults.length > 0) {
                             products = allResults.map((item, index) => {
                                 // Use extracted_price if available (cleaner than parsing price string)
-                                const price = (item.extracted_price !== undefined && item.extracted_price !== null)
-                                    ? parseFloat(item.extracted_price)
-                                    : (item.price ? parseFloat(String(item.price).replace(/[^0-9.]/g, '')) : 0);
+                                let price = 0;
+                                if (item.extracted_price !== undefined && item.extracted_price !== null) {
+                                    price = parseFloat(item.extracted_price);
+                                } else if (item.price) {
+                                    // Try to extract price from string like "$99.99" or "99.99"
+                                    const priceStr = String(item.price).replace(/[^0-9.]/g, '');
+                                    price = parseFloat(priceStr) || 0;
+                                }
 
-                                const originalPrice = (item.extracted_original_price !== undefined && item.extracted_original_price !== null)
-                                    ? parseFloat(item.extracted_original_price)
-                                    : (item.original_price ? parseFloat(String(item.original_price).replace(/[^0-9.]/g, '')) : price);
+                                let originalPrice = price;
+                                if (item.extracted_original_price !== undefined && item.extracted_original_price !== null) {
+                                    originalPrice = parseFloat(item.extracted_original_price);
+                                } else if (item.original_price) {
+                                    const origPriceStr = String(item.original_price).replace(/[^0-9.]/g, '');
+                                    originalPrice = parseFloat(origPriceStr) || price;
+                                }
 
                                 return {
-                                    id: item.item_id || `ebay_${index}`,
+                                    id: item.item_id || item.id || `ebay_${index}`,
                                     title: item.title || 'Product',
-                                    image: item.thumbnail || 'https://via.placeholder.com/200',
+                                    image: item.thumbnail || item.image || 'https://via.placeholder.com/200',
                                     price: price || 0,
                                     originalPrice: originalPrice || price,
                                     rating: item.rating ? parseFloat(item.rating) : 0,
                                     reviews: item.reviews ? parseInt(String(item.reviews).replace(/[^0-9]/g, '')) : 0,
                                     availability: item.condition || 'In Stock',
-                                    link: item.link || '',
+                                    link: item.link || item.url || '',
                                     retailer: 'ebay',
                                     // Additional fields from API response
-                                    itemId: item.item_id || null,
-                                    seller: item.seller || null,
+                                    itemId: item.item_id || item.id || null,
+                                    seller: item.seller || (item.seller_name ? { name: item.seller_name } : null),
                                     condition: item.condition || null,
                                     buyingFormat: item.buying_format || null,
                                     shipping: item.shipping || null
@@ -6620,15 +6642,29 @@
 
                             const totalResults = data.search_information?.total_results || products.length;
                             searchStatus.textContent = `Found ${products.length} eBay products for "${query}" (${totalResults.toLocaleString()} total available)`;
-                            console.log('eBay products processed successfully:', products.length);
+                            console.log('[eBay] Successfully processed', products.length, 'products');
                         } else {
-                            console.warn('eBay API returned no results. Response structure:', Object.keys(data || {}));
-                            throw new Error('No products found in eBay API response. Check console for details.');
+                            // Log the entire response structure for debugging
+                            console.warn('[eBay] No results found. Full response structure:', {
+                                hasData: !!data,
+                                keys: data ? Object.keys(data) : [],
+                                hasOrganicResults: !!(data && data.organic_results),
+                                organicResultsType: data && data.organic_results ? typeof data.organic_results : 'N/A',
+                                organicResultsIsArray: data && data.organic_results ? Array.isArray(data.organic_results) : false,
+                                hasSections: !!(data && data.sections),
+                                sectionsType: data && data.sections ? typeof data.sections : 'N/A',
+                                sectionsIsArray: data && data.sections ? Array.isArray(data.sections) : false,
+                                searchInformation: data && data.search_information ? data.search_information : null
+                            });
+                            throw new Error(`No products found in eBay API response. Response structure: ${JSON.stringify(Object.keys(data || {}))}. Check browser console for full details.`);
                         }
                     } catch (apiError) {
-                        console.error('eBay API error:', apiError);
-                        console.error('eBay API error stack:', apiError.stack);
-                        searchStatus.textContent = `Error searching eBay products: ${apiError.message}. Please check your API key and try again. Check browser console for more details.`;
+                        console.error('[eBay] API Error Details:', {
+                            message: apiError.message,
+                            stack: apiError.stack,
+                            name: apiError.name
+                        });
+                        searchStatus.textContent = `Error searching eBay products: ${apiError.message}. Please check your API key and try again. Open browser console (F12) for detailed error information.`;
                         products = [];
                         // NO MOCK DATA FALLBACK - Show error instead (same as Walmart)
                     }
