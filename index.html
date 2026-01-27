@@ -4901,6 +4901,8 @@
                         }
                     }
                     
+                    // Update name and plan immediately
+                    updateUserDisplay(); // Update name display first
                     updateSidebarUserInfo(); // Update sidebar with user name and plan immediately
                     syncUserPlan(); // Ensure plan is synced everywhere (sidebar, billing, etc.)
                     showPage('dashboard');
@@ -5585,6 +5587,7 @@
             // Sync user plan everywhere on dashboard initialization
             syncUserPlan();
             updateSidebarUserInfo();
+            updateUserDisplay(); // Update name display
             
             updateDashboardStats();
             renderBlocks();
@@ -5592,6 +5595,68 @@
             renderActivityTable();
             renderAnalytics();
             renderAlerts();
+        }
+        
+        // Update Dashboard Stats with REAL data from blocks
+        function updateDashboardStats() {
+            // Get all blocks from localStorage
+            const savedBlocks = JSON.parse(localStorage.getItem('kotaBlocks') || '[]');
+            const blocks = savedBlocks.length > 0 ? savedBlocks : currentBlocks;
+            
+            // Calculate real stats from blocks
+            let totalClicks = 0;
+            let totalRevenue = 0;
+            let totalCTR = 0;
+            let activeBlocksCount = 0;
+            let blocksWithClicks = 0;
+            
+            blocks.forEach(block => {
+                if (block.status === 'active') {
+                    activeBlocksCount++;
+                }
+                if (block.clicks) {
+                    totalClicks += parseInt(block.clicks) || 0;
+                    blocksWithClicks++;
+                }
+                if (block.revenue) {
+                    totalRevenue += parseFloat(block.revenue) || 0;
+                }
+                if (block.ctr) {
+                    totalCTR += parseFloat(block.ctr) || 0;
+                }
+            });
+            
+            // Calculate average CTR
+            const avgCTR = blocksWithClicks > 0 ? (totalCTR / blocksWithClicks) : 0;
+            
+            // Update DOM elements
+            const totalClicksEl = document.getElementById('totalClicks');
+            const estimatedRevenueEl = document.getElementById('estimatedRevenue');
+            const avgCTREl = document.getElementById('avgCTR');
+            const activeBlocksEl = document.getElementById('activeBlocks');
+            
+            if (totalClicksEl) {
+                totalClicksEl.textContent = totalClicks.toLocaleString();
+            }
+            
+            if (estimatedRevenueEl) {
+                estimatedRevenueEl.textContent = `$${totalRevenue.toFixed(2)}`;
+            }
+            
+            if (avgCTREl) {
+                avgCTREl.textContent = `${avgCTR.toFixed(1)}%`;
+            }
+            
+            if (activeBlocksEl) {
+                activeBlocksEl.textContent = activeBlocksCount.toString();
+            }
+            
+            console.log('[Dashboard Stats] Updated:', {
+                totalClicks,
+                totalRevenue,
+                avgCTR,
+                activeBlocks: activeBlocksCount
+            });
         }
 
         // Setup dashboard event listeners
@@ -5717,21 +5782,34 @@
 
         // Update user display
         function updateUserDisplay() {
-            if (currentUser) {
+            // Get user data from localStorage to ensure we have registration data
+            const savedUserData = JSON.parse(localStorage.getItem('kotaUser') || '{}');
+            const userData = currentUser || savedUserData;
+            
+            if (userData) {
                 const userNameEl = document.querySelector('.user-name');
                 const userPlanEl = document.querySelector('.user-plan');
                 
                 if (userNameEl) {
-                    userNameEl.textContent = currentUser.displayName || currentUser.email?.split('@')[0] || 'User';
+                    // Prioritize registration name first
+                    const displayName = userData.registrationName || 
+                                      userData.displayName || 
+                                      userData.name || 
+                                      userData.email?.split('@')[0] || 
+                                      'User';
+                    userNameEl.textContent = displayName;
+                    console.log('[updateUserDisplay] Name set to:', displayName);
                 }
                 
                 if (userPlanEl) {
-                    const plan = currentUser.plan || 'starter';
-                    userPlanEl.textContent = 
-                        plan === 'starter' ? 'Starter Plan ($19/mo)' : 
-                        plan === 'pro' ? 'Pro Plan ($49/mo)' : 
-                        plan === 'creatorplus' ? 'Creator+ Plan ($99/mo)' : 
-                        plan === 'agency' ? 'Agency Plan ($199+/mo)' : 'Starter Plan ($19/mo)';
+                    const plan = userData.plan || 'starter';
+                    const planNames = {
+                        'starter': 'Starter',
+                        'pro': 'Pro',
+                        'creatorplus': 'Creator+',
+                        'agency': 'Agency'
+                    };
+                    userPlanEl.textContent = `${planNames[plan] || 'Starter'} Plan`;
                 }
                 
                 const profileNameInput = document.getElementById('userName');
@@ -8311,6 +8389,9 @@
             return false;
         }
         
+        // Settings Password - Default password
+        const SETTINGS_PASSWORD = 'kotapal2024';
+        
         function verifySettingsPassword() {
             const passwordInput = document.getElementById('settingsPasswordInput');
             const messageEl = document.getElementById('settingsPasswordMessage');
@@ -8321,6 +8402,12 @@
             
             // Check against default password or user's custom password if set
             const savedPassword = localStorage.getItem('settings_password') || SETTINGS_PASSWORD;
+            
+            console.log('[Settings] Password check:', {
+                entered: enteredPassword.substring(0, 2) + '***',
+                saved: savedPassword.substring(0, 2) + '***',
+                match: enteredPassword === savedPassword
+            });
             
             if (enteredPassword === savedPassword) {
                 // Grant access for this session
@@ -8336,6 +8423,7 @@
                     messageEl.textContent = '';
                     messageEl.style.display = 'none';
                 }
+                showNotification('Access granted', 'success', 'Settings');
             } else {
                 // Show error message
                 if (messageEl) {
