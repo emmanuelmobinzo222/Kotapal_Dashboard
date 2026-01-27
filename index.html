@@ -4279,9 +4279,9 @@
                 firebase.initializeApp(firebaseConfig);
                 auth = firebase.auth();
                 
-                // Set persistence to LOCAL so users stay logged in across browser sessions
-                // This ensures the session persists even after closing the browser
-                auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch((error) => {
+                // Set persistence to SESSION so users must re-authenticate after closing the browser
+                // This reduces the chance of users appearing logged in on shared devices without re-entering credentials
+                auth.setPersistence(firebase.auth.Auth.Persistence.SESSION).catch((error) => {
                     console.error('Error setting auth persistence:', error);
                     // #region agent log
                     fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:4168',message:'Error setting auth persistence',data:{error:error.message},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'G'})}).catch(()=>{});
@@ -4770,24 +4770,10 @@
                     return;
                 }
                 
-                // ALWAYS check for explicit login first - NO AUTO LOGIN
-                // Check BOTH sessionStorage and localStorage for maximum persistence
+                // ALWAYS check for explicit login first - NO SILENT AUTO LOGIN
+                // We only trust the explicit flag set during a real login/signup action
                 let explicitLogin = sessionStorage.getItem('kotapal_explicit_login') === 'true' || 
                                    localStorage.getItem('kotapal_explicit_login') === 'true';
-                
-                // If no explicit login flag but user is authenticated, check localStorage for user data
-                if (!explicitLogin && user) {
-                    const savedUserData = JSON.parse(localStorage.getItem('kotaUser') || '{}');
-                    if (savedUserData.uid === user.uid) {
-                        // Restore the session flag immediately in BOTH storages
-                        sessionStorage.setItem('kotapal_explicit_login', 'true');
-                        localStorage.setItem('kotapal_explicit_login', 'true');
-                        explicitLogin = true;
-                        // #region agent log
-                        fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:4609',message:'Restored explicit login flag from localStorage',data:{userId:user.uid,hasSavedUserData:!!savedUserData.uid},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-                        // #endregion
-                    }
-                }
                 
                 // #region agent log
                 fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:4613',message:'Checking explicit login flag',data:{hasUser:!!user,explicitLogin,explicitLoginRaw:sessionStorage.getItem('kotapal_explicit_login'),allSessionKeys:Object.keys(sessionStorage)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
@@ -6503,6 +6489,11 @@
                         }
 
                         const data = await response.json();
+
+                        // If API returned an explicit error payload, surface it in the UI
+                        if (data && data.error) {
+                            throw new Error(data.error.message || data.error || 'eBay API returned an error');
+                        }
 
                         if (data && data.organic_results && Array.isArray(data.organic_results) && data.organic_results.length > 0) {
                             products = data.organic_results.map((item, index) => {
