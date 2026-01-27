@@ -5131,6 +5131,10 @@
             if (authModal) {
                 authModal.style.display = 'block';
                 document.body.style.overflow = 'hidden'; // Prevent scrolling
+                // Ensure form handlers are attached when modal is shown
+                setTimeout(() => {
+                    setupAuthFormHandlers();
+                }, 100);
             }
         }
 
@@ -5211,12 +5215,14 @@
             // Login form submission
             const loginForm = document.getElementById('loginFormElement');
             if (loginForm) {
-                // Remove any existing listeners first
-                const newLoginForm = loginForm.cloneNode(true);
-                loginForm.parentNode.replaceChild(newLoginForm, loginForm);
+                // Check if handler is already attached
+                if (loginForm.hasAttribute('data-handler-attached')) {
+                    console.log('[Login Form] Handler already attached, skipping...');
+                    return;
+                }
                 
-                // Attach event listener to the new form
-                newLoginForm.addEventListener('submit', async (e) => {
+                // Attach event listener to the form
+                loginForm.addEventListener('submit', async (e) => {
                     e.preventDefault();
                     e.stopPropagation();
                     console.log('[Login Form] ✅ FORM SUBMITTED - Login button clicked!');
@@ -5264,7 +5270,18 @@
                     }
                 });
                 
-                newLoginForm.setAttribute('data-handler-attached', 'true');
+                // Also attach click handler to the submit button as backup
+                const submitButton = loginForm.querySelector('button[type="submit"]');
+                if (submitButton) {
+                    submitButton.addEventListener('click', async (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        console.log('[Login Button] ✅ BUTTON CLICKED - Triggering form submit!');
+                        loginForm.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+                    });
+                }
+                
+                loginForm.setAttribute('data-handler-attached', 'true');
                 console.log('[Login Form] ✅ Event listener attached successfully to loginFormElement');
             } else {
                 console.error('[Login Form] ❌ Login form element not found! ID: loginFormElement');
@@ -5348,6 +5365,8 @@
             if (loginForm && !loginForm.hasAttribute('data-handler-attached')) {
                 console.log('[Init] Backup: Re-attaching login form handler...');
                 setupAuthFormHandlers();
+            } else if (loginForm && loginForm.hasAttribute('data-handler-attached')) {
+                console.log('[Init] Login form handler already attached');
             }
         }, 1000);
         
