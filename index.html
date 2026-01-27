@@ -4556,7 +4556,8 @@
                         dashboardView.classList.add('active');
                     }
                     
-                    updateSidebarUserInfo(); // Update sidebar with user name immediately
+                    updateSidebarUserInfo(); // Update sidebar with user name and plan immediately
+                    syncUserPlan(); // Ensure plan is synced everywhere
                     showPage('dashboard');
                     if (typeof initDashboard === 'function') {
                         initDashboard();
@@ -4856,8 +4857,9 @@
                         dashboardView.classList.add('active');
                     }
                     
-                    // Initialize dashboard
-                    updateSidebarUserInfo(); // Update sidebar with user name immediately
+                    // Initialize dashboard and sync plan
+                    updateSidebarUserInfo(); // Update sidebar with user name and plan immediately
+                    syncUserPlan(); // Ensure plan is synced everywhere (sidebar, billing, etc.)
                     showPage('dashboard');
                     if (typeof initDashboard === 'function') {
                         initDashboard();
@@ -5537,6 +5539,10 @@
                 { id: 'skimlinks', name: 'Skimlinks', status: 'connected', lastSync: '3 hours ago', affiliateId: 'skim-456' }
             ];
 
+            // Sync user plan everywhere on dashboard initialization
+            syncUserPlan();
+            updateSidebarUserInfo();
+            
             updateDashboardStats();
             renderBlocks();
             renderIntegrations();
@@ -6506,7 +6512,7 @@
                 } else if (retailer === 'ebay') {
                     // Use SearchAPI.io eBay Search API
                     // Endpoint: https://www.searchapi.io/api/v1/search?engine=ebay_search
-                    // Implemented the same way as Walmart and Amazon
+                    // Implemented EXACTLY the same way as Walmart and Amazon
                     const apiKey = getSearchApiKey();
                     
                     // Use default API key if user hasn't configured one (same as Walmart)
@@ -6519,7 +6525,7 @@
                     }
 
                     try {
-                        // Build URL with all supported parameters (same pattern as Walmart)
+                        // Build URL with all supported parameters (EXACT same pattern as Walmart)
                         const params = new URLSearchParams({
                             'engine': 'ebay_search',
                             'q': query,
@@ -6528,6 +6534,8 @@
                         });
 
                         const apiUrl = `${EBAY_API_URL}?${params.toString()}`;
+                        
+                        console.log('eBay API Request:', apiUrl.replace(finalApiKey, '[REDACTED]'));
 
                         const response = await fetch(apiUrl, {
                             method: 'GET',
@@ -6536,29 +6544,48 @@
                             }
                         });
 
+                        console.log('eBay API Response Status:', response.status, response.statusText);
+
                         if (!response.ok) {
                             const errorText = await response.text();
+                            console.error('eBay API Error Response:', errorText);
                             throw new Error(`API request failed: ${response.status} ${response.statusText}. ${errorText.substring(0, 120)}`);
                         }
 
                         const data = await response.json();
+                        console.log('eBay API Response Data:', data);
 
                         // Check for API errors in response (same as Walmart)
                         if (data && data.error) {
+                            console.error('eBay API Error in response:', data.error);
                             throw new Error(`API Error: ${data.error.message || data.error}`);
                         }
 
-                        // Parse SearchAPI.io response format (same pattern as Walmart)
+                        // Parse SearchAPI.io response format (EXACT same pattern as Walmart)
                         // Handle both organic_results and other_options if available
                         let allResults = [];
                         
                         if (data && data.organic_results && Array.isArray(data.organic_results)) {
+                            console.log('eBay organic_results found:', data.organic_results.length);
                             allResults = allResults.concat(data.organic_results);
                         }
                         
                         if (data && data.other_options && Array.isArray(data.other_options)) {
+                            console.log('eBay other_options found:', data.other_options.length);
                             allResults = allResults.concat(data.other_options);
                         }
+                        
+                        // Also check for sections (eBay sometimes returns results in sections)
+                        if (data && data.sections && Array.isArray(data.sections)) {
+                            console.log('eBay sections found:', data.sections.length);
+                            data.sections.forEach(section => {
+                                if (section.results && Array.isArray(section.results)) {
+                                    allResults = allResults.concat(section.results);
+                                }
+                            });
+                        }
+
+                        console.log('eBay Total results to process:', allResults.length);
 
                         if (allResults.length > 0) {
                             products = allResults.map((item, index) => {
@@ -6593,12 +6620,15 @@
 
                             const totalResults = data.search_information?.total_results || products.length;
                             searchStatus.textContent = `Found ${products.length} eBay products for "${query}" (${totalResults.toLocaleString()} total available)`;
+                            console.log('eBay products processed successfully:', products.length);
                         } else {
-                            throw new Error('No products found in eBay API response');
+                            console.warn('eBay API returned no results. Response structure:', Object.keys(data || {}));
+                            throw new Error('No products found in eBay API response. Check console for details.');
                         }
                     } catch (apiError) {
                         console.error('eBay API error:', apiError);
-                        searchStatus.textContent = `Error searching eBay products: ${apiError.message}. Please check your API key and try again.`;
+                        console.error('eBay API error stack:', apiError.stack);
+                        searchStatus.textContent = `Error searching eBay products: ${apiError.message}. Please check your API key and try again. Check browser console for more details.`;
                         products = [];
                         // NO MOCK DATA FALLBACK - Show error instead (same as Walmart)
                     }
@@ -7555,12 +7585,121 @@
             }, 1000);
         }
         
+        // Get user plan from single source of truth
+        function getUserPlan() {
+            // Always get from localStorage first (most up-to-date), then currentUser, then default
+            const savedUserData = JSON.parse(localStorage.getItem('kotaUser') || '{}');
+            return savedUserData.plan || currentUser?.plan || 'starter';
+        }
+        
+        // Update current user plan everywhere
+        function syncUserPlan() {
+            const userPlan = getUserPlan();
+            
+            // Update currentUser object
+            if (currentUser) {
+                currentUser.plan = userPlan;
+            }
+            
+            // Update sidebar plan display
+            const sidebarPlan = document.querySelector('.user-plan');
+            if (sidebarPlan) {
+                const planNames = {
+                    'starter': 'Starter',
+                    'pro': 'Pro',
+                    'creatorplus': 'Creator+',
+                    'agency': 'Agency'
+                };
+                sidebarPlan.textContent = `${planNames[userPlan] || 'Starter'} Plan`;
+            }
+            
+            // Update billing page if it's visible
+            updateCurrentSubscription();
+            renderBillingPlans();
+        }
+        
+        // Update Current Subscription Display
+        function updateCurrentSubscription() {
+            const container = document.getElementById('currentSubscriptionCard');
+            if (!container) return;
+            
+            const userPlan = getUserPlan();
+            const savedUserData = JSON.parse(localStorage.getItem('kotaUser') || '{}');
+            
+            const planNames = {
+                'starter': 'Starter',
+                'pro': 'Pro',
+                'creatorplus': 'Creator+',
+                'agency': 'Agency'
+            };
+            
+            const planPrices = {
+                'starter': '$19',
+                'pro': '$49',
+                'creatorplus': '$99',
+                'agency': '$199+'
+            };
+            
+            const planFeatures = {
+                'starter': [
+                    '1 Shopify store',
+                    'Amazon or Walmart only',
+                    'Limited blocks',
+                    'Watermarked embed'
+                ],
+                'pro': [
+                    'Unlimited blocks',
+                    'Shopify + 1 Affiliate Network',
+                    'Basic analytics'
+                ],
+                'creatorplus': [
+                    'Shopify + Amazon + Walmart',
+                    'AI Writer & Optimizer',
+                    'Smart Geo Redirect',
+                    'Email-friendly exports'
+                ],
+                'agency': [
+                    'YouTube Overlay Blocks',
+                    'Conversion tracking',
+                    'Newsletter block formats',
+                    'Heatmaps & CTR insights',
+                    'Whitelabel embeds',
+                    'Multiple client management',
+                    'Custom domains & branding'
+                ]
+            };
+            
+            const planName = planNames[userPlan] || 'Starter';
+            const planPrice = planPrices[userPlan] || '$19';
+            const features = planFeatures[userPlan] || planFeatures['starter'];
+            
+            container.innerHTML = `
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+                    <div class="card" style="border: 2px solid var(--primary); position: relative;">
+                        <span style="position: absolute; top: 15px; right: 15px; background: var(--primary); color: white; padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 600;">Current Plan</span>
+                        <div style="text-align: center; padding-bottom: 20px; border-bottom: 1px solid #eee;">
+                            <h3 style="margin: 15px 0 10px 0;">${planName}</h3>
+                            <div class="stat-value" style="font-size: 1.5rem;">${planPrice}</div>
+                            <div class="stat-label">per month</div>
+                        </div>
+                        <ul style="list-style: none; padding: 20px 0; text-align: left; margin: 0;">
+                            ${features.map(feature => `<li style="margin-bottom: 10px;"><i class="fas fa-check" style="color: var(--success); margin-right: 10px;"></i> ${feature}</li>`).join('')}
+                        </ul>
+                        <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #eee;">
+                            <div style="font-size: 0.875rem; color: var(--gray); margin-bottom: 8px;">Next billing date:</div>
+                            <div style="font-weight: 600;">${new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString()}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
         // Render Billing Plans
         function renderBillingPlans() {
             const container = document.getElementById('billingPlansContainer');
             if (!container) return;
             
-            const userPlan = currentUser?.plan || 'starter';
+            const userPlan = getUserPlan();
             
             const plans = [
                 {
@@ -7669,6 +7808,7 @@
                 
                 // Render billing plans when settings page is shown
                 if (pageName === 'settings') {
+                    syncUserPlan(); // Sync plan before rendering
                     renderBillingPlans();
                     loadProfileSettings();
                     updateSidebarUserInfo();
@@ -7682,6 +7822,7 @@
                 
                 // Update current subscription when billing page is shown
                 if (pageName === 'billing') {
+                    syncUserPlan(); // Sync plan before updating
                     updateCurrentSubscription();
                 }
                 
@@ -7775,16 +7916,8 @@
                 sidebarName.textContent = displayName;
             }
             
-            if (sidebarPlan) {
-                const planNames = {
-                    'starter': 'Starter',
-                    'pro': 'Pro',
-                    'creatorplus': 'Creator+',
-                    'agency': 'Agency'
-                };
-                const plan = userData.plan || 'starter';
-                sidebarPlan.textContent = `${planNames[plan] || 'Starter'} Plan`;
-            }
+            // Use syncUserPlan to ensure plan is synced everywhere
+            syncUserPlan();
         }
         
         // Plan Change Modal
@@ -7866,23 +7999,22 @@
             const confirmMessage = `Are you sure you want to ${action} to the ${planNames[planId]} plan?\n\n${priceChange}\n\nChanges will take effect immediately.`;
             
             if (confirm(confirmMessage)) {
-                // Update user plan
-                currentUser.plan = planId;
+                // Update user plan in localStorage (single source of truth)
                 const userData = JSON.parse(localStorage.getItem('kotaUser') || '{}');
                 userData.plan = planId;
                 userData.planChangeDate = new Date().toISOString();
-                userData.previousPlan = currentUser.plan;
+                userData.previousPlan = userData.plan || currentUser?.plan || 'starter';
                 localStorage.setItem('kotaUser', JSON.stringify(userData));
                 
-                // Update sidebar
-                const userPlanDisplay = document.querySelector('.user-plan');
-                if (userPlanDisplay) {
-                    userPlanDisplay.textContent = `${planNames[planId]} Plan`;
+                // Update currentUser object
+                if (currentUser) {
+                    currentUser.plan = planId;
                 }
                 
+                // Sync plan everywhere (sidebar, billing, etc.)
+                syncUserPlan();
+                
                 hidePlanChangeModal();
-                renderBillingPlans();
-                updateCurrentSubscription();
                 
                 const actionText = isUpgrade ? 'upgraded' : 'downgraded';
                 showNotification(`Plan ${actionText} to ${planNames[planId]}! Changes are now active.`, 'success', 'Plan Updated');
