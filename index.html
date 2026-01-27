@@ -4852,13 +4852,24 @@
                     // #endregion
                     // User is signed in and explicitly logged in - show dashboard
                     const savedUserData = JSON.parse(localStorage.getItem('kotaUser') || '{}');
+                    
+                    // Preserve registration data if it exists
+                    const registrationName = savedUserData.registrationName || savedUserData.displayName || savedUserData.name || user.displayName || user.email.split('@')[0];
+                    const registrationEmail = savedUserData.registrationEmail || user.email;
+                    const registrationPlan = savedUserData.registrationPlan || savedUserData.plan || 'starter';
+                    
                     const userData = {
                         uid: user.uid,
                         email: user.email,
-                        displayName: user.displayName || savedUserData.displayName || user.email.split('@')[0],
+                        displayName: registrationName,
+                        name: registrationName, // Also store as 'name' for compatibility
                         emailVerified: user.emailVerified,
-                        plan: savedUserData.plan || 'starter',
-                        signupDate: savedUserData.signupDate || new Date().toISOString()
+                        plan: savedUserData.plan || registrationPlan,
+                        signupDate: savedUserData.signupDate || new Date().toISOString(),
+                        // Preserve original registration data
+                        registrationName: registrationName,
+                        registrationEmail: registrationEmail,
+                        registrationPlan: registrationPlan
                     };
                     localStorage.setItem('kotaUser', JSON.stringify(userData));
                     currentUser = userData;
@@ -4878,6 +4889,18 @@
                     }
                     
                     // Initialize dashboard and sync plan
+                    // CRITICAL: Update user data first, then sync everything
+                    const fullUserData = JSON.parse(localStorage.getItem('kotaUser') || '{}');
+                    if (fullUserData.registrationName) {
+                        currentUser = fullUserData;
+                        // Ensure registration name is used
+                        if (!currentUser.displayName || currentUser.displayName === 'User') {
+                            currentUser.displayName = fullUserData.registrationName;
+                            currentUser.name = fullUserData.registrationName;
+                            localStorage.setItem('kotaUser', JSON.stringify(currentUser));
+                        }
+                    }
+                    
                     updateSidebarUserInfo(); // Update sidebar with user name and plan immediately
                     syncUserPlan(); // Ensure plan is synced everywhere (sidebar, billing, etc.)
                     showPage('dashboard');
@@ -6550,11 +6573,12 @@
 
                     try {
                         // Build URL with all supported parameters (EXACT same pattern as Walmart)
+                        // eBay API only supports num values: 60, 120, or 240 (not 20)
                         const params = new URLSearchParams({
                             'engine': 'ebay_search',
                             'q': query,
                             'api_key': finalApiKey,
-                            'num': '20' // Limit results
+                            'num': '60' // eBay API only supports 60, 120, or 240
                         });
 
                         const apiUrl = `${EBAY_API_URL}?${params.toString()}`;
@@ -7826,18 +7850,21 @@
             ];
             
             container.innerHTML = plans.map(plan => `
-                <div class="card" style="border: ${plan.isCurrent ? '2px solid var(--primary)' : '1px solid #e5e7eb'}; position: relative;">
-                    ${plan.isCurrent ? '<span style="position: absolute; top: 15px; right: 15px; background: var(--primary); color: white; padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 600;">Current Plan</span>' : ''}
+                <div class="card" style="border: ${plan.isCurrent ? '2px solid var(--primary)' : '1px solid #e5e7eb'}; position: relative; transition: all 0.3s ease; ${plan.isCurrent ? 'box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);' : ''}">
+                    ${plan.isCurrent ? '<span style="position: absolute; top: 15px; right: 15px; background: var(--primary); color: white; padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; z-index: 10;">Current Plan</span>' : ''}
                     <div style="text-align: center; padding-bottom: 20px; border-bottom: 1px solid #eee;">
-                        <h3 style="margin: 15px 0 10px 0;">${plan.name}</h3>
-                        <div class="stat-value" style="font-size: 1.5rem;">${plan.price}</div>
-                        <div class="stat-label">per month</div>
+                        <h3 style="margin: 15px 0 10px 0; font-size: 1.5rem; font-weight: 700;">${plan.name}</h3>
+                        <div class="stat-value" style="font-size: 2rem; font-weight: 700; color: var(--primary);">${plan.price}</div>
+                        <div class="stat-label" style="color: var(--gray); font-size: 0.9rem;">per month</div>
                     </div>
-                    <ul style="list-style: none; padding: 20px 0; text-align: left; margin: 0;">
-                        ${plan.features.map(feature => `<li style="margin-bottom: 10px;"><i class="fas fa-check" style="color: var(--success); margin-right: 10px;"></i> ${feature}</li>`).join('')}
-                    </ul>
-                    <button class="btn ${plan.isCurrent ? 'btn-secondary' : 'btn-primary'}" style="width: 100%; margin-top: 20px;" onclick="${plan.isCurrent ? '' : `changePlan('${plan.id}')`}">
-                        ${plan.isCurrent ? 'Current Plan' : 'Switch to ' + plan.name}
+                    <div style="padding: 20px 0;">
+                        <div style="font-weight: 600; margin-bottom: 15px; color: var(--dark); font-size: 0.95rem;">Plan Features:</div>
+                        <ul style="list-style: none; padding: 0; margin: 0; text-align: left;">
+                            ${plan.features.map(feature => `<li style="margin-bottom: 12px; padding-left: 5px; display: flex; align-items: flex-start;"><i class="fas fa-check-circle" style="color: var(--success); margin-right: 10px; margin-top: 3px; font-size: 0.9rem;"></i><span style="font-size: 0.9rem; line-height: 1.5;">${feature}</span></li>`).join('')}
+                        </ul>
+                    </div>
+                    <button class="btn ${plan.isCurrent ? 'btn-secondary' : 'btn-primary'}" style="width: 100%; margin-top: 20px; padding: 12px; font-weight: 600; font-size: 1rem;" onclick="${plan.isCurrent ? '' : `changePlan('${plan.id}')`}" ${plan.isCurrent ? 'disabled' : ''}>
+                        ${plan.isCurrent ? '✓ Current Plan' : `Upgrade to ${plan.name}`}
                     </button>
                 </div>
             `).join('');
@@ -7895,6 +7922,7 @@
                 if (pageName === 'billing') {
                     syncUserPlan(); // Sync plan before updating
                     updateCurrentSubscription();
+                    renderBillingPlans(); // Show all available plans with perks
                 }
                 
                 // Load reports when reports page is shown
@@ -8001,7 +8029,13 @@
                                    (userData.email ? userData.email.split('@')[0] : null) ||
                                    'User';
                 sidebarName.textContent = displayName;
-                console.log('[UserInfo] Sidebar name updated to:', displayName, 'from registration:', userData.registrationName);
+                console.log('[UserInfo] Sidebar name updated to:', displayName);
+                console.log('[UserInfo] User data:', {
+                    registrationName: userData.registrationName,
+                    displayName: userData.displayName,
+                    name: userData.name,
+                    email: userData.email
+                });
             }
             
             // Use syncUserPlan to ensure plan is synced everywhere
