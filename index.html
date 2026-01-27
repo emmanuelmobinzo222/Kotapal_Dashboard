@@ -4363,6 +4363,7 @@
                 
                 // Get saved user data or create new
                 const savedUserData = JSON.parse(localStorage.getItem('kotaUser') || '{}');
+                // Prioritize Firebase displayName, then saved displayName, then email prefix
                 const displayName = user.displayName || savedUserData.displayName || user.email.split('@')[0];
                 
                 // Store user data in localStorage
@@ -4370,6 +4371,7 @@
                     uid: user.uid,
                     email: user.email,
                     displayName: displayName,
+                    name: displayName, // Also store as 'name' for compatibility
                     emailVerified: user.emailVerified,
                     plan: savedUserData.plan || 'starter',
                     signupDate: savedUserData.signupDate || new Date().toISOString()
@@ -4520,6 +4522,7 @@
                     uid: user.uid,
                     email: user.email,
                     displayName: name.trim(),
+                    name: name.trim(), // Also store as 'name' for compatibility
                     emailVerified: user.emailVerified,
                     plan: plan || 'starter',
                     signupDate: new Date().toISOString()
@@ -4553,7 +4556,7 @@
                         dashboardView.classList.add('active');
                     }
                     
-                    updateSidebarUserInfo();
+                    updateSidebarUserInfo(); // Update sidebar with user name immediately
                     showPage('dashboard');
                     if (typeof initDashboard === 'function') {
                         initDashboard();
@@ -4854,7 +4857,7 @@
                     }
                     
                     // Initialize dashboard
-                    updateSidebarUserInfo();
+                    updateSidebarUserInfo(); // Update sidebar with user name immediately
                     showPage('dashboard');
                     if (typeof initDashboard === 'function') {
                         initDashboard();
@@ -6503,20 +6506,25 @@
                 } else if (retailer === 'ebay') {
                     // Use SearchAPI.io eBay Search API
                     // Endpoint: https://www.searchapi.io/api/v1/search?engine=ebay_search
+                    // Implemented the same way as Walmart and Amazon
                     const apiKey = getSearchApiKey();
                     
-                    if (!apiKey) {
+                    // Use default API key if user hasn't configured one (same as Walmart)
+                    const finalApiKey = apiKey || DEFAULT_AMAZON_API_KEY;
+                    
+                    if (!finalApiKey) {
                         searchStatus.textContent = 'API key required. Please configure your SearchAPI.io API key in Settings.';
                         products = [];
                         return;
                     }
 
                     try {
+                        // Build URL with all supported parameters (same pattern as Walmart)
                         const params = new URLSearchParams({
-                            engine: 'ebay_search',
-                            q: query,
-                            api_key: apiKey,
-                            num: '20'
+                            'engine': 'ebay_search',
+                            'q': query,
+                            'api_key': finalApiKey,
+                            'num': '20' // Limit results
                         });
 
                         const apiUrl = `${EBAY_API_URL}?${params.toString()}`;
@@ -6535,14 +6543,26 @@
 
                         const data = await response.json();
 
-                        // If API returned an explicit error payload, surface it in the UI
+                        // Check for API errors in response (same as Walmart)
                         if (data && data.error) {
-                            throw new Error(data.error.message || data.error || 'eBay API returned an error');
+                            throw new Error(`API Error: ${data.error.message || data.error}`);
                         }
 
-                        if (data && data.organic_results && Array.isArray(data.organic_results) && data.organic_results.length > 0) {
-                            products = data.organic_results.map((item, index) => {
-                                // Prefer extracted_price / extracted_original_price when available
+                        // Parse SearchAPI.io response format (same pattern as Walmart)
+                        // Handle both organic_results and other_options if available
+                        let allResults = [];
+                        
+                        if (data && data.organic_results && Array.isArray(data.organic_results)) {
+                            allResults = allResults.concat(data.organic_results);
+                        }
+                        
+                        if (data && data.other_options && Array.isArray(data.other_options)) {
+                            allResults = allResults.concat(data.other_options);
+                        }
+
+                        if (allResults.length > 0) {
+                            products = allResults.map((item, index) => {
+                                // Use extracted_price if available (cleaner than parsing price string)
                                 const price = (item.extracted_price !== undefined && item.extracted_price !== null)
                                     ? parseFloat(item.extracted_price)
                                     : (item.price ? parseFloat(String(item.price).replace(/[^0-9.]/g, '')) : 0);
@@ -6561,7 +6581,13 @@
                                     reviews: item.reviews ? parseInt(String(item.reviews).replace(/[^0-9]/g, '')) : 0,
                                     availability: item.condition || 'In Stock',
                                     link: item.link || '',
-                                    retailer: 'ebay'
+                                    retailer: 'ebay',
+                                    // Additional fields from API response
+                                    itemId: item.item_id || null,
+                                    seller: item.seller || null,
+                                    condition: item.condition || null,
+                                    buyingFormat: item.buying_format || null,
+                                    shipping: item.shipping || null
                                 };
                             });
 
@@ -6574,6 +6600,7 @@
                         console.error('eBay API error:', apiError);
                         searchStatus.textContent = `Error searching eBay products: ${apiError.message}. Please check your API key and try again.`;
                         products = [];
+                        // NO MOCK DATA FALLBACK - Show error instead (same as Walmart)
                     }
                 } else if (retailer === 'shopify') {
                     products = [
@@ -7727,17 +7754,27 @@
         
         // Update Sidebar User Info
         function updateSidebarUserInfo() {
-            const userData = JSON.parse(localStorage.getItem('kotaUser') || '{}');
+            // Get user data from both localStorage and currentUser (prioritize currentUser)
+            const savedUserData = JSON.parse(localStorage.getItem('kotaUser') || '{}');
+            const userData = currentUser || savedUserData;
+            
             const sidebarAvatar = document.querySelector('.user-info img');
             const sidebarName = document.querySelector('.user-name');
             const sidebarPlan = document.querySelector('.user-plan');
             
             if (sidebarAvatar) {
-                sidebarAvatar.src = userData.profilePicture || currentUser?.profilePicture || 'https://i.pravatar.cc/40?img=1';
+                sidebarAvatar.src = userData.profilePicture || 'https://i.pravatar.cc/40?img=1';
             }
+            
             if (sidebarName) {
-                sidebarName.textContent = userData.displayName || currentUser?.displayName || 'User';
+                // Prioritize displayName, then name, then email prefix, then 'User'
+                const displayName = userData.displayName || 
+                                   userData.name || 
+                                   (userData.email ? userData.email.split('@')[0] : null) ||
+                                   'User';
+                sidebarName.textContent = displayName;
             }
+            
             if (sidebarPlan) {
                 const planNames = {
                     'starter': 'Starter',
@@ -7745,7 +7782,7 @@
                     'creatorplus': 'Creator+',
                     'agency': 'Agency'
                 };
-                const plan = userData.plan || currentUser?.plan || 'starter';
+                const plan = userData.plan || 'starter';
                 sidebarPlan.textContent = `${planNames[plan] || 'Starter'} Plan`;
             }
         }
@@ -7985,6 +8022,81 @@
                     showNotification('Error updating profile. Please try again.', 'error', 'Error');
                 }
             });
+        }
+        
+        // Settings Password Functions
+        const SETTINGS_PASSWORD = 'kotapal2024'; // Default settings password
+        
+        function checkSettingsAccess() {
+            // Check if user has already entered password in this session
+            if (sessionStorage.getItem('settings_access_granted') === 'true') {
+                return true;
+            }
+            
+            // Show password modal
+            const settingsPasswordModal = document.getElementById('settingsPasswordModal');
+            if (settingsPasswordModal) {
+                settingsPasswordModal.style.display = 'flex';
+                const passwordInput = document.getElementById('settingsPasswordInput');
+                if (passwordInput) {
+                    passwordInput.value = '';
+                    passwordInput.focus();
+                }
+            }
+            return false;
+        }
+        
+        function verifySettingsPassword() {
+            const passwordInput = document.getElementById('settingsPasswordInput');
+            const messageEl = document.getElementById('settingsPasswordMessage');
+            
+            if (!passwordInput) return;
+            
+            const enteredPassword = passwordInput.value.trim();
+            
+            // Check against default password or user's custom password if set
+            const savedPassword = localStorage.getItem('settings_password') || SETTINGS_PASSWORD;
+            
+            if (enteredPassword === savedPassword) {
+                // Grant access for this session
+                sessionStorage.setItem('settings_access_granted', 'true');
+                
+                // Hide modal
+                hideSettingsPasswordModal();
+                
+                // Show settings page
+                showPage('settings');
+                
+                if (messageEl) {
+                    messageEl.textContent = '';
+                    messageEl.style.display = 'none';
+                }
+            } else {
+                // Show error message
+                if (messageEl) {
+                    messageEl.textContent = 'Incorrect password. Please try again.';
+                    messageEl.style.color = 'var(--danger)';
+                    messageEl.style.display = 'block';
+                }
+                passwordInput.value = '';
+                passwordInput.focus();
+            }
+        }
+        
+        function hideSettingsPasswordModal() {
+            const settingsPasswordModal = document.getElementById('settingsPasswordModal');
+            if (settingsPasswordModal) {
+                settingsPasswordModal.style.display = 'none';
+            }
+            const passwordInput = document.getElementById('settingsPasswordInput');
+            if (passwordInput) {
+                passwordInput.value = '';
+            }
+            const messageEl = document.getElementById('settingsPasswordMessage');
+            if (messageEl) {
+                messageEl.textContent = '';
+                messageEl.style.display = 'none';
+            }
         }
         
         // Settings password modal handlers
