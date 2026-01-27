@@ -4361,6 +4361,8 @@
                     submitBtn.textContent = 'Logging in...';
                 }
 
+                console.log('[Login] Starting login process...');
+                
                 // #region agent log
                 fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:4232',message:'Calling Firebase signInWithEmailAndPassword',data:{email:email.trim().substring(0,10)+'...',hasPassword:!!password},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H'})}).catch(()=>{});
                 // #endregion
@@ -4368,12 +4370,15 @@
                 const userCredential = await auth.signInWithEmailAndPassword(email.trim(), password);
                 const user = userCredential.user;
                 
-                console.log('[Login] Firebase authentication successful:', user.uid);
+                console.log('[Login] Firebase authentication successful:', user.uid, user.email);
                 
-                // CRITICAL: Set explicit login flag IMMEDIATELY before any auth state change listener fires
-                // This must be set synchronously to prevent the auth state listener from signing the user out
+                // CRITICAL: Set explicit login flag IMMEDIATELY and synchronously
+                // This must happen BEFORE the auth state listener can interfere
                 sessionStorage.setItem('kotapal_explicit_login', 'true');
-                console.log('[Login] Explicit login flag set:', sessionStorage.getItem('kotapal_explicit_login'));
+                console.log('[Login] Explicit login flag set in sessionStorage:', sessionStorage.getItem('kotapal_explicit_login'));
+                
+                // Also set a flag to tell auth state listener to skip sign-out
+                window._loginJustCompleted = true;
                 
                 // Get saved user data or create new
                 const savedUserData = JSON.parse(localStorage.getItem('kotaUser') || '{}');
@@ -4412,39 +4417,44 @@
                 updateSidebarUserInfo();
                 syncUserPlan();
                 
-                // Small delay to ensure auth state listener processes the change after flags are set
-                await new Promise(resolve => setTimeout(resolve, 200));
+                console.log('[Login] User data synced, showing dashboard...');
                 
-                console.log('Login successful, showing dashboard...');
+                // Show success message
+                showAuthMessage('authMessage', 'Login successful! Redirecting to dashboard...', 'success');
+                
+                // Close modal immediately
+                closeAuthModal();
+                
+                // Force dashboard to show IMMEDIATELY - don't wait for auth state listener
+                const landingView = document.getElementById('landing-page-view');
+                const nav = document.querySelector('nav');
+                const footer = document.querySelector('footer');
+                const dashboardView = document.getElementById('dashboard-view');
+                
+                if (landingView) landingView.style.display = 'none';
+                if (nav) nav.style.display = 'none';
+                if (footer) footer.style.display = 'none';
+                if (dashboardView) {
+                    dashboardView.style.display = 'block';
+                    dashboardView.classList.add('active');
+                }
+                
+                // Initialize dashboard immediately
+                if (typeof initDashboard === 'function') {
+                    initDashboard();
+                }
+                
+                // Clear the login in progress flag after a delay
+                setTimeout(() => {
+                    window._loginJustCompleted = false;
+                    isLoginInProgress = false;
+                }, 1000);
+                
+                console.log('[Login] Dashboard displayed successfully');
+                
                 // #region agent log
                 fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:4760',message:'Login successful - user data stored',data:{userId:user.uid,email:user.email,hasCurrentUser:!!currentUser},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
                 // #endregion
-                
-                // Show success message before closing modal
-                showAuthMessage('authMessage', 'Login successful! Redirecting to dashboard...', 'success');
-                
-                // Close modal after a brief delay
-                setTimeout(() => {
-                    closeAuthModal();
-                    
-                    // Force dashboard to show
-                    const landingView = document.getElementById('landing-page-view');
-                    const nav = document.querySelector('nav');
-                    const footer = document.querySelector('footer');
-                    const dashboardView = document.getElementById('dashboard-view');
-                    
-                    if (landingView) landingView.style.display = 'none';
-                    if (nav) nav.style.display = 'none';
-                    if (footer) footer.style.display = 'none';
-                    if (dashboardView) {
-                        dashboardView.style.display = 'block';
-                        dashboardView.classList.add('active');
-                    }
-                    
-                    if (typeof initDashboard === 'function') {
-                        initDashboard();
-                    }
-                }, 500);
                 
                 // Re-enable button
                 if (submitBtn) {
@@ -4857,20 +4867,27 @@
                 
                 // CRITICAL: If user exists but no explicit login flag, sign them out
                 // This prevents auto-login from Firebase persistence
-                // BUT: Don't interfere if login is in progress (login will set the flag and show dashboard)
+                // BUT: Don't interfere if login just completed (login function handles dashboard display)
                 if (user && !explicitLogin) {
-                    // If login is in progress, don't sign out - let login function handle it
-                    if (isLoginInProgress) {
-                        console.log('[AuthState] Login in progress, skipping sign-out - login function will handle dashboard');
+                    // Check if login just completed (login function sets this flag)
+                    if (isLoginInProgress || window._loginJustCompleted) {
+                        console.log('[AuthState] Login in progress or just completed - skipping sign-out');
                         isProcessingAuthState = false;
                         return;
                     } else {
-                        // Not a login in progress - sign out immediately to prevent auto-login
+                        // Not a login - sign out immediately to prevent auto-login
                         console.log('[AuthState] User authenticated but no explicit login flag - signing out to prevent auto-login');
                         auth.signOut().catch(err => console.error('Error signing out:', err));
                         isProcessingAuthState = false;
                         return;
                     }
+                }
+                
+                // If user is logged in and has explicit flag, but login just completed, let login function handle it
+                if (user && explicitLogin && window._loginJustCompleted) {
+                    console.log('[AuthState] Login just completed - login function is handling dashboard display');
+                    isProcessingAuthState = false;
+                    return;
                 }
                 
                 // Only show dashboard if user is signed in AND explicitly logged in
