@@ -4366,15 +4366,23 @@
                 // Prioritize Firebase displayName, then saved displayName, then email prefix
                 const displayName = user.displayName || savedUserData.displayName || user.email.split('@')[0];
                 
-                // Store user data in localStorage
+                // Store user data in localStorage - preserve registration data if it exists
+                const registrationName = savedUserData.registrationName || savedUserData.displayName || savedUserData.name || displayName;
+                const registrationEmail = savedUserData.registrationEmail || user.email;
+                const registrationPlan = savedUserData.registrationPlan || savedUserData.plan || 'starter';
+                
                 const userData = {
                     uid: user.uid,
                     email: user.email,
                     displayName: displayName,
                     name: displayName, // Also store as 'name' for compatibility
                     emailVerified: user.emailVerified,
-                    plan: savedUserData.plan || 'starter',
-                    signupDate: savedUserData.signupDate || new Date().toISOString()
+                    plan: savedUserData.plan || registrationPlan || 'starter',
+                    signupDate: savedUserData.signupDate || new Date().toISOString(),
+                    // Preserve original registration data
+                    registrationName: registrationName,
+                    registrationEmail: registrationEmail,
+                    registrationPlan: registrationPlan
                 };
                 // Set explicit login flag ONLY in sessionStorage (not localStorage)
                 // sessionStorage is cleared when tab closes, ensuring users must log in each session
@@ -4382,6 +4390,10 @@
                 sessionStorage.setItem('kotapal_explicit_login', 'true');
                 localStorage.setItem('kotaUser', JSON.stringify(userData));
                 currentUser = userData;
+                
+                // Immediately sync user info everywhere
+                updateSidebarUserInfo();
+                syncUserPlan();
                 
                 // #region agent log
                 fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:4248',message:'Setting explicit login flag after login',data:{userId:user.uid,explicitLoginFlag:sessionStorage.getItem('kotapal_explicit_login'),hasLocalStorageFlag:!!localStorage.getItem('kotapal_explicit_login'),hasCurrentUser:!!currentUser},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
@@ -4517,7 +4529,7 @@
                     // Continue even if profile update fails
                 }
                 
-                // Store user data in localStorage
+                // Store user data in localStorage - ensure ALL registration data is preserved
                 const userData = {
                     uid: user.uid,
                     email: user.email,
@@ -4525,13 +4537,21 @@
                     name: name.trim(), // Also store as 'name' for compatibility
                     emailVerified: user.emailVerified,
                     plan: plan || 'starter',
-                    signupDate: new Date().toISOString()
+                    signupDate: new Date().toISOString(),
+                    // Store original registration data for syncing
+                    registrationName: name.trim(),
+                    registrationEmail: user.email,
+                    registrationPlan: plan || 'starter'
                 };
                 // Set explicit login flag ONLY in sessionStorage (not localStorage)
                 // sessionStorage is cleared when tab closes, ensuring users must log in each session
                 sessionStorage.setItem('kotapal_explicit_login', 'true');
                 localStorage.setItem('kotaUser', JSON.stringify(userData));
                 currentUser = userData;
+                
+                // Immediately sync user info everywhere
+                updateSidebarUserInfo();
+                syncUserPlan();
                 
                 console.log('Signup successful, showing dashboard...');
                 
@@ -6643,6 +6663,7 @@
                             const totalResults = data.search_information?.total_results || products.length;
                             searchStatus.textContent = `Found ${products.length} eBay products for "${query}" (${totalResults.toLocaleString()} total available)`;
                             console.log('[eBay] Successfully processed', products.length, 'products');
+                            console.log('[eBay] Products array:', products);
                         } else {
                             // Log the entire response structure for debugging
                             console.warn('[eBay] No results found. Full response structure:', {
@@ -6704,11 +6725,22 @@
                     ];
                 }
                 
-                searchStatus.textContent = `Found ${products.length} products for "${query}"`;
+                // Only set generic status if no specific status was set (eBay sets its own status)
+                if (!searchStatus.textContent || searchStatus.textContent.includes('Searching...') || searchStatus.textContent === '') {
+                    searchStatus.textContent = `Found ${products.length} products for "${query}"`;
+                }
+                
+                console.log(`[${retailer}] Final products count:`, products.length);
+                console.log(`[${retailer}] Products to render:`, products);
                 
                 // #region agent log
                 fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:6281',message:'Rendering products to UI',data:{productsCount:products.length,retailer,query,hasProductsContainer:!!productsContainer},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
                 // #endregion
+                
+                // Clear container before rendering
+                if (productsContainer) {
+                    productsContainer.innerHTML = '';
+                }
                 
                 products.forEach((product, index) => {
                     const productCard = document.createElement('div');
@@ -7623,9 +7655,12 @@
         
         // Get user plan from single source of truth
         function getUserPlan() {
-            // Always get from localStorage first (most up-to-date), then currentUser, then default
+            // Always get from localStorage first (most up-to-date), then currentUser, then registration plan, then default
             const savedUserData = JSON.parse(localStorage.getItem('kotaUser') || '{}');
-            return savedUserData.plan || currentUser?.plan || 'starter';
+            return savedUserData.plan || 
+                   currentUser?.plan || 
+                   savedUserData.registrationPlan || 
+                   'starter';
         }
         
         // Update current user plan everywhere
@@ -7916,17 +7951,31 @@
         // Load Profile Settings
         function loadProfileSettings() {
             const userData = JSON.parse(localStorage.getItem('kotaUser') || '{}');
+            const fullUserData = currentUser || userData;
             const userName = document.getElementById('userName');
             const userEmail = document.getElementById('userEmail');
             const userWebsite = document.getElementById('userWebsite');
             const profilePicturePreview = document.getElementById('profilePicturePreview');
             
-            if (userName) userName.value = userData.displayName || currentUser?.displayName || '';
-            if (userEmail) userEmail.value = userData.email || currentUser?.email || '';
-            if (userWebsite) userWebsite.value = userData.website || '';
+            // Use registration name first, then displayName, then name
+            const nameToShow = fullUserData.registrationName || 
+                              fullUserData.displayName || 
+                              fullUserData.name || 
+                              '';
+            
+            // Use registration email first, then current email
+            const emailToShow = fullUserData.registrationEmail || 
+                               fullUserData.email || 
+                               '';
+            
+            if (userName) userName.value = nameToShow;
+            if (userEmail) userEmail.value = emailToShow;
+            if (userWebsite) userWebsite.value = fullUserData.website || '';
             if (profilePicturePreview) {
-                profilePicturePreview.src = userData.profilePicture || currentUser?.profilePicture || 'https://i.pravatar.cc/150?img=1';
+                profilePicturePreview.src = fullUserData.profilePicture || 'https://i.pravatar.cc/150?img=1';
             }
+            
+            console.log('[ProfileSettings] Loaded:', { nameToShow, emailToShow, registrationName: fullUserData.registrationName });
         }
         
         // Update Sidebar User Info
@@ -7944,12 +7993,15 @@
             }
             
             if (sidebarName) {
-                // Prioritize displayName, then name, then email prefix, then 'User'
-                const displayName = userData.displayName || 
+                // Prioritize registration name, then displayName, then name, then email prefix, then 'User'
+                // This ensures the name entered during registration is always shown
+                const displayName = userData.registrationName || 
+                                   userData.displayName || 
                                    userData.name || 
                                    (userData.email ? userData.email.split('@')[0] : null) ||
                                    'User';
                 sidebarName.textContent = displayName;
+                console.log('[UserInfo] Sidebar name updated to:', displayName, 'from registration:', userData.registrationName);
             }
             
             // Use syncUserPlan to ensure plan is synced everywhere
@@ -8155,11 +8207,19 @@
                     const userWebsite = document.getElementById('userWebsite').value;
                     const profilePicture = document.getElementById('profilePicturePreview')?.src;
                     
-                    // Update user data
+                    // Update user data - preserve registration data
                     const userData = JSON.parse(localStorage.getItem('kotaUser') || '{}');
                     userData.displayName = userName;
+                    userData.name = userName; // Also update name for compatibility
                     userData.email = userEmail;
                     userData.website = userWebsite;
+                    // Preserve original registration data
+                    if (!userData.registrationName) {
+                        userData.registrationName = userName;
+                    }
+                    if (!userData.registrationEmail) {
+                        userData.registrationEmail = userEmail;
+                    }
                     if (profilePicture) {
                         userData.profilePicture = profilePicture;
                     }
@@ -8182,7 +8242,10 @@
                     
                     // Update sidebar and current user
                     currentUser = userData;
+                    
+                    // Sync everywhere immediately
                     updateSidebarUserInfo();
+                    syncUserPlan();
                     
                     showNotification('Profile updated successfully!', 'success', 'Success');
                 } catch (error) {
