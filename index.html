@@ -4374,10 +4374,10 @@
                     plan: savedUserData.plan || 'starter',
                     signupDate: savedUserData.signupDate || new Date().toISOString()
                 };
-                // Set explicit login flag in BOTH sessionStorage AND localStorage for maximum persistence
-                // Set these IMMEDIATELY before any async operations to prevent race conditions
+                // Set explicit login flag ONLY in sessionStorage (not localStorage)
+                // sessionStorage is cleared when tab closes, ensuring users must log in each session
+                // This prevents auto-login from stale localStorage data
                 sessionStorage.setItem('kotapal_explicit_login', 'true');
-                localStorage.setItem('kotapal_explicit_login', 'true'); // Backup in localStorage
                 localStorage.setItem('kotaUser', JSON.stringify(userData));
                 currentUser = userData;
                 
@@ -4524,7 +4524,8 @@
                     plan: plan || 'starter',
                     signupDate: new Date().toISOString()
                 };
-                // Set explicit login flag FIRST, before any state changes
+                // Set explicit login flag ONLY in sessionStorage (not localStorage)
+                // sessionStorage is cleared when tab closes, ensuring users must log in each session
                 sessionStorage.setItem('kotapal_explicit_login', 'true');
                 localStorage.setItem('kotaUser', JSON.stringify(userData));
                 currentUser = userData;
@@ -4717,6 +4718,18 @@
 
         // FORCE LANDING PAGE ON INITIAL LOAD - NO AUTO LOGIN
         let isInitialLoad = true;
+        let hasProcessedInitialAuth = false; // Track if we've processed the initial auth state
+        
+        // CRITICAL: Clear any stale login flags on page load to prevent auto-login
+        // Only sessionStorage persists within a tab session, localStorage persists across sessions
+        // We clear localStorage flag on page load to force fresh login
+        if (typeof Storage !== 'undefined') {
+            // Clear localStorage explicit login flag on every page load
+            // This ensures users must explicitly log in each time they visit
+            localStorage.removeItem('kotapal_explicit_login');
+            console.log('Cleared stale login flags on page load to prevent auto-login');
+        }
+        
         window.addEventListener('DOMContentLoaded', () => {
             // Always show landing page first on initial load
             const landingView = document.getElementById('landing-page-view');
@@ -4732,13 +4745,10 @@
             if (nav) nav.style.display = 'flex';
             if (footer) footer.style.display = 'block';
             
-            // Only clear explicit login flag if it doesn't exist (first visit)
-            // Don't clear it if user just logged in
-            if (!sessionStorage.getItem('kotapal_explicit_login')) {
-                // This is a fresh page load, ensure landing page is shown
-            }
-            
-            isInitialLoad = false;
+            // Mark initial load as complete after a short delay to ensure auth state has been checked
+            setTimeout(() => {
+                isInitialLoad = false;
+            }, 100);
         });
         
         // Check authentication state and show appropriate view
@@ -4761,23 +4771,55 @@
                 
                 isProcessingAuthState = true;
                 
-                // Skip processing during initial load to prevent conflicts
-                if (isInitialLoad) {
+                // On initial page load, ALWAYS show landing page and clear any stale flags
+                // This prevents auto-login from stale localStorage data
+                if (isInitialLoad || !hasProcessedInitialAuth) {
+                    hasProcessedInitialAuth = true;
                     // #region agent log
-                    fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:4601',message:'Skipping auth state change - initial load',data:{isInitialLoad},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+                    fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:4601',message:'Initial load - forcing landing page, clearing stale flags',data:{isInitialLoad,hasUser:!!user},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
                     // #endregion
+                    
+                    // Clear any stale explicit login flags on initial load
+                    sessionStorage.removeItem('kotapal_explicit_login');
+                    
+                    // Force landing page display
+                    const landingView = document.getElementById('landing-page-view');
+                    const nav = document.querySelector('nav');
+                    const footer = document.querySelector('footer');
+                    const dashboardView = document.getElementById('dashboard-view');
+                    
+                    if (dashboardView) {
+                        dashboardView.style.display = 'none';
+                        dashboardView.classList.remove('active');
+                    }
+                    if (landingView) landingView.style.display = 'block';
+                    if (nav) nav.style.display = 'flex';
+                    if (footer) footer.style.display = 'block';
+                    
                     isProcessingAuthState = false;
-                    return;
+                    return; // Exit early - user must explicitly log in
                 }
                 
                 // ALWAYS check for explicit login first - NO SILENT AUTO LOGIN
-                // We only trust the explicit flag set during a real login/signup action
-                let explicitLogin = sessionStorage.getItem('kotapal_explicit_login') === 'true' || 
-                                   localStorage.getItem('kotapal_explicit_login') === 'true';
+                // We ONLY trust sessionStorage flag (not localStorage) to prevent stale auto-login
+                // sessionStorage is cleared when the tab closes, ensuring fresh login each session
+                let explicitLogin = sessionStorage.getItem('kotapal_explicit_login') === 'true';
+                
+                // NEVER trust localStorage for explicit login - it persists across sessions
+                // Only sessionStorage is valid because it's cleared when the browser tab closes
                 
                 // #region agent log
-                fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:4613',message:'Checking explicit login flag',data:{hasUser:!!user,explicitLogin,explicitLoginRaw:sessionStorage.getItem('kotapal_explicit_login'),allSessionKeys:Object.keys(sessionStorage)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+                fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:4613',message:'Checking explicit login flag (sessionStorage only)',data:{hasUser:!!user,explicitLogin,explicitLoginRaw:sessionStorage.getItem('kotapal_explicit_login'),localStorageFlag:localStorage.getItem('kotapal_explicit_login'),allSessionKeys:Object.keys(sessionStorage)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
                 // #endregion
+                
+                // CRITICAL: If user exists but no explicit login flag, sign them out
+                // This prevents auto-login from Firebase persistence
+                if (user && !explicitLogin) {
+                    console.log('User authenticated but no explicit login flag - signing out to prevent auto-login');
+                    auth.signOut().catch(err => console.error('Error signing out:', err));
+                    isProcessingAuthState = false;
+                    return;
+                }
                 
                 // Only show dashboard if user is signed in AND explicitly logged in
                 if (user && explicitLogin) {
@@ -4830,13 +4872,16 @@
                     // If restoration failed, show landing page but DON'T sign out the user
                     // This prevents accidental logouts during navigation
                     
-                    // Clear user data if signed out
-                    if (!user) {
+                    // Clear user data if signed out or no explicit login
+                    if (!user || !explicitLogin) {
                         // #region agent log
-                        fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:4688',message:'Clearing user data - user signed out',data:{hadUserData:!!localStorage.getItem('kotaUser'),hadExplicitLogin:!!sessionStorage.getItem('kotapal_explicit_login')},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+                        fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:4688',message:'Clearing user data - user signed out or no explicit login',data:{hadUser:!!user,hadUserData:!!localStorage.getItem('kotaUser'),hadExplicitLogin:!!sessionStorage.getItem('kotapal_explicit_login')},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
                         // #endregion
-                        localStorage.removeItem('kotaUser');
-                        localStorage.removeItem('kotapal_explicit_login'); // Also remove from localStorage
+                        // Clear localStorage user data but keep it for display purposes if user exists
+                        if (!user) {
+                            localStorage.removeItem('kotaUser');
+                        }
+                        localStorage.removeItem('kotapal_explicit_login'); // Always clear localStorage flag
                         sessionStorage.removeItem('kotapal_explicit_login');
                         currentUser = null;
                         // #region agent log
@@ -4881,8 +4926,8 @@
                         fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:4726',message:'User signed out via Firebase',data:{hadUserData:!!localStorage.getItem('kotaUser'),hadExplicitLogin:!!sessionStorage.getItem('kotapal_explicit_login')},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
                         // #endregion
                         localStorage.removeItem('kotaUser');
-                        localStorage.removeItem('kotapal_explicit_login'); // Also remove from localStorage
-                        sessionStorage.removeItem('kotapal_explicit_login');
+                        localStorage.removeItem('kotapal_explicit_login'); // Clear localStorage flag
+                        sessionStorage.removeItem('kotapal_explicit_login'); // Clear sessionStorage flag
                         sessionStorage.removeItem('settings_access_granted');
                         currentUser = null;
                         // #region agent log
