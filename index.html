@@ -262,6 +262,19 @@
             max-width: 100%;
             height: auto;
         }
+        
+        .nav-links .nav-login-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font: inherit;
+            color: var(--dark);
+            font-weight: 500;
+            padding: 0;
+        }
+        .nav-links .nav-login-btn:hover {
+            color: var(--primary);
+        }
 
         .logo-icon {
             width: 30px;
@@ -2741,7 +2754,7 @@
                 <li><a href="#about" onclick="scrollToSection('about')">About</a></li>
                 <li><a href="#" onclick="showPage('blog-page')">Blog</a></li>
                 <li><a href="#" onclick="showPage('contact-page')">Contact</a></li>
-                <li><a href="#" id="loginBtn" onclick="if(typeof window.showAuthModal==='function'){ window.showAuthModal(); } return false;">Login</a></li>
+                <li><button type="button" id="loginBtn" class="nav-login-btn" onclick="if(typeof window.showAuthModal==='function'){ window.showAuthModal(); }">Login</button></li>
             </ul>
             
             <div class="mobile-menu-btn" id="mobileMenuBtn">
@@ -4946,17 +4959,14 @@
                 // CRITICAL: If user exists but no explicit login flag, sign them out
                 // This prevents auto-login from Firebase persistence
                 // BUT: Only do this if login is NOT in progress AND it's not immediately after login
-                // Add a small delay check to prevent race conditions
                 if (user && !explicitLogin && !isLoginInProgress && !window._loginJustCompleted) {
-                    // Wait a bit to ensure login flag has time to be set
                     setTimeout(() => {
                         const stillNoFlag = sessionStorage.getItem('kotapal_explicit_login') !== 'true';
                         if (stillNoFlag && !isLoginInProgress && !window._loginJustCompleted) {
-                            // Not a login - sign out immediately to prevent auto-login
                             console.log('[AuthState] User authenticated but no explicit login flag - signing out to prevent auto-login');
                             auth.signOut().catch(err => console.error('Error signing out:', err));
                         }
-                    }, 500); // Give login function 500ms to set the flag
+                    }, 500);
                     isProcessingAuthState = false;
                     return;
                 }
