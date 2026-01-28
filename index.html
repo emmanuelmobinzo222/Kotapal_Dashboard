@@ -4140,14 +4140,14 @@
             <div id="loginForm" class="auth-form active">
                 <h2>Welcome Back!</h2>
                 <div id="authMessage" class="form-status" style="display: none; margin-bottom: 20px;"></div>
-                <form id="loginFormElement">
+                <form id="loginFormElement" novalidate>
                     <div class="form-group">
                         <label for="loginEmail">Email</label>
-                        <input type="email" id="loginEmail" required>
+                        <input type="email" id="loginEmail" required autocomplete="email">
                     </div>
                     <div class="form-group">
                         <label for="loginPassword">Password</label>
-                        <input type="password" id="loginPassword" required>
+                        <input type="password" id="loginPassword" required autocomplete="current-password">
                     </div>
                     <div class="form-group">
                         <a href="#" class="forgot-password" id="forgotPasswordLink">Forgot Password?</a>
@@ -5314,70 +5314,20 @@
             // #endregion
             console.log('[Setup] Setting up auth form handlers...');
             
-            // Login form submission - MULTIPLE ATTACHMENT METHODS FOR RELIABILITY
+            // Login form: attach once (no clone/replace to avoid breaking handlers or wiping input)
             const loginForm = document.getElementById('loginFormElement');
-            if (loginForm) {
-                // Remove old handlers by cloning (clean slate)
-                const oldForm = loginForm;
-                const newForm = oldForm.cloneNode(true);
-                oldForm.parentNode.replaceChild(newForm, oldForm);
-                
-                // Method 1: Form submit event
-                newForm.addEventListener('submit', handleLoginSubmit, { capture: false });
-                console.log('[Login Form] ✅ Form submit listener attached');
-                
-                // Method 2: Direct button click handler - ATTACH MULTIPLE HANDLERS
-                const submitButton = newForm.querySelector('button[type="submit"]');
-                if (submitButton) {
-                    // Attach click handler (multiple times with different phases for reliability)
-                    submitButton.addEventListener('click', handleLoginSubmit, { capture: true });
-                    submitButton.addEventListener('click', handleLoginSubmit, { capture: false });
-                    console.log('[Login Form] ✅ Button click listeners attached (capture + bubble)');
-                    
-                    // Also attach mousedown as backup
-                    submitButton.addEventListener('mousedown', (e) => {
-                        e.preventDefault();
-                        console.log('[Login Form] ✅ Button mousedown - triggering login');
-                        handleLoginSubmit(e);
-                    }, { capture: true });
-                    
-                    // Touch event for mobile
-                    submitButton.addEventListener('touchend', (e) => {
-                        e.preventDefault();
-                        console.log('[Login Form] ✅ Button touchend - triggering login');
-                        handleLoginSubmit(e);
-                    }, { capture: true });
-                    
-                    // Pointer events for modern browsers
-                    submitButton.addEventListener('pointerup', (e) => {
-                        e.preventDefault();
-                        console.log('[Login Form] ✅ Button pointerup - triggering login');
-                        handleLoginSubmit(e);
-                    }, { capture: true });
-                    
-                    console.log('[Login Form] ✅ All button event listeners attached');
-                } else {
-                    console.error('[Login Form] ❌ Submit button not found!');
-                }
-                
-                // Method 3: Enter key on password field
-                const passwordInput = newForm.querySelector('#loginPassword');
-                if (passwordInput) {
-                    passwordInput.addEventListener('keypress', (e) => {
-                        if (e.key === 'Enter') {
-                            e.preventDefault();
-                            console.log('[Login Form] ✅ Enter key pressed - triggering login');
-                            handleLoginSubmit(e);
-                        }
-                    });
-                }
-                
-                newForm.setAttribute('data-handler-attached', 'true');
-                console.log('[Login Form] ✅ ALL event listeners attached successfully to loginFormElement');
-            } else {
-                console.error('[Login Form] ❌ Login form element not found! ID: loginFormElement');
-                console.error('[Login Form] Available forms:', document.querySelectorAll('form').length);
+            if (loginForm && !loginForm.getAttribute('data-handler-attached')) {
+                loginForm.setAttribute('data-handler-attached', 'true');
+                var onLogin = typeof window.handleLoginSubmit === 'function' ? window.handleLoginSubmit : function(e){ if(e)e.preventDefault(); showAuthMessage('authMessage','Login is not ready. Refresh the page.','error'); };
+                // Form submit (fires on button click or Enter in input)
+                loginForm.addEventListener('submit', function(e) { e.preventDefault(); e.stopPropagation(); onLogin(e); }, false);
+                var btn = loginForm.querySelector('button[type="submit"]');
+                if (btn) btn.addEventListener('click', function(e) { e.preventDefault(); onLogin(e); }, false);
+                var pw = loginForm.querySelector('#loginPassword');
+                if (pw) pw.addEventListener('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); onLogin(e); } }, false);
+                console.log('[Login Form] ✅ Handlers attached (submit, button click, Enter)');
             }
+            if (!loginForm) console.error('[Login Form] ❌ #loginFormElement not found');
 
             // Signup form submission
             const signupForm = document.getElementById('signupFormElement');
