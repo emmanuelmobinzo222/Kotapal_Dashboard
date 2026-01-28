@@ -242,7 +242,8 @@
         .nav-container {
               display: flex;
               align-items: center;
-              justify-content: center;
+              justify-content: space-between;
+              width: 100%;
               max-width: 1200px;
               margin: 0 auto;
               padding: 0 20px;
@@ -253,6 +254,13 @@
             align-items: center;
             font-weight: 700;
             font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+        
+        .logo img {
+            display: block;
+            max-width: 100%;
+            height: auto;
         }
 
         .logo-icon {
@@ -4937,11 +4945,18 @@
                 
                 // CRITICAL: If user exists but no explicit login flag, sign them out
                 // This prevents auto-login from Firebase persistence
-                // BUT: Only do this if login is NOT in progress
-                if (user && !explicitLogin) {
-                    // Not a login - sign out immediately to prevent auto-login
-                    console.log('[AuthState] User authenticated but no explicit login flag - signing out to prevent auto-login');
-                    auth.signOut().catch(err => console.error('Error signing out:', err));
+                // BUT: Only do this if login is NOT in progress AND it's not immediately after login
+                // Add a small delay check to prevent race conditions
+                if (user && !explicitLogin && !isLoginInProgress && !window._loginJustCompleted) {
+                    // Wait a bit to ensure login flag has time to be set
+                    setTimeout(() => {
+                        const stillNoFlag = sessionStorage.getItem('kotapal_explicit_login') !== 'true';
+                        if (stillNoFlag && !isLoginInProgress && !window._loginJustCompleted) {
+                            // Not a login - sign out immediately to prevent auto-login
+                            console.log('[AuthState] User authenticated but no explicit login flag - signing out to prevent auto-login');
+                            auth.signOut().catch(err => console.error('Error signing out:', err));
+                        }
+                    }, 500); // Give login function 500ms to set the flag
                     isProcessingAuthState = false;
                     return;
                 }
