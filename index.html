@@ -2741,7 +2741,7 @@
                 <li><a href="#about" onclick="scrollToSection('about')">About</a></li>
                 <li><a href="#" onclick="showPage('blog-page')">Blog</a></li>
                 <li><a href="#" onclick="showPage('contact-page')">Contact</a></li>
-                <li><a href="#" id="loginBtn">Login</a></li>
+                <li><a href="#" id="loginBtn" onclick="if(typeof window.showAuthModal==='function'){ window.showAuthModal(); } return false;">Login</a></li>
             </ul>
             
             <div class="mobile-menu-btn" id="mobileMenuBtn">
@@ -5158,6 +5158,7 @@
                 }, 200);
             }
         }
+        window.showAuthModal = showAuthModal;
 
         function closeAuthModal() {
             if (authModal) {
