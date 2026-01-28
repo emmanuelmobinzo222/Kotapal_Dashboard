@@ -4144,7 +4144,7 @@
                     <div class="form-group">
                         <a href="#" class="forgot-password" id="forgotPasswordLink">Forgot Password?</a>
                     </div>
-                    <button type="submit" class="btn btn-primary">Login</button>
+                    <button type="submit" class="btn btn-primary" onclick="if(typeof window.handleLoginSubmit === 'function') { event.preventDefault(); event.stopPropagation(); window.handleLoginSubmit(event); return false; }">Login</button>
                 </form>
             </div>
             <div id="signupForm" class="auth-form">
@@ -5131,10 +5131,16 @@
             if (authModal) {
                 authModal.style.display = 'block';
                 document.body.style.overflow = 'hidden'; // Prevent scrolling
-                // Ensure form handlers are attached when modal is shown
+                // CRITICAL: Re-attach form handlers when modal is shown
+                // Use multiple timeouts to ensure it works
                 setTimeout(() => {
+                    console.log('[Modal] Re-attaching login handlers...');
                     setupAuthFormHandlers();
-                }, 100);
+                }, 50);
+                setTimeout(() => {
+                    console.log('[Modal] Backup: Re-attaching login handlers...');
+                    setupAuthFormHandlers();
+                }, 200);
             }
         }
 
@@ -5208,81 +5214,123 @@
         // Firebase Auth Form Handlers
         // ============================================
         
+        // Login handler function - defined separately so it can be reused
+        // Make it globally accessible
+        window.handleLoginSubmit = async function handleLoginSubmit(e) {
+            if (e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            console.log('[Login] ✅ LOGIN TRIGGERED!');
+            
+            try {
+                const emailInput = document.getElementById('loginEmail');
+                const passwordInput = document.getElementById('loginPassword');
+                
+                console.log('[Login] Inputs found:', {
+                    emailInput: !!emailInput,
+                    passwordInput: !!passwordInput
+                });
+                
+                if (!emailInput || !passwordInput) {
+                    console.error('[Login] ❌ Email or password input not found!');
+                    showAuthMessage('authMessage', 'Form error. Please refresh the page.', 'error');
+                    return;
+                }
+                
+                const email = emailInput.value;
+                const password = passwordInput.value;
+                
+                console.log('[Login] Values:', {
+                    email: email ? email.substring(0, 10) + '...' : 'EMPTY',
+                    hasPassword: !!password
+                });
+                
+                if (!email || !email.trim()) {
+                    console.error('[Login] ❌ Email is empty');
+                    showAuthMessage('authMessage', 'Please enter your email address.', 'error');
+                    return;
+                }
+                
+                if (!password) {
+                    console.error('[Login] ❌ Password is empty');
+                    showAuthMessage('authMessage', 'Please enter your password.', 'error');
+                    return;
+                }
+                
+                console.log('[Login] ✅ Calling handleFirebaseLogin...');
+                await handleFirebaseLogin(email, password);
+            } catch (error) {
+                console.error('[Login] ❌ ERROR:', error);
+                console.error('[Login] Error stack:', error.stack);
+                showAuthMessage('authMessage', `Error: ${error.message || 'An error occurred. Please try again.'}`, 'error');
+            }
+        }
+        
         // Wait for DOM to be ready before attaching form handlers
         function setupAuthFormHandlers() {
             console.log('[Setup] Setting up auth form handlers...');
             
-            // Login form submission
+            // Login form submission - MULTIPLE ATTACHMENT METHODS FOR RELIABILITY
             const loginForm = document.getElementById('loginFormElement');
             if (loginForm) {
-                // Check if handler is already attached
-                if (loginForm.hasAttribute('data-handler-attached')) {
-                    console.log('[Login Form] Handler already attached, skipping...');
-                    return;
+                // Remove old handlers by cloning (clean slate)
+                const oldForm = loginForm;
+                const newForm = oldForm.cloneNode(true);
+                oldForm.parentNode.replaceChild(newForm, oldForm);
+                
+                // Method 1: Form submit event
+                newForm.addEventListener('submit', handleLoginSubmit, { capture: false });
+                console.log('[Login Form] ✅ Form submit listener attached');
+                
+                // Method 2: Direct button click handler - ATTACH MULTIPLE HANDLERS
+                const submitButton = newForm.querySelector('button[type="submit"]');
+                if (submitButton) {
+                    // Attach click handler (multiple times with different phases for reliability)
+                    submitButton.addEventListener('click', handleLoginSubmit, { capture: true });
+                    submitButton.addEventListener('click', handleLoginSubmit, { capture: false });
+                    console.log('[Login Form] ✅ Button click listeners attached (capture + bubble)');
+                    
+                    // Also attach mousedown as backup
+                    submitButton.addEventListener('mousedown', (e) => {
+                        e.preventDefault();
+                        console.log('[Login Form] ✅ Button mousedown - triggering login');
+                        handleLoginSubmit(e);
+                    }, { capture: true });
+                    
+                    // Touch event for mobile
+                    submitButton.addEventListener('touchend', (e) => {
+                        e.preventDefault();
+                        console.log('[Login Form] ✅ Button touchend - triggering login');
+                        handleLoginSubmit(e);
+                    }, { capture: true });
+                    
+                    // Pointer events for modern browsers
+                    submitButton.addEventListener('pointerup', (e) => {
+                        e.preventDefault();
+                        console.log('[Login Form] ✅ Button pointerup - triggering login');
+                        handleLoginSubmit(e);
+                    }, { capture: true });
+                    
+                    console.log('[Login Form] ✅ All button event listeners attached');
+                } else {
+                    console.error('[Login Form] ❌ Submit button not found!');
                 }
                 
-                // Attach event listener to the form
-                loginForm.addEventListener('submit', async (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    console.log('[Login Form] ✅ FORM SUBMITTED - Login button clicked!');
-                    try {
-                        const emailInput = document.getElementById('loginEmail');
-                        const passwordInput = document.getElementById('loginPassword');
-                        
-                        console.log('[Login Form] Inputs found:', {
-                            emailInput: !!emailInput,
-                            passwordInput: !!passwordInput
-                        });
-                        
-                        if (!emailInput || !passwordInput) {
-                            console.error('[Login Form] ❌ Email or password input not found!');
-                            showAuthMessage('authMessage', 'Form error. Please refresh the page.', 'error');
-                            return;
+                // Method 3: Enter key on password field
+                const passwordInput = newForm.querySelector('#loginPassword');
+                if (passwordInput) {
+                    passwordInput.addEventListener('keypress', (e) => {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            console.log('[Login Form] ✅ Enter key pressed - triggering login');
+                            handleLoginSubmit(e);
                         }
-                        
-                        const email = emailInput.value;
-                        const password = passwordInput.value;
-                        
-                        console.log('[Login Form] Values:', {
-                            email: email ? email.substring(0, 10) + '...' : 'EMPTY',
-                            hasPassword: !!password
-                        });
-                        
-                        if (!email || !email.trim()) {
-                            console.error('[Login Form] ❌ Email is empty');
-                            showAuthMessage('authMessage', 'Please enter your email address.', 'error');
-                            return;
-                        }
-                        
-                        if (!password) {
-                            console.error('[Login Form] ❌ Password is empty');
-                            showAuthMessage('authMessage', 'Please enter your password.', 'error');
-                            return;
-                        }
-                        
-                        console.log('[Login Form] ✅ Calling handleFirebaseLogin...');
-                        await handleFirebaseLogin(email, password);
-                    } catch (error) {
-                        console.error('[Login Form] ❌ ERROR:', error);
-                        console.error('[Login Form] Error stack:', error.stack);
-                        showAuthMessage('authMessage', `Error: ${error.message || 'An error occurred. Please try again.'}`, 'error');
-                    }
-                });
-                
-                // Also attach click handler to the submit button as backup
-                const submitButton = loginForm.querySelector('button[type="submit"]');
-                if (submitButton) {
-                    submitButton.addEventListener('click', async (e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        console.log('[Login Button] ✅ BUTTON CLICKED - Triggering form submit!');
-                        loginForm.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
                     });
                 }
                 
-                loginForm.setAttribute('data-handler-attached', 'true');
-                console.log('[Login Form] ✅ Event listener attached successfully to loginFormElement');
+                newForm.setAttribute('data-handler-attached', 'true');
+                console.log('[Login Form] ✅ ALL event listeners attached successfully to loginFormElement');
             } else {
                 console.error('[Login Form] ❌ Login form element not found! ID: loginFormElement');
                 console.error('[Login Form] Available forms:', document.querySelectorAll('form').length);
@@ -5362,13 +5410,43 @@
         // Also try to setup handlers after a short delay as backup
         setTimeout(() => {
             const loginForm = document.getElementById('loginFormElement');
-            if (loginForm && !loginForm.hasAttribute('data-handler-attached')) {
+            if (loginForm) {
                 console.log('[Init] Backup: Re-attaching login form handler...');
                 setupAuthFormHandlers();
-            } else if (loginForm && loginForm.hasAttribute('data-handler-attached')) {
-                console.log('[Init] Login form handler already attached');
             }
         }, 1000);
+        
+        // GLOBAL FALLBACK: Direct click handler on login button (works even if form handlers fail)
+        // Attach this after DOM is ready
+        function attachGlobalLoginHandler() {
+            document.addEventListener('click', function(e) {
+                // Check if clicked element is the login button or inside it
+                const target = e.target;
+                const loginForm = document.getElementById('loginFormElement');
+                
+                if (!loginForm) return;
+                
+                // Check if click is on login button
+                const loginButton = loginForm.querySelector('button[type="submit"]');
+                if (loginButton && (target === loginButton || target.closest('button[type="submit"]') === loginButton)) {
+                    // Only trigger if button text contains "Login"
+                    if (loginButton.textContent.trim().toLowerCase().includes('login')) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        console.log('[Global Handler] ✅ LOGIN BUTTON CLICKED - Global fallback triggered!');
+                        handleLoginSubmit(e);
+                    }
+                }
+            }, true); // Use capture phase to catch it early
+            console.log('[Global Handler] ✅ Global login click handler attached');
+        }
+        
+        // Attach global handler when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', attachGlobalLoginHandler);
+        } else {
+            attachGlobalLoginHandler();
+        }
         
         // Mobile Optimizations
         (function() {
