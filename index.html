@@ -5143,14 +5143,19 @@
         // Existing JavaScript Code
         // ============================================
         
-        // Set current year in footer
-        document.getElementById('currentYear').textContent = new Date().getFullYear();
+        // Set current year in footer (guard so missing element does not block auth modal)
+        var cyEl = document.getElementById('currentYear');
+        if (cyEl) cyEl.textContent = new Date().getFullYear();
 
         // Mobile menu toggle
-        document.getElementById('mobileMenuBtn').addEventListener('click', function() {
-            this.classList.toggle('active');
-            document.querySelector('.nav-links').classList.toggle('active');
-        });
+        var mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        if (mobileMenuBtn) {
+            mobileMenuBtn.addEventListener('click', function() {
+                this.classList.toggle('active');
+                var nl = document.querySelector('.nav-links');
+                if (nl) nl.classList.toggle('active');
+            });
+        }
 
         // Auth Modal Functions
         const authModal = document.getElementById('authModal');
@@ -5164,24 +5169,35 @@
             (window._debugLogs=window._debugLogs||[]).push(_d);
             fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(_d)}).catch(()=>{});
             // #endregion
-            if (authModal) {
-                // Clear previous auth/signup messages so old errors don't linger
-                const authMsg = document.getElementById('authMessage');
-                const signupMsg = document.getElementById('signupMessage');
-                if (authMsg) { authMsg.style.display = 'none'; authMsg.textContent = ''; }
-                if (signupMsg) { signupMsg.style.display = 'none'; signupMsg.textContent = ''; }
-                // Attach handlers once when modal opens (before display so form is ready)
-                setupAuthFormHandlers();
-                authModal.style.display = 'block';
-                document.body.style.overflow = 'hidden'; // Prevent scrolling
-            }
+            if (!authModal) return;
+            // Clear previous auth/signup messages
+            var authMsg = document.getElementById('authMessage');
+            var signupMsg = document.getElementById('signupMessage');
+            if (authMsg) { authMsg.style.display = 'none'; authMsg.textContent = ''; }
+            if (signupMsg) { signupMsg.style.display = 'none'; signupMsg.textContent = ''; }
+            // Always show Login tab when opening (in case Sign Up was last used)
+            authTabs.forEach(function(t) { t.classList.remove('active'); });
+            authForms.forEach(function(f) { f.classList.remove('active'); });
+            var loginTab = document.querySelector('.auth-tab[data-tab="login"]');
+            var loginFormEl = document.getElementById('loginForm');
+            if (loginTab) loginTab.classList.add('active');
+            if (loginFormEl) loginFormEl.classList.add('active');
+            // Attach handlers once when modal opens
+            if (typeof setupAuthFormHandlers === 'function') setupAuthFormHandlers();
+            // Show modal: use flex + active to match .modal.active (centered, on top)
+            authModal.classList.add('active');
+            authModal.style.display = 'flex';
+            authModal.style.zIndex = '10002';
+            document.body.style.overflow = 'hidden';
         }
         window.showAuthModal = showAuthModal;
 
         function closeAuthModal() {
             if (authModal) {
+                authModal.classList.remove('active');
                 authModal.style.display = 'none';
-                document.body.style.overflow = ''; // Restore scrolling
+                authModal.style.zIndex = '';
+                document.body.style.overflow = '';
             }
         }
 
