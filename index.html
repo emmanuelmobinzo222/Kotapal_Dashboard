@@ -2754,7 +2754,10 @@
                 <li><a href="#about" onclick="scrollToSection('about')">About</a></li>
                 <li><a href="#" onclick="showPage('blog-page')">Blog</a></li>
                 <li><a href="#" onclick="showPage('contact-page')">Contact</a></li>
-                <li><button type="button" id="loginBtn" class="nav-login-btn" onclick="if(typeof window.showAuthModal==='function'){ window.showAuthModal(); }">Login</button></li>
+                <li><button type="button" id="loginBtn" class="nav-login-btn" onclick="var _d={location:'index.html:nav-login-btn',message:'nav Login onclick',data:{hasShowAuthModal:typeof window.showAuthModal==='function'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H1'};
+(window._debugLogs=window._debugLogs||[]).push(_d);
+fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(_d)}).catch(()=>{});
+if(typeof window.showAuthModal==='function'){ window.showAuthModal(); }">Login</button></li>
             </ul>
             
             <div class="mobile-menu-btn" id="mobileMenuBtn">
@@ -4345,7 +4348,9 @@
             // Check if Firebase is initialized
             if (!auth) {
                 // #region agent log
-                fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:4206',message:'Firebase auth not initialized',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H'})}).catch(()=>{});
+                var _d={location:'index.html:handleFirebaseLogin',message:'early exit: !auth',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H3'};
+                (window._debugLogs=window._debugLogs||[]).push(_d);
+                fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(_d)}).catch(()=>{});
                 // #endregion
                 showAuthMessage('authMessage', 'Firebase is not configured. Please contact support.', 'error');
                 console.error('Firebase auth not initialized');
@@ -4359,7 +4364,9 @@
             // Validate inputs
             if (!email || !email.trim()) {
                 // #region agent log
-                fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:4213',message:'Email validation failed',data:{hasEmail:!!email},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H'})}).catch(()=>{});
+                var _d={location:'index.html:handleFirebaseLogin',message:'early exit: empty email',data:{hasEmail:!!email},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H3'};
+                (window._debugLogs=window._debugLogs||[]).push(_d);
+                fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(_d)}).catch(()=>{});
                 // #endregion
                 showAuthMessage('authMessage', 'Please enter your email address.', 'error');
                 return;
@@ -4367,7 +4374,9 @@
 
             if (!password) {
                 // #region agent log
-                fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:4218',message:'Password validation failed',data:{hasPassword:!!password},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H'})}).catch(()=>{});
+                var _d={location:'index.html:handleFirebaseLogin',message:'early exit: empty password',data:{hasPassword:!!password},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H3'};
+                (window._debugLogs=window._debugLogs||[]).push(_d);
+                fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(_d)}).catch(()=>{});
                 // #endregion
                 showAuthMessage('authMessage', 'Please enter your password.', 'error');
                 return;
@@ -4520,7 +4529,9 @@
                 window._isLoginInProgress = false;
                 
                 // #region agent log
-                fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:4312',message:'Login error caught',data:{errorCode:error.code,errorMessage:error.message,errorStack:error.stack?.substring(0,300)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H'})}).catch(()=>{});
+                var _d={location:'index.html:handleFirebaseLogin',message:'Login error caught',data:{errorCode:error.code,errorMessage:error.message},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H4'};
+                (window._debugLogs=window._debugLogs||[]).push(_d);
+                fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(_d)}).catch(()=>{});
                 // #endregion
                 
                 // Re-enable button
@@ -4960,9 +4971,19 @@
                 // This prevents auto-login from Firebase persistence
                 // BUT: Only do this if login is NOT in progress AND it's not immediately after login
                 if (user && !explicitLogin && !isLoginInProgress && !window._loginJustCompleted) {
+                    // #region agent log
+                    var _d={location:'index.html:onAuthStateChanged',message:'H5: will schedule signOut check',data:{explicitLogin,hasUser:!!user,uid:user?.uid},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H5'};
+                    (window._debugLogs=window._debugLogs||[]).push(_d);
+                    fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(_d)}).catch(()=>{});
+                    // #endregion
                     setTimeout(() => {
                         const stillNoFlag = sessionStorage.getItem('kotapal_explicit_login') !== 'true';
                         if (stillNoFlag && !isLoginInProgress && !window._loginJustCompleted) {
+                            // #region agent log
+                            var _d2={location:'index.html:onAuthStateChanged',message:'H5: calling auth.signOut',data:{stillNoFlag},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H5'};
+                            (window._debugLogs=window._debugLogs||[]).push(_d2);
+                            fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(_d2)}).catch(()=>{});
+                            // #endregion
                             console.log('[AuthState] User authenticated but no explicit login flag - signing out to prevent auto-login');
                             auth.signOut().catch(err => console.error('Error signing out:', err));
                         }
@@ -5153,6 +5174,11 @@
         const authForms = document.querySelectorAll('.auth-form');
 
         function showAuthModal() {
+            // #region agent log
+            var _d={location:'index.html:showAuthModal',message:'showAuthModal called',data:{hasAuthModal:!!authModal},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H1'};
+            (window._debugLogs=window._debugLogs||[]).push(_d);
+            fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(_d)}).catch(()=>{});
+            // #endregion
             if (authModal) {
                 authModal.style.display = 'block';
                 document.body.style.overflow = 'hidden'; // Prevent scrolling
@@ -5243,6 +5269,11 @@
         // Login handler function - defined separately so it can be reused
         // Make it globally accessible
         window.handleLoginSubmit = async function handleLoginSubmit(e) {
+            // #region agent log
+            var _d={location:'index.html:handleLoginSubmit',message:'handleLoginSubmit called',data:{hasE:!!e},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H2'};
+            (window._debugLogs=window._debugLogs||[]).push(_d);
+            fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(_d)}).catch(()=>{});
+            // #endregion
             if (e) {
                 e.preventDefault();
                 e.stopPropagation();
@@ -5295,6 +5326,12 @@
         
         // Wait for DOM to be ready before attaching form handlers
         function setupAuthFormHandlers() {
+            // #region agent log
+            const _lf = document.getElementById('loginFormElement');
+            var _d={location:'index.html:setupAuthFormHandlers',message:'setupAuthFormHandlers called',data:{foundLoginForm:!!_lf},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H2'};
+            (window._debugLogs=window._debugLogs||[]).push(_d);
+            fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(_d)}).catch(()=>{});
+            // #endregion
             console.log('[Setup] Setting up auth form handlers...');
             
             // Login form submission - MULTIPLE ATTACHMENT METHODS FOR RELIABILITY
