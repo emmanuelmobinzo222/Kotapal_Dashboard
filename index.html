@@ -4341,8 +4341,6 @@
                 return;
             }
             
-            // Mark login as in progress
-            isLoginInProgress = true;
             console.log('[Login] Login process started');
 
             // Validate inputs
@@ -4376,6 +4374,9 @@
                 }
 
                 console.log('[Login] Starting login process...');
+                
+                // Mark login in progress only right before Firebase call (after validation)
+                isLoginInProgress = true;
                 
                 // #region agent log
                 fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:4232',message:'Calling Firebase signInWithEmailAndPassword',data:{email:email.trim().substring(0,10)+'...',hasPassword:!!password},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H'})}).catch(()=>{});
@@ -5164,6 +5165,11 @@
             fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(_d)}).catch(()=>{});
             // #endregion
             if (authModal) {
+                // Clear previous auth/signup messages so old errors don't linger
+                const authMsg = document.getElementById('authMessage');
+                const signupMsg = document.getElementById('signupMessage');
+                if (authMsg) { authMsg.style.display = 'none'; authMsg.textContent = ''; }
+                if (signupMsg) { signupMsg.style.display = 'none'; signupMsg.textContent = ''; }
                 // Attach handlers once when modal opens (before display so form is ready)
                 setupAuthFormHandlers();
                 authModal.style.display = 'block';
@@ -5329,9 +5335,10 @@
             }
             if (!loginForm) console.error('[Login Form] ❌ #loginFormElement not found');
 
-            // Signup form submission
+            // Signup form submission - attach once to avoid duplicate handlers
             const signupForm = document.getElementById('signupFormElement');
-            if (signupForm) {
+            if (signupForm && !signupForm.getAttribute('data-handler-attached')) {
+                signupForm.setAttribute('data-handler-attached', 'true');
                 signupForm.addEventListener('submit', async (e) => {
                     e.preventDefault();
                     e.stopPropagation();
@@ -5348,13 +5355,14 @@
                         showAuthMessage('signupMessage', 'An error occurred. Please try again.', 'error');
                     }
                 });
-            } else {
-                console.error('Signup form not found!');
+                console.log('[Signup Form] ✅ Handler attached');
             }
+            if (!signupForm) console.error('Signup form not found!');
 
-            // Forgot password link
+            // Forgot password link - attach once
             const forgotPasswordLink = document.getElementById('forgotPasswordLink');
-            if (forgotPasswordLink) {
+            if (forgotPasswordLink && !forgotPasswordLink.getAttribute('data-handler-attached')) {
+                forgotPasswordLink.setAttribute('data-handler-attached', 'true');
                 forgotPasswordLink.addEventListener('click', (e) => {
                     e.preventDefault();
                     closeAuthModal();
@@ -5365,10 +5373,10 @@
                 });
             }
 
-            // Password reset form
-            const resetPasswordModal = document.getElementById('resetPasswordModal');
+            // Password reset form - attach once
             const resetForm = document.getElementById('resetPasswordForm');
-            if (resetForm) {
+            if (resetForm && !resetForm.getAttribute('data-handler-attached')) {
+                resetForm.setAttribute('data-handler-attached', 'true');
                 resetForm.addEventListener('submit', async (e) => {
                     e.preventDefault();
                     e.stopPropagation();
