@@ -263,19 +263,6 @@
             height: auto;
         }
         
-        .nav-links .nav-login-btn {
-            background: none;
-            border: none;
-            cursor: pointer;
-            font: inherit;
-            color: var(--dark);
-            font-weight: 500;
-            padding: 0;
-        }
-        .nav-links .nav-login-btn:hover {
-            color: var(--primary);
-        }
-
         .logo-icon {
             width: 30px;
             height: 30px;
@@ -2754,10 +2741,7 @@
                 <li><a href="#about" onclick="scrollToSection('about')">About</a></li>
                 <li><a href="#" onclick="showPage('blog-page')">Blog</a></li>
                 <li><a href="#" onclick="showPage('contact-page')">Contact</a></li>
-                <li><button type="button" id="loginBtn" class="nav-login-btn" onclick="var _d={location:'index.html:nav-login-btn',message:'nav Login onclick',data:{hasShowAuthModal:typeof window.showAuthModal==='function'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H1'};
-(window._debugLogs=window._debugLogs||[]).push(_d);
-fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(_d)}).catch(()=>{});
-if(typeof window.showAuthModal==='function'){ window.showAuthModal(); }">Login</button></li>
+                <li><a href="#" id="loginBtn" onclick="var _d={location:'index.html:nav-login-btn',message:'nav Login onclick',data:{hasShowAuthModal:typeof window.showAuthModal==='function'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H1'};(window._debugLogs=window._debugLogs||[]).push(_d);fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(_d)}).catch(()=>{});if(typeof window.showAuthModal==='function'){window.showAuthModal();}return false;">Login</a></li>
             </ul>
             
             <div class="mobile-menu-btn" id="mobileMenuBtn">
@@ -4168,7 +4152,7 @@ if(typeof window.showAuthModal==='function'){ window.showAuthModal(); }">Login</
                     <div class="form-group">
                         <a href="#" class="forgot-password" id="forgotPasswordLink">Forgot Password?</a>
                     </div>
-                    <button type="submit" class="btn btn-primary" onclick="if(typeof window.handleLoginSubmit === 'function') { event.preventDefault(); event.stopPropagation(); window.handleLoginSubmit(event); return false; }">Login</button>
+                    <button type="submit" class="btn btn-primary">Login</button>
                 </form>
             </div>
             <div id="signupForm" class="auth-form">
@@ -5180,18 +5164,10 @@ if(typeof window.showAuthModal==='function'){ window.showAuthModal(); }">Login</
             fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(_d)}).catch(()=>{});
             // #endregion
             if (authModal) {
+                // Attach handlers once when modal opens (before display so form is ready)
+                setupAuthFormHandlers();
                 authModal.style.display = 'block';
                 document.body.style.overflow = 'hidden'; // Prevent scrolling
-                // CRITICAL: Re-attach form handlers when modal is shown
-                // Use multiple timeouts to ensure it works
-                setTimeout(() => {
-                    console.log('[Modal] Re-attaching login handlers...');
-                    setupAuthFormHandlers();
-                }, 50);
-                setTimeout(() => {
-                    console.log('[Modal] Backup: Re-attaching login handlers...');
-                    setupAuthFormHandlers();
-                }, 200);
             }
         }
         window.showAuthModal = showAuthModal;
@@ -5269,6 +5245,8 @@ if(typeof window.showAuthModal==='function'){ window.showAuthModal(); }">Login</
         // Login handler function - defined separately so it can be reused
         // Make it globally accessible
         window.handleLoginSubmit = async function handleLoginSubmit(e) {
+            if (window._loginSubmitting) return;
+            window._loginSubmitting = true;
             // #region agent log
             var _d={location:'index.html:handleLoginSubmit',message:'handleLoginSubmit called',data:{hasE:!!e},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H2'};
             (window._debugLogs=window._debugLogs||[]).push(_d);
@@ -5321,6 +5299,8 @@ if(typeof window.showAuthModal==='function'){ window.showAuthModal(); }">Login</
                 console.error('[Login] ❌ ERROR:', error);
                 console.error('[Login] Error stack:', error.stack);
                 showAuthMessage('authMessage', `Error: ${error.message || 'An error occurred. Please try again.'}`, 'error');
+            } finally {
+                window._loginSubmitting = false;
             }
         }
         
