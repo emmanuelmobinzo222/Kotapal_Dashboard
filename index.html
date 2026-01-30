@@ -242,8 +242,7 @@
         .nav-container {
               display: flex;
               align-items: center;
-              justify-content: space-between;
-              width: 100%;
+              justify-content: center;
               max-width: 1200px;
               margin: 0 auto;
               padding: 0 20px;
@@ -254,15 +253,8 @@
             align-items: center;
             font-weight: 700;
             font-size: 1.5rem;
-            flex-shrink: 0;
         }
-        
-        .logo img {
-            display: block;
-            max-width: 100%;
-            height: auto;
-        }
-        
+
         .logo-icon {
             width: 30px;
             height: 30px;
@@ -2741,7 +2733,7 @@
                 <li><a href="#about" onclick="scrollToSection('about')">About</a></li>
                 <li><a href="#" onclick="showPage('blog-page')">Blog</a></li>
                 <li><a href="#" onclick="showPage('contact-page')">Contact</a></li>
-                <li><a href="#" id="loginBtn" onclick="var _d={location:'index.html:nav-login-btn',message:'nav Login onclick',data:{hasShowAuthModal:typeof window.showAuthModal==='function'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H1'};(window._debugLogs=window._debugLogs||[]).push(_d);fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(_d)}).catch(()=>{});if(typeof window.showAuthModal==='function'){window.showAuthModal();}return false;">Login</a></li>
+                <li><a href="#" id="loginBtn">Login</a></li>
             </ul>
             
             <div class="mobile-menu-btn" id="mobileMenuBtn">
@@ -3353,7 +3345,7 @@
                                 <option value="all">All Retailers</option>
                                 <option value="amazon">Amazon</option>
                                 <option value="walmart">Walmart</option>
-                                    <option value="ebay">eBay</option>
+                                <option value="ebay">eBay</option>
                                 <option value="shopify">Shopify</option>
                                 <option value="skimlinks">Skimlinks</option>
                             </select>
@@ -3495,59 +3487,13 @@
                             </div>
                         </div>
                         <div class="form-group">
-                            <label for="amazonApiKey">SearchAPI.io API Key (Amazon & Walmart)</label>
-                            <p style="margin: 10px 0; color: var(--gray); font-size: 0.9rem;">Get your API key from <a href="https://www.searchapi.io/" target="_blank" style="color: var(--primary);">SearchAPI.io</a> to enable real Amazon and Walmart product searches. One API key works for both retailers.</p>
+                            <label for="amazonApiKey">SearchAPI.io API Key (Amazon, Walmart & eBay)</label>
+                            <p style="margin: 10px 0; color: var(--gray); font-size: 0.9rem;">Get your API key from <a href="https://www.searchapi.io/" target="_blank" style="color: var(--primary);">SearchAPI.io</a> to enable real Amazon, Walmart and eBay product searches. One API key works for all.</p>
                             <div style="display: flex;">
                                 <input type="password" id="amazonApiKey" class="form-control" style="flex: 1; margin-right: 10px;" placeholder="Enter your SearchAPI.io API key">
                                 <button class="btn btn-primary" id="saveAmazonApiKey">Save</button>
                             </div>
                             <p id="amazonApiKeyStatus" style="margin-top: 10px; font-size: 0.85rem; color: var(--gray);"></p>
-                            </div>
-                            <div class="form-group">
-                                <label>SearchAPI.io Engines (Amazon, Walmart, eBay, Google AI Mode)</label>
-                                <p style="margin: 10px 0; color: var(--gray); font-size: 0.9rem;">
-                                    These engines all use the same SearchAPI.io API key. Below is a quick reference for the eBay Search API and Google AI Mode API that power real-time product search and the AI Assistant inside KOTAPAL.
-                                </p>
-                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px;">
-                                    <div style="background: #f9fafb; border-radius: 8px; padding: 12px 14px;">
-                                        <h4 style="font-size: 1rem; margin-bottom: 6px;">eBay Search API</h4>
-                                        <p style="font-size: 0.85rem; color: var(--gray); margin-bottom: 8px;">
-                                            Real-time product search across eBay using <code style="font-size: 0.8rem;">engine=ebay_search</code>.
-                                        </p>
-                                        <p style="font-size: 0.8rem; color: var(--gray); margin-bottom: 4px;"><strong>Endpoint</strong>: <code>GET /api/v1/search?engine=ebay_search</code></p>
-                                        <p style="font-size: 0.8rem; color: var(--gray); margin-bottom: 4px;"><strong>Core query params</strong>:</p>
-                                        <ul style="font-size: 0.8rem; color: var(--gray); padding-left: 18px; margin-bottom: 4px;">
-                                            <li><code>q</code> – search query (words, groups like <code>(ring,earrings)</code>, exclusions like <code>-wood</code>)</li>
-                                            <li><code>category_id</code> – restrict to a specific eBay category</li>
-                                            <li><code>ebay_domain</code>, <code>country</code>, <code>delivery_country</code>, <code>postal_code</code>, <code>distance_radius</code></li>
-                                            <li><code>price_min</code>, <code>price_max</code>, <code>condition</code>, <code>buying_format</code></li>
-                                            <li><code>filters</code>, <code>advanced_filters</code> (e.g. <code>Size=XS|S,Brand=adidas</code>)</li>
-                                            <li><code>sort_by</code> (best_match, price_low_to_high, distance_nearest, etc.)</li>
-                                            <li><code>layout</code>, <code>num</code>, <code>page</code> for pagination</li>
-                                            <li><code>engine</code> (always <code>ebay_search</code>), <code>api_key</code>, optional <code>zero_retention</code></li>
-                                        </ul>
-                                        <p style="font-size: 0.8rem; color: var(--gray);">
-                                            KOTAPAL uses this API to fetch eBay products directly into the dashboard, and renders all responses inside the app UI.
-                                        </p>
-                                    </div>
-                                    <div style="background: #f9fafb; border-radius: 8px; padding: 12px 14px;">
-                                        <h4 style="font-size: 1rem; margin-bottom: 6px;">Google AI Mode API</h4>
-                                        <p style="font-size: 0.85rem; color: var(--gray); margin-bottom: 8px;">
-                                            AI-generated answers and structured results from Google’s experimental AI search using <code style="font-size: 0.8rem;">engine=google_ai_mode</code>.
-                                        </p>
-                                        <p style="font-size: 0.8rem; color: var(--gray); margin-bottom: 4px;"><strong>Endpoint</strong>: <code>GET /api/v1/search?engine=google_ai_mode</code></p>
-                                        <p style="font-size: 0.8rem; color: var(--gray); margin-bottom: 4px;"><strong>Core query params</strong>:</p>
-                                        <ul style="font-size: 0.8rem; color: var(--gray); padding-left: 18px; margin-bottom: 4px;">
-                                            <li><code>q</code> – natural language question or prompt (language of the query controls response language)</li>
-                                            <li><code>url</code> – optional image URL to analyze (can be combined with <code>q</code>)</li>
-                                            <li><code>location</code> or <code>uule</code> – geographic targeting</li>
-                                            <li><code>engine</code> (always <code>google_ai_mode</code>), <code>api_key</code>, optional <code>zero_retention</code></li>
-                                        </ul>
-                                        <p style="font-size: 0.8rem; color: var(--gray);">
-                                            The AI Assistant page in KOTAPAL calls this API and displays all AI responses, markdown, and references directly in the chat and result cards—no external popups.
-                                        </p>
-                                    </div>
-                                </div>
                         </div>
                     </div>
                 </div>
@@ -3571,6 +3517,7 @@
                                     <option value="all">All Products</option>
                                     <option value="amazon">Amazon</option>
                                     <option value="walmart">Walmart</option>
+                                    <option value="ebay">eBay</option>
                                     <option value="shopify">Shopify</option>
                                     <option value="skimlinks">Skimlinks</option>
                                 </select>
@@ -4140,14 +4087,14 @@
             <div id="loginForm" class="auth-form active">
                 <h2>Welcome Back!</h2>
                 <div id="authMessage" class="form-status" style="display: none; margin-bottom: 20px;"></div>
-                <form id="loginFormElement" novalidate>
+                <form id="loginFormElement">
                     <div class="form-group">
                         <label for="loginEmail">Email</label>
-                        <input type="email" id="loginEmail" required autocomplete="email">
+                        <input type="email" id="loginEmail" required>
                     </div>
                     <div class="form-group">
                         <label for="loginPassword">Password</label>
-                        <input type="password" id="loginPassword" required autocomplete="current-password">
+                        <input type="password" id="loginPassword" required>
                     </div>
                     <div class="form-group">
                         <a href="#" class="forgot-password" id="forgotPasswordLink">Forgot Password?</a>
@@ -4266,11 +4213,35 @@
             measurementId: "G-8GQ7JGDZ7P"
         };
 
+        // Debug log fallback (when ingest server unreachable, e.g. file:// or CORS)
+        window.__debugLog = window.__debugLog || [];
+        function _dbg(payload) {
+            window.__debugLog.push(payload);
+            console.log('[DEBUG]', payload.location, payload.message, payload.data);
+        }
+        function _log(payload) {
+            var p = Object.assign({ location: '', message: '', data: {}, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: '' }, payload);
+            _dbg(p);
+            fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(p)}).catch(function(){});
+        }
+
         // Initialize Firebase
         let auth;
         try {
+            // Firebase Auth does not work from file:// — must use http(s) (e.g. localhost)
+            if (typeof window !== 'undefined' && window.location && window.location.protocol === 'file:') {
+                auth = null;
+                console.warn('KotaPal: Login/Sign up require a web server. Open via http://localhost (e.g. npx serve or Live Server), not file://.');
+                window.addEventListener('DOMContentLoaded', function() {
+                    var banner = document.createElement('div');
+                    banner.id = 'file-protocol-banner';
+                    banner.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#f59e0b;color:#000;padding:10px 16px;text-align:center;z-index:99999;font-size:14px;';
+                    banner.textContent = 'For Login and Sign up to work, open this app from a web server (e.g. http://localhost). Use "npx serve" in the project folder or your IDE\'s Live Server.';
+                    document.body.insertBefore(banner, document.body.firstChild);
+                });
+            }
             // Check if Firebase config is set up
-            if (firebaseConfig.apiKey === "YOUR_API_KEY" || 
+            else if (firebaseConfig.apiKey === "YOUR_API_KEY" || 
                 firebaseConfig.authDomain === "YOUR_AUTH_DOMAIN") {
                 console.error('Firebase not configured! Please update firebaseConfig with your Firebase project values.');
                 // Show a helpful error message
@@ -4287,9 +4258,9 @@
                 firebase.initializeApp(firebaseConfig);
                 auth = firebase.auth();
                 
-                // Set persistence to SESSION so users must re-authenticate after closing the browser
-                // This reduces the chance of users appearing logged in on shared devices without re-entering credentials
-                auth.setPersistence(firebase.auth.Auth.Persistence.SESSION).catch((error) => {
+                // Set persistence to LOCAL so users stay logged in across browser sessions
+                // This ensures the session persists even after closing the browser
+                auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch((error) => {
                     console.error('Error setting auth persistence:', error);
                     // #region agent log
                     fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:4168',message:'Error setting auth persistence',data:{error:error.message},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'G'})}).catch(()=>{});
@@ -4312,6 +4283,10 @@
         // Show auth message
         function showAuthMessage(elementId, message, type) {
             const messageEl = document.getElementById(elementId);
+            // #region agent log
+            _log({location:'index.html:showAuthMessage',message:'showAuthMessage called',data:{elementId,hasMessageEl:!!messageEl,type,msgLen:message?.length},hypothesisId:'H5'});
+            // #endregion
+            if (!messageEl) return;
             messageEl.textContent = message;
             messageEl.className = 'form-status ' + type;
             messageEl.style.display = 'block';
@@ -4320,35 +4295,29 @@
             }, 5000);
         }
 
-        // Track if login is in progress to prevent auth state listener from interfering
-        let isLoginInProgress = false;
-        
         // Handle Login
         async function handleFirebaseLogin(email, password) {
             // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:4204',message:'handleFirebaseLogin called',data:{hasAuth:!!auth,email:email?.substring(0,10)+'...',hasPassword:!!password},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H'})}).catch(()=>{});
+            _log({location:'index.html:handleFirebaseLogin',message:'handleFirebaseLogin called',data:{hasAuth:!!auth,email:email?.substring(0,10)+'...',hasPassword:!!password},hypothesisId:'H1'});
             // #endregion
             
-            // Check if Firebase is initialized
+            // Check if Firebase is initialized (e.g. not when opened via file://)
             if (!auth) {
                 // #region agent log
-                var _d={location:'index.html:handleFirebaseLogin',message:'early exit: !auth',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H3'};
-                (window._debugLogs=window._debugLogs||[]).push(_d);
-                fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(_d)}).catch(()=>{});
+                _log({location:'index.html:authCheck',message:'Firebase auth not initialized',data:{},hypothesisId:'H1'});
                 // #endregion
-                showAuthMessage('authMessage', 'Firebase is not configured. Please contact support.', 'error');
+                var msg = (typeof window !== 'undefined' && window.location && window.location.protocol === 'file:')
+                    ? 'Login requires opening the app from a web server (e.g. http://localhost), not by double-clicking the file. Use "npx serve" in the project folder or your IDE\'s Live Server.'
+                    : 'Firebase is not configured. Please contact support.';
+                showAuthMessage('authMessage', msg, 'error');
                 console.error('Firebase auth not initialized');
                 return;
             }
-            
-            console.log('[Login] Login process started');
 
             // Validate inputs
             if (!email || !email.trim()) {
                 // #region agent log
-                var _d={location:'index.html:handleFirebaseLogin',message:'early exit: empty email',data:{hasEmail:!!email},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H3'};
-                (window._debugLogs=window._debugLogs||[]).push(_d);
-                fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(_d)}).catch(()=>{});
+                fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:4213',message:'Email validation failed',data:{hasEmail:!!email},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H'})}).catch(()=>{});
                 // #endregion
                 showAuthMessage('authMessage', 'Please enter your email address.', 'error');
                 return;
@@ -4356,9 +4325,7 @@
 
             if (!password) {
                 // #region agent log
-                var _d={location:'index.html:handleFirebaseLogin',message:'early exit: empty password',data:{hasPassword:!!password},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H3'};
-                (window._debugLogs=window._debugLogs||[]).push(_d);
-                fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(_d)}).catch(()=>{});
+                fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:4218',message:'Password validation failed',data:{hasPassword:!!password},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H'})}).catch(()=>{});
                 // #endregion
                 showAuthMessage('authMessage', 'Please enter your password.', 'error');
                 return;
@@ -4373,129 +4340,70 @@
                     submitBtn.textContent = 'Logging in...';
                 }
 
-                console.log('[Login] Starting login process...');
-                
-                // Mark login in progress only right before Firebase call (after validation)
-                isLoginInProgress = true;
-                
                 // #region agent log
                 fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:4232',message:'Calling Firebase signInWithEmailAndPassword',data:{email:email.trim().substring(0,10)+'...',hasPassword:!!password},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H'})}).catch(()=>{});
                 // #endregion
 
-                console.log('[Login] 🔐 Calling Firebase signInWithEmailAndPassword...');
                 const userCredential = await auth.signInWithEmailAndPassword(email.trim(), password);
                 const user = userCredential.user;
                 
-                console.log('[Login] ✅ Firebase authentication successful!');
-                console.log('[Login] User ID:', user.uid);
-                console.log('[Login] User Email:', user.email);
-                
-                // CRITICAL: Set explicit login flag IMMEDIATELY and synchronously
-                // This must happen BEFORE the auth state listener can interfere
-                sessionStorage.setItem('kotapal_explicit_login', 'true');
-                localStorage.setItem('kotapal_explicit_login', 'true'); // Also set in localStorage as backup
-                window._loginJustCompleted = true;
-                console.log('[Login] ✅ Explicit login flag set in sessionStorage:', sessionStorage.getItem('kotapal_explicit_login'));
-                console.log('[Login] ✅ All login flags set - auth state listener will not interfere');
-                
                 // Get saved user data or create new
                 const savedUserData = JSON.parse(localStorage.getItem('kotaUser') || '{}');
-                // Prioritize Firebase displayName, then saved displayName, then email prefix
                 const displayName = user.displayName || savedUserData.displayName || user.email.split('@')[0];
                 
-                // Store user data in localStorage - preserve ALL registration data
-                // This ensures all information entered during registration is remembered
-                const registrationName = savedUserData.registrationName || savedUserData.displayName || savedUserData.name || displayName;
-                const registrationEmail = savedUserData.registrationEmail || user.email;
-                const registrationPlan = savedUserData.registrationPlan || savedUserData.plan || 'starter';
-                
-                // Build complete user data object with ALL information
+                // Store user data in localStorage
                 const userData = {
                     uid: user.uid,
                     email: user.email,
                     displayName: displayName,
-                    name: displayName, // Also store as 'name' for compatibility
                     emailVerified: user.emailVerified,
-                    plan: savedUserData.plan || registrationPlan || 'starter',
-                    signupDate: savedUserData.signupDate || new Date().toISOString(),
-                    // Preserve original registration data - CRITICAL for remembering user info
-                    registrationName: registrationName,
-                    registrationEmail: registrationEmail,
-                    registrationPlan: registrationPlan,
-                    // Preserve any other registration data
-                    website: savedUserData.website || '',
-                    profilePicture: savedUserData.profilePicture || '',
-                    // Last login timestamp
-                    lastLogin: new Date().toISOString()
+                    plan: savedUserData.plan || 'starter',
+                    signupDate: savedUserData.signupDate || new Date().toISOString()
                 };
-                
-                // Save to localStorage - this is the single source of truth
+                // Set explicit login flag in BOTH sessionStorage AND localStorage for maximum persistence
+                // Set these IMMEDIATELY before any async operations to prevent race conditions
+                sessionStorage.setItem('kotapal_explicit_login', 'true');
+                localStorage.setItem('kotapal_explicit_login', 'true'); // Backup in localStorage
                 localStorage.setItem('kotaUser', JSON.stringify(userData));
                 currentUser = userData;
-                
-                console.log('[Login] ✅ User data saved to localStorage:', {
-                    uid: user.uid,
-                    email: user.email,
-                    displayName: displayName,
-                    registrationName: registrationName,
-                    plan: userData.plan
-                });
-                console.log('[Login] ✅ All registration information preserved:', {
-                    registrationName: registrationName,
-                    registrationEmail: registrationEmail,
-                    registrationPlan: registrationPlan
-                });
                 
                 // #region agent log
                 fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:4248',message:'Setting explicit login flag after login',data:{userId:user.uid,explicitLoginFlag:sessionStorage.getItem('kotapal_explicit_login'),hasLocalStorageFlag:!!localStorage.getItem('kotapal_explicit_login'),hasCurrentUser:!!currentUser},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
                 // #endregion
                 
-                // Immediately sync user info everywhere
-                updateUserDisplay();
-                updateSidebarUserInfo();
-                syncUserPlan();
+                // Small delay to ensure auth state listener processes the change after flags are set
+                await new Promise(resolve => setTimeout(resolve, 100));
                 
-                console.log('[Login] User data synced, showing dashboard...');
-                
-                // Show success message
-                showAuthMessage('authMessage', 'Login successful! Redirecting to dashboard...', 'success');
-                
-                // Close modal immediately
-                closeAuthModal();
-                
-                // Force dashboard to show IMMEDIATELY - don't wait for auth state listener
-                const landingView = document.getElementById('landing-page-view');
-                const nav = document.querySelector('nav');
-                const footer = document.querySelector('footer');
-                const dashboardView = document.getElementById('dashboard-view');
-                
-                if (landingView) landingView.style.display = 'none';
-                if (nav) nav.style.display = 'none';
-                if (footer) footer.style.display = 'none';
-                if (dashboardView) {
-                    dashboardView.style.display = 'block';
-                    dashboardView.classList.add('active');
-                }
-                
-                // Initialize dashboard immediately
-                if (typeof initDashboard === 'function') {
-                    initDashboard();
-                }
-                
-                // Clear the login in progress flags after a delay
-                setTimeout(() => {
-                    window._loginJustCompleted = false;
-                    window._isLoginInProgress = false;
-                    isLoginInProgress = false;
-                    console.log('[Login] Login flags cleared');
-                }, 2000);
-                
-                console.log('[Login] ✅ Dashboard displayed successfully');
-                console.log('[Login] ✅ Login process complete');
-                
+                console.log('Login successful, showing dashboard...');
                 // #region agent log
                 fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:4760',message:'Login successful - user data stored',data:{userId:user.uid,email:user.email,hasCurrentUser:!!currentUser},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
                 // #endregion
+                
+                // Show success message before closing modal
+                showAuthMessage('authMessage', 'Login successful! Redirecting to dashboard...', 'success');
+                
+                // Close modal after a brief delay
+                setTimeout(() => {
+                    closeAuthModal();
+                    
+                    // Force dashboard to show
+                    const landingView = document.getElementById('landing-page-view');
+                    const nav = document.querySelector('nav');
+                    const footer = document.querySelector('footer');
+                    const dashboardView = document.getElementById('dashboard-view');
+                    
+                    if (landingView) landingView.style.display = 'none';
+                    if (nav) nav.style.display = 'none';
+                    if (footer) footer.style.display = 'none';
+                    if (dashboardView) {
+                        dashboardView.style.display = 'block';
+                        dashboardView.classList.add('active');
+                    }
+                    
+                    if (typeof initDashboard === 'function') {
+                        initDashboard();
+                    }
+                }, 500);
                 
                 // Re-enable button
                 if (submitBtn) {
@@ -4503,20 +4411,10 @@
                     submitBtn.textContent = originalText;
                 }
             } catch (error) {
-                console.error('[Login] ❌ LOGIN ERROR:', error);
-                console.error('[Login] Error code:', error.code);
-                console.error('[Login] Error message:', error.message);
-                console.error('[Login] Full error:', JSON.stringify(error, null, 2));
-                
-                // Clear login in progress flags on error
-                isLoginInProgress = false;
-                window._loginJustCompleted = false;
-                window._isLoginInProgress = false;
+                console.error('Login error:', error);
                 
                 // #region agent log
-                var _d={location:'index.html:handleFirebaseLogin',message:'Login error caught',data:{errorCode:error.code,errorMessage:error.message},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H4'};
-                (window._debugLogs=window._debugLogs||[]).push(_d);
-                fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(_d)}).catch(()=>{});
+                _log({location:'index.html:loginError',message:'Login error caught',data:{errorCode:error.code,errorMessage:error.message},hypothesisId:'H4'});
                 // #endregion
                 
                 // Re-enable button
@@ -4546,6 +4444,9 @@
                     case 'auth/network-request-failed':
                         errorMessage = 'Network error. Please check your internet connection and try again.';
                         break;
+                    case 'auth/operation-not-allowed':
+                        errorMessage = 'Email/password sign-in is not enabled. In Firebase Console go to Authentication > Sign-in method and enable "Email/Password".';
+                        break;
                     case 'auth/invalid-credential':
                         errorMessage = 'Invalid email or password. Please check your credentials.';
                         break;
@@ -4558,9 +4459,15 @@
 
         // Handle Sign Up
         async function handleFirebaseSignup(name, email, password, plan) {
-            // Check if Firebase is initialized
+            // #region agent log
+            _log({location:'index.html:handleFirebaseSignup',message:'handleFirebaseSignup called',data:{hasAuth:!!auth,emailPrefix:email?.trim().substring(0,10),hasName:!!name?.trim(),hasPassword:!!password},hypothesisId:'H1'});
+            // #endregion
+            // Check if Firebase is initialized (e.g. not when opened via file://)
             if (!auth) {
-                showAuthMessage('signupMessage', 'Firebase is not configured. Please contact support.', 'error');
+                var msg = (typeof window !== 'undefined' && window.location && window.location.protocol === 'file:')
+                    ? 'Sign up requires opening the app from a web server (e.g. http://localhost), not by double-clicking the file. Use "npx serve" in the project folder or your IDE\'s Live Server.'
+                    : 'Firebase is not configured. Please contact support.';
+                showAuthMessage('signupMessage', msg, 'error');
                 console.error('Firebase auth not initialized');
                 return;
             }
@@ -4590,6 +4497,9 @@
                     submitBtn.textContent = 'Creating Account...';
                 }
 
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:handleFirebaseSignup.createUser',message:'Calling createUserWithEmailAndPassword',data:{emailPrefix:email?.trim().substring(0,10)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H4'})}).catch(()=>{});
+                // #endregion
                 const userCredential = await auth.createUserWithEmailAndPassword(email.trim(), password);
                 const user = userCredential.user;
                 
@@ -4603,89 +4513,49 @@
                     // Continue even if profile update fails
                 }
                 
-                // Store user data in localStorage - ensure ALL registration data is preserved
-                // THIS IS CRITICAL - all information entered during registration is saved here
+                // Store user data in localStorage
                 const userData = {
                     uid: user.uid,
                     email: user.email,
                     displayName: name.trim(),
-                    name: name.trim(), // Also store as 'name' for compatibility
                     emailVerified: user.emailVerified,
                     plan: plan || 'starter',
-                    signupDate: new Date().toISOString(),
-                    // Store original registration data - THIS REMEMBERS YOUR INFO
-                    registrationName: name.trim(),
-                    registrationEmail: user.email,
-                    registrationPlan: plan || 'starter',
-                    // Additional fields
-                    website: '',
-                    profilePicture: '',
-                    signupTimestamp: new Date().toISOString()
+                    signupDate: new Date().toISOString()
                 };
-                
-                // Set explicit login flag in BOTH sessionStorage and localStorage
+                // Set explicit login flag FIRST, before any state changes
                 sessionStorage.setItem('kotapal_explicit_login', 'true');
-                localStorage.setItem('kotapal_explicit_login', 'true');
-                
-                // Save user data - THIS REMEMBERS ALL YOUR INFORMATION
                 localStorage.setItem('kotaUser', JSON.stringify(userData));
                 currentUser = userData;
                 
-                console.log('[Signup] ✅ User account created and ALL information saved:', {
-                    registrationName: userData.registrationName,
-                    registrationEmail: userData.registrationEmail,
-                    registrationPlan: userData.registrationPlan,
-                    displayName: userData.displayName,
-                    email: userData.email
-                });
+                console.log('Signup successful, showing dashboard...');
                 
-                // Set flags to prevent auth state listener from interfering
-                window._loginJustCompleted = true;
-                window._isLoginInProgress = true;
-                isLoginInProgress = true;
-                
-                // Immediately sync user info everywhere
-                updateUserDisplay();
-                updateSidebarUserInfo();
-                syncUserPlan();
-                
-                console.log('[Signup] ✅ Signup successful, showing dashboard...');
-                
-                // Show success message
+                // Show success message before closing modal
                 showAuthMessage('signupMessage', 'Account created successfully! Redirecting to dashboard...', 'success');
                 
-                // Close modal immediately
-                closeAuthModal();
-                
-                // Force dashboard to show IMMEDIATELY
-                const landingView = document.getElementById('landing-page-view');
-                const nav = document.querySelector('nav');
-                const footer = document.querySelector('footer');
-                const dashboardView = document.getElementById('dashboard-view');
-                
-                if (landingView) landingView.style.display = 'none';
-                if (nav) nav.style.display = 'none';
-                if (footer) footer.style.display = 'none';
-                if (dashboardView) {
-                    dashboardView.style.display = 'block';
-                    dashboardView.classList.add('active');
-                }
-                
-                updateUserDisplay();
-                updateSidebarUserInfo(); // Update sidebar with user name and plan immediately
-                syncUserPlan(); // Ensure plan is synced everywhere
-                showPage('dashboard');
-                if (typeof initDashboard === 'function') {
-                    initDashboard();
-                }
-                
-                // Clear flags after delay
+                // Close modal after a brief delay
                 setTimeout(() => {
-                    window._loginJustCompleted = false;
-                    window._isLoginInProgress = false;
-                    isLoginInProgress = false;
-                    console.log('[Signup] ✅ Signup complete - flags cleared');
-                }, 2000);
+                    closeAuthModal();
+                    
+                    // Force dashboard to show
+                    const landingView = document.getElementById('landing-page-view');
+                    const nav = document.querySelector('nav');
+                    const footer = document.querySelector('footer');
+                    const dashboardView = document.getElementById('dashboard-view');
+                    
+                    if (landingView) landingView.style.display = 'none';
+                    if (nav) nav.style.display = 'none';
+                    if (footer) footer.style.display = 'none';
+                    if (dashboardView) {
+                        dashboardView.style.display = 'block';
+                        dashboardView.classList.add('active');
+                    }
+                    
+                    updateSidebarUserInfo();
+                    showPage('dashboard');
+                    if (typeof initDashboard === 'function') {
+                        initDashboard();
+                    }
+                }, 500);
                 
                 // Re-enable button
                 if (submitBtn) {
@@ -4694,15 +4564,18 @@
                 }
             } catch (error) {
                 console.error('Sign up error:', error);
+                // #region agent log
+                _log({location:'index.html:signupError',message:'Signup error caught',data:{errorCode:error.code,errorMessage:error.message},hypothesisId:'H4'});
+                // #endregion
                 let errorMessage = 'Sign up failed. Please try again.';
-                
+
                 // Re-enable button
                 const submitBtn = document.querySelector('#signupFormElement button[type="submit"]');
                 if (submitBtn) {
                     submitBtn.disabled = false;
                     submitBtn.textContent = 'Sign Up';
                 }
-                
+
                 switch (error.code) {
                     case 'auth/email-already-in-use':
                         errorMessage = 'An account with this email already exists. Please use a different email or try logging in.';
@@ -4714,7 +4587,7 @@
                         errorMessage = 'Password is too weak. Please use at least 6 characters.';
                         break;
                     case 'auth/operation-not-allowed':
-                        errorMessage = 'Email/password accounts are not enabled. Please contact support.';
+                        errorMessage = 'Email/password sign-in is not enabled. In Firebase Console go to Authentication > Sign-in method and enable "Email/Password".';
                         break;
                     case 'auth/network-request-failed':
                         errorMessage = 'Network error. Please check your internet connection and try again.';
@@ -4845,18 +4718,6 @@
 
         // FORCE LANDING PAGE ON INITIAL LOAD - NO AUTO LOGIN
         let isInitialLoad = true;
-        let hasProcessedInitialAuth = false; // Track if we've processed the initial auth state
-        
-        // CRITICAL: Clear any stale login flags on page load to prevent auto-login
-        // Only sessionStorage persists within a tab session, localStorage persists across sessions
-        // We clear localStorage flag on page load to force fresh login
-        if (typeof Storage !== 'undefined') {
-            // Clear localStorage explicit login flag on every page load
-            // This ensures users must explicitly log in each time they visit
-            localStorage.removeItem('kotapal_explicit_login');
-            console.log('Cleared stale login flags on page load to prevent auto-login');
-        }
-        
         window.addEventListener('DOMContentLoaded', () => {
             // Always show landing page first on initial load
             const landingView = document.getElementById('landing-page-view');
@@ -4872,10 +4733,13 @@
             if (nav) nav.style.display = 'flex';
             if (footer) footer.style.display = 'block';
             
-            // Mark initial load as complete after a short delay to ensure auth state has been checked
-            setTimeout(() => {
-                isInitialLoad = false;
-            }, 100);
+            // Only clear explicit login flag if it doesn't exist (first visit)
+            // Don't clear it if user just logged in
+            if (!sessionStorage.getItem('kotapal_explicit_login')) {
+                // This is a fresh page load, ensure landing page is shown
+            }
+            
+            isInitialLoad = false;
         });
         
         // Check authentication state and show appropriate view
@@ -4898,84 +4762,37 @@
                 
                 isProcessingAuthState = true;
                 
-                // On initial page load, ALWAYS show landing page and clear any stale flags
-                // This prevents auto-login from stale localStorage data
-                if (isInitialLoad || !hasProcessedInitialAuth) {
-                    hasProcessedInitialAuth = true;
+                // Skip processing during initial load to prevent conflicts
+                if (isInitialLoad) {
                     // #region agent log
-                    fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:4601',message:'Initial load - forcing landing page, clearing stale flags',data:{isInitialLoad,hasUser:!!user},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+                    fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:4601',message:'Skipping auth state change - initial load',data:{isInitialLoad},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
                     // #endregion
-                    
-                    // Clear any stale explicit login flags on initial load
-                    sessionStorage.removeItem('kotapal_explicit_login');
-                    
-                    // Force landing page display
-                    const landingView = document.getElementById('landing-page-view');
-                    const nav = document.querySelector('nav');
-                    const footer = document.querySelector('footer');
-                    const dashboardView = document.getElementById('dashboard-view');
-                    
-                    if (dashboardView) {
-                        dashboardView.style.display = 'none';
-                        dashboardView.classList.remove('active');
-                    }
-                    if (landingView) landingView.style.display = 'block';
-                    if (nav) nav.style.display = 'flex';
-                    if (footer) footer.style.display = 'block';
-                    
-                    isProcessingAuthState = false;
-                    return; // Exit early - user must explicitly log in
-                }
-                
-                // ALWAYS check for explicit login first - NO SILENT AUTO LOGIN
-                // We ONLY trust sessionStorage flag (not localStorage) to prevent stale auto-login
-                // sessionStorage is cleared when the tab closes, ensuring fresh login each session
-                let explicitLogin = sessionStorage.getItem('kotapal_explicit_login') === 'true';
-                
-                // NEVER trust localStorage for explicit login - it persists across sessions
-                // Only sessionStorage is valid because it's cleared when the browser tab closes
-                
-                // #region agent log
-                fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:4613',message:'Checking explicit login flag (sessionStorage only)',data:{hasUser:!!user,explicitLogin,explicitLoginRaw:sessionStorage.getItem('kotapal_explicit_login'),localStorageFlag:localStorage.getItem('kotapal_explicit_login'),allSessionKeys:Object.keys(sessionStorage)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-                // #endregion
-                
-                // CRITICAL: If login is in progress or just completed, DO NOT INTERFERE AT ALL
-                // Let the login function handle everything - completely skip this listener
-                if (isLoginInProgress || window._loginJustCompleted || window._isLoginInProgress) {
-                    console.log('[AuthState] ⚠️ Login in progress - COMPLETELY SKIPPING auth state processing');
-                    console.log('[AuthState] Flags:', {
-                        isLoginInProgress,
-                        _loginJustCompleted: window._loginJustCompleted,
-                        _isLoginInProgress: window._isLoginInProgress
-                    });
-                    isProcessingAuthState = false;
-                    return; // Exit immediately - don't process anything
-                }
-                
-                // CRITICAL: If user exists but no explicit login flag, sign them out
-                // This prevents auto-login from Firebase persistence
-                // BUT: Only do this if login is NOT in progress AND it's not immediately after login
-                if (user && !explicitLogin && !isLoginInProgress && !window._loginJustCompleted) {
-                    // #region agent log
-                    var _d={location:'index.html:onAuthStateChanged',message:'H5: will schedule signOut check',data:{explicitLogin,hasUser:!!user,uid:user?.uid},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H5'};
-                    (window._debugLogs=window._debugLogs||[]).push(_d);
-                    fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(_d)}).catch(()=>{});
-                    // #endregion
-                    setTimeout(() => {
-                        const stillNoFlag = sessionStorage.getItem('kotapal_explicit_login') !== 'true';
-                        if (stillNoFlag && !isLoginInProgress && !window._loginJustCompleted) {
-                            // #region agent log
-                            var _d2={location:'index.html:onAuthStateChanged',message:'H5: calling auth.signOut',data:{stillNoFlag},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H5'};
-                            (window._debugLogs=window._debugLogs||[]).push(_d2);
-                            fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(_d2)}).catch(()=>{});
-                            // #endregion
-                            console.log('[AuthState] User authenticated but no explicit login flag - signing out to prevent auto-login');
-                            auth.signOut().catch(err => console.error('Error signing out:', err));
-                        }
-                    }, 500);
                     isProcessingAuthState = false;
                     return;
                 }
+                
+                // ALWAYS check for explicit login first - NO AUTO LOGIN
+                // Check BOTH sessionStorage and localStorage for maximum persistence
+                let explicitLogin = sessionStorage.getItem('kotapal_explicit_login') === 'true' || 
+                                   localStorage.getItem('kotapal_explicit_login') === 'true';
+                
+                // If no explicit login flag but user is authenticated, check localStorage for user data
+                if (!explicitLogin && user) {
+                    const savedUserData = JSON.parse(localStorage.getItem('kotaUser') || '{}');
+                    if (savedUserData.uid === user.uid) {
+                        // Restore the session flag immediately in BOTH storages
+                        sessionStorage.setItem('kotapal_explicit_login', 'true');
+                        localStorage.setItem('kotapal_explicit_login', 'true');
+                        explicitLogin = true;
+                        // #region agent log
+                        fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:4609',message:'Restored explicit login flag from localStorage',data:{userId:user.uid,hasSavedUserData:!!savedUserData.uid},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+                        // #endregion
+                    }
+                }
+                
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:4613',message:'Checking explicit login flag',data:{hasUser:!!user,explicitLogin,explicitLoginRaw:sessionStorage.getItem('kotapal_explicit_login'),allSessionKeys:Object.keys(sessionStorage)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+                // #endregion
                 
                 // Only show dashboard if user is signed in AND explicitly logged in
                 if (user && explicitLogin) {
@@ -4984,24 +4801,13 @@
                     // #endregion
                     // User is signed in and explicitly logged in - show dashboard
                     const savedUserData = JSON.parse(localStorage.getItem('kotaUser') || '{}');
-                    
-                    // Preserve registration data if it exists
-                    const registrationName = savedUserData.registrationName || savedUserData.displayName || savedUserData.name || user.displayName || user.email.split('@')[0];
-                    const registrationEmail = savedUserData.registrationEmail || user.email;
-                    const registrationPlan = savedUserData.registrationPlan || savedUserData.plan || 'starter';
-                    
                     const userData = {
                         uid: user.uid,
                         email: user.email,
-                        displayName: registrationName,
-                        name: registrationName, // Also store as 'name' for compatibility
+                        displayName: user.displayName || savedUserData.displayName || user.email.split('@')[0],
                         emailVerified: user.emailVerified,
-                        plan: savedUserData.plan || registrationPlan,
-                        signupDate: savedUserData.signupDate || new Date().toISOString(),
-                        // Preserve original registration data
-                        registrationName: registrationName,
-                        registrationEmail: registrationEmail,
-                        registrationPlan: registrationPlan
+                        plan: savedUserData.plan || 'starter',
+                        signupDate: savedUserData.signupDate || new Date().toISOString()
                     };
                     localStorage.setItem('kotaUser', JSON.stringify(userData));
                     currentUser = userData;
@@ -5020,23 +4826,8 @@
                         dashboardView.classList.add('active');
                     }
                     
-                    // Initialize dashboard and sync plan
-                    // CRITICAL: Update user data first, then sync everything
-                    const fullUserData = JSON.parse(localStorage.getItem('kotaUser') || '{}');
-                    if (fullUserData.registrationName) {
-                        currentUser = fullUserData;
-                        // Ensure registration name is used
-                        if (!currentUser.displayName || currentUser.displayName === 'User') {
-                            currentUser.displayName = fullUserData.registrationName;
-                            currentUser.name = fullUserData.registrationName;
-                            localStorage.setItem('kotaUser', JSON.stringify(currentUser));
-                        }
-                    }
-                    
-                    // Update name and plan immediately
-                    updateUserDisplay(); // Update name display first
-                    updateSidebarUserInfo(); // Update sidebar with user name and plan immediately
-                    syncUserPlan(); // Ensure plan is synced everywhere (sidebar, billing, etc.)
+                    // Initialize dashboard
+                    updateSidebarUserInfo();
                     showPage('dashboard');
                     if (typeof initDashboard === 'function') {
                         initDashboard();
@@ -5054,16 +4845,13 @@
                     // If restoration failed, show landing page but DON'T sign out the user
                     // This prevents accidental logouts during navigation
                     
-                    // Clear user data if signed out or no explicit login
-                    if (!user || !explicitLogin) {
+                    // Clear user data if signed out
+                    if (!user) {
                         // #region agent log
-                        fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:4688',message:'Clearing user data - user signed out or no explicit login',data:{hadUser:!!user,hadUserData:!!localStorage.getItem('kotaUser'),hadExplicitLogin:!!sessionStorage.getItem('kotapal_explicit_login')},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+                        fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:4688',message:'Clearing user data - user signed out',data:{hadUserData:!!localStorage.getItem('kotaUser'),hadExplicitLogin:!!sessionStorage.getItem('kotapal_explicit_login')},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
                         // #endregion
-                        // Clear localStorage user data but keep it for display purposes if user exists
-                        if (!user) {
-                            localStorage.removeItem('kotaUser');
-                        }
-                        localStorage.removeItem('kotapal_explicit_login'); // Always clear localStorage flag
+                        localStorage.removeItem('kotaUser');
+                        localStorage.removeItem('kotapal_explicit_login'); // Also remove from localStorage
                         sessionStorage.removeItem('kotapal_explicit_login');
                         currentUser = null;
                         // #region agent log
@@ -5108,8 +4896,8 @@
                         fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:4726',message:'User signed out via Firebase',data:{hadUserData:!!localStorage.getItem('kotaUser'),hadExplicitLogin:!!sessionStorage.getItem('kotapal_explicit_login')},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
                         // #endregion
                         localStorage.removeItem('kotaUser');
-                        localStorage.removeItem('kotapal_explicit_login'); // Clear localStorage flag
-                        sessionStorage.removeItem('kotapal_explicit_login'); // Clear sessionStorage flag
+                        localStorage.removeItem('kotapal_explicit_login'); // Also remove from localStorage
+                        sessionStorage.removeItem('kotapal_explicit_login');
                         sessionStorage.removeItem('settings_access_granted');
                         currentUser = null;
                         // #region agent log
@@ -5140,20 +4928,20 @@
         }
 
         // ============================================
-        // Existing JavaScript Code
+        // Existing JavaScript Code (run when DOM is ready so auth modal & forms exist)
         // ============================================
-        
-        // Set current year in footer (guard so missing element does not block auth modal)
-        var cyEl = document.getElementById('currentYear');
-        if (cyEl) cyEl.textContent = new Date().getFullYear();
+        function initWhenDOMReady() {
+        // Set current year in footer
+        const currentYearEl = document.getElementById('currentYear');
+        if (currentYearEl) currentYearEl.textContent = new Date().getFullYear();
 
         // Mobile menu toggle
-        var mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
         if (mobileMenuBtn) {
             mobileMenuBtn.addEventListener('click', function() {
                 this.classList.toggle('active');
-                var nl = document.querySelector('.nav-links');
-                if (nl) nl.classList.toggle('active');
+                const navLinks = document.querySelector('.nav-links');
+                if (navLinks) navLinks.classList.toggle('active');
             });
         }
 
@@ -5165,39 +4953,18 @@
 
         function showAuthModal() {
             // #region agent log
-            var _d={location:'index.html:showAuthModal',message:'showAuthModal called',data:{hasAuthModal:!!authModal},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H1'};
-            (window._debugLogs=window._debugLogs||[]).push(_d);
-            fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(_d)}).catch(()=>{});
+            _log({location:'index.html:showAuthModal',message:'showAuthModal called',data:{hasAuthModal:!!authModal},hypothesisId:'H3'});
             // #endregion
-            if (!authModal) return;
-            // Clear previous auth/signup messages
-            var authMsg = document.getElementById('authMessage');
-            var signupMsg = document.getElementById('signupMessage');
-            if (authMsg) { authMsg.style.display = 'none'; authMsg.textContent = ''; }
-            if (signupMsg) { signupMsg.style.display = 'none'; signupMsg.textContent = ''; }
-            // Always show Login tab when opening (in case Sign Up was last used)
-            authTabs.forEach(function(t) { t.classList.remove('active'); });
-            authForms.forEach(function(f) { f.classList.remove('active'); });
-            var loginTab = document.querySelector('.auth-tab[data-tab="login"]');
-            var loginFormEl = document.getElementById('loginForm');
-            if (loginTab) loginTab.classList.add('active');
-            if (loginFormEl) loginFormEl.classList.add('active');
-            // Attach handlers once when modal opens
-            if (typeof setupAuthFormHandlers === 'function') setupAuthFormHandlers();
-            // Show modal: use flex + active to match .modal.active (centered, on top)
-            authModal.classList.add('active');
-            authModal.style.display = 'flex';
-            authModal.style.zIndex = '10002';
-            document.body.style.overflow = 'hidden';
+            if (authModal) {
+                authModal.style.display = 'block';
+                document.body.style.overflow = 'hidden'; // Prevent scrolling
+            }
         }
-        window.showAuthModal = showAuthModal;
 
         function closeAuthModal() {
             if (authModal) {
-                authModal.classList.remove('active');
                 authModal.style.display = 'none';
-                authModal.style.zIndex = '';
-                document.body.style.overflow = '';
+                document.body.style.overflow = ''; // Restore scrolling
             }
         }
 
@@ -5264,100 +5031,43 @@
         // Firebase Auth Form Handlers
         // ============================================
         
-        // Login handler function - defined separately so it can be reused
-        // Make it globally accessible
-        window.handleLoginSubmit = async function handleLoginSubmit(e) {
-            if (window._loginSubmitting) return;
-            window._loginSubmitting = true;
-            // #region agent log
-            var _d={location:'index.html:handleLoginSubmit',message:'handleLoginSubmit called',data:{hasE:!!e},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H2'};
-            (window._debugLogs=window._debugLogs||[]).push(_d);
-            fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(_d)}).catch(()=>{});
-            // #endregion
-            if (e) {
-                e.preventDefault();
-                e.stopPropagation();
-            }
-            console.log('[Login] ✅ LOGIN TRIGGERED!');
-            
-            try {
-                const emailInput = document.getElementById('loginEmail');
-                const passwordInput = document.getElementById('loginPassword');
-                
-                console.log('[Login] Inputs found:', {
-                    emailInput: !!emailInput,
-                    passwordInput: !!passwordInput
-                });
-                
-                if (!emailInput || !passwordInput) {
-                    console.error('[Login] ❌ Email or password input not found!');
-                    showAuthMessage('authMessage', 'Form error. Please refresh the page.', 'error');
-                    return;
-                }
-                
-                const email = emailInput.value;
-                const password = passwordInput.value;
-                
-                console.log('[Login] Values:', {
-                    email: email ? email.substring(0, 10) + '...' : 'EMPTY',
-                    hasPassword: !!password
-                });
-                
-                if (!email || !email.trim()) {
-                    console.error('[Login] ❌ Email is empty');
-                    showAuthMessage('authMessage', 'Please enter your email address.', 'error');
-                    return;
-                }
-                
-                if (!password) {
-                    console.error('[Login] ❌ Password is empty');
-                    showAuthMessage('authMessage', 'Please enter your password.', 'error');
-                    return;
-                }
-                
-                console.log('[Login] ✅ Calling handleFirebaseLogin...');
-                await handleFirebaseLogin(email, password);
-            } catch (error) {
-                console.error('[Login] ❌ ERROR:', error);
-                console.error('[Login] Error stack:', error.stack);
-                showAuthMessage('authMessage', `Error: ${error.message || 'An error occurred. Please try again.'}`, 'error');
-            } finally {
-                window._loginSubmitting = false;
-            }
-        }
-        
         // Wait for DOM to be ready before attaching form handlers
         function setupAuthFormHandlers() {
-            // #region agent log
-            const _lf = document.getElementById('loginFormElement');
-            var _d={location:'index.html:setupAuthFormHandlers',message:'setupAuthFormHandlers called',data:{foundLoginForm:!!_lf},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H2'};
-            (window._debugLogs=window._debugLogs||[]).push(_d);
-            fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(_d)}).catch(()=>{});
-            // #endregion
-            console.log('[Setup] Setting up auth form handlers...');
-            
-            // Login form: attach once (no clone/replace to avoid breaking handlers or wiping input)
             const loginForm = document.getElementById('loginFormElement');
-            if (loginForm && !loginForm.getAttribute('data-handler-attached')) {
-                loginForm.setAttribute('data-handler-attached', 'true');
-                var onLogin = typeof window.handleLoginSubmit === 'function' ? window.handleLoginSubmit : function(e){ if(e)e.preventDefault(); showAuthMessage('authMessage','Login is not ready. Refresh the page.','error'); };
-                // Form submit (fires on button click or Enter in input)
-                loginForm.addEventListener('submit', function(e) { e.preventDefault(); e.stopPropagation(); onLogin(e); }, false);
-                var btn = loginForm.querySelector('button[type="submit"]');
-                if (btn) btn.addEventListener('click', function(e) { e.preventDefault(); onLogin(e); }, false);
-                var pw = loginForm.querySelector('#loginPassword');
-                if (pw) pw.addEventListener('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); onLogin(e); } }, false);
-                console.log('[Login Form] ✅ Handlers attached (submit, button click, Enter)');
-            }
-            if (!loginForm) console.error('[Login Form] ❌ #loginFormElement not found');
-
-            // Signup form submission - attach once to avoid duplicate handlers
             const signupForm = document.getElementById('signupFormElement');
-            if (signupForm && !signupForm.getAttribute('data-handler-attached')) {
-                signupForm.setAttribute('data-handler-attached', 'true');
+            // #region agent log
+            _log({location:'index.html:setupAuthFormHandlers',message:'setupAuthFormHandlers ran',data:{hasLoginForm:!!loginForm,hasSignupForm:!!signupForm,readyState:document.readyState},hypothesisId:'H2'});
+            // #endregion
+            // Login form submission
+            if (loginForm) {
+                loginForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    // #region agent log
+                    _log({location:'index.html:loginForm.submit',message:'Login form submit fired',data:{},hypothesisId:'H3'});
+                    // #endregion
+                    try {
+                        const email = document.getElementById('loginEmail').value;
+                        const password = document.getElementById('loginPassword').value;
+                        console.log('Login attempt:', email);
+                        await handleFirebaseLogin(email, password);
+                    } catch (error) {
+                        console.error('Login form error:', error);
+                        showAuthMessage('authMessage', 'An error occurred. Please try again.', 'error');
+                    }
+                });
+            } else {
+                console.error('Login form not found!');
+            }
+
+            // Signup form submission
+            if (signupForm) {
                 signupForm.addEventListener('submit', async (e) => {
                     e.preventDefault();
                     e.stopPropagation();
+                    // #region agent log
+                    _log({location:'index.html:signupForm.submit',message:'Signup form submit fired',data:{},hypothesisId:'H3'});
+                    // #endregion
                     try {
                         const name = document.getElementById('signupName').value;
                         const email = document.getElementById('signupEmail').value;
@@ -5371,14 +5081,13 @@
                         showAuthMessage('signupMessage', 'An error occurred. Please try again.', 'error');
                     }
                 });
-                console.log('[Signup Form] ✅ Handler attached');
+            } else {
+                console.error('Signup form not found!');
             }
-            if (!signupForm) console.error('Signup form not found!');
 
-            // Forgot password link - attach once
+            // Forgot password link
             const forgotPasswordLink = document.getElementById('forgotPasswordLink');
-            if (forgotPasswordLink && !forgotPasswordLink.getAttribute('data-handler-attached')) {
-                forgotPasswordLink.setAttribute('data-handler-attached', 'true');
+            if (forgotPasswordLink) {
                 forgotPasswordLink.addEventListener('click', (e) => {
                     e.preventDefault();
                     closeAuthModal();
@@ -5389,10 +5098,10 @@
                 });
             }
 
-            // Password reset form - attach once
+            // Password reset form
+            const resetPasswordModal = document.getElementById('resetPasswordModal');
             const resetForm = document.getElementById('resetPasswordForm');
-            if (resetForm && !resetForm.getAttribute('data-handler-attached')) {
-                resetForm.setAttribute('data-handler-attached', 'true');
+            if (resetForm) {
                 resetForm.addEventListener('submit', async (e) => {
                     e.preventDefault();
                     e.stopPropagation();
@@ -5411,58 +5120,11 @@
         }
         
         // Setup form handlers when DOM is ready
-        function initializeAuthHandlers() {
-            console.log('[Init] Setting up auth form handlers...');
-            setupAuthFormHandlers();
-            console.log('[Init] Auth form handlers setup complete');
-        }
-        
         if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', initializeAuthHandlers);
+            document.addEventListener('DOMContentLoaded', setupAuthFormHandlers);
         } else {
             // DOM is already ready
-            initializeAuthHandlers();
-        }
-        
-        // Also try to setup handlers after a short delay as backup
-        setTimeout(() => {
-            const loginForm = document.getElementById('loginFormElement');
-            if (loginForm) {
-                console.log('[Init] Backup: Re-attaching login form handler...');
-                setupAuthFormHandlers();
-            }
-        }, 1000);
-        
-        // GLOBAL FALLBACK: Direct click handler on login button (works even if form handlers fail)
-        // Attach this after DOM is ready
-        function attachGlobalLoginHandler() {
-            document.addEventListener('click', function(e) {
-                // Check if clicked element is the login button or inside it
-                const target = e.target;
-                const loginForm = document.getElementById('loginFormElement');
-                
-                if (!loginForm) return;
-                
-                // Check if click is on login button
-                const loginButton = loginForm.querySelector('button[type="submit"]');
-                if (loginButton && (target === loginButton || target.closest('button[type="submit"]') === loginButton)) {
-                    // Only trigger if button text contains "Login"
-                    if (loginButton.textContent.trim().toLowerCase().includes('login')) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        console.log('[Global Handler] ✅ LOGIN BUTTON CLICKED - Global fallback triggered!');
-                        handleLoginSubmit(e);
-                    }
-                }
-            }, true); // Use capture phase to catch it early
-            console.log('[Global Handler] ✅ Global login click handler attached');
-        }
-        
-        // Attach global handler when DOM is ready
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', attachGlobalLoginHandler);
-        } else {
-            attachGlobalLoginHandler();
+            setupAuthFormHandlers();
         }
         
         // Mobile Optimizations
@@ -5859,79 +5521,12 @@
                 { id: 'skimlinks', name: 'Skimlinks', status: 'connected', lastSync: '3 hours ago', affiliateId: 'skim-456' }
             ];
 
-            // Sync user plan everywhere on dashboard initialization
-            syncUserPlan();
-            updateSidebarUserInfo();
-            updateUserDisplay(); // Update name display
-            
             updateDashboardStats();
             renderBlocks();
             renderIntegrations();
             renderActivityTable();
             renderAnalytics();
             renderAlerts();
-        }
-        
-        // Update Dashboard Stats with REAL data from blocks
-        function updateDashboardStats() {
-            // Get all blocks from localStorage
-            const savedBlocks = JSON.parse(localStorage.getItem('kotaBlocks') || '[]');
-            const blocks = savedBlocks.length > 0 ? savedBlocks : currentBlocks;
-            
-            // Calculate real stats from blocks
-            let totalClicks = 0;
-            let totalRevenue = 0;
-            let totalCTR = 0;
-            let activeBlocksCount = 0;
-            let blocksWithClicks = 0;
-            
-            blocks.forEach(block => {
-                if (block.status === 'active') {
-                    activeBlocksCount++;
-                }
-                if (block.clicks) {
-                    totalClicks += parseInt(block.clicks) || 0;
-                    blocksWithClicks++;
-                }
-                if (block.revenue) {
-                    totalRevenue += parseFloat(block.revenue) || 0;
-                }
-                if (block.ctr) {
-                    totalCTR += parseFloat(block.ctr) || 0;
-                }
-            });
-            
-            // Calculate average CTR
-            const avgCTR = blocksWithClicks > 0 ? (totalCTR / blocksWithClicks) : 0;
-            
-            // Update DOM elements
-            const totalClicksEl = document.getElementById('totalClicks');
-            const estimatedRevenueEl = document.getElementById('estimatedRevenue');
-            const avgCTREl = document.getElementById('avgCTR');
-            const activeBlocksEl = document.getElementById('activeBlocks');
-            
-            if (totalClicksEl) {
-                totalClicksEl.textContent = totalClicks.toLocaleString();
-            }
-            
-            if (estimatedRevenueEl) {
-                estimatedRevenueEl.textContent = `$${totalRevenue.toFixed(2)}`;
-            }
-            
-            if (avgCTREl) {
-                avgCTREl.textContent = `${avgCTR.toFixed(1)}%`;
-            }
-            
-            if (activeBlocksEl) {
-                activeBlocksEl.textContent = activeBlocksCount.toString();
-            }
-            
-            console.log('[Dashboard Stats] Updated:', {
-                totalClicks,
-                totalRevenue,
-                avgCTR,
-                activeBlocks: activeBlocksCount
-            });
         }
 
         // Setup dashboard event listeners
@@ -6057,34 +5652,21 @@
 
         // Update user display
         function updateUserDisplay() {
-            // Get user data from localStorage to ensure we have registration data
-            const savedUserData = JSON.parse(localStorage.getItem('kotaUser') || '{}');
-            const userData = currentUser || savedUserData;
-            
-            if (userData) {
+            if (currentUser) {
                 const userNameEl = document.querySelector('.user-name');
                 const userPlanEl = document.querySelector('.user-plan');
                 
                 if (userNameEl) {
-                    // Prioritize registration name first
-                    const displayName = userData.registrationName || 
-                                      userData.displayName || 
-                                      userData.name || 
-                                      userData.email?.split('@')[0] || 
-                                      'User';
-                    userNameEl.textContent = displayName;
-                    console.log('[updateUserDisplay] Name set to:', displayName);
+                    userNameEl.textContent = currentUser.displayName || currentUser.email?.split('@')[0] || 'User';
                 }
                 
                 if (userPlanEl) {
-                    const plan = userData.plan || 'starter';
-                    const planNames = {
-                        'starter': 'Starter',
-                        'pro': 'Pro',
-                        'creatorplus': 'Creator+',
-                        'agency': 'Agency'
-                    };
-                    userPlanEl.textContent = `${planNames[plan] || 'Starter'} Plan`;
+                    const plan = currentUser.plan || 'starter';
+                    userPlanEl.textContent = 
+                        plan === 'starter' ? 'Starter Plan ($19/mo)' : 
+                        plan === 'pro' ? 'Pro Plan ($49/mo)' : 
+                        plan === 'creatorplus' ? 'Creator+ Plan ($99/mo)' : 
+                        plan === 'agency' ? 'Agency Plan ($199+/mo)' : 'Starter Plan ($19/mo)';
                 }
                 
                 const profileNameInput = document.getElementById('userName');
@@ -6502,7 +6084,6 @@
         const SEARCHAPI_URL = 'https://www.searchapi.io/api/v1/search';
         const AMAZON_API_URL = SEARCHAPI_URL;
         const WALMART_API_URL = SEARCHAPI_URL;
-        const EBAY_API_URL = SEARCHAPI_URL;
         
         // Load API key when settings page is shown
         function loadAmazonApiKey() {
@@ -6513,7 +6094,7 @@
                     apiKeyInput.value = savedKey;
                     const statusEl = document.getElementById('amazonApiKeyStatus');
                     if (statusEl) {
-                        statusEl.textContent = 'API key saved ✓ (Works for Amazon & Walmart)';
+                        statusEl.textContent = 'API key saved ✓ (Works for Amazon, Walmart & eBay)';
                         statusEl.style.color = 'var(--success)';
                     }
                 } else {
@@ -6537,10 +6118,10 @@
                 if (apiKeyInput && apiKeyInput.value.trim()) {
                     setSearchApiKey(apiKeyInput.value.trim());
                     if (statusEl) {
-                        statusEl.textContent = 'API key saved successfully! ✓ (Works for Amazon & Walmart)';
+                        statusEl.textContent = 'API key saved successfully! ✓ (Works for Amazon, Walmart & eBay)';
                         statusEl.style.color = 'var(--success)';
                     }
-                    showNotification('SearchAPI.io key saved! Works for both Amazon and Walmart searches.', 'success', 'Settings');
+                    showNotification('SearchAPI.io key saved! Works for Amazon, Walmart and eBay searches.', 'success', 'Settings');
                 } else {
                     if (statusEl) {
                         statusEl.textContent = 'Please enter a valid API key';
@@ -6906,165 +6487,83 @@
                         // NO MOCK DATA FALLBACK - Show error instead
                     }
                 } else if (retailer === 'ebay') {
-                    // Use SearchAPI.io eBay Search API
-                    // Endpoint: https://www.searchapi.io/api/v1/search?engine=ebay_search
-                    // Implemented EXACTLY the same way as Walmart and Amazon
-                    const apiKey = getSearchApiKey();
-                    
-                    // getSearchApiKey() already returns DEFAULT_AMAZON_API_KEY if no user key is set
-                    // So finalApiKey should always have a value
-                    const finalApiKey = apiKey || DEFAULT_AMAZON_API_KEY;
-                    
-                    console.log('[eBay] Starting search:', { query, hasApiKey: !!finalApiKey, apiKeyLength: finalApiKey?.length });
-                    
-                    if (!finalApiKey) {
-                        console.error('[eBay] No API key available!');
+                    // SearchAPI.io eBay Search API: engine=ebay_search
+                    const apiKey = getSearchApiKey() || DEFAULT_AMAZON_API_KEY;
+                    if (!apiKey) {
                         searchStatus.textContent = 'API key required. Please configure your SearchAPI.io API key in Settings.';
                         products = [];
-                        return;
-                    }
-
-                    try {
-                        // Build URL with all supported parameters (EXACT same pattern as Walmart)
-                        // eBay API only supports num values: 60, 120, or 240 (not 20)
-                        const params = new URLSearchParams({
-                            'engine': 'ebay_search',
-                            'q': query,
-                            'api_key': finalApiKey,
-                            'num': '60' // eBay API only supports 60, 120, or 240
-                        });
-
-                        const apiUrl = `${EBAY_API_URL}?${params.toString()}`;
-                        
-                        console.log('[eBay] API Request URL:', apiUrl.replace(finalApiKey, '[REDACTED]'));
-                        console.log('[eBay] Query:', query);
-                        console.log('[eBay] Has API Key:', !!finalApiKey);
-
-                        const response = await fetch(apiUrl, {
-                            method: 'GET',
-                            headers: {
-                                'Accept': 'application/json'
+                    } else {
+                        try {
+                            const params = new URLSearchParams({
+                                engine: 'ebay_search',
+                                q: query,
+                                api_key: apiKey,
+                                num: '60'
+                            });
+                            const response = await fetch(`${SEARCHAPI_URL}?${params.toString()}`, {
+                                method: 'GET',
+                                headers: { 'Accept': 'application/json' }
+                            });
+                            if (!response.ok) {
+                                throw new Error(`API request failed: ${response.status} ${response.statusText}`);
                             }
-                        });
-
-                        console.log('[eBay] Response Status:', response.status, response.statusText);
-                        console.log('[eBay] Response OK:', response.ok);
-
-                        if (!response.ok) {
-                            const errorText = await response.text();
-                            console.error('[eBay] Error Response Text:', errorText);
-                            throw new Error(`API request failed: ${response.status} ${response.statusText}. ${errorText.substring(0, 200)}`);
-                        }
-
-                        const data = await response.json();
-                        console.log('[eBay] Full Response Data:', JSON.stringify(data, null, 2));
-                        console.log('[eBay] Response Keys:', Object.keys(data || {}));
-
-                        // Check for API errors in response (same as Walmart)
-                        if (data && data.error) {
-                            console.error('[eBay] API Error in response:', data.error);
-                            const errorMsg = typeof data.error === 'string' ? data.error : (data.error.message || JSON.stringify(data.error));
-                            throw new Error(`API Error: ${errorMsg}`);
-                        }
-
-                        // Parse SearchAPI.io response format (EXACT same pattern as Walmart)
-                        // Handle both organic_results and other_options if available
-                        let allResults = [];
-                        
-                        if (data && data.organic_results && Array.isArray(data.organic_results)) {
-                            console.log('[eBay] Found organic_results:', data.organic_results.length);
-                            allResults = allResults.concat(data.organic_results);
-                        } else {
-                            console.log('[eBay] No organic_results found or not an array');
-                        }
-                        
-                        if (data && data.other_options && Array.isArray(data.other_options)) {
-                            console.log('[eBay] Found other_options:', data.other_options.length);
-                            allResults = allResults.concat(data.other_options);
-                        }
-                        
-                        // Also check for sections (eBay sometimes returns results in sections)
-                        if (data && data.sections && Array.isArray(data.sections)) {
-                            console.log('[eBay] Found sections:', data.sections.length);
-                            data.sections.forEach((section, idx) => {
-                                if (section.results && Array.isArray(section.results)) {
-                                    console.log(`[eBay] Section ${idx} has ${section.results.length} results`);
-                                    allResults = allResults.concat(section.results);
+                            const data = await response.json();
+                            if (data && data.error) {
+                                throw new Error(data.error.message || data.error);
+                            }
+                            let allResults = [];
+                            if (data && data.organic_results && Array.isArray(data.organic_results)) {
+                                allResults = allResults.concat(data.organic_results);
+                            }
+                            if (data && data.sections && Array.isArray(data.sections)) {
+                                for (const sec of data.sections) {
+                                    if (sec.results && Array.isArray(sec.results)) {
+                                        allResults = allResults.concat(sec.results);
+                                    }
                                 }
-                            });
+                            }
+                            if (allResults.length > 0) {
+                                products = allResults.slice(0, 20).map((item, index) => {
+                                    let price = 0;
+                                    if (item.extracted_price != null) {
+                                        price = parseFloat(item.extracted_price);
+                                    } else if (item.extracted_price_range) {
+                                        price = item.extracted_price_range.from || item.extracted_price_range.to || 0;
+                                    } else if (item.price) {
+                                        const m = String(item.price).match(/\$?([\d,]+\.?\d*)/);
+                                        if (m) price = parseFloat(m[1].replace(/,/g, ''));
+                                    }
+                                    const orig = item.extracted_original_price != null
+                                        ? parseFloat(item.extracted_original_price)
+                                        : (item.original_price ? parseFloat(String(item.original_price).replace(/[^0-9.]/g, '')) : price);
+                                    return {
+                                        id: item.item_id || item.id || `ebay_${index}`,
+                                        title: item.title || 'Product',
+                                        image: item.thumbnail || (item.images && item.images[0]) || 'https://via.placeholder.com/200',
+                                        price: price || 0,
+                                        originalPrice: orig || price,
+                                        rating: item.rating != null ? parseFloat(item.rating) : 0,
+                                        reviews: item.reviews != null ? parseInt(String(item.reviews).replace(/[^0-9]/g, '')) : 0,
+                                        availability: 'In Stock',
+                                        item_id: item.item_id,
+                                        link: item.link || `https://www.ebay.com/itm/${item.item_id || item.id || ''}`,
+                                        retailer: 'ebay',
+                                        condition: item.condition || null,
+                                        seller: item.seller || null,
+                                        shipping: item.shipping || null
+                                    };
+                                });
+                                const totalResults = data.search_information?.total_results || products.length;
+                                searchStatus.textContent = `Found ${products.length} eBay products for "${query}" (${(totalResults || products.length).toLocaleString()} total available)`;
+                            } else {
+                                searchStatus.textContent = `No eBay products found for "${query}".`;
+                                products = [];
+                            }
+                        } catch (apiError) {
+                            console.error('eBay API error:', apiError);
+                            searchStatus.textContent = `Error searching eBay: ${apiError.message}. Please check your API key and try again.`;
+                            products = [];
                         }
-
-                        console.log('[eBay] Total results collected:', allResults.length);
-                        console.log('[eBay] Sample result structure:', allResults.length > 0 ? allResults[0] : 'No results');
-
-                        if (allResults.length > 0) {
-                            products = allResults.map((item, index) => {
-                                // Use extracted_price if available (cleaner than parsing price string)
-                                let price = 0;
-                                if (item.extracted_price !== undefined && item.extracted_price !== null) {
-                                    price = parseFloat(item.extracted_price);
-                                } else if (item.price) {
-                                    // Try to extract price from string like "$99.99" or "99.99"
-                                    const priceStr = String(item.price).replace(/[^0-9.]/g, '');
-                                    price = parseFloat(priceStr) || 0;
-                                }
-
-                                let originalPrice = price;
-                                if (item.extracted_original_price !== undefined && item.extracted_original_price !== null) {
-                                    originalPrice = parseFloat(item.extracted_original_price);
-                                } else if (item.original_price) {
-                                    const origPriceStr = String(item.original_price).replace(/[^0-9.]/g, '');
-                                    originalPrice = parseFloat(origPriceStr) || price;
-                                }
-
-                                return {
-                                    id: item.item_id || item.id || `ebay_${index}`,
-                                    title: item.title || 'Product',
-                                    image: item.thumbnail || item.image || 'https://via.placeholder.com/200',
-                                    price: price || 0,
-                                    originalPrice: originalPrice || price,
-                                    rating: item.rating ? parseFloat(item.rating) : 0,
-                                    reviews: item.reviews ? parseInt(String(item.reviews).replace(/[^0-9]/g, '')) : 0,
-                                    availability: item.condition || 'In Stock',
-                                    link: item.link || item.url || '',
-                                    retailer: 'ebay',
-                                    // Additional fields from API response
-                                    itemId: item.item_id || item.id || null,
-                                    seller: item.seller || (item.seller_name ? { name: item.seller_name } : null),
-                                    condition: item.condition || null,
-                                    buyingFormat: item.buying_format || null,
-                                    shipping: item.shipping || null
-                                };
-                            });
-
-                            const totalResults = data.search_information?.total_results || products.length;
-                            searchStatus.textContent = `Found ${products.length} eBay products for "${query}" (${totalResults.toLocaleString()} total available)`;
-                            console.log('[eBay] Successfully processed', products.length, 'products');
-                            console.log('[eBay] Products array:', products);
-                        } else {
-                            // Log the entire response structure for debugging
-                            console.warn('[eBay] No results found. Full response structure:', {
-                                hasData: !!data,
-                                keys: data ? Object.keys(data) : [],
-                                hasOrganicResults: !!(data && data.organic_results),
-                                organicResultsType: data && data.organic_results ? typeof data.organic_results : 'N/A',
-                                organicResultsIsArray: data && data.organic_results ? Array.isArray(data.organic_results) : false,
-                                hasSections: !!(data && data.sections),
-                                sectionsType: data && data.sections ? typeof data.sections : 'N/A',
-                                sectionsIsArray: data && data.sections ? Array.isArray(data.sections) : false,
-                                searchInformation: data && data.search_information ? data.search_information : null
-                            });
-                            throw new Error(`No products found in eBay API response. Response structure: ${JSON.stringify(Object.keys(data || {}))}. Check browser console for full details.`);
-                        }
-                    } catch (apiError) {
-                        console.error('[eBay] API Error Details:', {
-                            message: apiError.message,
-                            stack: apiError.stack,
-                            name: apiError.name
-                        });
-                        searchStatus.textContent = `Error searching eBay products: ${apiError.message}. Please check your API key and try again. Open browser console (F12) for detailed error information.`;
-                        products = [];
-                        // NO MOCK DATA FALLBACK - Show error instead (same as Walmart)
                     }
                 } else if (retailer === 'shopify') {
                     products = [
@@ -7102,22 +6601,13 @@
                     ];
                 }
                 
-                // Only set generic status if no specific status was set (eBay sets its own status)
-                if (!searchStatus.textContent || searchStatus.textContent.includes('Searching...') || searchStatus.textContent === '') {
+                if (retailer === 'shopify' || retailer === 'skimlinks') {
                     searchStatus.textContent = `Found ${products.length} products for "${query}"`;
                 }
-                
-                console.log(`[${retailer}] Final products count:`, products.length);
-                console.log(`[${retailer}] Products to render:`, products);
                 
                 // #region agent log
                 fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:6281',message:'Rendering products to UI',data:{productsCount:products.length,retailer,query,hasProductsContainer:!!productsContainer},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
                 // #endregion
-                
-                // Clear container before rendering
-                if (productsContainer) {
-                    productsContainer.innerHTML = '';
-                }
                 
                 products.forEach((product, index) => {
                     const productCard = document.createElement('div');
@@ -7653,17 +7143,111 @@
         // reference links, local results, web references, and shopping suggestions
         // Endpoint: https://www.searchapi.io/api/v1/search?engine=google_ai_mode
         const GOOGLE_AI_API_URL = 'https://www.searchapi.io/api/v1/search';
-        const GOOGLE_AI_ENGINE = 'google_ai_mode'; // Try 'google_ai' or 'google_ai_search' if this doesn't work
+        const GOOGLE_AI_ENGINE = 'google_ai_mode';
+        
+        // Extract main text and references from Google AI Mode API response
+        // Handles: text_blocks (paragraph, header, code_blocks, unordered_list, ordered_list),
+        // markdown, reference_links, local_results, web_results, inline_shopping
+        // Fallback: answer, answer_box, organic_results
+        function extractGoogleAIContent(data) {
+            if (!data) return { text: '', references: [], localResults: [], webResults: [], shopping: [] };
+            let text = '';
+            
+            // Priority 1: Use markdown if available (most complete)
+            if (data.markdown && typeof data.markdown === 'string') {
+                text = data.markdown;
+            } 
+            // Priority 2: Process text_blocks array
+            else if (data.text_blocks && Array.isArray(data.text_blocks)) {
+                const parts = [];
+                for (const b of data.text_blocks) {
+                    if (!b || !b.type) continue;
+                    
+                    switch (b.type) {
+                        case 'header':
+                            if (b.answer) parts.push('\n## ' + b.answer + '\n');
+                            break;
+                        case 'paragraph':
+                            if (b.answer) parts.push(b.answer);
+                            break;
+                        case 'code_blocks':
+                            if (b.code) {
+                                const lang = b.language ? b.language : '';
+                                parts.push('\n```' + lang + '\n' + b.code + '\n```\n');
+                            }
+                            break;
+                        case 'ordered_list':
+                            if (b.items && Array.isArray(b.items)) {
+                                b.items.forEach((it, idx) => {
+                                    if (it && it.answer) parts.push(`${idx + 1}. ${it.answer}`);
+                                    else if (it && typeof it === 'string') parts.push(`${idx + 1}. ${it}`);
+                                });
+                            }
+                            break;
+                        case 'unordered_list':
+                            if (b.items && Array.isArray(b.items)) {
+                                b.items.forEach((it) => {
+                                    if (it && it.answer) parts.push('• ' + it.answer);
+                                    else if (it && it.type === 'paragraph' && it.answer) parts.push('• ' + it.answer);
+                                    else if (it && typeof it === 'string') parts.push('• ' + it);
+                                });
+                            }
+                            break;
+                        default:
+                            if (b.answer) parts.push(b.answer);
+                            else if (b.code) parts.push(b.code);
+                    }
+                }
+                text = parts.join('\n\n');
+            }
+            
+            // Fallback to other fields
+            if (!text && data.answer) text = data.answer;
+            if (!text && data.answer_box && data.answer_box.text) text = data.answer_box.text;
+            if (!text && data.organic_results && data.organic_results[0]) {
+                const r = data.organic_results[0];
+                text = r.snippet || r.description || '';
+            }
+            
+            // Extract all result types
+            const refs = data.reference_links || data.references || [];
+            const localResults = data.local_results || [];
+            const webResults = data.web_results || [];
+            const shopping = data.inline_shopping || [];
+            
+            return { 
+                text, 
+                references: refs,
+                localResults: localResults,
+                webResults: webResults,
+                shopping: shopping
+            };
+        }
+        
+        function escapeHtml(s) {
+            return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
         
         // AI Assistant Functions with Google AI Integration
-        async function generateProductDescription() {
+        // Supports: q (query), url (image URL for analysis), location (geographic location)
+        async function generateProductDescription(options = {}) {
             showNotification('AI is generating your product description using Google AI...', 'info', 'AI Assistant');
             
             const apiKey = getSearchApiKey();
-            const query = 'How to write compelling product descriptions for e-commerce products';
+            const query = options.query || 'How to write compelling product descriptions for e-commerce products';
+            const imageUrl = options.url || null;
+            const location = options.location || null;
             
             try {
-                const apiUrl = `${GOOGLE_AI_API_URL}?engine=${GOOGLE_AI_ENGINE}&api_key=${apiKey}&q=${encodeURIComponent(query)}`;
+                const params = new URLSearchParams({
+                    engine: GOOGLE_AI_ENGINE,
+                    api_key: apiKey,
+                    q: query
+                });
+                if (imageUrl) params.append('url', imageUrl);
+                if (location) params.append('location', location);
+                
+                const apiUrl = `${GOOGLE_AI_API_URL}?${params.toString()}`;
                 
                 const response = await fetch(apiUrl, {
                     method: 'GET',
@@ -7672,19 +7256,36 @@
                 
                 if (response.ok) {
                     const data = await response.json();
+                    const { text, references, localResults, webResults, shopping } = extractGoogleAIContent(data);
+                    let aiContent = text;
                     
-                    // Extract AI-generated content from Google AI Mode response
-                    let aiContent = '';
-                    if (data.answer) {
-                        aiContent = data.answer;
-                    } else if (data.answer_box && data.answer_box.text) {
-                        aiContent = data.answer_box.text;
-                    } else if (data.organic_results && data.organic_results[0]) {
-                        aiContent = data.organic_results[0].snippet || data.organic_results[0].description || '';
+                    // Add references
+                    if (references.length) {
+                        aiContent += "\n\n---\nReferences:\n" + references.map(r => (r.title || 'Source') + ": " + (r.link || '')).join('\n');
+                    }
+                    
+                    // Add local results if available
+                    if (localResults.length) {
+                        aiContent += "\n\n---\nLocal Results:\n" + localResults.slice(0, 3).map(l => 
+                            (l.title || '') + (l.address ? ' — ' + l.address : '') + (l.rating ? ' ★ ' + l.rating : '')
+                        ).join('\n');
+                    }
+                    
+                    // Add web results if available
+                    if (webResults.length) {
+                        aiContent += "\n\n---\nWeb Results:\n" + webResults.slice(0, 3).map(w => 
+                            (w.title || w.source || '') + (w.snippet ? ' — ' + String(w.snippet).substring(0, 100) + '...' : '')
+                        ).join('\n');
+                    }
+                    
+                    // Add shopping suggestions if available
+                    if (shopping.length) {
+                        aiContent += "\n\n---\nShopping Suggestions:\n" + shopping.slice(0, 3).map(s => 
+                            (s.title || '') + ' — ' + (s.price || '')
+                        ).join('\n');
                     }
                     
                     if (aiContent) {
-                        // Display in-app instead of alert
                         const resultDiv = document.getElementById('aiProductDescriptionResult');
                         const contentDiv = document.getElementById('aiProductDescriptionContent');
                         if (resultDiv && contentDiv) {
@@ -7702,27 +7303,34 @@
                 }
             } catch (error) {
                 console.error('Google AI error:', error);
-                // Display error in-app
                 const resultDiv = document.getElementById('aiProductDescriptionResult');
                 const contentDiv = document.getElementById('aiProductDescriptionContent');
                 if (resultDiv && contentDiv) {
-                    contentDiv.textContent = 'Experience premium quality with this exceptional product. Designed for modern lifestyles, it combines style and functionality to deliver outstanding performance. Perfect for everyday use, this product offers unmatched value and reliability.\n\n(Note: Using fallback content. Please check your API key configuration.)';
+                    contentDiv.textContent = 'Experience premium quality with this exceptional product. Designed for modern lifestyles, it combines style and functionality to deliver outstanding performance. Perfect for everyday use, this product offers unmatched value and reliability.\n\n(Note: ' + error.message + '. Please check your API key or try again.)';
                     resultDiv.style.display = 'block';
                     resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                 } else {
-                    alert('AI-Generated Product Description:\n\n"Experience premium quality with this exceptional product. Designed for modern lifestyles, it combines style and functionality to deliver outstanding performance. Perfect for everyday use, this product offers unmatched value and reliability."\n\nYou can customize this description in your product settings.');
+                    alert('AI-Generated Product Description:\n\n"Experience premium quality with this exceptional product. Designed for modern lifestyles, it combines style and functionality to deliver outstanding performance. Perfect for everyday use, this product offers unmatched value and reliability."\n\n(Error: ' + error.message + ')\n\nYou can customize this description in your product settings.');
                 }
             }
         }
         
-        async function optimizePerformance() {
+        async function optimizePerformance(options = {}) {
             showNotification('Analyzing your block performance using Google AI...', 'info', 'AI Assistant');
             
             const apiKey = getSearchApiKey();
-            const query = 'How to optimize affiliate marketing product blocks for better click-through rates and conversions';
+            const query = options.query || 'How to optimize affiliate marketing product blocks for better click-through rates and conversions';
+            const location = options.location || null;
             
             try {
-                const apiUrl = `${GOOGLE_AI_API_URL}?engine=${GOOGLE_AI_ENGINE}&api_key=${apiKey}&q=${encodeURIComponent(query)}`;
+                const params = new URLSearchParams({
+                    engine: GOOGLE_AI_ENGINE,
+                    api_key: apiKey,
+                    q: query
+                });
+                if (location) params.append('location', location);
+                
+                const apiUrl = `${GOOGLE_AI_API_URL}?${params.toString()}`;
                 
                 const response = await fetch(apiUrl, {
                     method: 'GET',
@@ -7731,21 +7339,26 @@
                 
                 if (response.ok) {
                     const data = await response.json();
+                    const { text, references, localResults, webResults, shopping } = extractGoogleAIContent(data);
+                    let recommendations = text;
                     
-                    // Extract AI-generated recommendations
-                    let recommendations = '';
-                    if (data.answer) {
-                        recommendations = data.answer;
-                    } else if (data.answer_box && data.answer_box.text) {
-                        recommendations = data.answer_box.text;
-                    } else if (data.organic_results && data.organic_results.length > 0) {
-                        recommendations = data.organic_results.slice(0, 3).map((r, i) => 
-                            `${i + 1}. ${r.title || r.snippet || ''}`
-                        ).join('\n\n');
+                    if (references.length) {
+                        recommendations += "\n\n---\nReferences:\n" + references.map(r => (r.title || 'Source') + ": " + (r.link || '')).join('\n');
+                    }
+                    
+                    if (localResults.length) {
+                        recommendations += "\n\n---\nLocal Results:\n" + localResults.slice(0, 3).map(l => 
+                            (l.title || '') + (l.address ? ' — ' + l.address : '') + (l.rating ? ' ★ ' + l.rating : '')
+                        ).join('\n');
+                    }
+                    
+                    if (webResults.length) {
+                        recommendations += "\n\n---\nWeb Results:\n" + webResults.slice(0, 3).map(w => 
+                            (w.title || w.source || '') + (w.snippet ? ' — ' + String(w.snippet).substring(0, 100) + '...' : '')
+                        ).join('\n');
                     }
                     
                     if (recommendations) {
-                        // Display in-app instead of alert
                         const resultDiv = document.getElementById('aiPerformanceResult');
                         const contentDiv = document.getElementById('aiPerformanceContent');
                         if (resultDiv && contentDiv) {
@@ -7763,11 +7376,10 @@
                 }
             } catch (error) {
                 console.error('Google AI error:', error);
-                // Display error in-app
                 const resultDiv = document.getElementById('aiPerformanceResult');
                 const contentDiv = document.getElementById('aiPerformanceContent');
                 if (resultDiv && contentDiv) {
-                    contentDiv.textContent = '1. Update product images for better visual appeal\n2. Optimize CTA text to increase click-through rates\n3. Consider A/B testing different layouts\n4. Add more relevant products to increase engagement\n5. Monitor peak traffic times and adjust accordingly\n\n(Note: Using fallback recommendations. Please check your API key configuration.)';
+                    contentDiv.textContent = '1. Update product images for better visual appeal\n2. Optimize CTA text to increase click-through rates\n3. Consider A/B testing different layouts\n4. Add more relevant products to increase engagement\n5. Monitor peak traffic times and adjust accordingly\n\n(Note: ' + error.message + '. Please check your API key or try again.)';
                     resultDiv.style.display = 'block';
                     resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                 } else {
@@ -7776,14 +7388,22 @@
             }
         }
         
-        async function getContentIdeas() {
+        async function getContentIdeas(options = {}) {
             showNotification('Generating content ideas using Google AI...', 'info', 'AI Assistant');
             
             const apiKey = getSearchApiKey();
-            const query = 'content ideas for affiliate marketing blog posts and product reviews';
+            const query = options.query || 'content ideas for affiliate marketing blog posts and product reviews';
+            const location = options.location || null;
             
             try {
-                const apiUrl = `${GOOGLE_AI_API_URL}?engine=${GOOGLE_AI_ENGINE}&api_key=${apiKey}&q=${encodeURIComponent(query)}`;
+                const params = new URLSearchParams({
+                    engine: GOOGLE_AI_ENGINE,
+                    api_key: apiKey,
+                    q: query
+                });
+                if (location) params.append('location', location);
+                
+                const apiUrl = `${GOOGLE_AI_API_URL}?${params.toString()}`;
                 
                 const response = await fetch(apiUrl, {
                     method: 'GET',
@@ -7792,21 +7412,32 @@
                 
                 if (response.ok) {
                     const data = await response.json();
+                    const { text, references, localResults, webResults, shopping } = extractGoogleAIContent(data);
+                    let ideas = text;
                     
-                    // Extract AI-generated content ideas
-                    let ideas = '';
-                    if (data.answer) {
-                        ideas = data.answer;
-                    } else if (data.answer_box && data.answer_box.text) {
-                        ideas = data.answer_box.text;
-                    } else if (data.organic_results && data.organic_results.length > 0) {
-                        ideas = data.organic_results.slice(0, 5).map((r, i) => 
-                            `${i + 1}. "${r.title || r.snippet || ''}"`
+                    if (references.length) {
+                        ideas += "\n\n---\nReferences:\n" + references.map(r => (r.title || 'Source') + ": " + (r.link || '')).join('\n');
+                    }
+                    
+                    if (localResults.length) {
+                        ideas += "\n\n---\nLocal Results:\n" + localResults.slice(0, 3).map(l => 
+                            (l.title || '') + (l.address ? ' — ' + l.address : '') + (l.rating ? ' ★ ' + l.rating : '')
+                        ).join('\n');
+                    }
+                    
+                    if (webResults.length) {
+                        ideas += "\n\n---\nWeb Results:\n" + webResults.slice(0, 3).map(w => 
+                            (w.title || w.source || '') + (w.snippet ? ' — ' + String(w.snippet).substring(0, 100) + '...' : '')
+                        ).join('\n');
+                    }
+                    
+                    if (shopping.length) {
+                        ideas += "\n\n---\nShopping Suggestions:\n" + shopping.slice(0, 3).map(s => 
+                            (s.title || '') + ' — ' + (s.price || '')
                         ).join('\n');
                     }
                     
                     if (ideas) {
-                        // Display in-app instead of alert
                         const resultDiv = document.getElementById('aiContentIdeasResult');
                         const contentDiv = document.getElementById('aiContentIdeasContent');
                         if (resultDiv && contentDiv) {
@@ -7824,15 +7455,14 @@
                 }
             } catch (error) {
                 console.error('Google AI error:', error);
-                // Display error in-app
                 const resultDiv = document.getElementById('aiContentIdeasResult');
                 const contentDiv = document.getElementById('aiContentIdeasContent');
                 if (resultDiv && contentDiv) {
-                    contentDiv.textContent = '1. "Top 10 Must-Have Products for [Your Niche]"\n2. "Product Review: [Product Name] - Is It Worth It?"\n3. "Best Deals This Week: [Category]"\n4. "How to Choose the Right [Product Type]"\n5. "Product Comparison: [Product A] vs [Product B]"\n\n(Note: Using fallback ideas. Please check your API key configuration.)\n\nUse these ideas to create engaging content around your products!';
+                    contentDiv.textContent = '1. "Top 10 Must-Have Products for [Your Niche]"\n2. "Product Review: [Product Name] - Is It Worth It?"\n3. "Best Deals This Week: [Category]"\n4. "How to Choose the Right [Product Type]"\n5. "Product Comparison: [Product A] vs [Product B]"\n\n(Note: ' + error.message + '. Please check your API key or try again.)\n\nUse these ideas to create engaging content around your products!';
                     resultDiv.style.display = 'block';
                     resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                 } else {
-                    alert('AI-Generated Content Ideas:\n\n1. "Top 10 Must-Have Products for [Your Niche]"\n2. "Product Review: [Product Name] - Is It Worth It?"\n3. "Best Deals This Week: [Category]"\n4. "How to Choose the Right [Product Type]"\n5. "Product Comparison: [Product A] vs [Product B]"\n\nUse these ideas to create engaging content around your products!');
+                    alert('AI-Generated Content Ideas:\n\n1. "Top 10 Must-Have Products for [Your Niche]"\n2. "Product Review: [Product Name] - Is It Worth It?"\n3. "Best Deals This Week: [Category]"\n4. "How to Choose the Right [Product Type]"\n5. "Product Comparison: [Product A] vs [Product B]"\n\n(Error: ' + error.message + ')\n\nUse these ideas to create engaging content around your products!');
                 }
             }
         }
@@ -7854,7 +7484,7 @@
             userMessageDiv.innerHTML = `
                 <div style="display: inline-block; background: var(--primary); color: white; padding: 12px 16px; border-radius: 12px; max-width: 70%; text-align: left;">
                     <div style="font-weight: 600; margin-bottom: 4px;">You</div>
-                    <div>${message}</div>
+                    <div>${escapeHtml(message)}</div>
                 </div>
             `;
             chatContainer.appendChild(userMessageDiv);
@@ -7875,8 +7505,23 @@
             
             const apiKey = getSearchApiKey();
             
+            // Check if message contains an image URL or location hint
+            const urlMatch = message.match(/(https?:\/\/[^\s]+\.(jpg|jpeg|png|gif|webp))/i);
+            const imageUrl = urlMatch ? urlMatch[1] : null;
+            const locationMatch = message.match(/(?:near|in|at)\s+([A-Z][a-zA-Z\s]+)/);
+            const location = locationMatch ? locationMatch[1].trim() : null;
+            const queryText = imageUrl ? message.replace(urlMatch[0], '').trim() : message;
+            
             try {
-                const apiUrl = `${GOOGLE_AI_API_URL}?engine=${GOOGLE_AI_ENGINE}&api_key=${apiKey}&q=${encodeURIComponent(message)}`;
+                const params = new URLSearchParams({
+                    engine: GOOGLE_AI_ENGINE,
+                    api_key: apiKey,
+                    q: queryText || message
+                });
+                if (imageUrl) params.append('url', imageUrl);
+                if (location) params.append('location', location);
+                
+                const apiUrl = `${GOOGLE_AI_API_URL}?${params.toString()}`;
                 
                 const response = await fetch(apiUrl, {
                     method: 'GET',
@@ -7888,42 +7533,21 @@
                 
                 if (response.ok) {
                     const data = await response.json();
-                    
-                    // Extract AI response
-                    let aiResponse = '';
-                    if (data.answer) {
-                        aiResponse = data.answer;
-                    } else if (data.answer_box && data.answer_box.text) {
-                        aiResponse = data.answer_box.text;
-                    } else if (data.organic_results && data.organic_results[0]) {
-                        aiResponse = data.organic_results[0].snippet || data.organic_results[0].description || 'I found some information, but could you be more specific?';
-                    } else {
-                        aiResponse = 'I\'m here to help! Could you provide more details about what you\'d like to know?';
-                    }
-                    
-                    // Add AI response to chat
+                    const { text, references, localResults, webResults, shopping } = extractGoogleAIContent(data);
+                    let aiResponse = text || 'I\'m here to help! Could you provide more details about what you\'d like to know?';
+                    const refs = references;
+                    const local = localResults;
+                    const web = webResults;
+                    const safe = (u) => (u||'').match(/^https?:\/\//) ? String(u).replace(/&/g,'&amp;').replace(/"/g,'&quot;') : '#';
+                    const refHtml = refs.length ? '<div style="margin-top:10px;padding-top:10px;border-top:1px solid #e5e7eb;"><div style="font-size:0.85rem;color:var(--gray);margin-bottom:5px;">References:</div>' + refs.slice(0, 5).map(r => '<a href="' + safe(r.link) + '" target="_blank" rel="noopener" style="font-size:0.8rem;color:var(--primary);display:block;margin-top:4px;">' + escapeHtml(r.title || 'Source') + '</a>').join('') + '</div>' : '';
+                    const localHtml = local.length ? '<div style="margin-top:10px;padding-top:10px;border-top:1px solid #e5e7eb;"><div style="font-size:0.85rem;color:var(--gray);margin-bottom:5px;">Local:</div>' + local.slice(0, 3).map(l => '<div style="font-size:0.85rem;margin-top:4px;">' + escapeHtml(l.title||'') + (l.address ? ' — ' + escapeHtml(l.address) : '') + (l.rating ? ' ★ ' + l.rating : '') + ' <a href="' + safe(l.link) + '" target="_blank" rel="noopener" style="color:var(--primary);">View</a></div>').join('') + '</div>' : '';
+                    const webHtml = web.length ? '<div style="margin-top:10px;padding-top:10px;border-top:1px solid #e5e7eb;"><div style="font-size:0.85rem;color:var(--gray);margin-bottom:5px;">Web:</div>' + web.slice(0, 3).map(w => '<div style="font-size:0.85rem;margin-top:4px;"><a href="' + safe(w.link) + '" target="_blank" rel="noopener" style="color:var(--primary);">' + escapeHtml(w.title || w.source || '') + '</a>' + (w.snippet ? ' — ' + escapeHtml(String(w.snippet).substring(0,100)) + '…' : '') + '</div>').join('') + '</div>' : '';
+                    const shopHtml = shopping.length ? '<div style="margin-top:10px;padding-top:10px;border-top:1px solid #e5e7eb;"><div style="font-size:0.85rem;color:var(--gray);margin-bottom:5px;">Shopping:</div>' + shopping.slice(0, 3).map(s => '<div style="font-size:0.85rem;margin-top:4px;"><a href="' + safe(s.link) + '" target="_blank" rel="noopener" style="color:var(--primary);">' + escapeHtml(s.title||'') + '</a> — ' + escapeHtml(s.price||'') + '</div>').join('') + '</div>' : '';
                     const aiMessageDiv = document.createElement('div');
                     aiMessageDiv.style.cssText = 'margin-bottom: 15px; text-align: left;';
-                    aiMessageDiv.innerHTML = `
-                        <div style="display: inline-block; background: #f3f4f6; padding: 12px 16px; border-radius: 12px; max-width: 70%;">
-                            <div style="font-weight: 600; margin-bottom: 4px; color: var(--primary);">
-                                <i class="fas fa-robot"></i> AI Assistant
-                            </div>
-                            <div style="color: var(--dark); white-space: pre-wrap;">${aiResponse}</div>
-                            ${data.references && data.references.length > 0 ? `
-                                <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #e5e7eb;">
-                                    <div style="font-size: 0.85rem; color: var(--gray); margin-bottom: 5px;">References:</div>
-                                    ${data.references.slice(0, 3).map(ref => `
-                                        <a href="${ref.link || '#'}" target="_blank" style="font-size: 0.8rem; color: var(--primary); display: block; margin-top: 4px;">${ref.title || ref.link || 'Source'}</a>
-                                    `).join('')}
-                                </div>
-                            ` : ''}
-                        </div>
-                    `;
+                    aiMessageDiv.innerHTML = '<div style="display:inline-block;background:#f3f4f6;padding:12px 16px;border-radius:12px;max-width:70%;"><div style="font-weight:600;margin-bottom:4px;color:var(--primary);"><i class="fas fa-robot"></i> AI Assistant</div><div style="color:var(--dark);white-space:pre-wrap;">' + escapeHtml(aiResponse) + '</div>' + refHtml + localHtml + webHtml + shopHtml + '</div>';
                     chatContainer.appendChild(aiMessageDiv);
                     chatContainer.scrollTop = chatContainer.scrollHeight;
-                    
-                    // Save to history
                     aiChatHistory.push({ role: 'user', content: message });
                     aiChatHistory.push({ role: 'assistant', content: aiResponse });
                 } else {
@@ -7932,16 +7556,10 @@
             } catch (error) {
                 console.error('Google AI chat error:', error);
                 loadingDiv.remove();
-                
-                // Show error message
+                const errMsg = escapeHtml(error.message || 'Unknown error');
                 const errorDiv = document.createElement('div');
                 errorDiv.style.cssText = 'margin-bottom: 15px; text-align: left;';
-                errorDiv.innerHTML = `
-                    <div style="display: inline-block; background: #fee2e2; color: #991b1b; padding: 12px 16px; border-radius: 12px; max-width: 70%;">
-                        <div style="font-weight: 600; margin-bottom: 4px;">AI Assistant</div>
-                        <div>Sorry, I encountered an error. Please try again or check your API key configuration.</div>
-                    </div>
-                `;
+                errorDiv.innerHTML = '<div style="display:inline-block;background:#fee2e2;color:#991b1b;padding:12px 16px;border-radius:12px;max-width:70%;"><div style="font-weight:600;margin-bottom:4px;">AI Assistant</div><div>Sorry, I encountered an error. ' + errMsg + ' Please try again or check your API key in Settings.</div></div>';
                 chatContainer.appendChild(errorDiv);
                 chatContainer.scrollTop = chatContainer.scrollHeight;
             }
@@ -8030,124 +7648,12 @@
             }, 1000);
         }
         
-        // Get user plan from single source of truth
-        function getUserPlan() {
-            // Always get from localStorage first (most up-to-date), then currentUser, then registration plan, then default
-            const savedUserData = JSON.parse(localStorage.getItem('kotaUser') || '{}');
-            return savedUserData.plan || 
-                   currentUser?.plan || 
-                   savedUserData.registrationPlan || 
-                   'starter';
-        }
-        
-        // Update current user plan everywhere
-        function syncUserPlan() {
-            const userPlan = getUserPlan();
-            
-            // Update currentUser object
-            if (currentUser) {
-                currentUser.plan = userPlan;
-            }
-            
-            // Update sidebar plan display
-            const sidebarPlan = document.querySelector('.user-plan');
-            if (sidebarPlan) {
-                const planNames = {
-                    'starter': 'Starter',
-                    'pro': 'Pro',
-                    'creatorplus': 'Creator+',
-                    'agency': 'Agency'
-                };
-                sidebarPlan.textContent = `${planNames[userPlan] || 'Starter'} Plan`;
-            }
-            
-            // Update billing page if it's visible
-            updateCurrentSubscription();
-            renderBillingPlans();
-        }
-        
-        // Update Current Subscription Display
-        function updateCurrentSubscription() {
-            const container = document.getElementById('currentSubscriptionCard');
-            if (!container) return;
-            
-            const userPlan = getUserPlan();
-            const savedUserData = JSON.parse(localStorage.getItem('kotaUser') || '{}');
-            
-            const planNames = {
-                'starter': 'Starter',
-                'pro': 'Pro',
-                'creatorplus': 'Creator+',
-                'agency': 'Agency'
-            };
-            
-            const planPrices = {
-                'starter': '$19',
-                'pro': '$49',
-                'creatorplus': '$99',
-                'agency': '$199+'
-            };
-            
-            const planFeatures = {
-                'starter': [
-                    '1 Shopify store',
-                    'Amazon or Walmart only',
-                    'Limited blocks',
-                    'Watermarked embed'
-                ],
-                'pro': [
-                    'Unlimited blocks',
-                    'Shopify + 1 Affiliate Network',
-                    'Basic analytics'
-                ],
-                'creatorplus': [
-                    'Shopify + Amazon + Walmart',
-                    'AI Writer & Optimizer',
-                    'Smart Geo Redirect',
-                    'Email-friendly exports'
-                ],
-                'agency': [
-                    'YouTube Overlay Blocks',
-                    'Conversion tracking',
-                    'Newsletter block formats',
-                    'Heatmaps & CTR insights',
-                    'Whitelabel embeds',
-                    'Multiple client management',
-                    'Custom domains & branding'
-                ]
-            };
-            
-            const planName = planNames[userPlan] || 'Starter';
-            const planPrice = planPrices[userPlan] || '$19';
-            const features = planFeatures[userPlan] || planFeatures['starter'];
-            
-            container.innerHTML = `
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
-                    <div class="card" style="border: 2px solid var(--primary); position: relative;">
-                        <span style="position: absolute; top: 15px; right: 15px; background: var(--primary); color: white; padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 600;">Current Plan</span>
-                        <div style="text-align: center; padding-bottom: 20px; border-bottom: 1px solid #eee;">
-                            <h3 style="margin: 15px 0 10px 0;">${planName}</h3>
-                            <div class="stat-value" style="font-size: 1.5rem;">${planPrice}</div>
-                            <div class="stat-label">per month</div>
-                        </div>
-                        <ul style="list-style: none; padding: 20px 0; text-align: left; margin: 0;">
-                            ${features.map(feature => `<li style="margin-bottom: 10px;"><i class="fas fa-check" style="color: var(--success); margin-right: 10px;"></i> ${feature}</li>`).join('')}
-                        </ul>
-                        <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #eee;">
-                            <div style="font-size: 0.875rem; color: var(--gray); margin-bottom: 8px;">Next billing date:</div>
-                            <div style="font-weight: 600;">${new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString()}</div>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-        
         // Render Billing Plans
         function renderBillingPlans() {
             const container = document.getElementById('billingPlansContainer');
             if (!container) return;
             
-            const userPlan = getUserPlan();
+            const userPlan = currentUser?.plan || 'starter';
             
             const plans = [
                 {
@@ -8203,21 +7709,18 @@
             ];
             
             container.innerHTML = plans.map(plan => `
-                <div class="card" style="border: ${plan.isCurrent ? '2px solid var(--primary)' : '1px solid #e5e7eb'}; position: relative; transition: all 0.3s ease; ${plan.isCurrent ? 'box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);' : ''}">
-                    ${plan.isCurrent ? '<span style="position: absolute; top: 15px; right: 15px; background: var(--primary); color: white; padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; z-index: 10;">Current Plan</span>' : ''}
+                <div class="card" style="border: ${plan.isCurrent ? '2px solid var(--primary)' : '1px solid #e5e7eb'}; position: relative;">
+                    ${plan.isCurrent ? '<span style="position: absolute; top: 15px; right: 15px; background: var(--primary); color: white; padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 600;">Current Plan</span>' : ''}
                     <div style="text-align: center; padding-bottom: 20px; border-bottom: 1px solid #eee;">
-                        <h3 style="margin: 15px 0 10px 0; font-size: 1.5rem; font-weight: 700;">${plan.name}</h3>
-                        <div class="stat-value" style="font-size: 2rem; font-weight: 700; color: var(--primary);">${plan.price}</div>
-                        <div class="stat-label" style="color: var(--gray); font-size: 0.9rem;">per month</div>
+                        <h3 style="margin: 15px 0 10px 0;">${plan.name}</h3>
+                        <div class="stat-value" style="font-size: 1.5rem;">${plan.price}</div>
+                        <div class="stat-label">per month</div>
                     </div>
-                    <div style="padding: 20px 0;">
-                        <div style="font-weight: 600; margin-bottom: 15px; color: var(--dark); font-size: 0.95rem;">Plan Features:</div>
-                        <ul style="list-style: none; padding: 0; margin: 0; text-align: left;">
-                            ${plan.features.map(feature => `<li style="margin-bottom: 12px; padding-left: 5px; display: flex; align-items: flex-start;"><i class="fas fa-check-circle" style="color: var(--success); margin-right: 10px; margin-top: 3px; font-size: 0.9rem;"></i><span style="font-size: 0.9rem; line-height: 1.5;">${feature}</span></li>`).join('')}
-                        </ul>
-                    </div>
-                    <button class="btn ${plan.isCurrent ? 'btn-secondary' : 'btn-primary'}" style="width: 100%; margin-top: 20px; padding: 12px; font-weight: 600; font-size: 1rem;" onclick="${plan.isCurrent ? '' : `changePlan('${plan.id}')`}" ${plan.isCurrent ? 'disabled' : ''}>
-                        ${plan.isCurrent ? '✓ Current Plan' : `Upgrade to ${plan.name}`}
+                    <ul style="list-style: none; padding: 20px 0; text-align: left; margin: 0;">
+                        ${plan.features.map(feature => `<li style="margin-bottom: 10px;"><i class="fas fa-check" style="color: var(--success); margin-right: 10px;"></i> ${feature}</li>`).join('')}
+                    </ul>
+                    <button class="btn ${plan.isCurrent ? 'btn-secondary' : 'btn-primary'}" style="width: 100%; margin-top: 20px;" onclick="${plan.isCurrent ? '' : `changePlan('${plan.id}')`}">
+                        ${plan.isCurrent ? 'Current Plan' : 'Switch to ' + plan.name}
                     </button>
                 </div>
             `).join('');
@@ -8259,7 +7762,6 @@
                 
                 // Render billing plans when settings page is shown
                 if (pageName === 'settings') {
-                    syncUserPlan(); // Sync plan before rendering
                     renderBillingPlans();
                     loadProfileSettings();
                     updateSidebarUserInfo();
@@ -8273,9 +7775,7 @@
                 
                 // Update current subscription when billing page is shown
                 if (pageName === 'billing') {
-                    syncUserPlan(); // Sync plan before updating
                     updateCurrentSubscription();
-                    renderBillingPlans(); // Show all available plans with perks
                 }
                 
                 // Load reports when reports page is shown
@@ -8332,67 +7832,42 @@
         // Load Profile Settings
         function loadProfileSettings() {
             const userData = JSON.parse(localStorage.getItem('kotaUser') || '{}');
-            const fullUserData = currentUser || userData;
             const userName = document.getElementById('userName');
             const userEmail = document.getElementById('userEmail');
             const userWebsite = document.getElementById('userWebsite');
             const profilePicturePreview = document.getElementById('profilePicturePreview');
             
-            // Use registration name first, then displayName, then name
-            const nameToShow = fullUserData.registrationName || 
-                              fullUserData.displayName || 
-                              fullUserData.name || 
-                              '';
-            
-            // Use registration email first, then current email
-            const emailToShow = fullUserData.registrationEmail || 
-                               fullUserData.email || 
-                               '';
-            
-            if (userName) userName.value = nameToShow;
-            if (userEmail) userEmail.value = emailToShow;
-            if (userWebsite) userWebsite.value = fullUserData.website || '';
+            if (userName) userName.value = userData.displayName || currentUser?.displayName || '';
+            if (userEmail) userEmail.value = userData.email || currentUser?.email || '';
+            if (userWebsite) userWebsite.value = userData.website || '';
             if (profilePicturePreview) {
-                profilePicturePreview.src = fullUserData.profilePicture || 'https://i.pravatar.cc/150?img=1';
+                profilePicturePreview.src = userData.profilePicture || currentUser?.profilePicture || 'https://i.pravatar.cc/150?img=1';
             }
-            
-            console.log('[ProfileSettings] Loaded:', { nameToShow, emailToShow, registrationName: fullUserData.registrationName });
         }
         
         // Update Sidebar User Info
         function updateSidebarUserInfo() {
-            // Get user data from both localStorage and currentUser (prioritize currentUser)
-            const savedUserData = JSON.parse(localStorage.getItem('kotaUser') || '{}');
-            const userData = currentUser || savedUserData;
-            
+            const userData = JSON.parse(localStorage.getItem('kotaUser') || '{}');
             const sidebarAvatar = document.querySelector('.user-info img');
             const sidebarName = document.querySelector('.user-name');
             const sidebarPlan = document.querySelector('.user-plan');
             
             if (sidebarAvatar) {
-                sidebarAvatar.src = userData.profilePicture || 'https://i.pravatar.cc/40?img=1';
+                sidebarAvatar.src = userData.profilePicture || currentUser?.profilePicture || 'https://i.pravatar.cc/40?img=1';
             }
-            
             if (sidebarName) {
-                // Prioritize registration name, then displayName, then name, then email prefix, then 'User'
-                // This ensures the name entered during registration is always shown
-                const displayName = userData.registrationName || 
-                                   userData.displayName || 
-                                   userData.name || 
-                                   (userData.email ? userData.email.split('@')[0] : null) ||
-                                   'User';
-                sidebarName.textContent = displayName;
-                console.log('[UserInfo] Sidebar name updated to:', displayName);
-                console.log('[UserInfo] User data:', {
-                    registrationName: userData.registrationName,
-                    displayName: userData.displayName,
-                    name: userData.name,
-                    email: userData.email
-                });
+                sidebarName.textContent = userData.displayName || currentUser?.displayName || 'User';
             }
-            
-            // Use syncUserPlan to ensure plan is synced everywhere
-            syncUserPlan();
+            if (sidebarPlan) {
+                const planNames = {
+                    'starter': 'Starter',
+                    'pro': 'Pro',
+                    'creatorplus': 'Creator+',
+                    'agency': 'Agency'
+                };
+                const plan = userData.plan || currentUser?.plan || 'starter';
+                sidebarPlan.textContent = `${planNames[plan] || 'Starter'} Plan`;
+            }
         }
         
         // Plan Change Modal
@@ -8474,22 +7949,23 @@
             const confirmMessage = `Are you sure you want to ${action} to the ${planNames[planId]} plan?\n\n${priceChange}\n\nChanges will take effect immediately.`;
             
             if (confirm(confirmMessage)) {
-                // Update user plan in localStorage (single source of truth)
+                // Update user plan
+                currentUser.plan = planId;
                 const userData = JSON.parse(localStorage.getItem('kotaUser') || '{}');
                 userData.plan = planId;
                 userData.planChangeDate = new Date().toISOString();
-                userData.previousPlan = userData.plan || currentUser?.plan || 'starter';
+                userData.previousPlan = currentUser.plan;
                 localStorage.setItem('kotaUser', JSON.stringify(userData));
                 
-                // Update currentUser object
-                if (currentUser) {
-                    currentUser.plan = planId;
+                // Update sidebar
+                const userPlanDisplay = document.querySelector('.user-plan');
+                if (userPlanDisplay) {
+                    userPlanDisplay.textContent = `${planNames[planId]} Plan`;
                 }
                 
-                // Sync plan everywhere (sidebar, billing, etc.)
-                syncUserPlan();
-                
                 hidePlanChangeModal();
+                renderBillingPlans();
+                updateCurrentSubscription();
                 
                 const actionText = isUpgrade ? 'upgraded' : 'downgraded';
                 showNotification(`Plan ${actionText} to ${planNames[planId]}! Changes are now active.`, 'success', 'Plan Updated');
@@ -8594,19 +8070,11 @@
                     const userWebsite = document.getElementById('userWebsite').value;
                     const profilePicture = document.getElementById('profilePicturePreview')?.src;
                     
-                    // Update user data - preserve registration data
+                    // Update user data
                     const userData = JSON.parse(localStorage.getItem('kotaUser') || '{}');
                     userData.displayName = userName;
-                    userData.name = userName; // Also update name for compatibility
                     userData.email = userEmail;
                     userData.website = userWebsite;
-                    // Preserve original registration data
-                    if (!userData.registrationName) {
-                        userData.registrationName = userName;
-                    }
-                    if (!userData.registrationEmail) {
-                        userData.registrationEmail = userEmail;
-                    }
                     if (profilePicture) {
                         userData.profilePicture = profilePicture;
                     }
@@ -8629,10 +8097,7 @@
                     
                     // Update sidebar and current user
                     currentUser = userData;
-                    
-                    // Sync everywhere immediately
                     updateSidebarUserInfo();
-                    syncUserPlan();
                     
                     showNotification('Profile updated successfully!', 'success', 'Success');
                 } catch (error) {
@@ -8640,91 +8105,6 @@
                     showNotification('Error updating profile. Please try again.', 'error', 'Error');
                 }
             });
-        }
-        
-        // Settings Password Functions
-        const SETTINGS_PASSWORD = 'kotapal2024'; // Default settings password
-        
-        function checkSettingsAccess() {
-            // Check if user has already entered password in this session
-            if (sessionStorage.getItem('settings_access_granted') === 'true') {
-                return true;
-            }
-            
-            // Show password modal
-            const settingsPasswordModal = document.getElementById('settingsPasswordModal');
-            if (settingsPasswordModal) {
-                settingsPasswordModal.style.display = 'flex';
-                const passwordInput = document.getElementById('settingsPasswordInput');
-                if (passwordInput) {
-                    passwordInput.value = '';
-                    passwordInput.focus();
-                }
-            }
-            return false;
-        }
-        
-        // Settings Password - Default password
-        const SETTINGS_PASSWORD = 'kotapal2024';
-        
-        function verifySettingsPassword() {
-            const passwordInput = document.getElementById('settingsPasswordInput');
-            const messageEl = document.getElementById('settingsPasswordMessage');
-            
-            if (!passwordInput) return;
-            
-            const enteredPassword = passwordInput.value.trim();
-            
-            // Check against default password or user's custom password if set
-            const savedPassword = localStorage.getItem('settings_password') || SETTINGS_PASSWORD;
-            
-            console.log('[Settings] Password check:', {
-                entered: enteredPassword.substring(0, 2) + '***',
-                saved: savedPassword.substring(0, 2) + '***',
-                match: enteredPassword === savedPassword
-            });
-            
-            if (enteredPassword === savedPassword) {
-                // Grant access for this session
-                sessionStorage.setItem('settings_access_granted', 'true');
-                
-                // Hide modal
-                hideSettingsPasswordModal();
-                
-                // Show settings page
-                showPage('settings');
-                
-                if (messageEl) {
-                    messageEl.textContent = '';
-                    messageEl.style.display = 'none';
-                }
-                showNotification('Access granted', 'success', 'Settings');
-            } else {
-                // Show error message
-                if (messageEl) {
-                    messageEl.textContent = 'Incorrect password. Please try again.';
-                    messageEl.style.color = 'var(--danger)';
-                    messageEl.style.display = 'block';
-                }
-                passwordInput.value = '';
-                passwordInput.focus();
-            }
-        }
-        
-        function hideSettingsPasswordModal() {
-            const settingsPasswordModal = document.getElementById('settingsPasswordModal');
-            if (settingsPasswordModal) {
-                settingsPasswordModal.style.display = 'none';
-            }
-            const passwordInput = document.getElementById('settingsPasswordInput');
-            if (passwordInput) {
-                passwordInput.value = '';
-            }
-            const messageEl = document.getElementById('settingsPasswordMessage');
-            if (messageEl) {
-                messageEl.textContent = '';
-                messageEl.style.display = 'none';
-            }
         }
         
         // Settings password modal handlers

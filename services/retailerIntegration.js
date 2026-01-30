@@ -43,6 +43,7 @@ class RetailerIntegrationService extends EventEmitter {
     this.retailers = {
       amazon: new AmazonRetailer(this),
       walmart: new WalmartRetailer(this),
+      ebay: new eBayRetailer(this),
       shopify: new ShopifyRetailer(this),
       skimlinks: new SkimlinksRetailer(this)
     };
@@ -618,6 +619,193 @@ class WalmartRetailer extends BaseRetailer {
 }
 
 /**
+ * eBay Retailer Adapter
+ * Uses SearchAPI.io eBay Search API to access eBay's marketplace data
+ * Endpoint: https://www.searchapi.io/api/v1/search?engine=ebay_search
+ * Supports organic_results, sections, filters, pagination
+ */
+class eBayRetailer extends BaseRetailer {
+  constructor(integrationService) {
+    super(integrationService);
+    this.name = 'ebay';
+    this.apiBaseUrl = process.env.SEARCHAPI_EBAY_URL || 'https://www.searchapi.io/api/v1/search';
+    this.apiKey = process.env.SEARCHAPI_API_KEY ||
+                  process.env.EBAY_API_KEY ||
+                  'WceNe5Tmok9RVw5Y4Qn6PnLM';
+  }
+
+  /**
+   * Search eBay products using SearchAPI.io eBay Search API
+   * Supports: q, category_id, ebay_domain, country, delivery_country, postal_code,
+   * distance_radius, product_origin_country, price_min, price_max, condition,
+   * buying_format, filters, advanced_filters, sort_by, layout, num, page
+   */
+  async searchProducts(query, options = {}) {
+    const {
+      limit = 20,
+      page = 1,
+      category_id,
+      ebay_domain,
+      country,
+      delivery_country,
+      postal_code,
+      distance_radius,
+      product_origin_country,
+      price_min,
+      price_max,
+      condition,
+      buying_format,
+      filters,
+      advanced_filters,
+      sort_by,
+      layout,
+      num
+    } = options;
+
+    const numVal = num || (limit <= 60 ? 60 : limit <= 120 ? 120 : 240);
+
+    try {
+      const params = {
+        engine: 'ebay_search',
+        api_key: this.apiKey,
+        q: query,
+        num: Math.min(numVal, 240),
+        page: page
+      };
+
+      if (category_id) params.category_id = category_id;
+      if (ebay_domain) params.ebay_domain = ebay_domain;
+      if (country) params.country = country;
+      if (delivery_country) params.delivery_country = delivery_country;
+      if (postal_code) params.postal_code = postal_code;
+      if (distance_radius) params.distance_radius = distance_radius;
+      if (product_origin_country) params.product_origin_country = product_origin_country;
+      if (price_min) params.price_min = price_min;
+      if (price_max) params.price_max = price_max;
+      if (condition) params.condition = condition;
+      if (buying_format) params.buying_format = buying_format;
+      if (filters) params.filters = filters;
+      if (advanced_filters) params.advanced_filters = advanced_filters;
+      if (sort_by) params.sort_by = sort_by;
+      if (layout) params.layout = layout;
+
+      const response = await axios.get(this.apiBaseUrl, {
+        params,
+        timeout: this.service.config.requestTimeout
+      });
+
+      let allResults = [];
+      if (response.data && response.data.organic_results) {
+        allResults = allResults.concat(response.data.organic_results);
+      }
+      if (response.data && response.data.sections) {
+        for (const sec of response.data.sections) {
+          if (sec.results && Array.isArray(sec.results)) {
+            allResults = allResults.concat(sec.results);
+          }
+        }
+      }
+
+      return this.normalizeData(allResults.slice(0, limit || 60));
+    } catch (error) {
+      console.error('eBay searchProducts error:', error.message);
+      throw new Error(`eBay search failed: ${error.message}`);
+    }
+  }
+
+  async fetchBestSellers(options = {}) {
+    const { category = 'electronics', limit = 20 } = options;
+    try {
+      const response = await axios.get(this.apiBaseUrl, {
+        params: {
+          engine: 'ebay_search',
+          api_key: this.apiKey,
+          q: `best sellers ${category}`,
+          num: 60,
+          sort_by: 'best_match'
+        },
+        timeout: this.service.config.requestTimeout
+      });
+
+      let allResults = [];
+      if (response.data && response.data.organic_results) {
+        allResults = allResults.concat(response.data.organic_results);
+      }
+      if (response.data && response.data.sections) {
+        for (const sec of response.data.sections) {
+          if (sec.results && Array.isArray(sec.results)) {
+            allResults = allResults.concat(sec.results);
+          }
+        }
+      }
+      return this.normalizeData(allResults.slice(0, limit));
+    } catch (error) {
+      console.error('eBay fetchBestSellers error:', error.message);
+      throw new Error(`eBay best sellers fetch failed: ${error.message}`);
+    }
+  }
+
+  async fetchClickAnalytics(options = {}) {
+    return {
+      totalClicks: Math.floor(Math.random() * 3500),
+      clicksToday: Math.floor(Math.random() * 350),
+      ctr: (Math.random() * 3.8).toFixed(2),
+      revenue: (Math.random() * 700).toFixed(2),
+      topProduct: 'eBay Top Product'
+    };
+  }
+
+  normalizeData(data) {
+    return Array.isArray(data) ? data.map(item => {
+      let price = 0;
+      if (item.extracted_price !== undefined && item.extracted_price !== null) {
+        price = parseFloat(item.extracted_price);
+      } else if (item.extracted_price_range) {
+        price = item.extracted_price_range.from || item.extracted_price_range.to || 0;
+      } else if (item.price) {
+        const m = String(item.price).match(/\$?([\d,]+\.?\d*)/);
+        if (m) price = parseFloat(m[1].replace(/,/g, ''));
+      }
+
+      const originalPrice = item.extracted_original_price != null
+        ? parseFloat(item.extracted_original_price)
+        : (item.original_price ? parseFloat(String(item.original_price).replace(/[^0-9.]/g, '')) : price);
+
+      return {
+        id: item.item_id || item.id,
+        title: item.title || 'Product',
+        price: price || 0,
+        originalPrice: originalPrice || price,
+        rating: item.rating != null ? parseFloat(item.rating) : 0,
+        reviews: item.reviews != null ? parseInt(String(item.reviews).replace(/[^0-9]/g, '')) : 0,
+        image: item.thumbnail || item.images?.[0] || 'https://via.placeholder.com/200',
+        availability: 'In Stock',
+        category: '',
+        retailer: 'ebay',
+        link: item.link || `https://www.ebay.com/itm/${item.item_id || item.id || ''}`,
+        normalizedAt: new Date(),
+        item_id: item.item_id || null,
+        condition: item.condition || null,
+        seller: item.seller || null,
+        buying_format: item.buying_format || null,
+        shipping: item.shipping || null,
+        extracted_shipping: item.extracted_shipping,
+        discount: item.discount || null,
+        is_sponsored: item.is_sponsored || false,
+        watching: item.extracted_watching ?? item.watching,
+        items_sold: item.extracted_items_sold ?? item.items_sold,
+        is_free_return: item.is_free_return || false,
+        extensions: item.extensions || []
+      };
+    }) : data;
+  }
+
+  generateAffiliateUrl(productId, affiliateId) {
+    return `https://www.ebay.com/itm/${productId}${affiliateId ? '?mkevt=1&mkcid=1&campid=' + affiliateId : ''}`;
+  }
+}
+
+/**
  * Shopify Retailer Adapter
  */
 class ShopifyRetailer extends BaseRetailer {
@@ -780,6 +968,7 @@ module.exports = {
   BaseRetailer,
   AmazonRetailer,
   WalmartRetailer,
+  eBayRetailer,
   ShopifyRetailer,
   SkimlinksRetailer
 };

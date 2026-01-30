@@ -575,6 +575,36 @@ app.get('/api/products/search', authenticateToken, async (req, res) => {
           }
         ].filter(p => p.title.toLowerCase().includes(query.toLowerCase()));
         break;
+      case 'ebay':
+        products = [
+          {
+            id: '226713039768',
+            title: 'Unlocked Apple iPhone SE 3rd Gen - Black 64GB',
+            image: 'https://i.ebayimg.com/images/g/KUkAAOSw~CtoBToW/s-l500.jpg',
+            price: 99.99,
+            originalPrice: 149.99,
+            rating: 5,
+            reviews: 304,
+            availability: 'In Stock',
+            item_id: '226713039768',
+            condition: 'Pre-Owned',
+            retailer: 'ebay'
+          },
+          {
+            id: '335217770415',
+            title: 'Nike Air Jordan 1 Chicago Lost & Found - Size 10.5 Mens',
+            image: 'https://i.ebayimg.com/images/g/CJYAAOSwmtFlqsPp/s-l500.jpg',
+            price: 449.99,
+            originalPrice: 499.99,
+            rating: 5,
+            reviews: 16,
+            availability: 'In Stock',
+            item_id: '335217770415',
+            condition: 'Brand New',
+            retailer: 'ebay'
+          }
+        ].filter(p => p.title.toLowerCase().includes(query.toLowerCase()));
+        break;
       case 'shopify':
         products = [
           {
@@ -682,6 +712,13 @@ app.get('/api/products/:id', authenticateToken, async (req, res) => {
           lastUpdated: new Date().toISOString()
         };
         break;
+      case 'ebay':
+        product = {
+          id,
+          affiliateUrl: `https://www.ebay.com/itm/${id.replace(/^ebay_/, '')}?mkevt=1&mkcid=1&campid=${affiliateId}`,
+          lastUpdated: new Date().toISOString()
+        };
+        break;
       case 'shopify':
         product = {
           id,
@@ -744,6 +781,9 @@ app.get('/r/:userId/:blockId/:productId', async (req, res) => {
         break;
       case 'walmart':
         redirectUrl = `https://www.walmart.com/ip/${productId.split('_')[1]}?affid=${affiliateId}`;
+        break;
+      case 'ebay':
+        redirectUrl = `https://www.ebay.com/itm/${String(productId).replace(/^ebay_/, '')}?mkevt=1&mkcid=1&campid=${affiliateId}`;
         break;
       case 'shopify':
         redirectUrl = `https://store.shopify.com/products/${productId.split('_')[1]}?ref=${affiliateId}`;
