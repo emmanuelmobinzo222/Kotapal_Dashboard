@@ -4226,11 +4226,10 @@
         }
 
         // Initialize Firebase
-        let auth;
+        let auth = null;
         try {
             // Firebase Auth does not work from file:// — must use http(s) (e.g. localhost)
             if (typeof window !== 'undefined' && window.location && window.location.protocol === 'file:') {
-                auth = null;
                 console.warn('KotaPal: Login/Sign up require a web server. Open via http://localhost (e.g. npx serve or Live Server), not file://.');
                 window.addEventListener('DOMContentLoaded', function() {
                     var banner = document.createElement('div');
@@ -4244,36 +4243,35 @@
             else if (firebaseConfig.apiKey === "YOUR_API_KEY" || 
                 firebaseConfig.authDomain === "YOUR_AUTH_DOMAIN") {
                 console.error('Firebase not configured! Please update firebaseConfig with your Firebase project values.');
-                // Show a helpful error message
-                window.addEventListener('DOMContentLoaded', () => {
-                    const loginBtn = document.getElementById('loginBtn');
+                window.addEventListener('DOMContentLoaded', function() {
+                    var loginBtn = document.getElementById('loginBtn');
                     if (loginBtn) {
-                        loginBtn.addEventListener('click', (e) => {
+                        loginBtn.addEventListener('click', function(e) {
                             e.preventDefault();
                             alert('Firebase is not configured yet. Please update the firebaseConfig object in index.html with your Firebase project credentials.\n\nSee FIREBASE_SETUP.md for instructions.');
                         });
                     }
                 });
             } else {
-                firebase.initializeApp(firebaseConfig);
+                // Avoid "Firebase App named '[DEFAULT]' already exists" (e.g. hot reload)
+                if (!firebase.apps || firebase.apps.length === 0) {
+                    firebase.initializeApp(firebaseConfig);
+                }
                 auth = firebase.auth();
-                
-                // Set persistence to LOCAL so users stay logged in across browser sessions
-                // This ensures the session persists even after closing the browser
-                auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch((error) => {
-                    console.error('Error setting auth persistence:', error);
-                    // #region agent log
-                    fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:4168',message:'Error setting auth persistence',data:{error:error.message},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'G'})}).catch(()=>{});
-                    // #endregion
+                auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(function(err) {
+                    console.error('Error setting auth persistence:', err);
                 });
-                
-                // #region agent log
-                fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:4168',message:'Firebase auth initialized with LOCAL persistence',data:{hasAuth:!!auth},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'G'})}).catch(()=>{});
-                // #endregion
             }
         } catch (error) {
             console.error('Firebase initialization error:', error);
-            alert('Firebase initialization failed. Please check your configuration.');
+            auth = null;
+            // If app already exists, we can still use auth
+            if (typeof firebase !== 'undefined' && firebase.auth) {
+                try { auth = firebase.auth(); } catch (e) { /* ignore */ }
+            }
+            if (!auth) {
+                alert('Firebase initialization failed. Please check your configuration.');
+            }
         }
 
         // ============================================
