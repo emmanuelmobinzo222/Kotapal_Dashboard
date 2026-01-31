@@ -7,6 +7,8 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#3b82f6">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="HandheldFriendly" content="true">
     <title>KOTAPAL - Monetize Your Content</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Firebase SDK -->
@@ -18,6 +20,12 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+        }
+
+        html {
+            overflow-x: hidden;
+            -webkit-text-size-adjust: 100%;
+            text-size-adjust: 100%;
         }
 
         :root {
@@ -43,9 +51,11 @@
             -moz-text-size-adjust: 100%;
             -ms-text-size-adjust: 100%;
             text-size-adjust: 100%;
+            min-height: 100vh;
+            min-height: 100dvh;
         }
         
-        /* iOS Safe Area Support */
+        /* iOS Safe Area Support (notched devices, home indicator) */
         @supports (padding: max(0px)) {
             .sidebar,
             .main-content,
@@ -53,10 +63,16 @@
                 padding-left: max(12px, env(safe-area-inset-left));
                 padding-right: max(12px, env(safe-area-inset-right));
             }
-            
+            .main-content,
+            .page-content {
+                padding-bottom: max(24px, env(safe-area-inset-bottom));
+            }
             .sidebar-toggle {
                 top: max(20px, env(safe-area-inset-top));
                 left: max(20px, env(safe-area-inset-left));
+            }
+            .modal .modal-content {
+                padding-bottom: max(24px, env(safe-area-inset-bottom));
             }
         }
 
@@ -101,6 +117,7 @@
             overflow-y: auto;
             overflow-x: hidden;
             padding: 24px;
+            -webkit-overflow-scrolling: touch;
         }
 
         .table-container {
@@ -301,9 +318,12 @@
 
         /* Hero Section */
         .hero {
-            padding-top: 120px;
+            padding-top: max(80px, env(safe-area-inset-top));
+            padding-bottom: max(40px, env(safe-area-inset-bottom));
             min-height: 100vh;
+            min-height: 100dvh;
             background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('https://images.pexels.com/photos/1649771/pexels-photo-1649771.jpeg') no-repeat center center/cover;
+            background-attachment: scroll;
             color: white;
             display: flex;
             align-items: center;
@@ -312,20 +332,23 @@
         .hero-content {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 0 20px;
+            padding: 0 max(16px, env(safe-area-inset-left));
+            padding-right: max(16px, env(safe-area-inset-right));
             display: flex;
             flex-direction: column;
             align-items: center;
             text-align: center;
+            width: 100%;
         }
 
         .hero h1 {
-            font-size: 3.5rem;
+            font-size: clamp(1.75rem, 5vw, 3.5rem);
             margin-bottom: 20px;
+            line-height: 1.2;
         }
 
         .hero p {
-            font-size: 1.5rem;
+            font-size: clamp(1rem, 2.5vw, 1.5rem);
             margin-bottom: 40px;
             max-width: 700px;
         }
@@ -719,7 +742,11 @@
             touch-action: manipulation;
         }
         
-        /* Minimum touch target size (44x44px for iOS/Android) */
+        /* Touch-friendly: tap highlight and minimum target size (44x44px for iOS/Android) */
+        .btn, button, .nav-link, .inline-toggle-btn, a[href] {
+            -webkit-tap-highlight-color: rgba(59, 130, 246, 0.2);
+            tap-highlight-color: rgba(59, 130, 246, 0.2);
+        }
         .btn, button, .nav-link, .inline-toggle-btn {
             min-height: 44px;
             min-width: 44px;
@@ -844,7 +871,10 @@
                 z-index: 1000;
                 position: fixed;
                 height: 100vh;
+                height: 100dvh;
+                width: min(320px, 85vw);
                 overflow-y: auto;
+                -webkit-overflow-scrolling: touch;
             }
 
             .sidebar.active {
@@ -854,6 +884,7 @@
             .main-content {
                 margin-left: 0;
                 padding: 16px;
+                padding-top: max(56px, calc(12px + env(safe-area-inset-top)));
                 width: 100%;
             }
             
@@ -895,10 +926,15 @@
             
             /* Optimize modals for mobile */
             .modal-content {
-                max-width: 90%;
+                max-width: 90vw;
                 margin: 5% auto;
                 padding: 24px;
                 max-height: 90vh;
+                max-height: 90dvh;
+            }
+            
+            .page-content {
+                padding: 16px;
             }
             
             /* Stack form elements on mobile */
@@ -1142,6 +1178,8 @@
         .dashboard {
             display: flex;
             min-height: 100vh;
+            min-height: 100dvh;
+            width: 100%;
         }
 
         .sidebar {
@@ -1152,6 +1190,7 @@
             left: 0;
             top: 0;
             height: 100vh;
+            height: 100dvh;
             overflow-y: auto;
             z-index: 1000;
             transition: transform 0.3s ease;
@@ -1174,6 +1213,49 @@
             max-width: 100%;
             height: auto;
             object-fit: contain;
+        }
+        
+        /* Extra-small screens (phones in portrait) */
+        @media (max-width: 480px) {
+            .hero {
+                padding-top: max(60px, env(safe-area-inset-top));
+            }
+            .hero h1 {
+                font-size: 1.5rem;
+            }
+            .hero p {
+                font-size: 1rem;
+            }
+            .hero-buttons {
+                width: 100%;
+                max-width: 280px;
+            }
+            .hero-buttons .btn {
+                width: 100%;
+            }
+            .page-content {
+                padding: 12px;
+            }
+            .header {
+                padding: 16px;
+            }
+            .card {
+                padding: 16px;
+            }
+            .nav-container .logo img,
+            .sidebar .logo img {
+                max-width: 100%;
+                height: auto;
+                max-height: 56px;
+                object-fit: contain;
+            }
+            .blocks-grid {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+            .stats-grid {
+                gap: 12px;
+            }
         }
 
         .logo-text {
@@ -1841,6 +1923,13 @@
         @media (max-width: 1024px) {
             .sidebar {
                 transform: translateX(-100%);
+                position: fixed;
+                top: 0;
+                left: 0;
+                height: 100vh;
+                height: 100dvh;
+                width: min(320px, 85vw);
+                z-index: 1002;
             }
 
             .sidebar.active {
@@ -1849,6 +1938,8 @@
 
             .main-content {
                 margin-left: 0;
+                padding-top: 60px;
+                padding-top: max(60px, calc(20px + env(safe-area-inset-top)));
             }
 
             .sidebar-toggle {
@@ -2236,6 +2327,8 @@
         .dashboard {
             display: flex;
             min-height: 100vh;
+            min-height: 100dvh;
+            width: 100%;
         }
 
         .sidebar {
@@ -2245,6 +2338,7 @@
             padding: 24px 0;
             position: fixed;
             height: 100vh;
+            height: 100dvh;
             overflow-y: auto;
             border-right: 1px solid #e5e7eb;
         }
@@ -2662,7 +2756,7 @@
 
         .product-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
             gap: 15px;
             margin-top: 20px;
         }
@@ -2741,9 +2835,10 @@
                 flex-direction: column;
             }
             .sidebar {
-                width: 100%;
-                height: auto;
-                position: relative;
+                width: min(320px, 85vw);
+                height: 100vh;
+                height: 100dvh;
+                position: fixed;
             }
             .main-content {
                 margin-left: 0;
@@ -3163,12 +3258,6 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="#" class="nav-link" data-page="ai-assistant" data-scroll-to="ai-chat-section">
-                            <i class="fas fa-comments"></i>
-                            Chat
-                        </a>
-                    </li>
-                    <li class="nav-item">
                         <a href="#" class="nav-link" data-page="billing">
                             <i class="fas fa-credit-card"></i>
                             Billing
@@ -3533,10 +3622,37 @@
                     <div class="header">
                         <h1 class="page-title">Product Library</h1>
                         <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
-                            <input type="text" id="productLibrarySearch" class="form-control" placeholder="Search products..." style="max-width: 300px;">
-                            <button class="btn btn-primary" id="addProductBtn">
+                            <input type="text" id="productLibrarySearch" class="form-control" placeholder="Filter my products..." style="max-width: 300px;">
+                            <button class="btn btn-primary" id="addProductBtn" type="button" onclick="document.getElementById('productLibrarySearchRetailersCard').scrollIntoView({behavior:'smooth'}); document.getElementById('productLibraryRetailerQuery').focus();">
                                 <i class="fas fa-plus"></i> Add Product
                             </button>
+                        </div>
+                    </div>
+                    <!-- Search Amazon, Walmart & eBay -->
+                    <div class="card" id="productLibrarySearchRetailersCard">
+                        <div class="card-header">
+                            <h3 class="card-title">Search Amazon, Walmart & eBay</h3>
+                        </div>
+                        <div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; margin-bottom: 12px;">
+                            <div>
+                                <label for="productLibraryRetailer" style="display: block; font-size: 0.85rem; margin-bottom: 4px; color: var(--gray);">Retailer</label>
+                                <select id="productLibraryRetailer" class="form-control" style="width: auto;">
+                                    <option value="amazon">Amazon</option>
+                                    <option value="walmart">Walmart</option>
+                                    <option value="ebay">eBay</option>
+                                </select>
+                            </div>
+                            <div style="flex: 1; min-width: 200px;">
+                                <label for="productLibraryRetailerQuery" style="display: block; font-size: 0.85rem; margin-bottom: 4px; color: var(--gray);">Search</label>
+                                <input type="text" id="productLibraryRetailerQuery" class="form-control" placeholder="e.g. headphones, laptop...">
+                            </div>
+                            <button type="button" class="btn btn-primary" id="productLibrarySearchRetailersBtn">
+                                <i class="fas fa-search"></i> Search
+                            </button>
+                        </div>
+                        <div id="productLibrarySearchStatus" style="font-size: 0.9rem; color: var(--gray); margin-bottom: 12px;"></div>
+                        <div id="productLibrarySearchResults" class="product-grid" style="min-height: 80px;">
+                            <!-- Search results with Add to Library will appear here -->
                         </div>
                     </div>
                     <div class="card">
@@ -3561,6 +3677,38 @@
                         </div>
                         <div id="productLibraryContainer" class="product-grid" style="margin-top: 20px;">
                             <!-- Products will be loaded here -->
+                        </div>
+                    </div>
+                    <!-- Embed Anywhere: Drag & Drop -->
+                    <div class="card" id="embedAnywhereCard">
+                        <div class="card-header">
+                            <h3 class="card-title"><i class="fas fa-code"></i> Embed Anywhere</h3>
+                        </div>
+                        <p style="color: var(--gray); margin-bottom: 16px;">Drag the block below into your website builder or any page. You can also copy the embed code and paste it anywhere.</p>
+                        <div style="display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start;">
+                            <div style="flex: 1; min-width: 280px;">
+                                <label style="display: block; font-size: 0.9rem; margin-bottom: 8px; font-weight: 600;">Select block to embed</label>
+                                <select id="embedBlockSelect" class="form-control" style="margin-bottom: 12px;">
+                                    <option value="">-- Select a block --</option>
+                                </select>
+                                <div id="embedDragPreview" class="embed-drag-preview" draggable="true" style="border: 2px dashed var(--primary); border-radius: 12px; padding: 20px; background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); cursor: grab; user-select: none; max-width: 320px;">
+                                    <div style="display: flex; align-items: center; gap: 12px;">
+                                        <div style="width: 60px; height: 60px; background: var(--primary); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white;"><i class="fas fa-cube"></i></div>
+                                        <div>
+                                            <div style="font-weight: 600; color: var(--dark);" id="embedDragBlockTitle">KotaPal Block</div>
+                                            <div style="font-size: 0.85rem; color: var(--gray);">Drag me to your site</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <p style="font-size: 0.85rem; color: var(--gray); margin-top: 12px;"><i class="fas fa-arrows-alt"></i> Drag this block and drop it in your website builder, Notion, or any page.</p>
+                            </div>
+                            <div style="flex: 1; min-width: 280px;">
+                                <label style="display: block; font-size: 0.9rem; margin-bottom: 8px; font-weight: 600;">Embed code</label>
+                                <textarea id="embedCodeTextarea" class="form-control" rows="5" readonly style="font-family: monospace; font-size: 0.85rem; background: #1a1a1a; color: #4ade80; resize: vertical;"></textarea>
+                                <button type="button" class="btn btn-primary" id="copyEmbedCodeBtn" style="margin-top: 10px;">
+                                    <i class="fas fa-copy"></i> Copy embed code
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -6733,6 +6881,199 @@
             }
         }
         
+        // Search products from Product Library page (Amazon, Walmart, eBay) and show "Add to Library"
+        async function searchProductsForLibrary(retailer, query) {
+            const statusEl = document.getElementById('productLibrarySearchStatus');
+            const resultsEl = document.getElementById('productLibrarySearchResults');
+            if (!statusEl || !resultsEl) return;
+            if (!query || !query.trim()) {
+                statusEl.textContent = 'Enter a search term.';
+                resultsEl.innerHTML = '';
+                return;
+            }
+            const apiKey = getSearchApiKey() || DEFAULT_AMAZON_API_KEY;
+            if (!apiKey) {
+                statusEl.textContent = 'API key required. Configure SearchAPI.io key in Settings.';
+                resultsEl.innerHTML = '';
+                return;
+            }
+            statusEl.textContent = 'Searching...';
+            resultsEl.innerHTML = '<div style="padding: 24px; text-align: center; color: var(--gray);"><div class="spinner" style="margin: 0 auto 12px;"></div>Loading products...</div>';
+            let products = [];
+            try {
+                if (retailer === 'amazon') {
+                    const url = `${SEARCHAPI_URL}?engine=amazon_search&api_key=${apiKey}&q=${encodeURIComponent(query)}&num=20`;
+                    const res = await fetch(url, { method: 'GET', headers: { 'Accept': 'application/json' } });
+                    const data = await res.json();
+                    if (!res.ok || (data && data.error)) throw new Error(data?.error?.message || data?.error || `HTTP ${res.status}`);
+                    if (data && data.organic_results && Array.isArray(data.organic_results)) {
+                        products = data.organic_results.map((item, i) => ({
+                            id: item.asin || item.product_id || `amz_${i}`,
+                            title: item.title || 'Product',
+                            image: item.thumbnail || item.image || 'https://via.placeholder.com/200',
+                            price: item.extracted_price != null ? parseFloat(item.extracted_price) : (item.price ? parseFloat(String(item.price).replace(/[^0-9.]/g, '')) : 0) || 0,
+                            retailer: 'amazon',
+                            asin: item.asin,
+                            link: item.link || `https://www.amazon.com/dp/${item.asin || ''}`,
+                            addedDate: new Date().toISOString()
+                        }));
+                    }
+                } else if (retailer === 'walmart') {
+                    const params = new URLSearchParams({ engine: 'walmart_search', q: query, api_key: apiKey, num: '20' });
+                    const res = await fetch(`${SEARCHAPI_URL}?${params}`, { method: 'GET', headers: { 'Accept': 'application/json' } });
+                    const data = await res.json();
+                    if (!res.ok || (data && data.error)) throw new Error(data?.error?.message || data?.error || `HTTP ${res.status}`);
+                    let allResults = [];
+                    if (data && data.organic_results) allResults = allResults.concat(data.organic_results);
+                    if (data && data.other_options) allResults = allResults.concat(data.other_options);
+                    if (allResults.length > 0) {
+                        products = allResults.map((item, i) => ({
+                            id: item.product_id || item.id || `wlm_${i}`,
+                            title: item.title || 'Product',
+                            image: item.thumbnail || 'https://via.placeholder.com/200',
+                            price: item.extracted_price != null ? parseFloat(item.extracted_price) : (item.price ? parseFloat(String(item.price).replace(/[^0-9.]/g, '')) : 0) || 0,
+                            retailer: 'walmart',
+                            link: item.link || `https://www.walmart.com/ip/${item.product_id || item.id || ''}`,
+                            addedDate: new Date().toISOString()
+                        }));
+                    }
+                } else if (retailer === 'ebay') {
+                    const params = new URLSearchParams({ engine: 'ebay_search', q: query, api_key: apiKey, num: '20' });
+                    const res = await fetch(`${SEARCHAPI_URL}?${params}`, { method: 'GET', headers: { 'Accept': 'application/json' } });
+                    const data = await res.json();
+                    if (!res.ok || (data && data.error)) throw new Error(data?.error?.message || data?.error || `HTTP ${res.status}`);
+                    let allResults = [];
+                    if (data && data.organic_results) allResults = allResults.concat(data.organic_results);
+                    if (data && data.sections) data.sections.forEach(sec => { if (sec.results) allResults = allResults.concat(sec.results); });
+                    if (allResults.length > 0) {
+                        products = allResults.slice(0, 20).map((item, i) => {
+                            let price = 0;
+                            if (item.extracted_price != null) price = parseFloat(item.extracted_price);
+                            else if (item.price) { const m = String(item.price).match(/\$?([\d,]+\.?\d*)/); if (m) price = parseFloat(m[1].replace(/,/g, '')); }
+                            return {
+                                id: item.item_id || item.id || `ebay_${i}`,
+                                title: item.title || 'Product',
+                                image: item.thumbnail || (item.images && item.images[0]) || 'https://via.placeholder.com/200',
+                                price: price || 0,
+                                retailer: 'ebay',
+                                link: item.link || `https://www.ebay.com/itm/${item.item_id || item.id || ''}`,
+                                addedDate: new Date().toISOString()
+                            };
+                        });
+                    }
+                }
+                statusEl.textContent = products.length > 0 ? `Found ${products.length} ${retailer} product(s) for "${query}". Click "Add to Library" to save.` : `No ${retailer} products found for "${query}".`;
+                window._lastLibrarySearchProducts = products;
+                resultsEl.innerHTML = products.length === 0 ? '<p style="text-align: center; color: var(--gray); padding: 24px;">No results. Try another search.</p>' : products.map((p, idx) => `
+                    <div class="product-card-dashboard" style="position: relative;">
+                        <img src="${(p.image || 'https://via.placeholder.com/200').replace(/"/g, '&quot;')}" alt="${(p.title || '').replace(/"/g, '&quot;')}" class="product-image-dashboard" onerror="this.src='https://via.placeholder.com/200'">
+                        <div class="product-title">${(p.title || 'Product').substring(0, 60)}${(p.title || '').length > 60 ? '...' : ''}</div>
+                        <div class="product-price">$${(p.price || 0).toFixed(2)}</div>
+                        <div class="product-retailer">${(p.retailer || '').charAt(0).toUpperCase() + (p.retailer || '').slice(1)}</div>
+                        <button type="button" class="btn btn-primary btn-sm" style="margin-top: 8px; width: 100%; padding: 8px;" onclick="addProductToLibraryByIndex(${idx})">
+                            <i class="fas fa-plus"></i> Add to Library
+                        </button>
+                    </div>
+                `).join('');
+            } catch (err) {
+                console.error('Product Library search error:', err);
+                statusEl.textContent = `Error: ${err.message}. Check your API key in Settings.`;
+                resultsEl.innerHTML = '<p style="text-align: center; color: var(--danger); padding: 20px;">Search failed. Please try again.</p>';
+            }
+        }
+        
+        function addProductToLibraryByIndex(index) {
+            const products = window._lastLibrarySearchProducts;
+            if (!products || !products[index]) return;
+            addProductToLibrary(products[index]);
+        }
+        
+        function addProductToLibrary(product) {
+            const uid = currentUser?.uid;
+            if (!uid) {
+                showNotification('You must be logged in to add products to your library.', 'error', 'Library');
+                return;
+            }
+            const libraryKey = 'kotaProductLibrary_' + uid;
+            let list = [];
+            try {
+                const saved = localStorage.getItem(libraryKey);
+                if (saved) list = JSON.parse(saved);
+            } catch (e) {}
+            const id = product.id || product.asin;
+            if (list.some(p => (p.id || p.asin) === id)) {
+                showNotification('Product is already in your library.', 'info', 'Library');
+                return;
+            }
+            list.push({
+                id: id,
+                title: product.title,
+                image: product.image,
+                price: product.price,
+                retailer: product.retailer,
+                addedDate: product.addedDate || new Date().toISOString()
+            });
+            localStorage.setItem(libraryKey, JSON.stringify(list));
+            loadProductLibrary();
+            showNotification('Added to Product Library.', 'success', 'Library');
+        }
+        
+        // Embed Anywhere: populate block select, update embed code, drag-and-drop
+        function updateEmbedAnywhere() {
+            const select = document.getElementById('embedBlockSelect');
+            const textarea = document.getElementById('embedCodeTextarea');
+            const titleEl = document.getElementById('embedDragBlockTitle');
+            if (!select) return;
+            select.innerHTML = '<option value="">-- Select a block --</option>';
+            (currentBlocks || []).forEach(block => {
+                const opt = document.createElement('option');
+                opt.value = block.id;
+                opt.textContent = block.title || block.id;
+                select.appendChild(opt);
+            });
+            embedAnywhereUpdateCode();
+        }
+        
+        function embedAnywhereUpdateCode() {
+            const select = document.getElementById('embedBlockSelect');
+            const textarea = document.getElementById('embedCodeTextarea');
+            const titleEl = document.getElementById('embedDragBlockTitle');
+            const blockId = select?.value || '';
+            const block = (currentBlocks || []).find(b => b.id === blockId);
+            const baseUrl = window.location.origin + window.location.pathname.replace(/\/[^/]*$/, '') || 'https://kotapal.example.com';
+            const embedCode = blockId ? `<script async src="${baseUrl}/embed.js" data-block-id="${blockId}"><\/script>` : '<!-- Select a block above -->';
+            if (textarea) textarea.value = embedCode;
+            if (titleEl) titleEl.textContent = block ? block.title : 'KotaPal Block';
+        }
+        
+        function setupEmbedAnywhere() {
+            const select = document.getElementById('embedBlockSelect');
+            const preview = document.getElementById('embedDragPreview');
+            const copyBtn = document.getElementById('copyEmbedCodeBtn');
+            const textarea = document.getElementById('embedCodeTextarea');
+            if (select) select.addEventListener('change', embedAnywhereUpdateCode);
+            if (copyBtn && textarea) {
+                copyBtn.addEventListener('click', () => {
+                    textarea.select();
+                    document.execCommand('copy');
+                    navigator.clipboard.writeText(textarea.value).catch(() => {});
+                    showNotification('Embed code copied to clipboard.', 'success', 'Copy');
+                });
+            }
+            if (preview && textarea) {
+                preview.addEventListener('dragstart', (e) => {
+                    e.dataTransfer.setData('text/plain', textarea.value || '');
+                    e.dataTransfer.effectAllowed = 'copy';
+                    preview.style.cursor = 'grabbing';
+                    preview.style.opacity = '0.8';
+                });
+                preview.addEventListener('dragend', () => {
+                    preview.style.cursor = 'grab';
+                    preview.style.opacity = '1';
+                });
+            }
+        }
+        
         // Mock Amazon products (fallback)
         function getMockAmazonProducts(query) {
             return [
@@ -7730,6 +8071,7 @@
                         } catch (e) { console.error('Error loading blocks for library:', e); }
                     }
                     loadProductLibrary();
+                    updateEmbedAnywhere();
                 }
                 
                 // Update subscription and render billing plans when billing page is shown
@@ -8025,7 +8367,7 @@
                 });
             });
             
-            // Button/link on AI Assistant page: "Go to Chat (Amazon & Walmart)"
+            // Button/link on AI Assistant page: "Go to Chat"
             const scrollToAiChatBtn = document.getElementById('scrollToAiChatBtn');
             if (scrollToAiChatBtn) {
                 scrollToAiChatBtn.addEventListener('click', (e) => {
@@ -8033,6 +8375,7 @@
                     scrollToAiChatSection();
                 });
             }
+            setupEmbedAnywhere();
         });
         
         // Intercept settings page navigation
@@ -8153,17 +8496,20 @@
             productLibrarySort.addEventListener('change', loadProductLibrary);
         }
         if (productLibrarySearch) {
-            productLibrarySearch.addEventListener('input', (e) => {
-                const searchTerm = e.target.value.toLowerCase();
-                const products = document.querySelectorAll('#productLibraryContainer .product-card-dashboard');
-                products.forEach(product => {
-                    const title = product.querySelector('.product-title')?.textContent.toLowerCase() || '';
-                    if (title.includes(searchTerm)) {
-                        product.style.display = 'block';
-                    } else {
-                        product.style.display = 'none';
-                    }
-                });
+            productLibrarySearch.addEventListener('input', () => loadProductLibrary());
+        }
+        const productLibrarySearchRetailersBtn = document.getElementById('productLibrarySearchRetailersBtn');
+        const productLibraryRetailer = document.getElementById('productLibraryRetailer');
+        const productLibraryRetailerQuery = document.getElementById('productLibraryRetailerQuery');
+        if (productLibrarySearchRetailersBtn && productLibraryRetailer && productLibraryRetailerQuery) {
+            productLibrarySearchRetailersBtn.addEventListener('click', () => {
+                searchProductsForLibrary(productLibraryRetailer.value, productLibraryRetailerQuery.value.trim());
+            });
+            productLibraryRetailerQuery.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    searchProductsForLibrary(productLibraryRetailer.value, productLibraryRetailerQuery.value.trim());
+                }
             });
         }
         
