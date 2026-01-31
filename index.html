@@ -2733,7 +2733,7 @@
                 <li><a href="#about" onclick="scrollToSection('about')">About</a></li>
                 <li><a href="#" onclick="showPage('blog-page')">Blog</a></li>
                 <li><a href="#" onclick="showPage('contact-page')">Contact</a></li>
-                <li><a href="#" id="loginBtn" role="button">Login</a></li>
+                <li><a href="#" id="loginBtn">Login</a></li>
             </ul>
             
             <div class="mobile-menu-btn" id="mobileMenuBtn">
@@ -4087,7 +4087,7 @@
             <div id="loginForm" class="auth-form active">
                 <h2>Welcome Back!</h2>
                 <div id="authMessage" class="form-status" style="display: none; margin-bottom: 20px;"></div>
-                <form id="loginFormElement" action="#" method="post" onsubmit="return false;">
+                <form id="loginFormElement">
                     <div class="form-group">
                         <label for="loginEmail">Email</label>
                         <input type="email" id="loginEmail" required>
@@ -4105,7 +4105,7 @@
             <div id="signupForm" class="auth-form">
                 <h2>Create Account</h2>
                 <div id="signupMessage" class="form-status" style="display: none; margin-bottom: 20px;"></div>
-                <form id="signupFormElement" action="#" method="post" onsubmit="return false;">
+                <form id="signupFormElement">
                     <div class="form-group">
                         <label for="signupName">Full Name</label>
                         <input type="text" id="signupName" required>
@@ -4213,65 +4213,43 @@
             measurementId: "G-8GQ7JGDZ7P"
         };
 
-        // Debug log fallback (when ingest server unreachable, e.g. file:// or CORS)
-        window.__debugLog = window.__debugLog || [];
-        function _dbg(payload) {
-            window.__debugLog.push(payload);
-            console.log('[DEBUG]', payload.location, payload.message, payload.data);
-        }
-        function _log(payload) {
-            var p = Object.assign({ location: '', message: '', data: {}, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: '' }, payload);
-            _dbg(p);
-            fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(p)}).catch(function(){});
-        }
-
         // Initialize Firebase
-        let auth = null;
+        let auth;
         try {
-            // Firebase Auth does not work from file:// — must use http(s) (e.g. localhost)
-            if (typeof window !== 'undefined' && window.location && window.location.protocol === 'file:') {
-                console.warn('KotaPal: Login/Sign up require a web server. Open via http://localhost (e.g. npx serve or Live Server), not file://.');
-                window.addEventListener('DOMContentLoaded', function() {
-                    var banner = document.createElement('div');
-                    banner.id = 'file-protocol-banner';
-                    banner.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#f59e0b;color:#000;padding:10px 16px;text-align:center;z-index:99999;font-size:14px;';
-                    banner.textContent = 'For Login and Sign up to work, open this app from a web server (e.g. http://localhost). Use "npx serve" in the project folder or your IDE\'s Live Server.';
-                    document.body.insertBefore(banner, document.body.firstChild);
-                });
-            }
             // Check if Firebase config is set up
-            else if (firebaseConfig.apiKey === "YOUR_API_KEY" || 
+            if (firebaseConfig.apiKey === "YOUR_API_KEY" || 
                 firebaseConfig.authDomain === "YOUR_AUTH_DOMAIN") {
                 console.error('Firebase not configured! Please update firebaseConfig with your Firebase project values.');
-                window.addEventListener('DOMContentLoaded', function() {
-                    var loginBtn = document.getElementById('loginBtn');
+                // Show a helpful error message
+                window.addEventListener('DOMContentLoaded', () => {
+                    const loginBtn = document.getElementById('loginBtn');
                     if (loginBtn) {
-                        loginBtn.addEventListener('click', function(e) {
+                        loginBtn.addEventListener('click', (e) => {
                             e.preventDefault();
                             alert('Firebase is not configured yet. Please update the firebaseConfig object in index.html with your Firebase project credentials.\n\nSee FIREBASE_SETUP.md for instructions.');
                         });
                     }
                 });
             } else {
-                // Avoid "Firebase App named '[DEFAULT]' already exists" (e.g. hot reload)
-                if (!firebase.apps || firebase.apps.length === 0) {
-                    firebase.initializeApp(firebaseConfig);
-                }
+                firebase.initializeApp(firebaseConfig);
                 auth = firebase.auth();
-                auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(function(err) {
-                    console.error('Error setting auth persistence:', err);
+                
+                // Set persistence to LOCAL so users stay logged in across browser sessions
+                // This ensures the session persists even after closing the browser
+                auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch((error) => {
+                    console.error('Error setting auth persistence:', error);
+                    // #region agent log
+                    fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:4168',message:'Error setting auth persistence',data:{error:error.message},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'G'})}).catch(()=>{});
+                    // #endregion
                 });
+                
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:4168',message:'Firebase auth initialized with LOCAL persistence',data:{hasAuth:!!auth},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'G'})}).catch(()=>{});
+                // #endregion
             }
         } catch (error) {
             console.error('Firebase initialization error:', error);
-            auth = null;
-            // If app already exists, we can still use auth
-            if (typeof firebase !== 'undefined' && firebase.auth) {
-                try { auth = firebase.auth(); } catch (e) { /* ignore */ }
-            }
-            if (!auth) {
-                alert('Firebase initialization failed. Please check your configuration.');
-            }
+            alert('Firebase initialization failed. Please check your configuration.');
         }
 
         // ============================================
@@ -4281,10 +4259,6 @@
         // Show auth message
         function showAuthMessage(elementId, message, type) {
             const messageEl = document.getElementById(elementId);
-            // #region agent log
-            _log({location:'index.html:showAuthMessage',message:'showAuthMessage called',data:{elementId,hasMessageEl:!!messageEl,type,msgLen:message?.length},hypothesisId:'H5'});
-            // #endregion
-            if (!messageEl) return;
             messageEl.textContent = message;
             messageEl.className = 'form-status ' + type;
             messageEl.style.display = 'block';
@@ -4296,18 +4270,15 @@
         // Handle Login
         async function handleFirebaseLogin(email, password) {
             // #region agent log
-            _log({location:'index.html:handleFirebaseLogin',message:'handleFirebaseLogin called',data:{hasAuth:!!auth,email:email?.substring(0,10)+'...',hasPassword:!!password},hypothesisId:'H1'});
+            fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:4204',message:'handleFirebaseLogin called',data:{hasAuth:!!auth,email:email?.substring(0,10)+'...',hasPassword:!!password},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H'})}).catch(()=>{});
             // #endregion
             
-            // Check if Firebase is initialized (e.g. not when opened via file://)
+            // Check if Firebase is initialized
             if (!auth) {
                 // #region agent log
-                _log({location:'index.html:authCheck',message:'Firebase auth not initialized',data:{},hypothesisId:'H1'});
+                fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:4206',message:'Firebase auth not initialized',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H'})}).catch(()=>{});
                 // #endregion
-                var msg = (typeof window !== 'undefined' && window.location && window.location.protocol === 'file:')
-                    ? 'Login requires opening the app from a web server (e.g. http://localhost), not by double-clicking the file. Use "npx serve" in the project folder or your IDE\'s Live Server.'
-                    : 'Firebase is not configured. Please contact support.';
-                showAuthMessage('authMessage', msg, 'error');
+                showAuthMessage('authMessage', 'Firebase is not configured. Please contact support.', 'error');
                 console.error('Firebase auth not initialized');
                 return;
             }
@@ -4382,25 +4353,24 @@
                 
                 // Close modal after a brief delay
                 setTimeout(() => {
-                    try {
-                        closeAuthModal();
-                        const landingView = document.getElementById('landing-page-view');
-                        const nav = document.querySelector('nav');
-                        const footer = document.querySelector('footer');
-                        const dashboardView = document.getElementById('dashboard-view');
-                        if (landingView) landingView.style.display = 'none';
-                        if (nav) nav.style.display = 'none';
-                        if (footer) footer.style.display = 'none';
-                        if (dashboardView) {
-                            dashboardView.style.display = 'block';
-                            dashboardView.classList.add('active');
-                        }
-                        if (typeof updateSidebarUserInfo === 'function') updateSidebarUserInfo();
-                        if (typeof showPage === 'function') showPage('dashboard');
-                        if (typeof initDashboard === 'function') initDashboard();
-                    } catch (err) {
-                        console.error('Post-login dashboard open error:', err);
-                        showAuthMessage('authMessage', 'Could not open dashboard. Please refresh.', 'error');
+                    closeAuthModal();
+                    
+                    // Force dashboard to show
+                    const landingView = document.getElementById('landing-page-view');
+                    const nav = document.querySelector('nav');
+                    const footer = document.querySelector('footer');
+                    const dashboardView = document.getElementById('dashboard-view');
+                    
+                    if (landingView) landingView.style.display = 'none';
+                    if (nav) nav.style.display = 'none';
+                    if (footer) footer.style.display = 'none';
+                    if (dashboardView) {
+                        dashboardView.style.display = 'block';
+                        dashboardView.classList.add('active');
+                    }
+                    
+                    if (typeof initDashboard === 'function') {
+                        initDashboard();
                     }
                 }, 500);
                 
@@ -4413,7 +4383,7 @@
                 console.error('Login error:', error);
                 
                 // #region agent log
-                _log({location:'index.html:loginError',message:'Login error caught',data:{errorCode:error.code,errorMessage:error.message},hypothesisId:'H4'});
+                fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:4312',message:'Login error caught',data:{errorCode:error.code,errorMessage:error.message,errorStack:error.stack?.substring(0,300)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H'})}).catch(()=>{});
                 // #endregion
                 
                 // Re-enable button
@@ -4443,9 +4413,6 @@
                     case 'auth/network-request-failed':
                         errorMessage = 'Network error. Please check your internet connection and try again.';
                         break;
-                    case 'auth/operation-not-allowed':
-                        errorMessage = 'Email/password sign-in is not enabled. In Firebase Console go to Authentication > Sign-in method and enable "Email/Password".';
-                        break;
                     case 'auth/invalid-credential':
                         errorMessage = 'Invalid email or password. Please check your credentials.';
                         break;
@@ -4456,54 +4423,11 @@
             }
         }
 
-        // Document-level login form handler (capture) so login always runs even if form listener missed
-        document.addEventListener('submit', function(e) {
-            if (e.target && e.target.id === 'loginFormElement') {
-                e.preventDefault();
-                e.stopPropagation();
-                var emailEl = document.getElementById('loginEmail');
-                var passwordEl = document.getElementById('loginPassword');
-                var email = emailEl ? emailEl.value : '';
-                var password = passwordEl ? passwordEl.value : '';
-                handleFirebaseLogin(email, password).catch(function(err) {
-                    console.error('Login form error:', err);
-                    showAuthMessage('authMessage', 'An error occurred. Please try again.', 'error');
-                });
-                return false;
-            }
-        }, true);
-
-        document.addEventListener('submit', function(e) {
-            if (e.target && e.target.id === 'signupFormElement') {
-                e.preventDefault();
-                e.stopPropagation();
-                var nameEl = document.getElementById('signupName');
-                var emailEl = document.getElementById('signupEmail');
-                var passwordEl = document.getElementById('signupPassword');
-                var planInput = document.querySelector('input[name="signupPlan"]:checked');
-                var name = nameEl ? nameEl.value : '';
-                var email = emailEl ? emailEl.value : '';
-                var password = passwordEl ? passwordEl.value : '';
-                var plan = planInput ? planInput.value : 'starter';
-                handleFirebaseSignup(name, email, password, plan).catch(function(err) {
-                    console.error('Signup form error:', err);
-                    showAuthMessage('signupMessage', 'An error occurred. Please try again.', 'error');
-                });
-                return false;
-            }
-        }, true);
-
         // Handle Sign Up
         async function handleFirebaseSignup(name, email, password, plan) {
-            // #region agent log
-            _log({location:'index.html:handleFirebaseSignup',message:'handleFirebaseSignup called',data:{hasAuth:!!auth,emailPrefix:email?.trim().substring(0,10),hasName:!!name?.trim(),hasPassword:!!password},hypothesisId:'H1'});
-            // #endregion
-            // Check if Firebase is initialized (e.g. not when opened via file://)
+            // Check if Firebase is initialized
             if (!auth) {
-                var msg = (typeof window !== 'undefined' && window.location && window.location.protocol === 'file:')
-                    ? 'Sign up requires opening the app from a web server (e.g. http://localhost), not by double-clicking the file. Use "npx serve" in the project folder or your IDE\'s Live Server.'
-                    : 'Firebase is not configured. Please contact support.';
-                showAuthMessage('signupMessage', msg, 'error');
+                showAuthMessage('signupMessage', 'Firebase is not configured. Please contact support.', 'error');
                 console.error('Firebase auth not initialized');
                 return;
             }
@@ -4533,9 +4457,6 @@
                     submitBtn.textContent = 'Creating Account...';
                 }
 
-                // #region agent log
-                fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:handleFirebaseSignup.createUser',message:'Calling createUserWithEmailAndPassword',data:{emailPrefix:email?.trim().substring(0,10)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H4'})}).catch(()=>{});
-                // #endregion
                 const userCredential = await auth.createUserWithEmailAndPassword(email.trim(), password);
                 const user = userCredential.user;
                 
@@ -4600,18 +4521,15 @@
                 }
             } catch (error) {
                 console.error('Sign up error:', error);
-                // #region agent log
-                _log({location:'index.html:signupError',message:'Signup error caught',data:{errorCode:error.code,errorMessage:error.message},hypothesisId:'H4'});
-                // #endregion
                 let errorMessage = 'Sign up failed. Please try again.';
-
+                
                 // Re-enable button
                 const submitBtn = document.querySelector('#signupFormElement button[type="submit"]');
                 if (submitBtn) {
                     submitBtn.disabled = false;
                     submitBtn.textContent = 'Sign Up';
                 }
-
+                
                 switch (error.code) {
                     case 'auth/email-already-in-use':
                         errorMessage = 'An account with this email already exists. Please use a different email or try logging in.';
@@ -4623,7 +4541,7 @@
                         errorMessage = 'Password is too weak. Please use at least 6 characters.';
                         break;
                     case 'auth/operation-not-allowed':
-                        errorMessage = 'Email/password sign-in is not enabled. In Firebase Console go to Authentication > Sign-in method and enable "Email/Password".';
+                        errorMessage = 'Email/password accounts are not enabled. Please contact support.';
                         break;
                     case 'auth/network-request-failed':
                         errorMessage = 'Network error. Please check your internet connection and try again.';
@@ -4752,29 +4670,29 @@
         let selectedProductsList = [];
         let currentLayout = 'grid';
 
-        // SHOW DASHBOARD DIRECTLY ON LOAD - NO AUTH REQUIRED
+        // FORCE LANDING PAGE ON INITIAL LOAD - NO AUTO LOGIN
         let isInitialLoad = true;
         window.addEventListener('DOMContentLoaded', () => {
+            // Always show landing page first on initial load
             const landingView = document.getElementById('landing-page-view');
             const nav = document.querySelector('nav');
             const footer = document.querySelector('footer');
             const dashboardView = document.getElementById('dashboard-view');
-            // Guest user so dashboard works without auth
-            var guestUser = { uid: 'guest', email: 'guest@kotapal.local', displayName: 'Guest', plan: 'starter', signupDate: new Date().toISOString() };
-            sessionStorage.setItem('kotapal_explicit_login', 'true');
-            localStorage.setItem('kotapal_explicit_login', 'true');
-            localStorage.setItem('kotaUser', JSON.stringify(guestUser));
-            currentUser = guestUser;
-            if (landingView) landingView.style.display = 'none';
-            if (nav) nav.style.display = 'none';
-            if (footer) footer.style.display = 'none';
+            
             if (dashboardView) {
-                dashboardView.style.display = 'block';
-                dashboardView.classList.add('active');
+                dashboardView.style.display = 'none';
+                dashboardView.classList.remove('active');
             }
-            if (typeof updateSidebarUserInfo === 'function') updateSidebarUserInfo();
-            if (typeof showPage === 'function') showPage('dashboard');
-            if (typeof initDashboard === 'function') initDashboard();
+            if (landingView) landingView.style.display = 'block';
+            if (nav) nav.style.display = 'flex';
+            if (footer) footer.style.display = 'block';
+            
+            // Only clear explicit login flag if it doesn't exist (first visit)
+            // Don't clear it if user just logged in
+            if (!sessionStorage.getItem('kotapal_explicit_login')) {
+                // This is a fresh page load, ensure landing page is shown
+            }
+            
             isInitialLoad = false;
         });
         
@@ -4964,22 +4882,17 @@
         }
 
         // ============================================
-        // Existing JavaScript Code (run when DOM is ready so auth modal & forms exist)
+        // Existing JavaScript Code
         // ============================================
-        function initWhenDOMReady() {
+        
         // Set current year in footer
-        const currentYearEl = document.getElementById('currentYear');
-        if (currentYearEl) currentYearEl.textContent = new Date().getFullYear();
+        document.getElementById('currentYear').textContent = new Date().getFullYear();
 
         // Mobile menu toggle
-        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
-        if (mobileMenuBtn) {
-            mobileMenuBtn.addEventListener('click', function() {
-                this.classList.toggle('active');
-                const navLinks = document.querySelector('.nav-links');
-                if (navLinks) navLinks.classList.toggle('active');
-            });
-        }
+        document.getElementById('mobileMenuBtn').addEventListener('click', function() {
+            this.classList.toggle('active');
+            document.querySelector('.nav-links').classList.toggle('active');
+        });
 
         // Auth Modal Functions
         const authModal = document.getElementById('authModal');
@@ -4988,9 +4901,6 @@
         const authForms = document.querySelectorAll('.auth-form');
 
         function showAuthModal() {
-            // #region agent log
-            _log({location:'index.html:showAuthModal',message:'showAuthModal called',data:{hasAuthModal:!!authModal},hypothesisId:'H3'});
-            // #endregion
             if (authModal) {
                 authModal.style.display = 'block';
                 document.body.style.overflow = 'hidden'; // Prevent scrolling
@@ -5042,16 +4952,8 @@
             });
         });
 
-        // Login button in nav — use delegation so it always works
-        document.addEventListener('click', function(e) {
-            var t = e.target && (e.target.id === 'loginBtn' || (e.target.closest && e.target.closest('#loginBtn')));
-            if (t) {
-                e.preventDefault();
-                e.stopPropagation();
-                if (typeof showAuthModal === 'function') showAuthModal();
-            }
-        }, true);
-        var loginBtn = document.getElementById('loginBtn');
+        // Login button in nav
+        const loginBtn = document.getElementById('loginBtn');
         if (loginBtn) {
             loginBtn.addEventListener('click', function(e) {
                 e.preventDefault();
@@ -5077,19 +4979,12 @@
         
         // Wait for DOM to be ready before attaching form handlers
         function setupAuthFormHandlers() {
-            const loginForm = document.getElementById('loginFormElement');
-            const signupForm = document.getElementById('signupFormElement');
-            // #region agent log
-            _log({location:'index.html:setupAuthFormHandlers',message:'setupAuthFormHandlers ran',data:{hasLoginForm:!!loginForm,hasSignupForm:!!signupForm,readyState:document.readyState},hypothesisId:'H2'});
-            // #endregion
             // Login form submission
+            const loginForm = document.getElementById('loginFormElement');
             if (loginForm) {
                 loginForm.addEventListener('submit', async (e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    // #region agent log
-                    _log({location:'index.html:loginForm.submit',message:'Login form submit fired',data:{},hypothesisId:'H3'});
-                    // #endregion
                     try {
                         const email = document.getElementById('loginEmail').value;
                         const password = document.getElementById('loginPassword').value;
@@ -5105,13 +5000,11 @@
             }
 
             // Signup form submission
+            const signupForm = document.getElementById('signupFormElement');
             if (signupForm) {
                 signupForm.addEventListener('submit', async (e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    // #region agent log
-                    _log({location:'index.html:signupForm.submit',message:'Signup form submit fired',data:{},hypothesisId:'H3'});
-                    // #endregion
                     try {
                         const name = document.getElementById('signupName').value;
                         const email = document.getElementById('signupEmail').value;
@@ -7190,82 +7083,33 @@
         const GOOGLE_AI_ENGINE = 'google_ai_mode';
         
         // Extract main text and references from Google AI Mode API response
-        // Handles: text_blocks (paragraph, header, code_blocks, unordered_list, ordered_list),
-        // markdown, reference_links, local_results, web_results, inline_shopping
-        // Fallback: answer, answer_box, organic_results
+        // (text_blocks, markdown, reference_links; fallback: answer, answer_box, organic_results)
         function extractGoogleAIContent(data) {
-            if (!data) return { text: '', references: [], localResults: [], webResults: [], shopping: [] };
+            if (!data) return { text: '', references: [] };
             let text = '';
-            
-            // Priority 1: Use markdown if available (most complete)
             if (data.markdown && typeof data.markdown === 'string') {
                 text = data.markdown;
-            } 
-            // Priority 2: Process text_blocks array
-            else if (data.text_blocks && Array.isArray(data.text_blocks)) {
+            } else if (data.text_blocks && Array.isArray(data.text_blocks)) {
                 const parts = [];
                 for (const b of data.text_blocks) {
-                    if (!b || !b.type) continue;
-                    
-                    switch (b.type) {
-                        case 'header':
-                            if (b.answer) parts.push('\n## ' + b.answer + '\n');
-                            break;
-                        case 'paragraph':
-                            if (b.answer) parts.push(b.answer);
-                            break;
-                        case 'code_blocks':
-                            if (b.code) {
-                                const lang = b.language ? b.language : '';
-                                parts.push('\n```' + lang + '\n' + b.code + '\n```\n');
-                            }
-                            break;
-                        case 'ordered_list':
-                            if (b.items && Array.isArray(b.items)) {
-                                b.items.forEach((it, idx) => {
-                                    if (it && it.answer) parts.push(`${idx + 1}. ${it.answer}`);
-                                    else if (it && typeof it === 'string') parts.push(`${idx + 1}. ${it}`);
-                                });
-                            }
-                            break;
-                        case 'unordered_list':
-                            if (b.items && Array.isArray(b.items)) {
-                                b.items.forEach((it) => {
-                                    if (it && it.answer) parts.push('• ' + it.answer);
-                                    else if (it && it.type === 'paragraph' && it.answer) parts.push('• ' + it.answer);
-                                    else if (it && typeof it === 'string') parts.push('• ' + it);
-                                });
-                            }
-                            break;
-                        default:
-                            if (b.answer) parts.push(b.answer);
-                            else if (b.code) parts.push(b.code);
+                    if (b.answer) parts.push(b.answer);
+                    else if (b.code) parts.push(b.code);
+                    else if (b.items && Array.isArray(b.items)) {
+                        for (const it of b.items) {
+                            if (it && it.answer) parts.push('• ' + it.answer);
+                        }
                     }
                 }
                 text = parts.join('\n\n');
             }
-            
-            // Fallback to other fields
             if (!text && data.answer) text = data.answer;
             if (!text && data.answer_box && data.answer_box.text) text = data.answer_box.text;
             if (!text && data.organic_results && data.organic_results[0]) {
                 const r = data.organic_results[0];
                 text = r.snippet || r.description || '';
             }
-            
-            // Extract all result types
             const refs = data.reference_links || data.references || [];
-            const localResults = data.local_results || [];
-            const webResults = data.web_results || [];
-            const shopping = data.inline_shopping || [];
-            
-            return { 
-                text, 
-                references: refs,
-                localResults: localResults,
-                webResults: webResults,
-                shopping: shopping
-            };
+            return { text, references: refs };
         }
         
         function escapeHtml(s) {
@@ -7273,25 +7117,14 @@
         }
         
         // AI Assistant Functions with Google AI Integration
-        // Supports: q (query), url (image URL for analysis), location (geographic location)
-        async function generateProductDescription(options = {}) {
+        async function generateProductDescription() {
             showNotification('AI is generating your product description using Google AI...', 'info', 'AI Assistant');
             
             const apiKey = getSearchApiKey();
-            const query = options.query || 'How to write compelling product descriptions for e-commerce products';
-            const imageUrl = options.url || null;
-            const location = options.location || null;
+            const query = 'How to write compelling product descriptions for e-commerce products';
             
             try {
-                const params = new URLSearchParams({
-                    engine: GOOGLE_AI_ENGINE,
-                    api_key: apiKey,
-                    q: query
-                });
-                if (imageUrl) params.append('url', imageUrl);
-                if (location) params.append('location', location);
-                
-                const apiUrl = `${GOOGLE_AI_API_URL}?${params.toString()}`;
+                const apiUrl = `${GOOGLE_AI_API_URL}?engine=${GOOGLE_AI_ENGINE}&api_key=${apiKey}&q=${encodeURIComponent(query)}`;
                 
                 const response = await fetch(apiUrl, {
                     method: 'GET',
@@ -7300,35 +7133,9 @@
                 
                 if (response.ok) {
                     const data = await response.json();
-                    const { text, references, localResults, webResults, shopping } = extractGoogleAIContent(data);
+                    const { text, references } = extractGoogleAIContent(data);
                     let aiContent = text;
-                    
-                    // Add references
-                    if (references.length) {
-                        aiContent += "\n\n---\nReferences:\n" + references.map(r => (r.title || 'Source') + ": " + (r.link || '')).join('\n');
-                    }
-                    
-                    // Add local results if available
-                    if (localResults.length) {
-                        aiContent += "\n\n---\nLocal Results:\n" + localResults.slice(0, 3).map(l => 
-                            (l.title || '') + (l.address ? ' — ' + l.address : '') + (l.rating ? ' ★ ' + l.rating : '')
-                        ).join('\n');
-                    }
-                    
-                    // Add web results if available
-                    if (webResults.length) {
-                        aiContent += "\n\n---\nWeb Results:\n" + webResults.slice(0, 3).map(w => 
-                            (w.title || w.source || '') + (w.snippet ? ' — ' + String(w.snippet).substring(0, 100) + '...' : '')
-                        ).join('\n');
-                    }
-                    
-                    // Add shopping suggestions if available
-                    if (shopping.length) {
-                        aiContent += "\n\n---\nShopping Suggestions:\n" + shopping.slice(0, 3).map(s => 
-                            (s.title || '') + ' — ' + (s.price || '')
-                        ).join('\n');
-                    }
-                    
+                    if (references.length) aiContent += "\n\n---\nReferences:\n" + references.map(r => (r.title || 'Source') + ": " + (r.link || '')).join('\n');
                     if (aiContent) {
                         const resultDiv = document.getElementById('aiProductDescriptionResult');
                         const contentDiv = document.getElementById('aiProductDescriptionContent');
@@ -7359,22 +7166,14 @@
             }
         }
         
-        async function optimizePerformance(options = {}) {
+        async function optimizePerformance() {
             showNotification('Analyzing your block performance using Google AI...', 'info', 'AI Assistant');
             
             const apiKey = getSearchApiKey();
-            const query = options.query || 'How to optimize affiliate marketing product blocks for better click-through rates and conversions';
-            const location = options.location || null;
+            const query = 'How to optimize affiliate marketing product blocks for better click-through rates and conversions';
             
             try {
-                const params = new URLSearchParams({
-                    engine: GOOGLE_AI_ENGINE,
-                    api_key: apiKey,
-                    q: query
-                });
-                if (location) params.append('location', location);
-                
-                const apiUrl = `${GOOGLE_AI_API_URL}?${params.toString()}`;
+                const apiUrl = `${GOOGLE_AI_API_URL}?engine=${GOOGLE_AI_ENGINE}&api_key=${apiKey}&q=${encodeURIComponent(query)}`;
                 
                 const response = await fetch(apiUrl, {
                     method: 'GET',
@@ -7383,25 +7182,9 @@
                 
                 if (response.ok) {
                     const data = await response.json();
-                    const { text, references, localResults, webResults, shopping } = extractGoogleAIContent(data);
+                    const { text, references } = extractGoogleAIContent(data);
                     let recommendations = text;
-                    
-                    if (references.length) {
-                        recommendations += "\n\n---\nReferences:\n" + references.map(r => (r.title || 'Source') + ": " + (r.link || '')).join('\n');
-                    }
-                    
-                    if (localResults.length) {
-                        recommendations += "\n\n---\nLocal Results:\n" + localResults.slice(0, 3).map(l => 
-                            (l.title || '') + (l.address ? ' — ' + l.address : '') + (l.rating ? ' ★ ' + l.rating : '')
-                        ).join('\n');
-                    }
-                    
-                    if (webResults.length) {
-                        recommendations += "\n\n---\nWeb Results:\n" + webResults.slice(0, 3).map(w => 
-                            (w.title || w.source || '') + (w.snippet ? ' — ' + String(w.snippet).substring(0, 100) + '...' : '')
-                        ).join('\n');
-                    }
-                    
+                    if (references.length) recommendations += "\n\n---\nReferences:\n" + references.map(r => (r.title || 'Source') + ": " + (r.link || '')).join('\n');
                     if (recommendations) {
                         const resultDiv = document.getElementById('aiPerformanceResult');
                         const contentDiv = document.getElementById('aiPerformanceContent');
@@ -7432,22 +7215,14 @@
             }
         }
         
-        async function getContentIdeas(options = {}) {
+        async function getContentIdeas() {
             showNotification('Generating content ideas using Google AI...', 'info', 'AI Assistant');
             
             const apiKey = getSearchApiKey();
-            const query = options.query || 'content ideas for affiliate marketing blog posts and product reviews';
-            const location = options.location || null;
+            const query = 'content ideas for affiliate marketing blog posts and product reviews';
             
             try {
-                const params = new URLSearchParams({
-                    engine: GOOGLE_AI_ENGINE,
-                    api_key: apiKey,
-                    q: query
-                });
-                if (location) params.append('location', location);
-                
-                const apiUrl = `${GOOGLE_AI_API_URL}?${params.toString()}`;
+                const apiUrl = `${GOOGLE_AI_API_URL}?engine=${GOOGLE_AI_ENGINE}&api_key=${apiKey}&q=${encodeURIComponent(query)}`;
                 
                 const response = await fetch(apiUrl, {
                     method: 'GET',
@@ -7456,31 +7231,9 @@
                 
                 if (response.ok) {
                     const data = await response.json();
-                    const { text, references, localResults, webResults, shopping } = extractGoogleAIContent(data);
+                    const { text, references } = extractGoogleAIContent(data);
                     let ideas = text;
-                    
-                    if (references.length) {
-                        ideas += "\n\n---\nReferences:\n" + references.map(r => (r.title || 'Source') + ": " + (r.link || '')).join('\n');
-                    }
-                    
-                    if (localResults.length) {
-                        ideas += "\n\n---\nLocal Results:\n" + localResults.slice(0, 3).map(l => 
-                            (l.title || '') + (l.address ? ' — ' + l.address : '') + (l.rating ? ' ★ ' + l.rating : '')
-                        ).join('\n');
-                    }
-                    
-                    if (webResults.length) {
-                        ideas += "\n\n---\nWeb Results:\n" + webResults.slice(0, 3).map(w => 
-                            (w.title || w.source || '') + (w.snippet ? ' — ' + String(w.snippet).substring(0, 100) + '...' : '')
-                        ).join('\n');
-                    }
-                    
-                    if (shopping.length) {
-                        ideas += "\n\n---\nShopping Suggestions:\n" + shopping.slice(0, 3).map(s => 
-                            (s.title || '') + ' — ' + (s.price || '')
-                        ).join('\n');
-                    }
-                    
+                    if (references.length) ideas += "\n\n---\nReferences:\n" + references.map(r => (r.title || 'Source') + ": " + (r.link || '')).join('\n');
                     if (ideas) {
                         const resultDiv = document.getElementById('aiContentIdeasResult');
                         const contentDiv = document.getElementById('aiContentIdeasContent');
@@ -7549,23 +7302,8 @@
             
             const apiKey = getSearchApiKey();
             
-            // Check if message contains an image URL or location hint
-            const urlMatch = message.match(/(https?:\/\/[^\s]+\.(jpg|jpeg|png|gif|webp))/i);
-            const imageUrl = urlMatch ? urlMatch[1] : null;
-            const locationMatch = message.match(/(?:near|in|at)\s+([A-Z][a-zA-Z\s]+)/);
-            const location = locationMatch ? locationMatch[1].trim() : null;
-            const queryText = imageUrl ? message.replace(urlMatch[0], '').trim() : message;
-            
             try {
-                const params = new URLSearchParams({
-                    engine: GOOGLE_AI_ENGINE,
-                    api_key: apiKey,
-                    q: queryText || message
-                });
-                if (imageUrl) params.append('url', imageUrl);
-                if (location) params.append('location', location);
-                
-                const apiUrl = `${GOOGLE_AI_API_URL}?${params.toString()}`;
+                const apiUrl = `${GOOGLE_AI_API_URL}?engine=${GOOGLE_AI_ENGINE}&api_key=${apiKey}&q=${encodeURIComponent(message)}`;
                 
                 const response = await fetch(apiUrl, {
                     method: 'GET',
@@ -7577,11 +7315,12 @@
                 
                 if (response.ok) {
                     const data = await response.json();
-                    const { text, references, localResults, webResults, shopping } = extractGoogleAIContent(data);
+                    const { text, references } = extractGoogleAIContent(data);
                     let aiResponse = text || 'I\'m here to help! Could you provide more details about what you\'d like to know?';
-                    const refs = references;
-                    const local = localResults;
-                    const web = webResults;
+                    const refs = data.reference_links || data.references || references;
+                    const local = data.local_results || [];
+                    const web = data.web_results || [];
+                    const shopping = data.inline_shopping || [];
                     const safe = (u) => (u||'').match(/^https?:\/\//) ? String(u).replace(/&/g,'&amp;').replace(/"/g,'&quot;') : '#';
                     const refHtml = refs.length ? '<div style="margin-top:10px;padding-top:10px;border-top:1px solid #e5e7eb;"><div style="font-size:0.85rem;color:var(--gray);margin-bottom:5px;">References:</div>' + refs.slice(0, 5).map(r => '<a href="' + safe(r.link) + '" target="_blank" rel="noopener" style="font-size:0.8rem;color:var(--primary);display:block;margin-top:4px;">' + escapeHtml(r.title || 'Source') + '</a>').join('') + '</div>' : '';
                     const localHtml = local.length ? '<div style="margin-top:10px;padding-top:10px;border-top:1px solid #e5e7eb;"><div style="font-size:0.85rem;color:var(--gray);margin-bottom:5px;">Local:</div>' + local.slice(0, 3).map(l => '<div style="font-size:0.85rem;margin-top:4px;">' + escapeHtml(l.title||'') + (l.address ? ' — ' + escapeHtml(l.address) : '') + (l.rating ? ' ★ ' + l.rating : '') + ' <a href="' + safe(l.link) + '" target="_blank" rel="noopener" style="color:var(--primary);">View</a></div>').join('') + '</div>' : '';
