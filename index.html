@@ -2733,7 +2733,7 @@
                 <li><a href="#about" onclick="scrollToSection('about')">About</a></li>
                 <li><a href="#" onclick="showPage('blog-page')">Blog</a></li>
                 <li><a href="#" onclick="showPage('contact-page')">Contact</a></li>
-                <li><a href="javascript:void(0)" id="loginBtn" role="button">Login</a></li>
+                <li><a href="#" id="loginBtn" role="button">Login</a></li>
             </ul>
             
             <div class="mobile-menu-btn" id="mobileMenuBtn">
@@ -4087,7 +4087,7 @@
             <div id="loginForm" class="auth-form active">
                 <h2>Welcome Back!</h2>
                 <div id="authMessage" class="form-status" style="display: none; margin-bottom: 20px;"></div>
-                <form id="loginFormElement" action="javascript:void(0)" method="post">
+                <form id="loginFormElement" action="#" method="post" onsubmit="return false;">
                     <div class="form-group">
                         <label for="loginEmail">Email</label>
                         <input type="email" id="loginEmail" required>
@@ -4105,7 +4105,7 @@
             <div id="signupForm" class="auth-form">
                 <h2>Create Account</h2>
                 <div id="signupMessage" class="form-status" style="display: none; margin-bottom: 20px;"></div>
-                <form id="signupFormElement" action="javascript:void(0)" method="post">
+                <form id="signupFormElement" action="#" method="post" onsubmit="return false;">
                     <div class="form-group">
                         <label for="signupName">Full Name</label>
                         <input type="text" id="signupName" required>
