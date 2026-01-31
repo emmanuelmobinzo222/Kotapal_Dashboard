@@ -4752,29 +4752,29 @@
         let selectedProductsList = [];
         let currentLayout = 'grid';
 
-        // FORCE LANDING PAGE ON INITIAL LOAD - NO AUTO LOGIN
+        // SHOW DASHBOARD DIRECTLY ON LOAD - NO AUTH REQUIRED
         let isInitialLoad = true;
         window.addEventListener('DOMContentLoaded', () => {
-            // Always show landing page first on initial load
             const landingView = document.getElementById('landing-page-view');
             const nav = document.querySelector('nav');
             const footer = document.querySelector('footer');
             const dashboardView = document.getElementById('dashboard-view');
-            
+            // Guest user so dashboard works without auth
+            var guestUser = { uid: 'guest', email: 'guest@kotapal.local', displayName: 'Guest', plan: 'starter', signupDate: new Date().toISOString() };
+            sessionStorage.setItem('kotapal_explicit_login', 'true');
+            localStorage.setItem('kotapal_explicit_login', 'true');
+            localStorage.setItem('kotaUser', JSON.stringify(guestUser));
+            currentUser = guestUser;
+            if (landingView) landingView.style.display = 'none';
+            if (nav) nav.style.display = 'none';
+            if (footer) footer.style.display = 'none';
             if (dashboardView) {
-                dashboardView.style.display = 'none';
-                dashboardView.classList.remove('active');
+                dashboardView.style.display = 'block';
+                dashboardView.classList.add('active');
             }
-            if (landingView) landingView.style.display = 'block';
-            if (nav) nav.style.display = 'flex';
-            if (footer) footer.style.display = 'block';
-            
-            // Only clear explicit login flag if it doesn't exist (first visit)
-            // Don't clear it if user just logged in
-            if (!sessionStorage.getItem('kotapal_explicit_login')) {
-                // This is a fresh page load, ensure landing page is shown
-            }
-            
+            if (typeof updateSidebarUserInfo === 'function') updateSidebarUserInfo();
+            if (typeof showPage === 'function') showPage('dashboard');
+            if (typeof initDashboard === 'function') initDashboard();
             isInitialLoad = false;
         });
         
