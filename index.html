@@ -5041,8 +5041,16 @@
             });
         });
 
-        // Login button in nav
-        const loginBtn = document.getElementById('loginBtn');
+        // Login button in nav — use delegation so it always works
+        document.addEventListener('click', function(e) {
+            var t = e.target && (e.target.id === 'loginBtn' || (e.target.closest && e.target.closest('#loginBtn')));
+            if (t) {
+                e.preventDefault();
+                e.stopPropagation();
+                if (typeof showAuthModal === 'function') showAuthModal();
+            }
+        }, true);
+        var loginBtn = document.getElementById('loginBtn');
         if (loginBtn) {
             loginBtn.addEventListener('click', function(e) {
                 e.preventDefault();
