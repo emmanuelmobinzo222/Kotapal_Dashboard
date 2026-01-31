@@ -1976,6 +1976,17 @@
         }
         
         /* Ensure auth modal content is scrollable */
+        .onboarding-tour-modal .modal-content {
+            max-width: 440px;
+            padding: 28px;
+        }
+        .onboarding-tour-modal .onboarding-step {
+            text-align: left;
+        }
+        .onboarding-tour-modal .onboarding-step h2 {
+            font-size: 1.25rem;
+        }
+
         #authModal .modal-content {
             max-height: 90vh;
             overflow-y: auto;
@@ -2651,6 +2662,7 @@
         }
 
         .product-card-dashboard {
+            position: relative;
             border: 2px solid #eee;
             border-radius: 10px;
             padding: 15px;
@@ -2666,6 +2678,27 @@
         .product-card-dashboard.selected {
             border-color: var(--primary);
             background: #dbeafe;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+        }
+
+        .product-card-check {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+
+        .product-card-dashboard.selected .product-card-check {
+            display: flex;
         }
 
         .product-image-dashboard {
@@ -3126,7 +3159,7 @@
                     <li class="nav-item">
                         <a href="#" class="nav-link" data-page="ai-assistant" data-scroll-to="ai-chat-section">
                             <i class="fas fa-comments"></i>
-                            Chat (Amazon &amp; Walmart)
+                            Chat
                         </a>
                     </li>
                     <li class="nav-item">
@@ -3545,7 +3578,7 @@
                 <div id="ai-assistant-page" class="page-content" style="display: none;">
                     <div class="header" style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
                         <h1 class="page-title">AI Assistant</h1>
-                        <a href="#ai-chat-section" class="btn btn-primary" id="scrollToAiChatBtn" style="margin-left: auto;">Go to Chat (Amazon &amp; Walmart)</a>
+                        <a href="#ai-chat-section" class="btn btn-primary" id="scrollToAiChatBtn" style="margin-left: auto;">Go to Chat</a>
                     </div>
                     <div class="card">
                         <div class="card-header">
@@ -4190,6 +4223,33 @@
         </div>
     </div>
 
+    <!-- One-time onboarding tour (Create Block flow) -->
+    <div id="onboardingTourModal" class="modal onboarding-tour-modal" style="display: none; z-index: 2001;">
+        <div class="modal-content onboarding-tour-content">
+            <div id="onboardingTourStep1" class="onboarding-step">
+                <h2 style="margin-bottom: 12px;">Welcome to KotaPal</h2>
+                <p style="color: var(--gray); margin-bottom: 20px;">Here’s a quick guide to create your first product block. You’ll only see this once.</p>
+                <button type="button" class="btn btn-primary" onclick="onboardingTourNext()">Get started</button>
+                <p style="margin-top: 14px;"><a href="#" onclick="onboardingTourDone(); return false;" style="font-size: 0.85rem; color: var(--gray);">Skip tour</a></p>
+            </div>
+            <div id="onboardingTourStep2" class="onboarding-step" style="display: none;">
+                <h2 style="margin-bottom: 12px;">1. Select a retailer & search</h2>
+                <p style="color: var(--gray); margin-bottom: 16px;">Choose Amazon, Walmart, eBay, or another retailer from the dropdown, then type a product search (e.g. “headphones”). Results will appear below.</p>
+                <button type="button" class="btn btn-primary" onclick="onboardingTourNext()">Next</button>
+            </div>
+            <div id="onboardingTourStep3" class="onboarding-step" style="display: none;">
+                <h2 style="margin-bottom: 12px;">2. Click products to add them</h2>
+                <p style="color: var(--gray); margin-bottom: 16px;">Click any product card to add it to your block. Selected items show a <strong>checkmark</strong> and appear in “Selected Products” below. Click again to remove.</p>
+                <button type="button" class="btn btn-primary" onclick="onboardingTourNext()">Next</button>
+            </div>
+            <div id="onboardingTourStep4" class="onboarding-step" style="display: none;">
+                <h2 style="margin-bottom: 12px;">3. Create your block</h2>
+                <p style="color: var(--gray); margin-bottom: 20px;">Give your block a title, pick a layout, then click <strong>Create Block</strong>. You’re all set.</p>
+                <button type="button" class="btn btn-primary" onclick="onboardingTourDone()">Done</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // ============================================
         // Firebase Configuration
@@ -4233,7 +4293,8 @@
                     if (loginBtn) {
                         loginBtn.addEventListener('click', (e) => {
                             e.preventDefault();
-                            alert('Firebase is not configured yet. Please update the firebaseConfig object in index.html with your Firebase project credentials.\n\nSee FIREBASE_SETUP.md for instructions.');
+                            if (typeof showNotification === 'function') showNotification('Firebase is not configured yet. Please update the firebaseConfig object in index.html with your Firebase project credentials. See FIREBASE_SETUP.md for instructions.', 'error', 'Setup');
+                            else alert('Firebase is not configured yet. Please update the firebaseConfig object in index.html with your Firebase project credentials.\n\nSee FIREBASE_SETUP.md for instructions.');
                         });
                     }
                 });
@@ -4256,7 +4317,8 @@
             }
         } catch (error) {
             console.error('Firebase initialization error:', error);
-            alert('Firebase initialization failed. Please check your configuration.');
+            if (typeof showNotification === 'function') showNotification('Firebase initialization failed. Please check your configuration.', 'error', 'Error');
+            else alert('Firebase initialization failed. Please check your configuration.');
         }
 
         // ============================================
@@ -4570,7 +4632,7 @@
                 if (resetMsg) {
                     showAuthMessage('resetMessage', 'Firebase is not configured. Please contact support.', 'error');
                 } else {
-                    alert('Firebase is not configured. Please contact support.');
+                    showNotification('Firebase is not configured. Please contact support.', 'error', 'Forgot Password');
                 }
                 console.error('Firebase auth not initialized');
                 return;
@@ -4614,7 +4676,7 @@
                 if (resetMsg) {
                     showAuthMessage('resetMessage', 'Password reset email sent successfully! Please check your inbox (and spam folder) for the reset link. Click the link in the email to reset your password.', 'success');
                 } else {
-                    alert('Password reset email sent successfully! Please check your inbox and spam folder.');
+                    showNotification('Password reset email sent successfully! Please check your inbox and spam folder.', 'success', 'Email Sent');
                 }
                 
                 // Reset form
@@ -4667,7 +4729,7 @@
                     resetMsg.style.display = 'block';
                     showAuthMessage('resetMessage', errorMessage, 'error');
                 } else {
-                    alert(errorMessage);
+                    showNotification(errorMessage, 'error', 'Password Reset');
                 }
             }
         }
@@ -5500,7 +5562,7 @@
                     // View will switch automatically via auth.onAuthStateChanged
                 } catch (error) {
                     console.error('Logout error:', error);
-                    alert('Error signing out. Please try again.');
+                    showNotification('Error signing out. Please try again.', 'error', 'Logout');
                 }
             });
 
@@ -5524,7 +5586,7 @@
             if (newBlockForm) newBlockForm.addEventListener('submit', handleCreateBlock);
             if (copyApiKey) copyApiKey.addEventListener('click', function() {
                 navigator.clipboard.writeText('sk_live_51JQ3x8H4bK7X9cY8aB2C1dE3fG4hI5jK6lM7nO8pQ9rS0tU1vW2xY3zA4');
-                alert('API key copied to clipboard!');
+                showNotification('API key copied to clipboard!', 'success', 'Copied');
             });
 
             // Layout selection
@@ -5582,6 +5644,7 @@
                     break;
                 case 'new-block':
                     document.getElementById('new-block-page').style.display = 'block';
+                    maybeShowOnboardingTour();
                     break;
                 case 'integrations':
                     document.getElementById('integrations-page').style.display = 'block';
@@ -5594,6 +5657,35 @@
                     document.getElementById('account-page').style.display = 'block';
                     break;
             }
+        }
+
+        // One-time onboarding tour (only when using the site for the first time)
+        const ONBOARDING_STORAGE_KEY = 'kotaPal_onboarding_done';
+        let onboardingStep = 1;
+
+        function maybeShowOnboardingTour() {
+            if (localStorage.getItem(ONBOARDING_STORAGE_KEY)) return;
+            const modal = document.getElementById('onboardingTourModal');
+            if (!modal) return;
+            onboardingStep = 1;
+            document.querySelectorAll('.onboarding-step').forEach((el, i) => {
+                el.style.display = (i === 0) ? 'block' : 'none';
+            });
+            modal.style.display = 'block';
+        }
+
+        function onboardingTourNext() {
+            const steps = document.querySelectorAll('.onboarding-step');
+            if (onboardingStep >= steps.length) return;
+            steps[onboardingStep - 1].style.display = 'none';
+            onboardingStep += 1;
+            steps[onboardingStep - 1].style.display = 'block';
+        }
+
+        function onboardingTourDone() {
+            localStorage.setItem(ONBOARDING_STORAGE_KEY, 'true');
+            const modal = document.getElementById('onboardingTourModal');
+            if (modal) modal.style.display = 'none';
         }
 
         // Update user display
@@ -5689,7 +5781,7 @@
             setTimeout(() => {
                 document.querySelectorAll('.btn-edit').forEach(btn => {
                     btn.addEventListener('click', function() {
-                        alert('Edit functionality would be implemented here');
+                        showNotification('Edit functionality would be implemented here', 'info', 'Edit');
                     });
                 });
                 
@@ -5704,7 +5796,7 @@
                                 currentBlocks[blockIndex].status = action === 'publish' ? 'active' : 'draft';
                                 renderBlocks();
                                 updateDashboardStats();
-                                alert(`Block ${action === 'publish' ? 'published' : 'unpublished'} successfully!`);
+                                showNotification(`Block ${action === 'publish' ? 'published' : 'unpublished'} successfully!`, 'success', 'Block');
                             }
                         });
                     }
@@ -5718,7 +5810,7 @@
                             currentBlocks = currentBlocks.filter(b => b.id !== blockId);
                             renderBlocks();
                             updateDashboardStats();
-                            alert('Block deleted successfully!');
+                            showNotification('Block deleted successfully!', 'success', 'Deleted');
                         }
                     });
                 });
@@ -5776,7 +5868,7 @@
                                                                                integrationId === 'walmart' ? 'walmart-user' : 
                                                                                integrationId === 'shopify' ? 'shopify-store' : 'skim-user';
                             renderIntegrations();
-                            alert('Integration connected successfully!');
+                            showNotification('Integration connected successfully!', 'success', 'Connected');
                         }
                     });
                 });
@@ -5791,7 +5883,7 @@
                             currentIntegrations[integrationIndex].lastSync = 'Never';
                             currentIntegrations[integrationIndex].affiliateId = '';
                             renderIntegrations();
-                            alert('Integration disconnected successfully!');
+                            showNotification('Integration disconnected successfully!', 'info', 'Disconnected');
                         }
                     });
                 });
@@ -5804,7 +5896,7 @@
                         if (integrationIndex !== -1) {
                             currentIntegrations[integrationIndex].lastSync = 'Just now';
                             renderIntegrations();
-                            alert('Integration synced successfully!');
+                            showNotification('Integration synced successfully!', 'success', 'Synced');
                         }
                     });
                 });
@@ -5935,7 +6027,7 @@
                 localStorage.setItem('kotaUser', JSON.stringify(currentUser));
                 updateUserDisplay();
                 
-                alert('Profile updated successfully!');
+                showNotification('Profile updated successfully!', 'success', 'Profile');
             }
         }
 
@@ -5946,12 +6038,12 @@
             const ctaText = document.getElementById('ctaText').value;
             
             if (!title.trim()) {
-                alert('Please add a title for your block');
+                showNotification('Please add a title for your block', 'warning', 'Create Block');
                 return;
             }
             
             if (selectedProductsList.length === 0) {
-                alert('Please select at least one product');
+                showNotification('Please select at least one product', 'warning', 'Create Block');
                 return;
             }
             
@@ -5991,7 +6083,7 @@
             renderBlocks();
             updateDashboardStats();
             
-            alert('Block created successfully!');
+            showNotification('Block created successfully!', 'success', 'Create Block');
         }
 
         // SearchAPI.io API Configuration
@@ -6558,7 +6650,11 @@
                 products.forEach((product, index) => {
                     const productCard = document.createElement('div');
                     productCard.className = 'product-card-dashboard';
+                    productCard.dataset.productId = product.id;
+                    const isInitiallySelected = selectedProductsList.some(p => p.id === product.id);
+                    if (isInitiallySelected) productCard.classList.add('selected');
                     productCard.innerHTML = `
+                        <span class="product-card-check" aria-hidden="true"><i class="fas fa-check"></i></span>
                         <img src="${product.image}" alt="${product.title}" class="product-image-dashboard">
                         <div class="product-title">${product.title}</div>
                         <div class="product-price">$${product.price.toFixed(2)}</div>
@@ -6574,13 +6670,13 @@
                                                currentUser?.plan === 'pro' ? 10 : 20;
                             
                             if (selectedProductsList.length >= maxProducts) {
-                                alert(`Maximum ${maxProducts} products allowed per block in your plan.`);
+                                showNotification(`Maximum ${maxProducts} products allowed per block in your plan.`, 'warning', 'Create Block');
                                 return;
                             }
                             
                             selectedProductsList.push(product);
                         }
-                        
+                        productCard.classList.toggle('selected', selectedProductsList.some(p => p.id === product.id));
                         updateSelectedProducts();
                     });
                     productsContainer.appendChild(productCard);
@@ -6632,7 +6728,7 @@
         // Mock Walmart products REMOVED - Using real API only
         // All Walmart products now come from SearchAPI.io Walmart Search API
 
-        // Update selected products display
+        // Update selected products display and sync checkmarks on product cards
         function updateSelectedProducts() {
             const selectedCount = document.getElementById('selectedCount');
             const selectedProducts = document.getElementById('selectedProducts');
@@ -6656,19 +6752,27 @@
                 selectedProducts.appendChild(productDiv);
             });
             
+            // Sync selected state (checkmarks) on product cards in the grid
+            const productsContainer = document.getElementById('productsContainer');
+            if (productsContainer) {
+                productsContainer.querySelectorAll('.product-card-dashboard').forEach(card => {
+                    const id = card.getAttribute('data-product-id');
+                    const selected = selectedProductsList.some(p => p.id === id);
+                    card.classList.toggle('selected', selected);
+                });
+            }
+            
             // Add event listeners to remove buttons
             setTimeout(() => {
-                document.querySelectorAll('[data-id]').forEach(btn => {
-                    if (btn.textContent === 'Remove') {
-                        btn.addEventListener('click', function(e) {
-                            e.stopPropagation();
-                            const productId = this.getAttribute('data-id');
-                            selectedProductsList = selectedProductsList.filter(p => p.id !== productId);
-                            updateSelectedProducts();
-                        });
-                    }
+                selectedProducts.querySelectorAll('button[data-id]').forEach(btn => {
+                    btn.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        const productId = this.getAttribute('data-id');
+                        selectedProductsList = selectedProductsList.filter(p => p.id !== productId);
+                        updateSelectedProducts();
+                    });
                 });
-            }, 100);
+            }, 0);
         }
 
         // ============================================
@@ -6851,23 +6955,18 @@
         }
         
         // Check settings access before showing settings page
+        // Logged-in users (currentUser) get access without a separate Settings PIN
         function checkSettingsAccess() {
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:6622',message:'checkSettingsAccess called',data:{hasCurrentUser:!!currentUser,hasAuth:!!auth,explicitLogin:sessionStorage.getItem('kotapal_explicit_login')},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'F'})}).catch(()=>{});
-            // #endregion
-            
+            if (currentUser) {
+                settingsAccessGranted = true;
+                sessionStorage.setItem('settings_access_granted', 'true');
+                return true;
+            }
             const sessionAccess = sessionStorage.getItem('settings_access_granted');
             if (sessionAccess === 'true') {
                 settingsAccessGranted = true;
-                // #region agent log
-                fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:6625',message:'Settings access granted',data:{sessionAccess},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'F'})}).catch(()=>{});
-                // #endregion
                 return true;
             }
-            
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:6629',message:'Settings access denied - showing password modal',data:{sessionAccess},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'F'})}).catch(()=>{});
-            // #endregion
             showSettingsPasswordModal();
             return false;
         }
@@ -7024,7 +7123,7 @@
             const products = JSON.parse(localStorage.getItem('kotaProductLibrary') || '[]');
             const product = products.find(p => p.id === productId);
             if (product) {
-                alert(`Product: ${product.title}\nPrice: $${product.price.toFixed(2)}\nRetailer: ${product.retailer}\n\nClick "Add Product" to add more products to your library.`);
+                showNotification(`${product.title} — $${product.price.toFixed(2)} (${product.retailer}). Click "Add Product" to add more products to your library.`, 'info', 'Product');
             }
         }
         
@@ -7155,7 +7254,7 @@
                             resultDiv.style.display = 'block';
                             resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                         } else {
-                            alert(`AI-Generated Product Description:\n\n${aiContent.substring(0, 500)}...\n\n(Generated by Google AI)\n\nYou can customize this description in your product settings.`);
+                            showNotification(aiContent.substring(0, 300) + '... (Generated by Google AI). You can customize this in your product settings.', 'info', 'AI Description');
                         }
                     } else {
                         throw new Error('No AI content found in response');
@@ -7173,7 +7272,7 @@
                     resultDiv.style.display = 'block';
                     resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                 } else {
-                    alert('AI-Generated Product Description:\n\n"Experience premium quality with this exceptional product. Designed for modern lifestyles, it combines style and functionality to deliver outstanding performance. Perfect for everyday use, this product offers unmatched value and reliability."\n\n(Error: ' + error.message + ')\n\nYou can customize this description in your product settings.');
+                    showNotification('Experience premium quality with this exceptional product. (Error: ' + (error && error.message ? error.message : '') + '). You can customize this in your product settings.', 'error', 'AI Description');
                 }
             }
         }
@@ -7207,7 +7306,7 @@
                             resultDiv.style.display = 'block';
                             resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                         } else {
-                            alert(`Performance Optimization Recommendations:\n\n${recommendations.substring(0, 800)}...\n\n(Generated by Google AI)`);
+                            showNotification(recommendations.substring(0, 400) + '... (Generated by Google AI)', 'info', 'Performance');
                         }
                     } else {
                         throw new Error('No recommendations found');
@@ -7225,7 +7324,7 @@
                     resultDiv.style.display = 'block';
                     resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                 } else {
-                    alert('Performance Optimization Recommendations:\n\n1. Update product images for better visual appeal\n2. Optimize CTA text to increase click-through rates\n3. Consider A/B testing different layouts\n4. Add more relevant products to increase engagement\n5. Monitor peak traffic times and adjust accordingly');
+                    showNotification('1. Update product images 2. Optimize CTA text 3. A/B test layouts 4. Add relevant products 5. Monitor peak traffic. (Fallback — check API key.)', 'info', 'Performance');
                 }
             }
         }
@@ -7259,7 +7358,7 @@
                             resultDiv.style.display = 'block';
                             resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                         } else {
-                            alert(`AI-Generated Content Ideas:\n\n${ideas.substring(0, 600)}...\n\n(Generated by Google AI)\n\nUse these ideas to create engaging content around your products!`);
+                            showNotification(ideas.substring(0, 350) + '... (Generated by Google AI). Use these ideas for your content!', 'info', 'Content Ideas');
                         }
                     } else {
                         throw new Error('No content ideas found');
@@ -7277,7 +7376,7 @@
                     resultDiv.style.display = 'block';
                     resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                 } else {
-                    alert('AI-Generated Content Ideas:\n\n1. "Top 10 Must-Have Products for [Your Niche]"\n2. "Product Review: [Product Name] - Is It Worth It?"\n3. "Best Deals This Week: [Category]"\n4. "How to Choose the Right [Product Type]"\n5. "Product Comparison: [Product A] vs [Product B]"\n\n(Error: ' + error.message + ')\n\nUse these ideas to create engaging content around your products!');
+                    showNotification('Content ideas: Top 10 products, Product Review, Best Deals, How to Choose, Product Comparison. (Fallback — check API key.) Use these for your content!', 'info', 'Content Ideas');
                 }
             }
         }
