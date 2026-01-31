@@ -4796,30 +4796,11 @@
                     return;
                 }
                 
-                // ALWAYS check for explicit login first - NO AUTO LOGIN
-                // Check BOTH sessionStorage and localStorage for maximum persistence
-                let explicitLogin = sessionStorage.getItem('kotapal_explicit_login') === 'true' || 
-                                   localStorage.getItem('kotapal_explicit_login') === 'true';
+                // Require explicit login THIS SESSION - use only sessionStorage so we don't auto-login from a previous session
+                // This ensures the user is asked for credentials when they open the site (new tab/window or after closing browser)
+                let explicitLogin = sessionStorage.getItem('kotapal_explicit_login') === 'true';
                 
-                // If no explicit login flag but user is authenticated, check localStorage for user data
-                if (!explicitLogin && user) {
-                    const savedUserData = JSON.parse(localStorage.getItem('kotaUser') || '{}');
-                    if (savedUserData.uid === user.uid) {
-                        // Restore the session flag immediately in BOTH storages
-                        sessionStorage.setItem('kotapal_explicit_login', 'true');
-                        localStorage.setItem('kotapal_explicit_login', 'true');
-                        explicitLogin = true;
-                        // #region agent log
-                        fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:4609',message:'Restored explicit login flag from localStorage',data:{userId:user.uid,hasSavedUserData:!!savedUserData.uid},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-                        // #endregion
-                    }
-                }
-                
-                // #region agent log
-                fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:4613',message:'Checking explicit login flag',data:{hasUser:!!user,explicitLogin,explicitLoginRaw:sessionStorage.getItem('kotapal_explicit_login'),allSessionKeys:Object.keys(sessionStorage)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-                // #endregion
-                
-                // Only show dashboard if user is signed in AND explicitly logged in
+                // Only show dashboard if user is signed in AND they logged in this session (entered credentials)
                 if (user && explicitLogin) {
                     // #region agent log
                     fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:5133',message:'User authenticated and explicitly logged in - showing dashboard',data:{userId:user.uid,email:user.email},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
@@ -4865,10 +4846,8 @@
                     fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:5167',message:'User not authenticated or no explicit login - showing landing page',data:{hasUser:!!user,explicitLogin,explicitLoginRaw:sessionStorage.getItem('kotapal_explicit_login')},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
                     // #endregion
                     
-                    // User is signed out OR not explicitly logged in
-                    // If user is authenticated but no explicit login flag, we already tried to restore it above
-                    // If restoration failed, show landing page but DON'T sign out the user
-                    // This prevents accidental logouts during navigation
+                    // User is signed out OR did not log in this session (must enter credentials)
+                    // Show landing page so they click Login and enter email/password
                     
                     // Clear user data if signed out
                     if (!user) {
