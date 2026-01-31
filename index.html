@@ -2649,6 +2649,12 @@
             border: 1px solid #f87171;
         }
 
+        .alert-info {
+            background: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #3b82f6;
+        }
+
         .alert i {
             margin-right: 10px;
             font-size: 1.2rem;
@@ -2787,8 +2793,8 @@
                 <h1>The Smartest Way to Monetize Your Content</h1>
                 <p>Create beautiful product comparison blocks from Amazon, Walmart, and more. Track clicks. See sales. Grow revenue.</p>
                 <div class="hero-buttons">
-                    <button class="btn btn-primary">Get Started Free</button>
-                    <button class="btn btn-secondary">Watch Demo</button>
+                    <button class="btn btn-primary" onclick="showAuthModal(); document.querySelector('.auth-tab[data-tab=signup]').click();">Get Started Free</button>
+                    <button class="btn btn-secondary" onclick="showAuthModal(); document.querySelector('.auth-tab[data-tab=login]').click();">Login</button>
                 </div>
                 <div style="display: flex; align-items: center; color: #fff;">
                     <div style="display: flex; margin-right: 15px;">
@@ -2847,7 +2853,7 @@
                             <li><i class="fas fa-check"></i> Basic analytics</li>
                             <li><i class="fas fa-check"></i> Email support</li>
                         </ul>
-                        <button class="btn btn-primary">Get Started Free</button>
+                        <button class="btn btn-primary" onclick="showAuthModal(); document.querySelector('.auth-tab[data-tab=signup]').click();">Get Started Free</button>
                     </div>
                     <div class="pricing-card popular">
                         <div class="popular-tag">Most Popular</div>
@@ -3488,21 +3494,6 @@
                     </div>
                     <div class="card">
                         <div class="card-header">
-                            <h3 class="card-title">Billing & Subscription</h3>
-                        </div>
-                        <div id="billingPlansContainer" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-top: 20px;">
-                            <!-- Plans will be dynamically rendered based on user's current plan -->
-                        </div>
-                        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
-                            <h4 style="text-align: center; margin-bottom: 15px;">Change Your Plan</h4>
-                            <p style="text-align: center; color: var(--gray); margin-bottom: 20px;">Upgrade or downgrade your plan at any time. Changes take effect immediately.</p>
-                            <div style="display: flex; justify-content: center; gap: 10px; flex-wrap: wrap;">
-                                <button class="btn btn-primary" onclick="showPlanChangeModal()">Switch Plan</button>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="card">
-                        <div class="card-header">
                             <h3 class="card-title">API & Embed</h3>
                         </div>
                         <div class="form-group">
@@ -3681,6 +3672,21 @@
                         </div>
                         <div id="currentSubscriptionCard" style="padding: 20px;">
                             <!-- Current subscription will be displayed here -->
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Billing Plans</h3>
+                        </div>
+                        <div id="billingPlansContainer" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-top: 20px;">
+                            <!-- Plans will be dynamically rendered based on user's current plan -->
+                        </div>
+                        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+                            <h4 style="text-align: center; margin-bottom: 15px;">Change Your Plan</h4>
+                            <p style="text-align: center; color: var(--gray); margin-bottom: 20px;">Upgrade or downgrade your plan at any time. Changes take effect immediately.</p>
+                            <div style="display: flex; justify-content: center; gap: 10px; flex-wrap: wrap;">
+                                <button class="btn btn-primary" onclick="showPlanChangeModal()">Switch Plan</button>
+                            </div>
                         </div>
                     </div>
                     <div class="card">
@@ -4796,11 +4802,10 @@
                     return;
                 }
                 
-                // Require explicit login THIS SESSION - use only sessionStorage so we don't auto-login from a previous session
-                // This ensures the user is asked for credentials when they open the site (new tab/window or after closing browser)
+                // Require login this session: show Login/Sign Up forms when user visits (no auto-login to another user's dashboard)
                 let explicitLogin = sessionStorage.getItem('kotapal_explicit_login') === 'true';
                 
-                // Only show dashboard if user is signed in AND they logged in this session (entered credentials)
+                // Only show dashboard if user signed in this session (entered credentials)
                 if (user && explicitLogin) {
                     // #region agent log
                     fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:5133',message:'User authenticated and explicitly logged in - showing dashboard',data:{userId:user.uid,email:user.email},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
@@ -5457,8 +5462,32 @@
             setupDashboardEventListeners();
         }
 
-        // Load mock data
+        // Persist user blocks to localStorage (keyed by user)
+        function saveUserBlocks() {
+            const uid = currentUser?.uid;
+            if (uid) localStorage.setItem('kotaBlocks_' + uid, JSON.stringify(currentBlocks));
+        }
+
+        // Load user data: blocks from localStorage, then mock only if empty
         function loadMockData() {
+            const uid = currentUser?.uid;
+            if (uid) {
+                try {
+                    const saved = localStorage.getItem('kotaBlocks_' + uid);
+                    if (saved) {
+                        currentBlocks = JSON.parse(saved);
+                        updateDashboardStats();
+                        renderBlocks();
+                        renderIntegrations();
+                        renderActivityTable();
+                        renderAnalytics();
+                        renderAlerts();
+                        return;
+                    }
+                } catch (e) {
+                    console.error('Error loading blocks:', e);
+                }
+            }
             currentBlocks = [
                 {
                     id: 'blk_1',
@@ -5466,6 +5495,7 @@
                     layout: 'grid',
                     ctaText: 'Buy Now',
                     products: 3,
+                    productsList: [],
                     clicks: 1247,
                     revenue: 89.42,
                     ctr: 3.2,
@@ -5479,6 +5509,7 @@
                     layout: 'carousel',
                     ctaText: 'Check Price',
                     products: 4,
+                    productsList: [],
                     clicks: 892,
                     revenue: 67.85,
                     ctr: 2.8,
@@ -5492,6 +5523,7 @@
                     layout: 'single',
                     ctaText: 'Learn More',
                     products: 1,
+                    productsList: [],
                     clicks: 543,
                     revenue: 42.30,
                     ctr: 4.1,
@@ -5773,6 +5805,7 @@
                             const blockIndex = currentBlocks.findIndex(b => b.id === blockId);
                             if (blockIndex !== -1) {
                                 currentBlocks[blockIndex].status = action === 'publish' ? 'active' : 'draft';
+                                saveUserBlocks();
                                 renderBlocks();
                                 updateDashboardStats();
                                 showNotification(`Block ${action === 'publish' ? 'published' : 'unpublished'} successfully!`, 'success', 'Block');
@@ -5787,6 +5820,7 @@
                         
                         if (confirm('Are you sure you want to delete this block?')) {
                             currentBlocks = currentBlocks.filter(b => b.id !== blockId);
+                            saveUserBlocks();
                             renderBlocks();
                             updateDashboardStats();
                             showNotification('Block deleted successfully!', 'success', 'Deleted');
@@ -5955,33 +5989,52 @@
             }
         }
 
-        // Render alerts
+        // Render alerts from real block data (low CTR, top performers)
         function renderAlerts() {
             const container = document.getElementById('alertsContainer');
             if (!container) return;
             
             container.innerHTML = '';
+            const alerts = [];
+            const blocks = currentBlocks || [];
             
-            const alerts = [
-                {
-                    id: 'alert_1',
-                    type: 'warning',
-                    title: 'Low Converting Block',
-                    message: 'Your "Gaming Laptops" block has a low CTR of 1.2%. Consider updating the product selection or CTA text.'
-                },
-                {
-                    id: 'alert_2',
-                    type: 'success',
-                    title: 'Top Performer',
-                    message: 'Your "Best Headphones 2024" block is performing exceptionally well with a 4.8% CTR this week!'
+            blocks.forEach(block => {
+                const ctr = block.ctr || 0;
+                const title = block.title || 'Untitled Block';
+                if (block.status === 'active' && ctr > 0 && ctr < 2) {
+                    alerts.push({
+                        id: 'alert_low_' + block.id,
+                        type: 'warning',
+                        title: 'Low Converting Block',
+                        message: `Your "${title}" block has a low CTR of ${ctr}%. Consider updating the product selection or CTA text.`
+                    });
                 }
-            ];
+                if (block.status === 'active' && ctr >= 4) {
+                    alerts.push({
+                        id: 'alert_top_' + block.id,
+                        type: 'success',
+                        title: 'Top Performer',
+                        message: `Your "${title}" block is performing well with a ${ctr}% CTR!`
+                    });
+                }
+            });
+            
+            if (alerts.length === 0 && blocks.length > 0) {
+                const totalClicks = blocks.reduce((s, b) => s + (b.clicks || 0), 0);
+                const totalRevenue = blocks.reduce((s, b) => s + (b.revenue || 0), 0);
+                alerts.push({
+                    id: 'alert_summary',
+                    type: 'info',
+                    title: 'Analytics Summary',
+                    message: `You have ${blocks.length} block(s). Total clicks: ${totalClicks.toLocaleString()}, Revenue: $${totalRevenue.toFixed(2)}.`
+                });
+            }
             
             alerts.forEach(alert => {
                 const alertDiv = document.createElement('div');
-                alertDiv.className = `alert alert-${alert.type === 'warning' ? 'warning' : 'success'}`;
+                alertDiv.className = `alert alert-${alert.type === 'warning' ? 'warning' : alert.type === 'success' ? 'success' : 'info'}`;
                 alertDiv.innerHTML = `
-                    <i class="fas fa-${alert.type === 'warning' ? 'exclamation-triangle' : 'check-circle'}"></i>
+                    <i class="fas fa-${alert.type === 'warning' ? 'exclamation-triangle' : alert.type === 'success' ? 'check-circle' : 'info-circle'}"></i>
                     <div>
                         <strong>${alert.title}</strong>
                         <p>${alert.message}</p>
@@ -6032,15 +6085,18 @@
                 layout: currentLayout,
                 ctaText: ctaText,
                 products: selectedProductsList.length,
+                productsList: selectedProductsList.map(p => ({ ...p, addedDate: new Date().toISOString() })),
                 clicks: 0,
                 revenue: 0,
                 ctr: 0,
                 lastUpdated: new Date().toISOString().split('T')[0],
                 status: 'draft',
-                retailer: selectedProductsList[0].retailer
+                retailer: selectedProductsList[0].retailer,
+                userId: currentUser?.uid || null
             };
             
             currentBlocks.push(newBlock);
+            saveUserBlocks();
             
             // Reset form
             document.getElementById('blockTitle').value = '';
@@ -6867,20 +6923,12 @@
         // ============================================
         
         let settingsAccessGranted = false;
-        const SETTINGS_PASSWORD_KEY = 'kotapal_settings_password';
         
-        // Check if settings password is set
-        function getSettingsPassword() {
-            return localStorage.getItem(SETTINGS_PASSWORD_KEY) || '';
-        }
-        
-        function setSettingsPassword(password) {
-            localStorage.setItem(SETTINGS_PASSWORD_KEY, password);
-        }
-        
-        // Show settings password modal
+        // Show settings password modal (enter sign-up / account password)
         function showSettingsPasswordModal() {
             const modal = document.getElementById('settingsPasswordModal');
+            const msg = document.getElementById('settingsPasswordMessage');
+            if (msg) msg.textContent = 'Enter your account password (the one you used to sign up) to access Settings:';
             if (modal) {
                 modal.classList.add('active');
                 const input = document.getElementById('settingsPasswordInput');
@@ -6899,52 +6947,52 @@
             }
         }
         
-        // Verify settings password
-        function verifySettingsPassword() {
+        // Verify settings password using Firebase re-auth (sign-up password)
+        async function verifySettingsPassword() {
             const input = document.getElementById('settingsPasswordInput');
-            const savedPassword = getSettingsPassword();
             const enteredPassword = input ? input.value : '';
             
-            // If no password is set, set this as the password
-            if (!savedPassword) {
-                if (enteredPassword.length >= 4) {
-                    setSettingsPassword(enteredPassword);
-                    settingsAccessGranted = true;
-                    sessionStorage.setItem('settings_access_granted', 'true');
-                    hideSettingsPasswordModal();
-                    showPage('settings');
-                    showNotification('Settings password set successfully!', 'success', 'Password Set');
-                } else {
-                    showNotification('Password must be at least 4 characters', 'error', 'Invalid Password');
-                }
+            if (!enteredPassword || enteredPassword.length < 6) {
+                showNotification('Please enter your account password (at least 6 characters).', 'error', 'Invalid');
                 return;
             }
             
-            // Verify password
-            if (enteredPassword === savedPassword) {
+            if (!auth || !auth.currentUser || !auth.currentUser.email) {
+                showNotification('You must be logged in to access Settings.', 'error', 'Access Denied');
+                return;
+            }
+            
+            const email = auth.currentUser.email;
+            try {
+                const credential = firebase.auth.EmailAuthProvider.credential(email, enteredPassword);
+                await auth.currentUser.reauthenticateWithCredential(credential);
                 settingsAccessGranted = true;
                 sessionStorage.setItem('settings_access_granted', 'true');
                 hideSettingsPasswordModal();
                 showPage('settings');
                 showNotification('Access granted', 'success', 'Welcome');
-            } else {
-                showNotification('Incorrect password. Please try again.', 'error', 'Access Denied');
+                if (input) input.value = '';
+            } catch (error) {
+                console.error('Settings re-auth error:', error);
+                if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+                    showNotification('Incorrect password. Please enter the password you used to sign up.', 'error', 'Access Denied');
+                } else {
+                    showNotification('Could not verify password. Please try again.', 'error', 'Access Denied');
+                }
                 if (input) input.value = '';
             }
         }
         
-        // Check settings access before showing settings page
-        // Logged-in users (currentUser) get access without a separate Settings PIN
+        // Check settings access: require account password (Firebase re-auth) unless already granted this session
         function checkSettingsAccess() {
-            if (currentUser) {
-                settingsAccessGranted = true;
-                sessionStorage.setItem('settings_access_granted', 'true');
-                return true;
-            }
             const sessionAccess = sessionStorage.getItem('settings_access_granted');
             if (sessionAccess === 'true') {
                 settingsAccessGranted = true;
                 return true;
+            }
+            if (!currentUser || !auth || !auth.currentUser) {
+                showNotification('You must be logged in to access Settings.', 'error', 'Access Denied');
+                return false;
             }
             showSettingsPasswordModal();
             return false;
@@ -7014,53 +7062,67 @@
         `;
         document.head.appendChild(style);
         
-        // Load Product Library
+        // Load Product Library: aggregate from user's blocks (productsList) and saved library
         function loadProductLibrary() {
             const container = document.getElementById('productLibraryContainer');
             if (!container) return;
             
-            // Get products from localStorage or use mock data
-            const savedProducts = localStorage.getItem('kotaProductLibrary');
+            const uid = currentUser?.uid;
+            const libraryKey = uid ? 'kotaProductLibrary_' + uid : 'kotaProductLibrary';
             let products = [];
             
-            if (savedProducts) {
-                try {
-                    products = JSON.parse(savedProducts);
-                } catch (e) {
-                    console.error('Error parsing product library:', e);
+            // First aggregate from current user's blocks (productsList) so we always show block products
+            const seen = new Set();
+            (currentBlocks || []).forEach(block => {
+                const list = block.productsList || block.products;
+                if (Array.isArray(list)) {
+                    list.forEach(product => {
+                        if (product && (product.id || product.asin) && !seen.has(product.id || product.asin)) {
+                            const id = product.id || product.asin;
+                            seen.add(id);
+                            products.push({
+                                id: id,
+                                title: product.title,
+                                image: product.image,
+                                price: product.price,
+                                retailer: product.retailer,
+                                addedDate: product.addedDate || new Date().toISOString()
+                            });
+                        }
+                    });
                 }
+            });
+            
+            // Then merge in any from saved library that aren't already in blocks
+            try {
+                const saved = localStorage.getItem(libraryKey);
+                if (saved) {
+                    const savedList = JSON.parse(saved);
+                    (savedList || []).forEach(p => {
+                        if (p && (p.id || p.asin) && !seen.has(p.id || p.asin)) {
+                            seen.add(p.id || p.asin);
+                            products.push({
+                                id: p.id || p.asin,
+                                title: p.title,
+                                image: p.image,
+                                price: p.price,
+                                retailer: p.retailer,
+                                addedDate: p.addedDate || new Date().toISOString()
+                            });
+                        }
+                    });
+                }
+            } catch (e) {
+                console.error('Error parsing product library:', e);
             }
             
-            // If no saved products, create sample products from existing blocks
-            if (products.length === 0) {
-                const blocks = JSON.parse(localStorage.getItem('kotaBlocks') || '[]');
-                products = [];
-                blocks.forEach(block => {
-                    if (block.products && Array.isArray(block.products)) {
-                        block.products.forEach(product => {
-                            if (!products.find(p => p.id === product.id)) {
-                                products.push(product);
-                            }
-                        });
-                    }
-                });
-                
-                // Add some sample products if still empty
-                if (products.length === 0) {
-                    products = [
-                        { id: 'lib_1', title: 'Sony WH-1000XM5 Headphones', image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=200', price: 299.99, retailer: 'amazon', addedDate: new Date().toISOString() },
-                        { id: 'lib_2', title: 'Samsung 55" TV', image: 'https://images.unsplash.com/photo-1593305841991-05c297ba4575?w=200', price: 499.99, retailer: 'walmart', addedDate: new Date(Date.now() - 86400000).toISOString() },
-                        { id: 'lib_3', title: 'Premium Yoga Mat', image: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=200', price: 49.99, retailer: 'shopify', addedDate: new Date(Date.now() - 172800000).toISOString() },
-                        { id: 'lib_4', title: 'Nike Air Max 270', image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=200', price: 150.00, retailer: 'skimlinks', addedDate: new Date(Date.now() - 259200000).toISOString() },
-                        { id: 'lib_5', title: 'Bose QuietComfort 45', image: 'https://images.unsplash.com/photo-1572536147248-ac59a8abfa4b?w=200', price: 279.99, retailer: 'amazon', addedDate: new Date(Date.now() - 345600000).toISOString() },
-                        { id: 'lib_6', title: 'Dyson V11 Vacuum', image: 'https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=200', price: 599.00, retailer: 'walmart', addedDate: new Date(Date.now() - 432000000).toISOString() }
-                    ];
-                }
-                
-                localStorage.setItem('kotaProductLibrary', JSON.stringify(products));
+            if (products.length > 0 && uid) localStorage.setItem(libraryKey, JSON.stringify(products));
+            
+            const searchQuery = (document.getElementById('productLibrarySearch')?.value || '').trim().toLowerCase();
+            if (searchQuery) {
+                products = products.filter(p => (p.title || '').toLowerCase().includes(searchQuery));
             }
             
-            // Apply filters
             const filter = document.getElementById('productLibraryFilter')?.value || 'all';
             const sort = document.getElementById('productLibrarySort')?.value || 'recent';
             
@@ -7099,10 +7161,20 @@
         }
         
         function viewProductDetails(productId) {
-            const products = JSON.parse(localStorage.getItem('kotaProductLibrary') || '[]');
-            const product = products.find(p => p.id === productId);
+            const uid = currentUser?.uid;
+            const libraryKey = uid ? 'kotaProductLibrary_' + uid : 'kotaProductLibrary';
+            let products = [];
+            try {
+                const saved = localStorage.getItem(libraryKey);
+                if (saved) products = JSON.parse(saved);
+            } catch (e) {}
+            const fromBlocks = (currentBlocks || []).flatMap(b => b.productsList || b.products || []);
+            const all = [...products];
+            fromBlocks.forEach(p => { if (p && (p.id || p.asin) && !all.find(x => (x.id || x.asin) === (p.id || p.asin))) all.push(p); });
+            const product = all.find(p => (p.id || p.asin) === productId);
             if (product) {
-                showNotification(`${product.title} — $${product.price.toFixed(2)} (${product.retailer}). Click "Add Product" to add more products to your library.`, 'info', 'Product');
+                const price = (product.price != null && product.price !== '') ? Number(product.price) : 0;
+                showNotification(`${product.title || 'Product'} — $${price.toFixed(2)} (${product.retailer || 'Unknown'}). Click "Add Product" to add more products to your library.`, 'info', 'Product');
             }
         }
         
@@ -7136,7 +7208,7 @@
                         </div>
                     </div>
                     <div>
-                        <button class="btn btn-primary" onclick="showPage('settings')">Manage Subscription</button>
+                        <button class="btn btn-primary" onclick="showPage('billing')">Manage Subscription</button>
                     </div>
                 </div>
             `;
@@ -7642,22 +7714,28 @@
                 // #endregion
                 targetPage.style.display = 'block';
                 
-                // Render billing plans when settings page is shown
                 if (pageName === 'settings') {
-                    renderBillingPlans();
                     loadProfileSettings();
                     updateSidebarUserInfo();
                     loadAmazonApiKey();
                 }
                 
-                // Load product library when product-library page is shown
+                // Load product library when product-library page is shown (refresh blocks from storage first)
                 if (pageName === 'product-library') {
+                    const uid = currentUser?.uid;
+                    if (uid) {
+                        try {
+                            const saved = localStorage.getItem('kotaBlocks_' + uid);
+                            if (saved) currentBlocks = JSON.parse(saved);
+                        } catch (e) { console.error('Error loading blocks for library:', e); }
+                    }
                     loadProductLibrary();
                 }
                 
-                // Update current subscription when billing page is shown
+                // Update subscription and render billing plans when billing page is shown
                 if (pageName === 'billing') {
                     updateCurrentSubscription();
+                    renderBillingPlans();
                 }
                 
                 // Load reports when reports page is shown
