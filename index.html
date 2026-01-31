@@ -4382,24 +4382,25 @@
                 
                 // Close modal after a brief delay
                 setTimeout(() => {
-                    closeAuthModal();
-                    
-                    // Force dashboard to show
-                    const landingView = document.getElementById('landing-page-view');
-                    const nav = document.querySelector('nav');
-                    const footer = document.querySelector('footer');
-                    const dashboardView = document.getElementById('dashboard-view');
-                    
-                    if (landingView) landingView.style.display = 'none';
-                    if (nav) nav.style.display = 'none';
-                    if (footer) footer.style.display = 'none';
-                    if (dashboardView) {
-                        dashboardView.style.display = 'block';
-                        dashboardView.classList.add('active');
-                    }
-                    
-                    if (typeof initDashboard === 'function') {
-                        initDashboard();
+                    try {
+                        closeAuthModal();
+                        const landingView = document.getElementById('landing-page-view');
+                        const nav = document.querySelector('nav');
+                        const footer = document.querySelector('footer');
+                        const dashboardView = document.getElementById('dashboard-view');
+                        if (landingView) landingView.style.display = 'none';
+                        if (nav) nav.style.display = 'none';
+                        if (footer) footer.style.display = 'none';
+                        if (dashboardView) {
+                            dashboardView.style.display = 'block';
+                            dashboardView.classList.add('active');
+                        }
+                        if (typeof updateSidebarUserInfo === 'function') updateSidebarUserInfo();
+                        if (typeof showPage === 'function') showPage('dashboard');
+                        if (typeof initDashboard === 'function') initDashboard();
+                    } catch (err) {
+                        console.error('Post-login dashboard open error:', err);
+                        showAuthMessage('authMessage', 'Could not open dashboard. Please refresh.', 'error');
                     }
                 }, 500);
                 
