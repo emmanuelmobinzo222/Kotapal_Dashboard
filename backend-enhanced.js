@@ -258,17 +258,18 @@ app.get('/api/bestsellers/:retailer', authenticateToken, async (req, res) => {
       limit: parseInt(limit)
     });
 
-    // Emit to all connected users
+    const items = Array.isArray(bestSellers) ? bestSellers : [];
+
     websocketService.publishToChannel(`bestsellers:${retailer}`, {
       type: 'bestsellers-fetched',
       retailer,
-      itemsCount: bestSellers.length,
+      itemsCount: items.length,
       timestamp: new Date()
     });
 
     res.json({
       retailer,
-      items: bestSellers,
+      items,
       timestamp: new Date(),
       cached: false
     });

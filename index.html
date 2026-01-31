@@ -3124,6 +3124,12 @@
                         </a>
                     </li>
                     <li class="nav-item">
+                        <a href="#" class="nav-link" data-page="ai-assistant" data-scroll-to="ai-chat-section">
+                            <i class="fas fa-comments"></i>
+                            Chat (Amazon &amp; Walmart)
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a href="#" class="nav-link" data-page="billing">
                             <i class="fas fa-credit-card"></i>
                             Billing
@@ -3537,8 +3543,9 @@
 
                 <!-- AI Assistant Page -->
                 <div id="ai-assistant-page" class="page-content" style="display: none;">
-                    <div class="header">
+                    <div class="header" style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
                         <h1 class="page-title">AI Assistant</h1>
+                        <a href="#ai-chat-section" class="btn btn-primary" id="scrollToAiChatBtn" style="margin-left: auto;">Go to Chat (Amazon &amp; Walmart)</a>
                     </div>
                     <div class="card">
                         <div class="card-header">
@@ -3605,7 +3612,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="card" style="margin-top: 24px;">
+                    <div class="card" id="ai-chat-section" style="margin-top: 24px;">
                         <div class="card-header">
                             <h3 class="card-title">Chat with AI Assistant</h3>
                         </div>
@@ -4256,15 +4263,17 @@
         // Firebase Authentication Functions
         // ============================================
 
-        // Show auth message
+        // Show auth message (displayed in the login/signup modal; errors stay 8s so user can read)
         function showAuthMessage(elementId, message, type) {
             const messageEl = document.getElementById(elementId);
+            if (!messageEl) return;
             messageEl.textContent = message;
             messageEl.className = 'form-status ' + type;
             messageEl.style.display = 'block';
+            const delay = type === 'error' ? 8000 : 5000;
             setTimeout(() => {
                 messageEl.style.display = 'none';
-            }, 5000);
+            }, delay);
         }
 
         // Handle Login
@@ -7133,6 +7142,8 @@
                 
                 if (response.ok) {
                     const data = await response.json();
+                    const apiError = data && data.error;
+                    if (apiError) throw new Error(typeof apiError === 'string' ? apiError : (apiError.message || JSON.stringify(apiError)));
                     const { text, references } = extractGoogleAIContent(data);
                     let aiContent = text;
                     if (references.length) aiContent += "\n\n---\nReferences:\n" + references.map(r => (r.title || 'Source') + ": " + (r.link || '')).join('\n');
@@ -7150,14 +7161,15 @@
                         throw new Error('No AI content found in response');
                     }
                 } else {
-                    throw new Error(`API request failed: ${response.status}`);
+                    const errText = await response.text();
+                    throw new Error(`API request failed: ${response.status}. ${(errText || '').substring(0, 150)}`);
                 }
             } catch (error) {
                 console.error('Google AI error:', error);
                 const resultDiv = document.getElementById('aiProductDescriptionResult');
                 const contentDiv = document.getElementById('aiProductDescriptionContent');
                 if (resultDiv && contentDiv) {
-                    contentDiv.textContent = 'Experience premium quality with this exceptional product. Designed for modern lifestyles, it combines style and functionality to deliver outstanding performance. Perfect for everyday use, this product offers unmatched value and reliability.\n\n(Note: ' + error.message + '. Please check your API key or try again.)';
+                    contentDiv.textContent = 'Experience premium quality with this exceptional product. Designed for modern lifestyles, it combines style and functionality to deliver outstanding performance. Perfect for everyday use, this product offers unmatched value and reliability.\n\n(Note: ' + (error && error.message ? error.message : String(error)) + '. Please check your API key in Settings or try again.)';
                     resultDiv.style.display = 'block';
                     resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                 } else {
@@ -7182,6 +7194,8 @@
                 
                 if (response.ok) {
                     const data = await response.json();
+                    const apiError = data && data.error;
+                    if (apiError) throw new Error(typeof apiError === 'string' ? apiError : (apiError.message || JSON.stringify(apiError)));
                     const { text, references } = extractGoogleAIContent(data);
                     let recommendations = text;
                     if (references.length) recommendations += "\n\n---\nReferences:\n" + references.map(r => (r.title || 'Source') + ": " + (r.link || '')).join('\n');
@@ -7199,14 +7213,15 @@
                         throw new Error('No recommendations found');
                     }
                 } else {
-                    throw new Error(`API request failed: ${response.status}`);
+                    const errText = await response.text();
+                    throw new Error(`API request failed: ${response.status}. ${(errText || '').substring(0, 150)}`);
                 }
             } catch (error) {
                 console.error('Google AI error:', error);
                 const resultDiv = document.getElementById('aiPerformanceResult');
                 const contentDiv = document.getElementById('aiPerformanceContent');
                 if (resultDiv && contentDiv) {
-                    contentDiv.textContent = '1. Update product images for better visual appeal\n2. Optimize CTA text to increase click-through rates\n3. Consider A/B testing different layouts\n4. Add more relevant products to increase engagement\n5. Monitor peak traffic times and adjust accordingly\n\n(Note: ' + error.message + '. Please check your API key or try again.)';
+                    contentDiv.textContent = '1. Update product images for better visual appeal\n2. Optimize CTA text to increase click-through rates\n3. Consider A/B testing different layouts\n4. Add more relevant products to increase engagement\n5. Monitor peak traffic times and adjust accordingly\n\n(Note: ' + (error && error.message ? error.message : String(error)) + '. Please check your API key in Settings or try again.)';
                     resultDiv.style.display = 'block';
                     resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                 } else {
@@ -7231,6 +7246,8 @@
                 
                 if (response.ok) {
                     const data = await response.json();
+                    const apiError = data && data.error;
+                    if (apiError) throw new Error(typeof apiError === 'string' ? apiError : (apiError.message || JSON.stringify(apiError)));
                     const { text, references } = extractGoogleAIContent(data);
                     let ideas = text;
                     if (references.length) ideas += "\n\n---\nReferences:\n" + references.map(r => (r.title || 'Source') + ": " + (r.link || '')).join('\n');
@@ -7248,14 +7265,15 @@
                         throw new Error('No content ideas found');
                     }
                 } else {
-                    throw new Error(`API request failed: ${response.status}`);
+                    const errText = await response.text();
+                    throw new Error(`API request failed: ${response.status}. ${(errText || '').substring(0, 150)}`);
                 }
             } catch (error) {
                 console.error('Google AI error:', error);
                 const resultDiv = document.getElementById('aiContentIdeasResult');
                 const contentDiv = document.getElementById('aiContentIdeasContent');
                 if (resultDiv && contentDiv) {
-                    contentDiv.textContent = '1. "Top 10 Must-Have Products for [Your Niche]"\n2. "Product Review: [Product Name] - Is It Worth It?"\n3. "Best Deals This Week: [Category]"\n4. "How to Choose the Right [Product Type]"\n5. "Product Comparison: [Product A] vs [Product B]"\n\n(Note: ' + error.message + '. Please check your API key or try again.)\n\nUse these ideas to create engaging content around your products!';
+                    contentDiv.textContent = '1. "Top 10 Must-Have Products for [Your Niche]"\n2. "Product Review: [Product Name] - Is It Worth It?"\n3. "Best Deals This Week: [Category]"\n4. "How to Choose the Right [Product Type]"\n5. "Product Comparison: [Product A] vs [Product B]"\n\n(Note: ' + (error && error.message ? error.message : String(error)) + '. Please check your API key in Settings or try again.)\n\nUse these ideas to create engaging content around your products!';
                     resultDiv.style.display = 'block';
                     resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                 } else {
@@ -7315,6 +7333,8 @@
                 
                 if (response.ok) {
                     const data = await response.json();
+                    const apiError = data && data.error;
+                    if (apiError) throw new Error(typeof apiError === 'string' ? apiError : (apiError.message || JSON.stringify(apiError)));
                     const { text, references } = extractGoogleAIContent(data);
                     let aiResponse = text || 'I\'m here to help! Could you provide more details about what you\'d like to know?';
                     const refs = data.reference_links || data.references || references;
@@ -7334,7 +7354,8 @@
                     aiChatHistory.push({ role: 'user', content: message });
                     aiChatHistory.push({ role: 'assistant', content: aiResponse });
                 } else {
-                    throw new Error(`API request failed: ${response.status}`);
+                    const errText = await response.text();
+                    throw new Error(`API request failed: ${response.status}. ${(errText || '').substring(0, 150)}`);
                 }
             } catch (error) {
                 console.error('Google AI chat error:', error);
@@ -7805,6 +7826,14 @@
             }
         });
         
+        // Scroll to AI Chat section (Amazon & Walmart)
+        function scrollToAiChatSection() {
+            const el = document.getElementById('ai-chat-section');
+            if (el) {
+                el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+        
         // Setup navigation links
         document.addEventListener('DOMContentLoaded', () => {
             const navLinks = document.querySelectorAll('.nav-link[data-page]');
@@ -7812,6 +7841,7 @@
                 link.addEventListener('click', (e) => {
                     e.preventDefault();
                     let pageName = link.getAttribute('data-page');
+                    const scrollToId = link.getAttribute('data-scroll-to');
                     
                     // Redirect account to settings (they're the same)
                     if (pageName === 'account') {
@@ -7826,8 +7856,27 @@
                     }
                     
                     showPage(pageName);
+                    
+                    // If link has scroll target (e.g. Chat Amazon & Walmart), scroll after page is visible
+                    if (scrollToId) {
+                        setTimeout(() => {
+                            const target = document.getElementById(scrollToId);
+                            if (target) {
+                                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                            }
+                        }, 150);
+                    }
                 });
             });
+            
+            // Button/link on AI Assistant page: "Go to Chat (Amazon & Walmart)"
+            const scrollToAiChatBtn = document.getElementById('scrollToAiChatBtn');
+            if (scrollToAiChatBtn) {
+                scrollToAiChatBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    scrollToAiChatSection();
+                });
+            }
         });
         
         // Intercept settings page navigation
