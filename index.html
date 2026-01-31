@@ -2733,7 +2733,7 @@
                 <li><a href="#about" onclick="scrollToSection('about')">About</a></li>
                 <li><a href="#" onclick="showPage('blog-page')">Blog</a></li>
                 <li><a href="#" onclick="showPage('contact-page')">Contact</a></li>
-                <li><a href="#" id="loginBtn">Login</a></li>
+                <li><a href="javascript:void(0)" id="loginBtn" role="button">Login</a></li>
             </ul>
             
             <div class="mobile-menu-btn" id="mobileMenuBtn">
@@ -4087,7 +4087,7 @@
             <div id="loginForm" class="auth-form active">
                 <h2>Welcome Back!</h2>
                 <div id="authMessage" class="form-status" style="display: none; margin-bottom: 20px;"></div>
-                <form id="loginFormElement">
+                <form id="loginFormElement" action="javascript:void(0)" method="post">
                     <div class="form-group">
                         <label for="loginEmail">Email</label>
                         <input type="email" id="loginEmail" required>
@@ -4105,7 +4105,7 @@
             <div id="signupForm" class="auth-form">
                 <h2>Create Account</h2>
                 <div id="signupMessage" class="form-status" style="display: none; margin-bottom: 20px;"></div>
-                <form id="signupFormElement">
+                <form id="signupFormElement" action="javascript:void(0)" method="post">
                     <div class="form-group">
                         <label for="signupName">Full Name</label>
                         <input type="text" id="signupName" required>
@@ -4454,6 +4454,43 @@
                 showAuthMessage('authMessage', errorMessage, 'error');
             }
         }
+
+        // Document-level login form handler (capture) so login always runs even if form listener missed
+        document.addEventListener('submit', function(e) {
+            if (e.target && e.target.id === 'loginFormElement') {
+                e.preventDefault();
+                e.stopPropagation();
+                var emailEl = document.getElementById('loginEmail');
+                var passwordEl = document.getElementById('loginPassword');
+                var email = emailEl ? emailEl.value : '';
+                var password = passwordEl ? passwordEl.value : '';
+                handleFirebaseLogin(email, password).catch(function(err) {
+                    console.error('Login form error:', err);
+                    showAuthMessage('authMessage', 'An error occurred. Please try again.', 'error');
+                });
+                return false;
+            }
+        }, true);
+
+        document.addEventListener('submit', function(e) {
+            if (e.target && e.target.id === 'signupFormElement') {
+                e.preventDefault();
+                e.stopPropagation();
+                var nameEl = document.getElementById('signupName');
+                var emailEl = document.getElementById('signupEmail');
+                var passwordEl = document.getElementById('signupPassword');
+                var planInput = document.querySelector('input[name="signupPlan"]:checked');
+                var name = nameEl ? nameEl.value : '';
+                var email = emailEl ? emailEl.value : '';
+                var password = passwordEl ? passwordEl.value : '';
+                var plan = planInput ? planInput.value : 'starter';
+                handleFirebaseSignup(name, email, password, plan).catch(function(err) {
+                    console.error('Signup form error:', err);
+                    showAuthMessage('signupMessage', 'An error occurred. Please try again.', 'error');
+                });
+                return false;
+            }
+        }, true);
 
         // Handle Sign Up
         async function handleFirebaseSignup(name, email, password, plan) {
