@@ -3093,67 +3093,133 @@
 
     </div> <!-- end landing-page-view -->
 
-    <!-- Light-theme dashboard styles (original KotaPal look) -->
+    <!-- Dashboard styles matching KotaPal simple copy design -->
     <style id="dashboard-light-theme">
-        #dashboard-view .dashboard { display: flex; min-height: 100vh; }
+        #dashboard-view { background: #f8fafc; min-height: 100vh; }
+        #dashboard-view .dashboard { display: flex; min-height: 100vh; width: 100%; }
         #dashboard-view .sidebar {
-            width: 250px; background: white; box-shadow: 0 0 20px rgba(0,0,0,0.1);
-            padding: 20px 0; position: fixed; top: 0; left: 0; height: 100vh; overflow-y: auto; z-index: 1000;
+            width: 260px; background: white; box-shadow: 2px 0 8px rgba(0,0,0,0.04);
+            padding: 24px 0; position: fixed; left: 0; top: 0; height: 100vh; overflow-y: auto; z-index: 1000;
+            border-right: 1px solid #e5e7eb; transition: transform 0.3s ease;
         }
-        #dashboard-view .main-content {
-            flex: 1; margin-left: 250px; padding: 20px; width: calc(100% - 250px); box-sizing: border-box;
-            background-color: #f5f7fa; color: #1f2937;
+        #dashboard-view .sidebar.hidden { transform: translateX(-100%); }
+        #dashboard-view .sidebar .logo {
+            padding: 24px 20px; border-bottom: 1px solid #e5e7eb;
+            display: flex; align-items: center; justify-content: center;
         }
-        #dashboard-view .sidebar-header { display: flex; align-items: center; padding: 20px 20px 0; border-bottom: 1px solid #eee; margin-bottom: 20px; }
-        #dashboard-view .sidebar .logo { display: flex; align-items: center; flex-wrap: wrap; }
-        #dashboard-view .sidebar .logo img { max-width: 150px; height: auto; display: block !important; }
-        #dashboard-view .user-info { padding: 0 20px 20px; border-bottom: 1px solid #eee; margin-bottom: 20px; }
-        #dashboard-view .user-info .user-avatar { width: 40px; height: 40px; border-radius: 50%; margin-right: 10px; object-fit: cover; }
-        #dashboard-view .user-name { font-weight: 600; color: #1f2937; }
-        #dashboard-view .user-plan { font-size: 0.8rem; color: #6b7280; padding: 4px 8px; border-radius: 12px; background: #f3f4f6; display: inline-block; margin-top: 4px; }
+        #dashboard-view .sidebar .logo img { max-width: 100%; height: 80px; width: 200px; object-fit: contain; }
+        #dashboard-view .user-info { padding: 0 20px 24px; border-bottom: 1px solid #e5e7eb; margin-bottom: 24px; }
+        #dashboard-view .user-avatar { width: 40px; height: 40px; border-radius: 50%; margin-right: 10px; object-fit: cover; }
+        #dashboard-view .user-name { font-weight: 600; color: var(--dark); font-size: 0.9375rem; }
+        #dashboard-view .user-plan { font-size: 0.8rem; color: var(--gray); margin-top: 4px; }
         #dashboard-view .nav-menu { list-style: none; padding: 0 10px; }
         #dashboard-view .nav-item { margin-bottom: 5px; }
-        #dashboard-view .nav-link { display: flex; align-items: center; padding: 12px 20px; color: #6b7280; border-radius: 8px; transition: all 0.3s ease; text-decoration: none; }
-        #dashboard-view .nav-link:hover { background: #f5f7fa; color: var(--primary); }
-        #dashboard-view .nav-link.active { background: var(--primary); color: white; }
+        #dashboard-view .nav-link {
+            display: flex; align-items: center; padding: 10px 20px; color: #4b5563; border-radius: 8px;
+            transition: all 0.2s ease; font-weight: 500; font-size: 0.9375rem; margin: 2px 12px; text-decoration: none;
+        }
+        #dashboard-view .nav-link:hover { background: #f3f4f6; color: var(--primary); }
+        #dashboard-view .nav-link.active {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white; box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+        }
         #dashboard-view .nav-link i { margin-right: 10px; width: 20px; text-align: center; }
-        #dashboard-view .header { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; border-bottom: 1px solid #eee; margin-bottom: 30px; }
-        #dashboard-view .page-title { font-size: 1.8rem; color: #1f2937; margin: 0; }
-        #dashboard-view .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px; }
-        #dashboard-view .stat-card { background: white; border-radius: 15px; padding: 25px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); text-align: center; transition: transform 0.3s ease; }
-        #dashboard-view .stat-card:hover { transform: translateY(-5px); }
-        #dashboard-view .stat-icon { width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 1.5rem; color: white; }
-        #dashboard-view .stat-icon.stat-primary { background: var(--primary); }
-        #dashboard-view .stat-icon.stat-success { background: var(--success); }
-        #dashboard-view .stat-icon.stat-warning { background: var(--warning); }
-        #dashboard-view .stat-icon.stat-info { background: #3b82f6; }
-        #dashboard-view .stat-value { font-size: 2rem; font-weight: 700; margin-bottom: 5px; color: #1f2937; }
-        #dashboard-view .stat-label { color: #6b7280; font-size: 0.9rem; }
-        #dashboard-view .card { background: white; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); padding: 25px; margin-bottom: 25px; }
-        #dashboard-view .card-header { margin-bottom: 20px; }
-        #dashboard-view .card-title { font-size: 1.3rem; font-weight: 600; color: #1f2937; margin: 0; }
-        #dashboard-view .table-container { overflow-x: auto; }
-        #dashboard-view .table-container table { width: 100%; border-collapse: collapse; background: white; border-radius: 15px; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
-        #dashboard-view .table-container th, #dashboard-view .table-container td { padding: 15px; text-align: left; border-bottom: 1px solid #eee; }
-        #dashboard-view .table-container th { background: #f5f7fa; font-weight: 600; color: #1f2937; }
+        #dashboard-view .main-content {
+            flex: 1; margin-left: 260px; padding: 32px 40px; width: calc(100% - 260px); box-sizing: border-box;
+            background: #f8fafc; min-height: 100vh; transition: margin-left 0.3s ease;
+        }
+        #dashboard-view .main-content.sidebar-hidden { margin-left: 0; }
+        #dashboard-view .page-content { padding: 24px; max-width: 1400px; width: 100%; margin: 0 auto; }
+        #dashboard-view .header {
+            display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;
+            padding: 24px 0; margin-bottom: 32px; border-bottom: none;
+        }
+        #dashboard-view .page-title { font-size: 2rem; font-weight: 700; color: var(--dark); margin: 0; letter-spacing: -0.5px; }
+        #dashboard-view .card {
+            background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            padding: 28px; margin-bottom: 24px; border: 1px solid #e5e7eb; transition: all 0.2s ease;
+        }
+        #dashboard-view .card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        #dashboard-view .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid #f3f4f6; }
+        #dashboard-view .card-title { font-size: 1.25rem; font-weight: 600; color: var(--dark); margin: 0; letter-spacing: -0.3px; }
+        #dashboard-view .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-bottom: 32px; }
+        #dashboard-view .stat-card {
+            background: white; border-radius: 12px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            border: 1px solid #e5e7eb; transition: all 0.2s ease; display: flex; align-items: center; gap: 16px;
+        }
+        #dashboard-view .stat-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-color: #d1d5db; }
+        #dashboard-view .stat-icon {
+            width: 56px; height: 56px; border-radius: 12px; display: flex; align-items: center; justify-content: center;
+            font-size: 1.5rem; color: white; flex-shrink: 0;
+        }
+        #dashboard-view .stat-icon.stat-primary { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); }
+        #dashboard-view .stat-icon.stat-success { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
+        #dashboard-view .stat-icon.stat-warning { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
+        #dashboard-view .stat-icon.stat-info { background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); }
+        #dashboard-view .stat-content { flex: 1; text-align: left; }
+        #dashboard-view .stat-value { font-size: 1.875rem; font-weight: 700; margin-bottom: 4px; color: var(--dark); line-height: 1.2; }
+        #dashboard-view .stat-label { color: #6b7280; font-size: 0.875rem; font-weight: 500; }
+        #dashboard-view .blocks-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+        #dashboard-view .block-card {
+            background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            border: 1px solid #e5e7eb; transition: all 0.2s ease;
+        }
+        #dashboard-view .block-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-color: #d1d5db; transform: translateY(-2px); }
+        #dashboard-view .block-header { padding: 20px; border-bottom: 1px solid #eee; }
+        #dashboard-view .block-title { font-weight: 600; margin-bottom: 10px; }
+        #dashboard-view .block-status { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; }
+        #dashboard-view .status-active { background: #dcfce7; color: #16a34a; }
+        #dashboard-view .status-draft { background: #fef3c7; color: #d97706; }
+        #dashboard-view .block-body { padding: 20px; }
+        #dashboard-view .block-meta { display: flex; justify-content: space-between; margin-bottom: 15px; font-size: 0.9rem; }
+        #dashboard-view .block-meta span { color: var(--gray); }
+        #dashboard-view .block-actions { display: flex; gap: 10px; }
+        #dashboard-view .block-btn { flex: 1; padding: 8px 12px; border-radius: 5px; font-size: 0.8rem; text-align: center; cursor: pointer; border: 1px solid transparent; font-weight: 500; transition: all 0.2s ease; }
+        #dashboard-view .btn-edit { background: #dbeafe; color: #1d4ed8; border: 1px solid #93c5fd; }
+        #dashboard-view .btn-publish { background: #dcfce7; color: #16a34a; border: 1px solid #86efac; }
+        #dashboard-view .btn-delete { background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; }
+        #dashboard-view .table-container { overflow-x: auto; border-radius: 8px; }
+        #dashboard-view .table-container table { width: 100%; border-collapse: collapse; background: white; }
+        #dashboard-view .table-container th, #dashboard-view .table-container td { padding: 15px; text-align: left; border-bottom: 1px solid #e5e7eb; }
+        #dashboard-view .table-container th { background: #f8fafc; font-weight: 600; color: var(--dark); }
         #dashboard-view .table-container tr:hover { background: #f9fafb; }
-        #dashboard-view .block-status.status-active { background: #dcfce7; color: #16a34a; padding: 3px 10px; border-radius: 20px; font-size: 0.8rem; }
-        #dashboard-view .block-status.status-draft { background: #fef3c7; color: #d97706; padding: 3px 10px; border-radius: 20px; font-size: 0.8rem; }
+        #dashboard-view .sensitive-toggle {
+            display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px;
+            background: #f3f4f6; border: 1px solid #d1d5db; border-radius: 8px; cursor: pointer;
+            font-size: 0.875rem; color: #4b5563; transition: all 0.2s ease; font-weight: 500;
+        }
+        #dashboard-view .sensitive-toggle:hover { background: #e5e7eb; border-color: #9ca3af; }
+        #dashboard-view .sensitive-toggle.active { background: #dbeafe; border-color: #3b82f6; color: #1e40af; }
+        #dashboard-view [data-sensitive="true"] { filter: blur(8px); user-select: none; transition: filter 0.3s ease; }
+        #dashboard-view [data-sensitive="true"].revealed { filter: none; }
+        #dashboard-view .sidebar-toggle {
+            position: fixed; top: 20px; left: 20px; z-index: 1001;
+            background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 10px 14px;
+            cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: none; align-items: center; justify-content: center; transition: all 0.2s ease;
+        }
+        #dashboard-view .sidebar-toggle:hover { background: #f9fafb; border-color: #d1d5db; }
+        #dashboard-view .sidebar-toggle i { font-size: 1.2rem; color: var(--dark); }
+        #dashboard-view .sidebar-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); z-index: 999;
+        }
+        #dashboard-view .sidebar-overlay.active { display: block; }
+        @media (max-width: 1024px) {
+            #dashboard-view .sidebar { transform: translateX(-100%); width: min(320px, 85vw); z-index: 1002; }
+            #dashboard-view .sidebar.active { transform: translateX(0); }
+            #dashboard-view .main-content { margin-left: 0; padding-top: 60px; }
+            #dashboard-view .sidebar-toggle { display: flex; }
+        }
     </style>
 
-    <!-- Authenticated Dashboard View (original light theme) -->
-    <div id="dashboard-view" style="display: none;">
+    <!-- Authenticated Dashboard View (KotaPal simple copy design) -->
+    <div id="dashboard-view" class="dashboard-view" style="display: none;">
+        <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar"><i class="fas fa-bars"></i></button>
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
         <div class="dashboard">
-            <div class="sidebar">
-                <div class="sidebar-header">
-                    <div class="logo">
-                        <img src="images/IMG_4258.png" alt="KotaPal Logo" style="height: 40px; width: auto; max-width: 150px; object-fit: contain;" onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='block';" />
-                        <span class="logo-text" style="display:none; font-weight:700; font-size:1.5rem; color:#1f2937;">KotaPal</span>
-                        <div style="margin-left: 10px;">
-                            <div style="font-weight: 700; font-size: 1.1rem; color: #1f2937;">KotaPal</div>
-                            <div style="font-size: 0.7rem; color: #6b7280; text-transform: uppercase; letter-spacing: 0.02em;">Affiliate Content Platform</div>
-                        </div>
-                    </div>
+            <div class="sidebar" id="sidebar">
+                <div class="logo">
+                    <img src="images/IMG_4258.png" alt="KotaPal Logo" style="height: 80px; width: 200px; object-fit: contain;" onerror="this.style.display='none';" />
                 </div>
                 <div class="user-info">
                     <div style="display: flex; align-items: center;">
@@ -3181,34 +3247,44 @@
                 <div id="dashboard-page" class="page-content">
                     <div class="header">
                         <h1 class="page-title">Dashboard</h1>
-                        <button class="btn btn-primary" id="createBlockBtn">Create New Block</button>
-                    </div>
-                    <div style="display: flex; justify-content: center; margin-bottom: 15px;">
-                        <button id="globalSensitiveToggle" class="btn btn-secondary" style="display: flex; align-items: center; gap: 8px;">
-                            <i class="fas fa-eye-slash"></i>
-                            <span>Show Sensitive Data</span>
-                        </button>
+                        <div style="display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; width: 100%;">
+                            <button class="btn btn-primary" id="createBlockBtn">Create New Block</button>
+                        </div>
+                        <div style="display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; width: 100%; margin-top: 12px;">
+                            <button type="button" class="sensitive-toggle" id="globalSensitiveToggle" onclick="toggleAllSensitive()">
+                                <i class="fas fa-eye-slash"></i>
+                                <span>Show Sensitive Data</span>
+                            </button>
+                        </div>
                     </div>
                     <div class="stats-grid">
                         <div class="stat-card">
                             <div class="stat-icon stat-primary"><i class="fas fa-mouse-pointer"></i></div>
-                            <div class="stat-value" id="totalClicks">0</div>
-                            <div class="stat-label">Total Clicks</div>
+                            <div class="stat-content">
+                                <div class="stat-value" id="totalClicks" data-sensitive="true">0</div>
+                                <div class="stat-label">Total Clicks</div>
+                            </div>
                         </div>
                         <div class="stat-card">
                             <div class="stat-icon stat-success"><i class="fas fa-dollar-sign"></i></div>
-                            <div class="stat-value" id="estimatedRevenue">$0.00</div>
-                            <div class="stat-label">Estimated Revenue</div>
+                            <div class="stat-content">
+                                <div class="stat-value" id="estimatedRevenue" data-sensitive="true">$0.00</div>
+                                <div class="stat-label">Estimated Revenue</div>
+                            </div>
                         </div>
                         <div class="stat-card">
                             <div class="stat-icon stat-warning"><i class="fas fa-percentage"></i></div>
-                            <div class="stat-value" id="avgCTR">0%</div>
-                            <div class="stat-label">Average CTR</div>
+                            <div class="stat-content">
+                                <div class="stat-value" id="avgCTR" data-sensitive="true">0%</div>
+                                <div class="stat-label">Average CTR</div>
+                            </div>
                         </div>
                         <div class="stat-card">
-                            <div class="stat-icon stat-info"><i class="fas fa-cubes"></i></div>
-                            <div class="stat-value" id="activeBlocks">0</div>
-                            <div class="stat-label">Active Blocks</div>
+                            <div class="stat-icon stat-info"><i class="fas fa-cube"></i></div>
+                            <div class="stat-content">
+                                <div class="stat-value" id="activeBlocks">0</div>
+                                <div class="stat-label">Active Blocks</div>
+                            </div>
                         </div>
                     </div>
                     <div class="card">
@@ -3240,7 +3316,7 @@
                         <h1 class="page-title">SmartBlocks</h1>
                         <button class="btn btn-primary" id="newBlockBtn">Create New Block</button>
                     </div>
-                    <div id="blocksContainer"></div>
+                    <div id="blocksContainer" class="blocks-grid"></div>
                 </div>
 
                 <div id="new-block-page" class="page-content" style="display:none;">
