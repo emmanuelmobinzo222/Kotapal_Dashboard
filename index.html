@@ -2356,6 +2356,7 @@
 </head>
 
 <body>
+    <div id="landing-page-view">
     <!-- Navigation -->
     <nav>
         <div class="nav-container">
@@ -3090,6 +3091,191 @@
         </div>
     </div>
 
+    </div> <!-- end landing-page-view -->
+
+    <!-- Authenticated Dashboard View -->
+    <div id="dashboard-view" style="display: none;">
+        <div class="dashboard-shell" style="display:flex; min-height: 100vh; background:#020617; color:#f9fafb;">
+            <aside class="dashboard-sidebar" style="width:260px; padding:24px 16px; border-right:1px solid rgba(148,163,184,0.3);">
+                <h2 style="font-size:1.4rem; margin-bottom:1.5rem;">KotaPal Dashboard</h2>
+                <div class="user-summary" style="margin-bottom:1.5rem;">
+                    <div id="sidebarUserName" style="font-weight:600;"></div>
+                    <div class="user-plan" style="font-size:0.9rem; color:#9ca3af;">Starter Plan</div>
+                </div>
+                <nav class="dashboard-nav">
+                    <a href="#" class="nav-link active" data-page="dashboard" style="display:block; padding:8px 12px; border-radius:6px; margin-bottom:4px;">Overview</a>
+                    <a href="#" class="nav-link" data-page="blocks" style="display:block; padding:8px 12px; border-radius:6px; margin-bottom:4px;">Smart Blocks</a>
+                    <a href="#" class="nav-link" data-page="analytics" style="display:block; padding:8px 12px; border-radius:6px; margin-bottom:4px;">Analytics</a>
+                    <a href="#" class="nav-link" data-page="reports" style="display:block; padding:8px 12px; border-radius:6px; margin-bottom:4px;">Reports</a>
+                    <a href="#" class="nav-link" data-page="billing" style="display:block; padding:8px 12px; border-radius:6px; margin-bottom:4px;">Billing</a>
+                    <a href="#" class="nav-link" data-page="product-library" style="display:block; padding:8px 12px; border-radius:6px; margin-bottom:4px;">Product Library</a>
+                    <a href="#" class="nav-link" data-page="settings" style="display:block; padding:8px 12px; border-radius:6px; margin-bottom:4px;">Settings</a>
+                </nav>
+            </aside>
+            <main class="dashboard-main" style="flex:1; padding:24px; overflow-y:auto;">
+                <!-- Overview -->
+                <section id="dashboard-page" class="page-content" style="display:block;">
+                    <h1 style="font-size:1.8rem; margin-bottom:1rem;">Overview</h1>
+                    <div style="display:flex; flex-wrap:wrap; gap:16px; margin-bottom:24px;">
+                        <div class="stat-card" style="flex:1 1 180px; background:#020617; border-radius:12px; padding:16px; border:1px solid rgba(148,163,184,0.4);">
+                            <div class="stat-label">Total Clicks</div>
+                            <div id="totalClicks" class="stat-value">0</div>
+                        </div>
+                        <div class="stat-card" style="flex:1 1 180px; background:#020617; border-radius:12px; padding:16px; border:1px solid rgba(148,163,184,0.4);">
+                            <div class="stat-label">Estimated Revenue</div>
+                            <div id="estimatedRevenue" class="stat-value">$0.00</div>
+                        </div>
+                        <div class="stat-card" style="flex:1 1 180px; background:#020617; border-radius:12px; padding:16px; border:1px solid rgba(148,163,184,0.4);">
+                            <div class="stat-label">Average CTR</div>
+                            <div id="avgCTR" class="stat-value">0%</div>
+                        </div>
+                        <div class="stat-card" style="flex:1 1 180px; background:#020617; border-radius:12px; padding:16px; border:1px solid rgba(148,163,184,0.4);">
+                            <div class="stat-label">Active Blocks</div>
+                            <div id="activeBlocks" class="stat-value">0</div>
+                        </div>
+                    </div>
+                    <h2 style="font-size:1.2rem; margin-bottom:0.5rem;">Recent Activity</h2>
+                    <table id="activityTable" style="width:100%; border-collapse:collapse; font-size:0.9rem; background:#020617; border-radius:12px; overflow:hidden;">
+                        <thead>
+                            <tr>
+                                <th style="text-align:left; padding:8px 12px;">Block</th>
+                                <th style="text-align:left; padding:8px 12px;">Layout</th>
+                                <th style="text-align:right; padding:8px 12px;">Clicks</th>
+                                <th style="text-align:right; padding:8px 12px;">Revenue</th>
+                                <th style="text-align:left; padding:8px 12px;">Status</th>
+                                <th style="text-align:left; padding:8px 12px;">Last Updated</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </section>
+
+                <!-- Blocks -->
+                <section id="blocks-page" class="page-content" style="display:none;">
+                    <h1 style="font-size:1.6rem; margin-bottom:1rem;">Smart Blocks</h1>
+                    <div id="blocksContainer"></div>
+                </section>
+
+                <!-- Analytics -->
+                <section id="analytics-page" class="page-content" style="display:none;">
+                    <h1 style="font-size:1.6rem; margin-bottom:1rem;">Analytics</h1>
+                    <div style="display:flex; gap:12px; margin-bottom:12px; flex-wrap:wrap;">
+                        <select id="dateRangeFilter" style="padding:6px 10px;">
+                            <option value="last7days">Last 7 days</option>
+                            <option value="last30days">Last 30 days</option>
+                            <option value="last90days">Last 90 days</option>
+                        </select>
+                        <select id="retailerFilter" style="padding:6px 10px;">
+                            <option value="all">All retailers</option>
+                            <option value="amazon">Amazon</option>
+                            <option value="walmart">Walmart</option>
+                            <option value="shopify">Shopify</option>
+                            <option value="skimlinks">Skimlinks</option>
+                        </select>
+                    </div>
+                    <div style="display:flex; gap:16px; margin-bottom:16px; flex-wrap:wrap;">
+                        <div style="flex:1 1 160px;">Clicks: <span id="filteredClicks">0</span></div>
+                        <div style="flex:1 1 160px;">Revenue: <span id="filteredRevenue">$0.00</span></div>
+                        <div style="flex:1 1 160px;">CTR: <span id="filteredCTR">0%</span></div>
+                        <div style="flex:1 1 160px;">Blocks Showing: <span id="blocksShowing">0</span></div>
+                    </div>
+                    <table id="analyticsTable" style="width:100%; border-collapse:collapse; font-size:0.9rem; background:#020617; border-radius:12px; overflow:hidden;">
+                        <thead>
+                            <tr>
+                                <th style="text-align:left; padding:8px 12px;">Block</th>
+                                <th style="text-align:left; padding:8px 12px;">Layout</th>
+                                <th style="text-align:right; padding:8px 12px;">Clicks</th>
+                                <th style="text-align:right; padding:8px 12px;">CTR</th>
+                                <th style="text-align:right; padding:8px 12px;">Revenue</th>
+                                <th style="text-align:left; padding:8px 12px;">Status</th>
+                                <th style="text-align:left; padding:8px 12px;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </section>
+
+                <!-- Reports -->
+                <section id="reports-page" class="page-content" style="display:none;">
+                    <h1 style="font-size:1.6rem; margin-bottom:1rem;">Reports</h1>
+                    <table style="width:100%; margin-bottom:12px;">
+                        <tr>
+                            <td>
+                                <button class="btn btn-primary" onclick="generateReport('performance')">Performance Report</button>
+                            </td>
+                            <td>
+                                <button class="btn btn-secondary" onclick="generateReport('payout')">Payout Report</button>
+                            </td>
+                        </tr>
+                    </table>
+                    <table id="reportsTable" style="width:100%; border-collapse:collapse; font-size:0.9rem; background:#020617; border-radius:12px; overflow:hidden;">
+                        <thead>
+                            <tr>
+                                <th style="text-align:left; padding:8px 12px;">Name</th>
+                                <th style="text-align:left; padding:8px 12px;">Type</th>
+                                <th style="text-align:left; padding:8px 12px;">Date</th>
+                                <th style="text-align:left; padding:8px 12px;">Format</th>
+                                <th style="text-align:left; padding:8px 12px;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </section>
+
+                <!-- Billing -->
+                <section id="billing-page" class="page-content" style="display:none;">
+                    <h1 style="font-size:1.6rem; margin-bottom:1rem;">Billing & Subscription</h1>
+                    <div id="currentSubscriptionCard" style="margin-bottom:24px;"></div>
+                    <h2 style="font-size:1.2rem; margin-bottom:0.5rem;">Billing History</h2>
+                    <table id="billingHistoryTable" style="width:100%; border-collapse:collapse; font-size:0.9rem; background:#020617; border-radius:12px; overflow:hidden; margin-bottom:24px;">
+                        <thead>
+                            <tr>
+                                <th style="text-align:left; padding:8px 12px;">Date</th>
+                                <th style="text-align:left; padding:8px 12px;">Description</th>
+                                <th style="text-align:right; padding:8px 12px;">Amount</th>
+                                <th style="text-align:left; padding:8px 12px;">Status</th>
+                                <th style="text-align:left; padding:8px 12px;">Invoice</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                    <h2 style="font-size:1.2rem; margin-bottom:0.5rem;">Plans</h2>
+                    <div id="billingPlansContainer" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:16px;"></div>
+                </section>
+
+                <!-- Product Library -->
+                <section id="product-library-page" class="page-content" style="display:none;">
+                    <h1 style="font-size:1.6rem; margin-bottom:1rem;">Product Library</h1>
+                    <div style="display:flex; gap:12px; margin-bottom:12px; flex-wrap:wrap;">
+                        <input id="productLibrarySearch" placeholder="Search products..." style="padding:6px 10px; flex:1 1 200px;">
+                        <select id="productLibraryFilter" style="padding:6px 10px;">
+                            <option value="all">All retailers</option>
+                            <option value="amazon">Amazon</option>
+                            <option value="walmart">Walmart</option>
+                            <option value="shopify">Shopify</option>
+                            <option value="ebay">eBay</option>
+                            <option value="skimlinks">Skimlinks</option>
+                        </select>
+                        <select id="productLibrarySort" style="padding:6px 10px;">
+                            <option value="recent">Most recent</option>
+                            <option value="price-low">Price: low to high</option>
+                            <option value="price-high">Price: high to low</option>
+                            <option value="name">Name A–Z</option>
+                        </select>
+                    </div>
+                    <div id="productLibraryContainer" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:16px;"></div>
+                </section>
+
+                <!-- Settings placeholder -->
+                <section id="settings-page" class="page-content" style="display:none;">
+                    <h1 style="font-size:1.6rem; margin-bottom:1rem;">Account Settings</h1>
+                    <!-- Existing profile form / settings elements will be wired by JS -->
+                </section>
+            </main>
+        </div>
+    </div>
+
     <!-- Login/Signup Modal -->
     <div id="authModal" class="modal" style="display: none;">
         <div class="modal-content">
@@ -3114,51 +3300,6 @@
                     </div>
                     <button type="submit" class="btn btn-primary">Login</button>
                     <div id="authMessage" class="form-status" style="display: none;"></div>
-                </form>
-            </div>
-
-            <!-- Forgot Password Form -->
-            <div id="forgotPasswordForm" class="auth-form" style="display: none;">
-                <h2>Reset Your Password</h2>
-                <p style="color: var(--gray); margin-bottom: 20px; font-size: 0.9rem;">Enter your email address and
-                    we'll send you a link to reset your password.</p>
-                <form id="forgotPasswordFormInner">
-                    <div class="form-group">
-                        <label for="forgotPasswordEmail">Email</label>
-                        <input type="email" id="forgotPasswordEmail" required>
-                    </div>
-                    <div id="forgotPasswordStatus" style="margin-top: 10px; font-size: 0.9rem; color: var(--gray);">
-                    </div>
-                    <button type="submit" class="btn btn-primary" id="forgotPasswordSubmit">Send Reset Link</button>
-                    <div style="text-align: center; margin-top: 15px;">
-                        <a href="#" class="forgot-password" id="backToLogin">Back to Login</a>
-                    </div>
-                </form>
-            </div>
-
-            <!-- Reset Password Form -->
-            <div id="resetPasswordForm" class="auth-form" style="display: none;">
-                <h2>Set New Password</h2>
-                <p style="color: var(--gray); margin-bottom: 20px; font-size: 0.9rem;">Enter your new password below.
-                </p>
-                <form id="resetPasswordFormInner">
-                    <input type="hidden" id="resetToken">
-                    <input type="hidden" id="resetUserId">
-                    <div class="form-group">
-                        <label for="resetNewPassword">New Password</label>
-                        <input type="password" id="resetNewPassword" required minlength="6">
-                        <small style="color: var(--gray); font-size: 0.85rem;">Must be at least 6 characters</small>
-                    </div>
-                    <div class="form-group">
-                        <label for="resetConfirmPassword">Confirm New Password</label>
-                        <input type="password" id="resetConfirmPassword" required minlength="6">
-                    </div>
-                    <div id="resetPasswordStatus" style="margin-top: 10px; font-size: 0.9rem; color: var(--gray);">
-                    </div>
-                    <button type="submit" class="btn btn-primary" id="resetPasswordSubmit">Reset Password</button>
-                    <div style="text-align: center; margin-top: 15px;">
-                        <a href="#" class="forgot-password" id="backToLoginFromReset">Back to Login</a>
-                    </div>
                 </form>
             </div>
 
@@ -3264,22 +3405,16 @@
                         and <a href="#" style="color: var(--primary);">Privacy Policy</a>.
                     </div>
                     <button type="submit" class="btn btn-primary">Sign Up</button>
-<<<<<<< HEAD
                     <div id="signupMessage" class="form-status" style="display: none;"></div>
-=======
->>>>>>> 048e81032f49546789eb8c266d122b7fb813357a
                     <div id="lpSignupStatus" style="margin-top:10px;font-size:0.9rem;color:#6b7280;"></div>
                 </form>
             </div>
         </div>
     </div>
 
-<<<<<<< HEAD
     <!-- jsPDF for PDF report generation -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
-=======
->>>>>>> 048e81032f49546789eb8c266d122b7fb813357a
      <script>
         // ============================================
         // Firebase Configuration
