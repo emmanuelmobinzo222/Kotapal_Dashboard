@@ -3161,6 +3161,51 @@
                     </div>
                 </form>
             </div>
+
+            <!-- Forgot Password Form -->
+            <div id="forgotPasswordForm" class="auth-form" style="display: none;">
+                <h2>Reset Your Password</h2>
+                <p style="color: var(--gray); margin-bottom: 20px; font-size: 0.9rem;">Enter your email address and
+                    we'll send you a link to reset your password.</p>
+                <form id="forgotPasswordFormInner">
+                    <div class="form-group">
+                        <label for="forgotPasswordEmail">Email</label>
+                        <input type="email" id="forgotPasswordEmail" required>
+                    </div>
+                    <div id="forgotPasswordStatus" style="margin-top: 10px; font-size: 0.9rem; color: var(--gray);">
+                    </div>
+                    <button type="submit" class="btn btn-primary" id="forgotPasswordSubmit">Send Reset Link</button>
+                    <div style="text-align: center; margin-top: 15px;">
+                        <a href="#" class="forgot-password" id="backToLogin">Back to Login</a>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Reset Password Form -->
+            <div id="resetPasswordForm" class="auth-form" style="display: none;">
+                <h2>Set New Password</h2>
+                <p style="color: var(--gray); margin-bottom: 20px; font-size: 0.9rem;">Enter your new password below.
+                </p>
+                <form id="resetPasswordFormInner">
+                    <input type="hidden" id="resetToken">
+                    <input type="hidden" id="resetUserId">
+                    <div class="form-group">
+                        <label for="resetNewPassword">New Password</label>
+                        <input type="password" id="resetNewPassword" required minlength="6">
+                        <small style="color: var(--gray); font-size: 0.85rem;">Must be at least 6 characters</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="resetConfirmPassword">Confirm New Password</label>
+                        <input type="password" id="resetConfirmPassword" required minlength="6">
+                    </div>
+                    <div id="resetPasswordStatus" style="margin-top: 10px; font-size: 0.9rem; color: var(--gray);">
+                    </div>
+                    <button type="submit" class="btn btn-primary" id="resetPasswordSubmit">Reset Password</button>
+                    <div style="text-align: center; margin-top: 15px;">
+                        <a href="#" class="forgot-password" id="backToLoginFromReset">Back to Login</a>
+                    </div>
+                </form>
+            </div>
             <div id="signupForm" class="auth-form">
                 <h2>Create Account</h2>
                 <form id="signupFormInner">
@@ -3219,16 +3264,22 @@
                         and <a href="#" style="color: var(--primary);">Privacy Policy</a>.
                     </div>
                     <button type="submit" class="btn btn-primary">Sign Up</button>
+<<<<<<< HEAD
                     <div id="signupMessage" class="form-status" style="display: none;"></div>
+=======
+>>>>>>> 048e81032f49546789eb8c266d122b7fb813357a
                     <div id="lpSignupStatus" style="margin-top:10px;font-size:0.9rem;color:#6b7280;"></div>
                 </form>
             </div>
         </div>
     </div>
 
+<<<<<<< HEAD
     <!-- jsPDF for PDF report generation -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
+=======
+>>>>>>> 048e81032f49546789eb8c266d122b7fb813357a
      <script>
         // ============================================
         // Firebase Configuration
