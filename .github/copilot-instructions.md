@@ -145,5 +145,4 @@ switch (user.plan) {
 - Block embedding JavaScript SDK
 - Advanced analytics with charts
 - Multi-user collaboration features
-- A/B testing for block layouts</content>
-<parameter name="filePath">/Users/karrelmobinzo/Library/CloudStorage/Dropbox/KotaPal simple copy/.github/copilot-instructions.md
+- A/B testing for block layouts
