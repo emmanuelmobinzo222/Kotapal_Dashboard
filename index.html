@@ -3429,18 +3429,36 @@
                                         <div class="stat-label">Blocks Showing</div>
                                     </div>
                                 </div>
-                                <div id="analyticsCharts" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:20px; margin-top:24px;">
-                                    <div class="analytics-chart-card" style="background:linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%); border-radius:12px; padding:20px; color:white; min-height:180px;">
+                                <div id="analyticsCharts" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); gap:20px; margin-top:24px;">
+                                    <div class="analytics-chart-card" data-chart="clicks" style="background:linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%); border-radius:12px; padding:20px; color:white; min-height:240px;">
                                         <h4 style="margin:0 0 12px 0; font-size:1rem;">Clicks by Block</h4>
-                                        <div class="chart-bars" style="display:flex; align-items:flex-end; gap:8px; height:120px;"></div>
+                                        <div class="chart-with-axes" style="display:flex; align-items:stretch; gap:8px;">
+                                            <div class="chart-y-axis" style="display:flex; flex-direction:column; justify-content:space-between; font-size:10px; opacity:0.9; min-width:32px;"></div>
+                                            <div style="flex:1;">
+                                                <div class="chart-bars" style="display:flex; align-items:flex-end; gap:6px; height:120px;"></div>
+                                                <div class="chart-x-axis" style="display:flex; justify-content:space-around; font-size:10px; margin-top:6px; opacity:0.9;"></div>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div class="analytics-chart-card" style="background:linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius:12px; padding:20px; color:white; min-height:180px;">
-                                        <h4 style="margin:0 0 12px 0; font-size:1rem;">Revenue</h4>
-                                        <div class="chart-bars" style="display:flex; align-items:flex-end; gap:8px; height:120px;"></div>
+                                    <div class="analytics-chart-card" data-chart="revenue" style="background:linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius:12px; padding:20px; color:white; min-height:240px;">
+                                        <h4 style="margin:0 0 12px 0; font-size:1rem;">Revenue ($)</h4>
+                                        <div class="chart-with-axes" style="display:flex; align-items:stretch; gap:8px;">
+                                            <div class="chart-y-axis" style="display:flex; flex-direction:column; justify-content:space-between; font-size:10px; opacity:0.9; min-width:40px;"></div>
+                                            <div style="flex:1;">
+                                                <div class="chart-bars" style="display:flex; align-items:flex-end; gap:6px; height:120px;"></div>
+                                                <div class="chart-x-axis" style="display:flex; justify-content:space-around; font-size:10px; margin-top:6px; opacity:0.9;"></div>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div class="analytics-chart-card" style="background:linear-gradient(135deg, #f59e0b 0%, #d97706 100%); border-radius:12px; padding:20px; color:white; min-height:180px;">
-                                        <h4 style="margin:0 0 12px 0; font-size:1rem;">CTR %</h4>
-                                        <div class="chart-bars" style="display:flex; align-items:flex-end; gap:8px; height:120px;"></div>
+                                    <div class="analytics-chart-card" data-chart="ctr" style="background:linear-gradient(135deg, #f59e0b 0%, #d97706 100%); border-radius:12px; padding:20px; color:white; min-height:240px;">
+                                        <h4 style="margin:0 0 12px 0; font-size:1rem;">CTR (%)</h4>
+                                        <div class="chart-with-axes" style="display:flex; align-items:stretch; gap:8px;">
+                                            <div class="chart-y-axis" style="display:flex; flex-direction:column; justify-content:space-between; font-size:10px; opacity:0.9; min-width:32px;"></div>
+                                            <div style="flex:1;">
+                                                <div class="chart-bars" style="display:flex; align-items:flex-end; gap:6px; height:120px;"></div>
+                                                <div class="chart-x-axis" style="display:flex; justify-content:space-around; font-size:10px; margin-top:6px; opacity:0.9;"></div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -4919,20 +4937,27 @@
             if (el.scrollLeft <= 0) el.scrollLeft = Math.max(0, el.scrollWidth - el.clientWidth);
         }
 
-        // Smooth auto-scroll using requestAnimationFrame (no jerk)
-        const carouselRAF = {};
-        const carouselSpeed = 0.4;
+        // Smooth auto-scroll: Features scrolls right-to-left, Pricing scrolls left-to-right
+        var carouselRAF = {};
+        var carouselSpeed = 0.5;
+        var carouselDirection = { featuresWrapper: 1, pricingWrapper: -1 };
         function carouselTick(id) {
-            const el = document.getElementById(id);
+            var el = document.getElementById(id);
             if (!el || !carouselRAF[id]) return;
-            el.scrollLeft += carouselSpeed;
-            const maxScroll = el.scrollWidth - el.clientWidth - 10;
-            if (maxScroll > 0 && el.scrollLeft >= maxScroll) el.scrollLeft = 0;
+            var dir = carouselDirection[id] !== undefined ? carouselDirection[id] : 1;
+            var maxScroll = el.scrollWidth - el.clientWidth - 10;
+            if (maxScroll <= 0) {
+                carouselRAF[id] = requestAnimationFrame(function() { carouselTick(id); });
+                return;
+            }
+            el.scrollLeft += carouselSpeed * dir;
+            if (dir > 0 && el.scrollLeft >= maxScroll) el.scrollLeft = 0;
+            if (dir < 0 && el.scrollLeft <= 0) el.scrollLeft = maxScroll;
             carouselRAF[id] = requestAnimationFrame(function() { carouselTick(id); });
         }
         function startCarousel(id) {
             if (carouselRAF[id]) cancelAnimationFrame(carouselRAF[id]);
-            const el = document.getElementById(id);
+            var el = document.getElementById(id);
             if (!el) return;
             carouselRAF[id] = requestAnimationFrame(function() { carouselTick(id); });
         }
@@ -6047,25 +6072,53 @@
             var chartsRoot = document.getElementById('analyticsCharts');
             if (chartsRoot) {
                 var cards = chartsRoot.querySelectorAll('.analytics-chart-card');
+                var slice = filteredBlocks.slice(0, 6);
                 var maxClicks = Math.max(1, Math.max.apply(null, filteredBlocks.map(function(b) { return b.clicks || 0; })));
                 var maxRev = Math.max(0.01, Math.max.apply(null, filteredBlocks.map(function(b) { return b.revenue || 0; })));
                 var maxCtr = Math.max(1, Math.max.apply(null, filteredBlocks.map(function(b) { return b.ctr || 0; })));
+                var monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+                function formatDateLabel(d) {
+                    if (!d) return '';
+                    var date = typeof d === 'string' ? new Date(d) : d;
+                    if (isNaN(date.getTime())) return d;
+                    return monthNames[date.getMonth()] + ' ' + date.getDate();
+                }
+                function yAxisLabels(maxVal, isDollar) {
+                    if (maxVal <= 0) return ['0'];
+                    var step = maxVal <= 4 ? 1 : (maxVal <= 20 ? Math.ceil(maxVal / 4) : Math.ceil(maxVal / 4 / 10) * 10);
+                    if (step < 1) step = 1;
+                    var labels = [];
+                    for (var v = 0; v <= maxVal; v += step) labels.push(isDollar ? '$' + v : v);
+                    if (labels.indexOf(maxVal) === -1) labels.push(isDollar ? '$' + Math.round(maxVal) : Math.round(maxVal));
+                    return labels.reverse();
+                }
+                var xLabels = slice.map(function(b) { return formatDateLabel(b.lastUpdated); });
+                if (xLabels.length === 0) xLabels = ['No data'];
                 if (cards[0]) {
-                    cards[0].querySelector('.chart-bars').innerHTML = filteredBlocks.slice(0, 6).map(function(b, i) {
+                    var y0 = yAxisLabels(maxClicks, false);
+                    cards[0].querySelector('.chart-y-axis').innerHTML = y0.map(function(l) { return '<span>' + l + '</span>'; }).join('');
+                    cards[0].querySelector('.chart-x-axis').innerHTML = xLabels.map(function(l) { return '<span>' + (l || '') + '</span>'; }).join('');
+                    cards[0].querySelector('.chart-bars').innerHTML = slice.map(function(b, i) {
                         var pct = maxClicks ? (100 * (b.clicks || 0) / maxClicks) : 0;
-                        return '<div style="flex:1; background:rgba(255,255,255,0.9); border-radius:6px 6px 0 0; min-height:4px; height:' + pct + '%; transition:height 0.6s ease ' + (i * 0.1) + 's;"></div>';
+                        return '<div style="flex:1; background:rgba(255,255,255,0.9); border-radius:6px 6px 0 0; min-height:4px; height:' + pct + '%; transition:height 0.6s ease ' + (i * 0.1) + 's;" title="' + (b.clicks || 0) + '"></div>';
                     }).join('');
                 }
                 if (cards[1]) {
-                    cards[1].querySelector('.chart-bars').innerHTML = filteredBlocks.slice(0, 6).map(function(b, i) {
+                    var y1 = yAxisLabels(Math.ceil(maxRev), true);
+                    cards[1].querySelector('.chart-y-axis').innerHTML = y1.map(function(l) { return '<span>' + l + '</span>'; }).join('');
+                    cards[1].querySelector('.chart-x-axis').innerHTML = xLabels.map(function(l) { return '<span>' + (l || '') + '</span>'; }).join('');
+                    cards[1].querySelector('.chart-bars').innerHTML = slice.map(function(b, i) {
                         var pct = maxRev ? (100 * (b.revenue || 0) / maxRev) : 0;
-                        return '<div style="flex:1; background:rgba(255,255,255,0.9); border-radius:6px 6px 0 0; min-height:4px; height:' + pct + '%; transition:height 0.6s ease ' + (i * 0.1) + 's;"></div>';
+                        return '<div style="flex:1; background:rgba(255,255,255,0.9); border-radius:6px 6px 0 0; min-height:4px; height:' + pct + '%; transition:height 0.6s ease ' + (i * 0.1) + 's;" title="$' + (b.revenue || 0).toFixed(2) + '"></div>';
                     }).join('');
                 }
                 if (cards[2]) {
-                    cards[2].querySelector('.chart-bars').innerHTML = filteredBlocks.slice(0, 6).map(function(b, i) {
+                    var y2 = yAxisLabels(Math.ceil(maxCtr), false);
+                    cards[2].querySelector('.chart-y-axis').innerHTML = y2.map(function(l) { return '<span>' + l + '%</span>'; }).join('');
+                    cards[2].querySelector('.chart-x-axis').innerHTML = xLabels.map(function(l) { return '<span>' + (l || '') + '</span>'; }).join('');
+                    cards[2].querySelector('.chart-bars').innerHTML = slice.map(function(b, i) {
                         var pct = maxCtr ? (100 * (b.ctr || 0) / maxCtr) : 0;
-                        return '<div style="flex:1; background:rgba(255,255,255,0.9); border-radius:6px 6px 0 0; min-height:4px; height:' + pct + '%; transition:height 0.6s ease ' + (i * 0.1) + 's;"></div>';
+                        return '<div style="flex:1; background:rgba(255,255,255,0.9); border-radius:6px 6px 0 0; min-height:4px; height:' + pct + '%; transition:height 0.6s ease ' + (i * 0.1) + 's;" title="' + (b.ctr || 0) + '%"></div>';
                     }).join('');
                 }
             }
