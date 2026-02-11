@@ -3492,18 +3492,20 @@
                                 <button class="btn btn-secondary" onclick="generateReport('payout')">Payout Report</button>
                             </div>
                             <p style="margin-bottom:12px; color:var(--gray); font-size:0.9rem;">Recent reports — download as PDF or Excel.</p>
-                            <table id="reportsTable" style="width:100%; border-collapse:collapse;">
-                                <thead>
-                                    <tr>
-                                        <th style="text-align:left; padding:10px; border-bottom:1px solid #e5e7eb;">Name</th>
-                                        <th style="text-align:left; padding:10px; border-bottom:1px solid #e5e7eb;">Type</th>
-                                        <th style="text-align:left; padding:10px; border-bottom:1px solid #e5e7eb;">Date</th>
-                                        <th style="text-align:left; padding:10px; border-bottom:1px solid #e5e7eb;">Format</th>
-                                        <th style="text-align:left; padding:10px; border-bottom:1px solid #e5e7eb;">Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="reportsTableBody"></tbody>
-                            </table>
+                            <div class="table-container" style="overflow-x: auto;">
+                                <table id="reportsTable" style="width:100%; border-collapse:collapse; min-width:500px;">
+                                    <thead>
+                                        <tr>
+                                            <th style="text-align:left; padding:10px; border-bottom:1px solid #e5e7eb;">Name</th>
+                                            <th style="text-align:left; padding:10px; border-bottom:1px solid #e5e7eb;">Type</th>
+                                            <th style="text-align:left; padding:10px; border-bottom:1px solid #e5e7eb;">Date</th>
+                                            <th style="text-align:left; padding:10px; border-bottom:1px solid #e5e7eb;">Format</th>
+                                            <th style="text-align:left; padding:10px; border-bottom:1px solid #e5e7eb; min-width:120px;">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="reportsTableBody"></tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -3625,10 +3627,10 @@
                     <div id="settings-access-gate" class="card" style="max-width:400px;">
                         <div class="card-header"><h3 class="card-title">Access control</h3></div>
                         <div class="card-body">
-                            <p style="margin-bottom:12px;color:var(--gray);">Enter your PIN to access Settings.</p>
+                            <p style="margin-bottom:12px;color:var(--gray);">Enter your account password (the same one you use to sign in) to access Settings.</p>
                             <div class="form-group">
-                                <label for="settingsPinInput">PIN</label>
-                                <input type="password" id="settingsPinInput" class="form-control" placeholder="Enter PIN" autocomplete="off">
+                                <label for="settingsPinInput">Password</label>
+                                <input type="password" id="settingsPinInput" class="form-control" placeholder="Enter your password" autocomplete="current-password">
                             </div>
                             <button type="button" class="btn btn-primary" id="settingsUnlockBtn">Unlock</button>
                             <p id="settingsAccessMessage" style="margin-top:12px;font-size:0.9rem;display:none;"></p>
@@ -5476,29 +5478,53 @@
         }
 
         let settingsAccessUnlocked = false;
-        function checkSettingsAccess() {
-            const pin = (localStorage.getItem('kota_settings_pin') || '1234').toString();
+        async function checkSettingsAccess() {
             const input = document.getElementById('settingsPinInput');
             const msgEl = document.getElementById('settingsAccessMessage');
-            const entered = (input && input.value) ? input.value.trim() : '';
-            if (entered !== pin) {
+            const btn = document.getElementById('settingsUnlockBtn');
+            const password = (input && input.value) ? input.value.trim() : '';
+            if (!password) {
                 if (msgEl) {
                     msgEl.style.display = 'block';
                     msgEl.style.color = 'var(--danger, #dc2626)';
-                    msgEl.textContent = 'Incorrect PIN. Access denied.';
+                    msgEl.textContent = 'Please enter your password.';
                 }
                 return false;
             }
-            settingsAccessUnlocked = true;
-            const gate = document.getElementById('settings-access-gate');
-            const content = document.getElementById('settings-content');
-            if (gate) gate.style.display = 'none';
-            if (content) content.style.display = 'block';
+            if (!auth || !auth.currentUser || !auth.currentUser.email) {
+                if (msgEl) {
+                    msgEl.style.display = 'block';
+                    msgEl.style.color = 'var(--danger, #dc2626)';
+                    msgEl.textContent = 'You must be signed in to access Settings.';
+                }
+                return false;
+            }
+            var originalBtnText = btn ? btn.textContent : '';
+            if (btn) { btn.disabled = true; btn.textContent = 'Verifying...'; }
             if (msgEl) msgEl.style.display = 'none';
-            if (input) input.value = '';
-            showNotification('Access granted.', 'success', 'Settings');
-            initSettingsPage();
-            return true;
+            try {
+                var credential = firebase.auth.EmailAuthProvider.credential(auth.currentUser.email, password);
+                await auth.currentUser.reauthenticateWithCredential(credential);
+                settingsAccessUnlocked = true;
+                var gate = document.getElementById('settings-access-gate');
+                var content = document.getElementById('settings-content');
+                if (gate) gate.style.display = 'none';
+                if (content) content.style.display = 'block';
+                if (msgEl) msgEl.style.display = 'none';
+                if (input) input.value = '';
+                showNotification('Access granted.', 'success', 'Settings');
+                initSettingsPage();
+                return true;
+            } catch (err) {
+                if (msgEl) {
+                    msgEl.style.display = 'block';
+                    msgEl.style.color = 'var(--danger, #dc2626)';
+                    msgEl.textContent = err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential' ? 'Incorrect password. Please try again.' : (err.message || 'Verification failed. Please try again.');
+                }
+                return false;
+            } finally {
+                if (btn) { btn.disabled = false; btn.textContent = originalBtnText; }
+            }
         }
 
         function toggleNavVisibility() {
@@ -7731,8 +7757,7 @@
                 return;
             }
             tbody.innerHTML = reports.map(function(report) {
-                var safeName = (report.name || '').replace(/'/g, "\\'");
-                return '<tr><td>' + (report.name || '') + '</td><td>' + (report.type ? report.type.charAt(0).toUpperCase() + report.type.slice(1) : '') + '</td><td>' + (report.date ? new Date(report.date).toLocaleString() : '') + '</td><td>' + (report.format || '') + '</td><td><button type="button" class="btn btn-secondary btn-sm report-download-btn" style="padding:5px 10px;font-size:0.8rem;" data-name="' + (report.name || '').replace(/"/g, '&quot;') + '" data-format="' + (report.format || 'PDF') + '">Download</button></td></tr>';
+                return '<tr><td style="padding:10px; border-bottom:1px solid #e5e7eb;">' + (report.name || '') + '</td><td style="padding:10px; border-bottom:1px solid #e5e7eb;">' + (report.type ? report.type.charAt(0).toUpperCase() + report.type.slice(1) : '') + '</td><td style="padding:10px; border-bottom:1px solid #e5e7eb;">' + (report.date ? new Date(report.date).toLocaleString() : '') + '</td><td style="padding:10px; border-bottom:1px solid #e5e7eb;">' + (report.format || '') + '</td><td style="padding:10px; border-bottom:1px solid #e5e7eb; min-width:120px;"><button type="button" class="btn btn-secondary btn-sm report-download-btn" style="padding:8px 14px; font-size:0.875rem; visibility:visible; display:inline-block; cursor:pointer;" data-name="' + (report.name || '').replace(/"/g, '&quot;') + '" data-format="' + (report.format || 'PDF') + '">Download</button></td></tr>';
             }).join('');
             tbody.querySelectorAll('.report-download-btn').forEach(function(btn) {
                 btn.addEventListener('click', function() {
