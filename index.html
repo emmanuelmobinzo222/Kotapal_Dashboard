@@ -3206,6 +3206,14 @@
         #dashboard-view .sidebar-overlay.active { display: block; }
         #dashboard-view .sidebar.nav-collapsed { transform: translateX(-100%); width: 0; min-width: 0; overflow: hidden; padding: 0; }
         #dashboard-view .main-content.nav-collapsed { margin-left: 0; }
+        #dashboard-view .nav-toggle-float {
+            position: fixed; left: 10px; top: 50%; transform: translateY(-50%); z-index: 1003;
+            background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 10px 14px;
+            cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center;
+            transition: left 0.3s ease, background 0.2s ease;
+        }
+        #dashboard-view .nav-toggle-float:hover { background: #f9fafb; border-color: #d1d5db; }
+        #dashboard-view .nav-toggle-float i { font-size: 1.2rem; color: var(--dark); }
         @media (max-width: 1024px) {
             #dashboard-view .sidebar { transform: translateX(-100%); width: min(320px, 85vw); z-index: 1002; }
             #dashboard-view .sidebar.active { transform: translateX(0); }
@@ -3244,10 +3252,10 @@
                     <li class="nav-item"><a href="#" class="nav-link" data-page="settings"><i class="fas fa-cog"></i> Settings</a></li>
                     <li class="nav-item"><a href="#" class="nav-link" data-page="billing"><i class="fas fa-credit-card"></i> Billing</a></li>
                     <li class="nav-item"><a href="#" class="nav-link" data-page="help"><i class="fas fa-question-circle"></i> Help</a></li>
-                    <li class="nav-item"><a href="#" class="nav-link" id="navToggleBtn" style="font-size:0.9rem;"><i class="fas fa-compress-arrows-alt"></i> Hide Nav</a></li>
                     <li class="nav-item"><a href="#" class="nav-link" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
                 </ul>
             </div>
+            <button type="button" class="nav-toggle-float" id="navToggleFloat" aria-label="Toggle navigation" title="Hide Nav"><i class="fas fa-compress-arrows-alt"></i></button>
             <div class="main-content">
                 <div id="dashboard-page" class="page-content">
                     <div class="header">
@@ -3289,13 +3297,6 @@
                             <div class="stat-content">
                                 <div class="stat-value" id="activeBlocks">0</div>
                                 <div class="stat-label">Active Blocks</div>
-                            </div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-icon stat-success"><i class="fas fa-check-circle"></i></div>
-                            <div class="stat-content">
-                                <div class="stat-value" id="totalConversions" data-sensitive="true">0</div>
-                                <div class="stat-label">Total Conversions</div>
                             </div>
                         </div>
                     </div>
@@ -3478,21 +3479,30 @@
                     <div class="header"><h1 class="page-title">Reports</h1></div>
                     <div class="card">
                         <div class="card-body">
+                            <div class="form-group" style="margin-bottom:16px;">
+                                <label>Date & time range</label>
+                                <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
+                                    <input type="datetime-local" id="reportDateFrom" class="form-control" style="max-width:220px;">
+                                    <span>to</span>
+                                    <input type="datetime-local" id="reportDateTo" class="form-control" style="max-width:220px;">
+                                </div>
+                            </div>
                             <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:15px;">
                                 <button class="btn btn-primary" onclick="generateReport('performance')">Performance Report</button>
                                 <button class="btn btn-secondary" onclick="generateReport('payout')">Payout Report</button>
                             </div>
-                            <table id="reportsTable" class="table-container" style="width:100%;">
+                            <p style="margin-bottom:12px; color:var(--gray); font-size:0.9rem;">Recent reports — download as PDF or Excel.</p>
+                            <table id="reportsTable" style="width:100%; border-collapse:collapse;">
                                 <thead>
                                     <tr>
-                                        <th>Name</th>
-                                        <th>Type</th>
-                                        <th>Date</th>
-                                        <th>Format</th>
-                                        <th>Action</th>
+                                        <th style="text-align:left; padding:10px; border-bottom:1px solid #e5e7eb;">Name</th>
+                                        <th style="text-align:left; padding:10px; border-bottom:1px solid #e5e7eb;">Type</th>
+                                        <th style="text-align:left; padding:10px; border-bottom:1px solid #e5e7eb;">Date</th>
+                                        <th style="text-align:left; padding:10px; border-bottom:1px solid #e5e7eb;">Format</th>
+                                        <th style="text-align:left; padding:10px; border-bottom:1px solid #e5e7eb;">Action</th>
                                     </tr>
                                 </thead>
-                                <tbody></tbody>
+                                <tbody id="reportsTableBody"></tbody>
                             </table>
                         </div>
                     </div>
@@ -3685,6 +3695,40 @@
                     </div>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit block title (in-website) -->
+    <div id="editBlockTitleModal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 420px;">
+            <h3 style="margin: 0 0 16px 0;">Edit Smart Block title</h3>
+            <input type="text" id="editBlockTitleInput" class="form-control" placeholder="Block title" style="margin-bottom: 16px;">
+            <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                <button type="button" class="btn btn-secondary" id="editBlockTitleCancel">Cancel</button>
+                <button type="button" class="btn btn-primary" id="editBlockTitleSave">Save</button>
+            </div>
+        </div>
+    </div>
+    <!-- Confirm delete block (in-website) -->
+    <div id="deleteBlockConfirmModal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 400px;">
+            <h3 style="margin: 0 0 16px 0;">Delete block</h3>
+            <p style="margin: 0 0 20px 0; color: var(--gray);">Are you sure you want to delete this block?</p>
+            <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                <button type="button" class="btn btn-secondary" id="deleteBlockCancel">Cancel</button>
+                <button type="button" class="btn btn-primary" id="deleteBlockConfirm" style="background:#dc2626; border-color:#dc2626;">Delete</button>
+            </div>
+        </div>
+    </div>
+    <!-- Logout confirmation (in-website) -->
+    <div id="logoutConfirmModal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 400px;">
+            <h3 style="margin: 0 0 16px 0;">Log out</h3>
+            <p style="margin: 0 0 20px 0; color: var(--gray);">Are you sure you would like to logout?</p>
+            <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                <button type="button" class="btn btn-secondary" id="logoutConfirmCancel">Cancel</button>
+                <button type="button" class="btn btn-primary" id="logoutConfirmBtn">Logout</button>
             </div>
         </div>
     </div>
@@ -4462,49 +4506,12 @@
             console.warn('Firebase auth not initialized - authentication features will not work');
         }
         
-        // Logout handler
-        const logoutBtn = document.getElementById('logoutBtn');
-        if (logoutBtn) {
-            logoutBtn.addEventListener('click', async (e) => {
+        // Logout handler: show in-website confirmation (performLogout does actual sign-out)
+        const logoutBtnEl = document.getElementById('logoutBtn');
+        if (logoutBtnEl) {
+            logoutBtnEl.addEventListener('click', function(e) {
                 e.preventDefault();
-                // #region agent log
-                fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:4722',message:'Logout button clicked',data:{hasAuth:!!auth,hasCurrentUser:!!currentUser},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-                // #endregion
-                try {
-                    if (auth) {
-                        await auth.signOut();
-                        // #region agent log
-                        fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:4726',message:'User signed out via Firebase',data:{hadUserData:!!localStorage.getItem('kotaUser'),hadExplicitLogin:!!sessionStorage.getItem('kotapal_explicit_login')},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-                        // #endregion
-                        localStorage.removeItem('kotaUser');
-                        localStorage.removeItem('kotapal_explicit_login'); // Also remove from localStorage
-                        sessionStorage.removeItem('kotapal_explicit_login');
-                        sessionStorage.removeItem('settings_access_granted');
-                        currentUser = null;
-                        // #region agent log
-                        fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:4730',message:'Session data cleared after logout',data:{hasUserData:!!localStorage.getItem('kotaUser'),hasExplicitLogin:!!sessionStorage.getItem('kotapal_explicit_login'),hasCurrentUser:!!currentUser},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-                        // #endregion
-                        
-                        // Show landing page
-                        const landingView = document.getElementById('landing-page-view');
-                        const nav = document.querySelector('nav');
-                        const footer = document.querySelector('footer');
-                        const dashboardView = document.getElementById('dashboard-view');
-                        
-                        if (dashboardView) {
-                            dashboardView.style.display = 'none';
-                            dashboardView.classList.remove('active');
-                        }
-                        if (landingView) landingView.style.display = 'block';
-                        if (nav) nav.style.display = 'flex';
-                        if (footer) footer.style.display = 'block';
-                        
-                        showNotification('Logged out successfully', 'success', 'Logout');
-                    }
-                } catch (error) {
-                    console.error('Logout error:', error);
-                    showNotification('Error logging out. Please try again.', 'error', 'Error');
-                }
+                if (typeof showLogoutConfirm === 'function') showLogoutConfirm();
             });
         }
 
@@ -5071,10 +5078,17 @@
             if (localStorage.getItem('kota_nav_collapsed') === '1') {
                 const sidebar = document.getElementById('sidebar');
                 const main = document.querySelector('#dashboard-view .main-content');
-                const navToggleBtn = document.getElementById('navToggleBtn');
+                const navToggleFloat = document.getElementById('navToggleFloat');
                 if (sidebar) sidebar.classList.add('nav-collapsed');
                 if (main) main.classList.add('nav-collapsed');
-                if (navToggleBtn) navToggleBtn.innerHTML = '<i class="fas fa-expand-arrows-alt"></i> Show Nav';
+                if (navToggleFloat) {
+                    navToggleFloat.innerHTML = '<i class="fas fa-expand-arrows-alt"></i>';
+                    navToggleFloat.style.left = '10px';
+                    navToggleFloat.title = 'Show Nav';
+                }
+            } else {
+                const navToggleFloat = document.getElementById('navToggleFloat');
+                if (navToggleFloat) { navToggleFloat.style.left = '270px'; navToggleFloat.title = 'Hide Nav'; }
             }
         }
 
@@ -5164,6 +5178,38 @@
             renderAlerts();
         }
 
+        function showLogoutConfirm() {
+            const modal = document.getElementById('logoutConfirmModal');
+            if (modal) modal.style.display = 'flex';
+        }
+
+        async function performLogout() {
+            const modal = document.getElementById('logoutConfirmModal');
+            if (modal) modal.style.display = 'none';
+            try {
+                if (typeof auth !== 'undefined' && auth) {
+                    await auth.signOut();
+                }
+                localStorage.removeItem('kotaUser');
+                localStorage.removeItem('kotapal_explicit_login');
+                sessionStorage.removeItem('kotapal_explicit_login');
+                sessionStorage.removeItem('settings_access_granted');
+                if (typeof currentUser !== 'undefined') currentUser = null;
+                showNotification('Logged out successfully', 'success', 'Logout');
+                const dashboardView = document.getElementById('dashboard-view');
+                const landingView = document.getElementById('landing-page-view');
+                const nav = document.querySelector('nav');
+                const footer = document.querySelector('footer');
+                if (dashboardView) { dashboardView.style.display = 'none'; }
+                if (landingView) landingView.style.display = 'block';
+                if (nav) nav.style.display = 'flex';
+                if (footer) footer.style.display = 'block';
+            } catch (error) {
+                console.error('Logout error:', error);
+                showNotification('Error signing out. Please try again.', 'error', 'Logout');
+            }
+        }
+
         // Setup dashboard event listeners
         function setupDashboardEventListeners() {
             // Navigation
@@ -5179,27 +5225,65 @@
                 });
             });
 
-            const navToggleBtn = document.getElementById('navToggleBtn');
-            if (navToggleBtn) {
-                navToggleBtn.addEventListener('click', function(e) {
+            const navToggleFloat = document.getElementById('navToggleFloat');
+            if (navToggleFloat) {
+                navToggleFloat.addEventListener('click', function(e) {
                     e.preventDefault();
                     e.stopPropagation();
                     toggleNavVisibility();
                 });
             }
 
-            // Logout
-            document.getElementById('logoutBtn').addEventListener('click', async function(e) {
-                e.preventDefault();
-                try {
-                    await auth.signOut();
-                    localStorage.removeItem('kotaUser');
-                    currentUser = null;
-                    // View will switch automatically via auth.onAuthStateChanged
-                } catch (error) {
-                    console.error('Logout error:', error);
-                    showNotification('Error signing out. Please try again.', 'error', 'Logout');
+            // Logout: show in-website confirmation first
+            const logoutBtn = document.getElementById('logoutBtn');
+            if (logoutBtn) logoutBtn.addEventListener('click', function(e) { e.preventDefault(); showLogoutConfirm(); });
+
+            // Logout confirm modal
+            const logoutConfirmModal = document.getElementById('logoutConfirmModal');
+            const logoutConfirmBtn = document.getElementById('logoutConfirmBtn');
+            const logoutConfirmCancel = document.getElementById('logoutConfirmCancel');
+            if (logoutConfirmCancel) logoutConfirmCancel.addEventListener('click', function() { if (logoutConfirmModal) logoutConfirmModal.style.display = 'none'; });
+            if (logoutConfirmBtn) logoutConfirmBtn.addEventListener('click', performLogout);
+
+            // Edit block title modal
+            const editBlockTitleModal = document.getElementById('editBlockTitleModal');
+            const editBlockTitleInput = document.getElementById('editBlockTitleInput');
+            const editBlockTitleCancel = document.getElementById('editBlockTitleCancel');
+            const editBlockTitleSave = document.getElementById('editBlockTitleSave');
+            if (editBlockTitleCancel) editBlockTitleCancel.addEventListener('click', function() { if (editBlockTitleModal) editBlockTitleModal.style.display = 'none'; });
+            if (editBlockTitleSave) editBlockTitleSave.addEventListener('click', function() {
+                const blockId = window._editBlockId;
+                const newTitle = editBlockTitleInput && editBlockTitleInput.value ? editBlockTitleInput.value.trim() : '';
+                if (!blockId || !newTitle) return;
+                const block = currentBlocks.find(function(b) { return b.id === blockId; });
+                if (block && newTitle !== block.title) {
+                    block.title = newTitle;
+                    block.lastUpdated = new Date().toISOString().split('T')[0];
+                    saveUserBlocks();
+                    renderBlocks();
+                    updateDashboardStats();
+                    renderActivityTable();
+                    showNotification('Block title updated.', 'success', 'Blocks');
                 }
+                if (editBlockTitleModal) editBlockTitleModal.style.display = 'none';
+            });
+
+            // Delete block confirm modal
+            const deleteBlockModal = document.getElementById('deleteBlockConfirmModal');
+            const deleteBlockCancel = document.getElementById('deleteBlockCancel');
+            const deleteBlockConfirm = document.getElementById('deleteBlockConfirm');
+            if (deleteBlockCancel) deleteBlockCancel.addEventListener('click', function() { if (deleteBlockModal) deleteBlockModal.style.display = 'none'; });
+            if (deleteBlockConfirm) deleteBlockConfirm.addEventListener('click', function() {
+                const blockId = window._deleteBlockId;
+                if (blockId) {
+                    currentBlocks = currentBlocks.filter(function(b) { return b.id !== blockId; });
+                    saveUserBlocks();
+                    renderBlocks();
+                    updateDashboardStats();
+                    renderActivityTable();
+                    showNotification('Block deleted successfully!', 'success', 'Deleted');
+                }
+                if (deleteBlockModal) deleteBlockModal.style.display = 'none';
             });
 
             // Dashboard buttons
@@ -5286,6 +5370,17 @@
                 if (page === 'analytics') renderAnalytics();
                 if (page === 'help') initHelpPage();
                 if (page === 'dashboard') refreshDashboard();
+                if (page === 'reports') {
+                    var fromEl = document.getElementById('reportDateFrom');
+                    var toEl = document.getElementById('reportDateTo');
+                    if (fromEl && !fromEl.value) {
+                        var d = new Date();
+                        d.setDate(d.getDate() - 30);
+                        fromEl.value = d.toISOString().slice(0, 16);
+                    }
+                    if (toEl && !toEl.value) toEl.value = new Date().toISOString().slice(0, 16);
+                    loadReports();
+                }
                 if (page === 'settings') {
                     const gate = document.getElementById('settings-access-gate');
                     const content = document.getElementById('settings-content');
@@ -5409,16 +5504,14 @@
         function toggleNavVisibility() {
             const sidebar = document.getElementById('sidebar');
             const main = document.querySelector('#dashboard-view .main-content');
-            const btn = document.getElementById('navToggleBtn');
+            const btn = document.getElementById('navToggleFloat');
             if (!sidebar || !btn) return;
             const isHidden = sidebar.classList.toggle('nav-collapsed');
             if (main) main.classList.toggle('nav-collapsed', isHidden);
-            const icon = btn.querySelector('i');
-            const label = btn.querySelector('span') || (btn.childNodes.length && Array.from(btn.childNodes).find(n => n.nodeType === 3));
-            if (icon) {
-                icon.className = isHidden ? 'fas fa-expand-arrows-alt' : 'fas fa-compress-arrows-alt';
-            }
-            btn.innerHTML = (isHidden ? '<i class="fas fa-expand-arrows-alt"></i> Show Nav' : '<i class="fas fa-compress-arrows-alt"></i> Hide Nav');
+            btn.style.left = isHidden ? '10px' : '270px';
+            btn.innerHTML = isHidden ? '<i class="fas fa-expand-arrows-alt"></i>' : '<i class="fas fa-compress-arrows-alt"></i>';
+            btn.title = isHidden ? 'Show Nav' : 'Hide Nav';
+            btn.setAttribute('aria-label', isHidden ? 'Show Nav' : 'Hide Nav');
             localStorage.setItem('kota_nav_collapsed', isHidden ? '1' : '0');
         }
 
@@ -5574,19 +5667,15 @@
             const totalRevenue = currentBlocks.reduce((sum, block) => sum + (block.revenue || 0), 0);
             const avgCTR = currentBlocks.length > 0 ? (currentBlocks.reduce((sum, block) => sum + (block.ctr || 0), 0) / currentBlocks.length) : 0;
             const activeBlocks = currentBlocks.filter(block => block.status === 'active').length;
-            const totalConversions = Math.max(0, Math.floor(totalClicks * 0.05));
-
             const totalClicksEl = document.getElementById('totalClicks');
             const estimatedRevenueEl = document.getElementById('estimatedRevenue');
             const avgCTREl = document.getElementById('avgCTR');
             const activeBlocksEl = document.getElementById('activeBlocks');
-            const totalConversionsEl = document.getElementById('totalConversions');
 
             if (totalClicksEl) totalClicksEl.textContent = totalClicks.toLocaleString();
             if (estimatedRevenueEl) estimatedRevenueEl.textContent = '$' + totalRevenue.toFixed(2);
             if (avgCTREl) avgCTREl.textContent = avgCTR.toFixed(1) + '%';
             if (activeBlocksEl) activeBlocksEl.textContent = activeBlocks;
-            if (totalConversionsEl) totalConversionsEl.textContent = totalConversions.toLocaleString();
         }
 
         // Render blocks
@@ -5649,15 +5738,13 @@
                         const blockId = this.getAttribute('data-id');
                         const block = currentBlocks.find(b => b.id === blockId);
                         if (!block) return;
-                        const newTitle = prompt('Edit block title:', block.title || '');
-                        if (newTitle && newTitle.trim() && newTitle.trim() !== block.title) {
-                            block.title = newTitle.trim();
-                            block.lastUpdated = new Date().toISOString().split('T')[0];
-                            saveUserBlocks();
-                            renderBlocks();
-                            updateDashboardStats();
-                            renderActivityTable();
-                            showNotification('Block title updated.', 'success', 'Blocks');
+                        window._editBlockId = blockId;
+                        const modal = document.getElementById('editBlockTitleModal');
+                        const input = document.getElementById('editBlockTitleInput');
+                        if (modal && input) {
+                            input.value = block.title || '';
+                            modal.style.display = 'flex';
+                            input.focus();
                         }
                     });
                 });
@@ -5667,7 +5754,6 @@
                         btn.addEventListener('click', function() {
                             const blockId = this.getAttribute('data-id');
                             const action = this.getAttribute('data-action');
-                            
                             const blockIndex = currentBlocks.findIndex(b => b.id === blockId);
                             if (blockIndex !== -1) {
                                 currentBlocks[blockIndex].status = action === 'publish' ? 'active' : 'draft';
@@ -5675,7 +5761,7 @@
                                 renderBlocks();
                                 updateDashboardStats();
                                 renderActivityTable();
-                                showNotification(`Block ${action === 'publish' ? 'published' : 'unpublished'} successfully!`, 'success', 'Block');
+                                showNotification('Block ' + (action === 'publish' ? 'published' : 'unpublished') + ' successfully!', 'success', 'Block');
                             }
                         });
                     }
@@ -5683,16 +5769,9 @@
                 
                 document.querySelectorAll('.btn-delete').forEach(btn => {
                     btn.addEventListener('click', function() {
-                        const blockId = this.getAttribute('data-id');
-                        
-                        if (confirm('Are you sure you want to delete this block?')) {
-                            currentBlocks = currentBlocks.filter(b => b.id !== blockId);
-                            saveUserBlocks();
-                            renderBlocks();
-                            updateDashboardStats();
-                            renderActivityTable();
-                            showNotification('Block deleted successfully!', 'success', 'Deleted');
-                        }
+                        window._deleteBlockId = this.getAttribute('data-id');
+                        const modal = document.getElementById('deleteBlockConfirmModal');
+                        if (modal) modal.style.display = 'flex';
                     });
                 });
             }, 100);
@@ -7047,8 +7126,8 @@
             }
         }
         
-        // Check settings access: require account password (Firebase re-auth) unless already granted this session
-        function checkSettingsAccess() {
+        // Legacy settings access (do not overwrite PIN-based checkSettingsAccess)
+        function checkSettingsAccessLegacy() {
             const sessionAccess = sessionStorage.getItem('settings_access_granted');
             if (sessionAccess === 'true') {
                 settingsAccessGranted = true;
@@ -7615,63 +7694,61 @@
         });
         
         // Reports Functions
-        function generateReport(type) {
-            showNotification(`Generating ${type} report...`, 'info', 'Reports');
-            setTimeout(() => {
-                const baseName = `${type.charAt(0).toUpperCase() + type.slice(1)} Report - ${new Date().toLocaleDateString()}`;
-                const reports = JSON.parse(localStorage.getItem('kotaReports') || '[]');
-                const timestamp = new Date().toISOString();
-                
-                ['PDF', 'Excel'].forEach(format => {
-                    reports.unshift({
-                        name: `${baseName} (${format})`,
-                        type: type,
-                        date: timestamp,
-                        format
-                    });
-                });
-                
-                localStorage.setItem('kotaReports', JSON.stringify(reports));
-                loadReports();
-                showNotification('Report generated successfully!', 'success', 'Reports');
-            }, 2000);
+        function getReportDateRange() {
+            const from = document.getElementById('reportDateFrom');
+            const to = document.getElementById('reportDateTo');
+            return {
+                from: from && from.value ? new Date(from.value) : null,
+                to: to && to.value ? new Date(to.value) : null
+            };
         }
-        
-        function loadReports() {
-            const reportsTable = document.getElementById('reportsTable');
-            if (!reportsTable) return;
-            
+
+        function generateReport(type) {
+            const range = getReportDateRange();
+            showNotification('Generating report...', 'info', 'Reports');
+            const baseName = type.charAt(0).toUpperCase() + type.slice(1) + ' Report - ' + new Date().toLocaleDateString();
             const reports = JSON.parse(localStorage.getItem('kotaReports') || '[]');
-            
+            const timestamp = new Date().toISOString();
+            ['PDF', 'Excel'].forEach(function(format) {
+                reports.unshift({
+                    name: baseName + ' (' + format + ')',
+                    type: type,
+                    date: timestamp,
+                    format: format
+                });
+            });
+            localStorage.setItem('kotaReports', JSON.stringify(reports));
+            loadReports();
+            showNotification('Report generated. Use Download to get PDF or Excel.', 'success', 'Reports');
+        }
+
+        function loadReports() {
+            const tbody = document.getElementById('reportsTableBody');
+            if (!tbody) return;
+            const reports = JSON.parse(localStorage.getItem('kotaReports') || '[]');
             if (reports.length === 0) {
-                reportsTable.innerHTML = `
-                    <tr>
-                        <td colspan="5" style="text-align: center; padding: 40px; color: var(--gray);">
-                            No reports generated yet. Click on a report type above to generate your first report.
-                        </td>
-                    </tr>
-                `;
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--gray);">No reports yet. Click a report type above to generate.</td></tr>';
                 return;
             }
-            
-            reportsTable.innerHTML = reports.map(report => `
-                <tr>
-                    <td>${report.name}</td>
-                    <td>${report.type.charAt(0).toUpperCase() + report.type.slice(1)}</td>
-                    <td>${new Date(report.date).toLocaleDateString()}</td>
-                    <td>${report.format}</td>
-                    <td>
-                        <button class="btn btn-secondary btn-sm" style="padding: 5px 10px; font-size: 0.8rem;" onclick="downloadReport('${report.name}', '${report.format}')">Download</button>
-                    </td>
-                </tr>
-            `).join('');
+            tbody.innerHTML = reports.map(function(report) {
+                var safeName = (report.name || '').replace(/'/g, "\\'");
+                return '<tr><td>' + (report.name || '') + '</td><td>' + (report.type ? report.type.charAt(0).toUpperCase() + report.type.slice(1) : '') + '</td><td>' + (report.date ? new Date(report.date).toLocaleString() : '') + '</td><td>' + (report.format || '') + '</td><td><button type="button" class="btn btn-secondary btn-sm report-download-btn" style="padding:5px 10px;font-size:0.8rem;" data-name="' + (report.name || '').replace(/"/g, '&quot;') + '" data-format="' + (report.format || 'PDF') + '">Download</button></td></tr>';
+            }).join('');
+            tbody.querySelectorAll('.report-download-btn').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    var name = this.getAttribute('data-name');
+                    var format = this.getAttribute('data-format') || 'PDF';
+                    downloadReport(name, format);
+                });
+            });
         }
-        
-        function downloadReport(reportName, format = 'PDF') {
-            showNotification(`Downloading ${reportName} (${format})...`, 'info', 'Reports');
-            
+
+        function downloadReport(reportName, format) {
+            format = (format || 'PDF').toUpperCase();
+            if (format === 'EXCEL') format = 'Excel';
+            showNotification('Downloading ' + (reportName || 'report') + '...', 'info', 'Reports');
             try {
-                const blocks = currentBlocks || [];
+                const blocks = typeof currentBlocks !== 'undefined' ? currentBlocks : [];
                 const rows = blocks.map(block => ({
                     title: block.title,
                     layout: block.layout,
@@ -7839,13 +7916,6 @@
                 pageName = 'settings';
             }
             
-            // Check settings access before showing settings page
-            if (pageName === 'settings') {
-                if (!checkSettingsAccess()) {
-                    return; // Access denied, modal will be shown
-                }
-            }
-            
             // Hide all pages
             const pages = document.querySelectorAll('.page-content');
             pages.forEach(page => {
@@ -7867,6 +7937,16 @@
                 targetPage.style.display = 'block';
                 
                 if (pageName === 'settings') {
+                    const gate = document.getElementById('settings-access-gate');
+                    const content = document.getElementById('settings-content');
+                    if (typeof settingsAccessUnlocked !== 'undefined' && settingsAccessUnlocked) {
+                        if (gate) gate.style.display = 'none';
+                        if (content) content.style.display = 'block';
+                        if (typeof initSettingsPage === 'function') initSettingsPage();
+                    } else {
+                        if (gate) gate.style.display = 'block';
+                        if (content) content.style.display = 'none';
+                    }
                     loadProfileSettings();
                     updateSidebarUserInfo();
                     loadAmazonApiKey();
@@ -7893,6 +7973,16 @@
                 
                 // Load reports when reports page is shown
                 if (pageName === 'reports') {
+                    var from = document.getElementById('reportDateFrom');
+                    var to = document.getElementById('reportDateTo');
+                    if (from && !from.value) {
+                        var d = new Date();
+                        d.setDate(d.getDate() - 30);
+                        from.value = d.toISOString().slice(0, 16);
+                    }
+                    if (to && !to.value) {
+                        to.value = new Date().toISOString().slice(0, 16);
+                    }
                     loadReports();
                 }
             }
@@ -8157,13 +8247,6 @@
                         pageName = 'settings';
                     }
                     
-                    // Check settings access
-                    if (pageName === 'settings') {
-                        if (!checkSettingsAccess()) {
-                            return;
-                        }
-                    }
-                    
                     showPage(pageName);
                     
                     // If link has scroll target (e.g. Chat Amazon & Walmart), scroll after page is visible
@@ -8189,17 +8272,7 @@
             setupEmbedAnywhere();
         });
         
-        // Intercept settings page navigation
-        const settingsNavLink = document.querySelector('[data-page="settings"]');
-        if (settingsNavLink) {
-            settingsNavLink.addEventListener('click', (e) => {
-                e.preventDefault();
-                if (!checkSettingsAccess()) {
-                    return;
-                }
-                showPage('settings');
-            });
-        }
+        // Settings nav link uses same showPage/showDashboardPage flow (gate shown until PIN entered)
         
         // Profile Form Handler
         const profileForm = document.getElementById('profileForm');
