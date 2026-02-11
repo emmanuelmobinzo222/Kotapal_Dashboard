@@ -2665,30 +2665,6 @@
             </div>
         </section>
 
-        <!-- Products Section -->
-        <section class="products">
-            <div class="section-container">
-                <h2 class="text-center">Trending Products</h2>
-                <p class="text-center">Real-time pricing from Amazon, Walmart, and more.</p>
-            </div>
-
-            <div class="scrollable-container" style="margin-left: 0; margin-right: 0; width: 100%;">
-                <button class="scroll-btn scroll-btn-left" id="productsScrollLeft" onclick="scrollProducts('right')">
-                    <i class="fas fa-chevron-left"></i>
-                </button>
-
-                <div class="scrollable-wrapper" id="productsWrapper">
-                    <div class="scrollable-content" id="productsScroll">
-                        <!-- Product cards will be generated dynamically -->
-                    </div>
-                </div>
-
-                <button class="scroll-btn scroll-btn-right" id="productsScrollRight" onclick="scrollProducts('left')">
-                    <i class="fas fa-chevron-right"></i>
-                </button>
-            </div>
-        </section>
-
         <!-- About Section -->
         <section class="about" id="about" style="background-color: var(--light);">
             <div class="section-container text-center">
@@ -3414,50 +3390,65 @@
 
                 <div id="analytics-page" class="page-content" style="display:none;">
                     <div class="header"><h1 class="page-title">Analytics</h1></div>
-                    <div class="card">
-                        <div class="card-body">
-                            <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:15px;">
-                                <select id="dateRangeFilter" class="form-control" style="max-width:200px;">
-                                    <option value="last7days">Last 7 days</option>
-                                    <option value="last30days">Last 30 days</option>
-                                    <option value="last90days">Last 90 days</option>
-                                </select>
-                                <select id="retailerFilter" class="form-control" style="max-width:200px;">
-                                    <option value="all">All Retailers</option>
-                                    <option value="amazon">Amazon</option>
-                                    <option value="walmart">Walmart</option>
-                                    <option value="shopify">Shopify</option>
-                                    <option value="skimlinks">Skimlinks</option>
-                                </select>
-                            </div>
-                            <div class="stats-grid">
-                                <div class="stat-card">
-                                    <div class="stat-icon stat-primary"><i class="fas fa-mouse-pointer"></i></div>
-                                    <div class="stat-value" id="filteredClicks">0</div>
-                                    <div class="stat-label">Clicks</div>
+                    <div id="analyticsBlurWrapper" style="filter:blur(6px); transition:filter 0.4s ease;">
+                        <div class="card">
+                            <div class="card-body">
+                                <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:15px;">
+                                    <select id="dateRangeFilter" class="form-control" style="max-width:200px;">
+                                        <option value="last7days">Last 7 days</option>
+                                        <option value="last30days">Last 30 days</option>
+                                        <option value="last90days">Last 90 days</option>
+                                    </select>
+                                    <select id="retailerFilter" class="form-control" style="max-width:200px;">
+                                        <option value="all">All Retailers</option>
+                                        <option value="amazon">Amazon</option>
+                                        <option value="walmart">Walmart</option>
+                                        <option value="shopify">Shopify</option>
+                                        <option value="skimlinks">Skimlinks</option>
+                                    </select>
                                 </div>
-                                <div class="stat-card">
-                                    <div class="stat-icon stat-success"><i class="fas fa-dollar-sign"></i></div>
-                                    <div class="stat-value" id="filteredRevenue">$0.00</div>
-                                    <div class="stat-label">Revenue</div>
+                                <div class="stats-grid">
+                                    <div class="stat-card">
+                                        <div class="stat-icon stat-primary"><i class="fas fa-mouse-pointer"></i></div>
+                                        <div class="stat-value" id="filteredClicks">0</div>
+                                        <div class="stat-label">Clicks</div>
+                                    </div>
+                                    <div class="stat-card">
+                                        <div class="stat-icon stat-success"><i class="fas fa-dollar-sign"></i></div>
+                                        <div class="stat-value" id="filteredRevenue">$0.00</div>
+                                        <div class="stat-label">Revenue</div>
+                                    </div>
+                                    <div class="stat-card">
+                                        <div class="stat-icon stat-warning"><i class="fas fa-percentage"></i></div>
+                                        <div class="stat-value" id="filteredCTR">0%</div>
+                                        <div class="stat-label">CTR</div>
+                                    </div>
+                                    <div class="stat-card">
+                                        <div class="stat-icon stat-info"><i class="fas fa-cubes"></i></div>
+                                        <div class="stat-value" id="blocksShowing">0</div>
+                                        <div class="stat-label">Blocks Showing</div>
+                                    </div>
                                 </div>
-                                <div class="stat-card">
-                                    <div class="stat-icon stat-warning"><i class="fas fa-percentage"></i></div>
-                                    <div class="stat-value" id="filteredCTR">0%</div>
-                                    <div class="stat-label">CTR</div>
-                                </div>
-                                <div class="stat-card">
-                                    <div class="stat-icon stat-info"><i class="fas fa-cubes"></i></div>
-                                    <div class="stat-value" id="blocksShowing">0</div>
-                                    <div class="stat-label">Blocks Showing</div>
+                                <div id="analyticsCharts" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:20px; margin-top:24px;">
+                                    <div class="analytics-chart-card" style="background:linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%); border-radius:12px; padding:20px; color:white; min-height:180px;">
+                                        <h4 style="margin:0 0 12px 0; font-size:1rem;">Clicks by Block</h4>
+                                        <div class="chart-bars" style="display:flex; align-items:flex-end; gap:8px; height:120px;"></div>
+                                    </div>
+                                    <div class="analytics-chart-card" style="background:linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius:12px; padding:20px; color:white; min-height:180px;">
+                                        <h4 style="margin:0 0 12px 0; font-size:1rem;">Revenue</h4>
+                                        <div class="chart-bars" style="display:flex; align-items:flex-end; gap:8px; height:120px;"></div>
+                                    </div>
+                                    <div class="analytics-chart-card" style="background:linear-gradient(135deg, #f59e0b 0%, #d97706 100%); border-radius:12px; padding:20px; color:white; min-height:180px;">
+                                        <h4 style="margin:0 0 12px 0; font-size:1rem;">CTR %</h4>
+                                        <div class="chart-bars" style="display:flex; align-items:flex-end; gap:8px; height:120px;"></div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="card">
-                        <div class="card-header"><h3 class="card-title">Block Performance</h3></div>
-                        <div class="table-container">
-                            <table id="analyticsTable">
+                        <div class="card">
+                            <div class="card-header"><h3 class="card-title">Block Performance</h3></div>
+                            <div class="table-container">
+                                <table id="analyticsTable">
                                 <thead>
                                     <tr>
                                         <th>Block</th>
@@ -3472,6 +3463,10 @@
                                 <tbody></tbody>
                             </table>
                         </div>
+                    </div>
+                    </div>
+                    <div style="text-align:center; margin-top:16px;">
+                        <button type="button" class="btn btn-primary" id="analyticsRevealBtn">Show analytics data</button>
                     </div>
                 </div>
 
@@ -3512,27 +3507,41 @@
 
                 <div id="billing-page" class="page-content" style="display:none;">
                     <div class="header"><h1 class="page-title">Billing & Subscription</h1></div>
-                    <div id="currentSubscriptionCard" style="margin-bottom:24px;"></div>
-                    <div class="card">
-                        <div class="card-header"><h3 class="card-title">Billing History</h3></div>
-                        <div class="table-container">
-                            <table id="billingHistoryTable">
-                                <thead>
-                                    <tr>
-                                        <th>Date</th>
-                                        <th>Description</th>
-                                        <th>Amount</th>
-                                        <th>Status</th>
-                                        <th>Invoice</th>
-                                    </tr>
-                                </thead>
-                                <tbody></tbody>
-                            </table>
+                    <div id="billing-access-gate" class="card" style="max-width:400px;">
+                        <div class="card-header"><h3 class="card-title">Access control</h3></div>
+                        <div class="card-body">
+                            <p style="margin-bottom:12px;color:var(--gray);">Billing and payment details are confidential. Enter your account password to continue.</p>
+                            <div class="form-group">
+                                <label for="billingPasswordInput">Password</label>
+                                <input type="password" id="billingPasswordInput" class="form-control" placeholder="Enter your password" autocomplete="current-password">
+                            </div>
+                            <button type="button" class="btn btn-primary" id="billingUnlockBtn">Unlock</button>
+                            <p id="billingAccessMessage" style="margin-top:12px;font-size:0.9rem;display:none;"></p>
                         </div>
                     </div>
-                    <div class="card">
-                        <div class="card-header"><h3 class="card-title">Plans</h3></div>
-                        <div id="billingPlansContainer" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:16px;"></div>
+                    <div id="billing-content" style="display:none;">
+                        <div id="currentSubscriptionCard" style="margin-bottom:24px;"></div>
+                        <div class="card">
+                            <div class="card-header"><h3 class="card-title">Billing History</h3></div>
+                            <div class="table-container">
+                                <table id="billingHistoryTable">
+                                    <thead>
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Description</th>
+                                            <th>Amount</th>
+                                            <th>Status</th>
+                                            <th>Invoice</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-header"><h3 class="card-title">Plans</h3></div>
+                            <div id="billingPlansContainer" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:16px;"></div>
+                        </div>
                     </div>
                 </div>
 
@@ -3645,8 +3654,9 @@
                                 <div style="display:flex;align-items:center;gap:16px;margin-bottom:12px;">
                                     <img id="profilePicturePreview" src="https://i.pravatar.cc/80?img=1" alt="Profile" style="width:80px;height:80px;border-radius:50%;object-fit:cover;">
                                     <div>
+                                        <p style="margin:0 0 8px 0; font-size:0.9rem; color:var(--gray);">Click to change your profile picture</p>
                                         <input type="file" id="profilePictureInput" accept="image/*" style="display:none;">
-                                        <button type="button" class="btn btn-secondary" onclick="document.getElementById('profilePictureInput').click()">Upload photo</button>
+                                        <button type="button" class="btn btn-primary" onclick="document.getElementById('profilePictureInput').click()">Upload photo</button>
                                     </div>
                                 </div>
                             </div>
@@ -4932,14 +4942,21 @@
                 carouselRAF[id] = null;
             }
         }
-        ['featuresWrapper', 'pricingWrapper', 'productsWrapper'].forEach(function(id) {
-            startCarousel(id);
-            const el = document.getElementById(id);
-            if (el) {
-                el.addEventListener('mouseenter', function() { stopCarousel(id); });
-                el.addEventListener('mouseleave', function() { startCarousel(id); });
-            }
-        });
+        function initLandingCarousels() {
+            ['featuresWrapper', 'pricingWrapper'].forEach(function(id) {
+                var el = document.getElementById(id);
+                if (el) {
+                    startCarousel(id);
+                    el.addEventListener('mouseenter', function() { stopCarousel(id); });
+                    el.addEventListener('mouseleave', function() { startCarousel(id); });
+                }
+            });
+        }
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initLandingCarousels);
+        } else {
+            initLandingCarousels();
+        }
 
         // Page navigation
         function showPage(pageId) {
@@ -5368,6 +5385,26 @@
             if (settingsPinInput) settingsPinInput.addEventListener('keypress', function(e) {
                 if (e.key === 'Enter') { e.preventDefault(); checkSettingsAccess(); }
             });
+            // Billing access
+            const billingUnlockBtn = document.getElementById('billingUnlockBtn');
+            const billingPasswordInput = document.getElementById('billingPasswordInput');
+            if (billingUnlockBtn) billingUnlockBtn.addEventListener('click', checkBillingAccess);
+            if (billingPasswordInput) billingPasswordInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') { e.preventDefault(); checkBillingAccess(); }
+            });
+            var analyticsRevealBtn = document.getElementById('analyticsRevealBtn');
+            var analyticsBlurWrapper = document.getElementById('analyticsBlurWrapper');
+            if (analyticsRevealBtn && analyticsBlurWrapper) {
+                analyticsRevealBtn.addEventListener('click', function() {
+                    if (analyticsBlurWrapper.style.filter && analyticsBlurWrapper.style.filter.indexOf('blur') !== -1) {
+                        analyticsBlurWrapper.style.filter = 'none';
+                        analyticsRevealBtn.textContent = 'Hide analytics data';
+                    } else {
+                        analyticsBlurWrapper.style.filter = 'blur(6px)';
+                        analyticsRevealBtn.textContent = 'Show analytics data';
+                    }
+                });
+            }
         }
 
         // Show dashboard page
@@ -5408,6 +5445,61 @@
                         if (content) content.style.display = 'none';
                     }
                 }
+                if (page === 'billing') {
+                    const gate = document.getElementById('billing-access-gate');
+                    const content = document.getElementById('billing-content');
+                    if (typeof billingAccessUnlocked !== 'undefined' && billingAccessUnlocked) {
+                        if (gate) gate.style.display = 'none';
+                        if (content) content.style.display = 'block';
+                        if (typeof updateCurrentSubscription === 'function') updateCurrentSubscription();
+                        if (typeof renderBillingPlans === 'function') renderBillingPlans();
+                    } else {
+                        if (gate) gate.style.display = 'block';
+                        if (content) content.style.display = 'none';
+                    }
+                }
+            }
+        }
+
+        let billingAccessUnlocked = false;
+        async function checkBillingAccess() {
+            var input = document.getElementById('billingPasswordInput');
+            var msgEl = document.getElementById('billingAccessMessage');
+            var btn = document.getElementById('billingUnlockBtn');
+            var password = (input && input.value) ? input.value.trim() : '';
+            if (!password) {
+                if (msgEl) { msgEl.style.display = 'block'; msgEl.style.color = 'var(--danger, #dc2626)'; msgEl.textContent = 'Please enter your password.'; }
+                return false;
+            }
+            if (!auth || !auth.currentUser || !auth.currentUser.email) {
+                if (msgEl) { msgEl.style.display = 'block'; msgEl.style.color = 'var(--danger, #dc2626)'; msgEl.textContent = 'You must be signed in to access Billing.'; }
+                return false;
+            }
+            var originalText = btn ? btn.textContent : '';
+            if (btn) { btn.disabled = true; btn.textContent = 'Verifying...'; }
+            if (msgEl) msgEl.style.display = 'none';
+            try {
+                var credential = firebase.auth.EmailAuthProvider.credential(auth.currentUser.email, password);
+                await auth.currentUser.reauthenticateWithCredential(credential);
+                billingAccessUnlocked = true;
+                var gate = document.getElementById('billing-access-gate');
+                var content = document.getElementById('billing-content');
+                if (gate) gate.style.display = 'none';
+                if (content) content.style.display = 'block';
+                if (input) input.value = '';
+                showNotification('Access granted.', 'success', 'Billing');
+                if (typeof updateCurrentSubscription === 'function') updateCurrentSubscription();
+                if (typeof renderBillingPlans === 'function') renderBillingPlans();
+                return true;
+            } catch (err) {
+                if (msgEl) {
+                    msgEl.style.display = 'block';
+                    msgEl.style.color = 'var(--danger, #dc2626)';
+                    msgEl.textContent = (err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') ? 'Incorrect password.' : (err.message || 'Verification failed.');
+                }
+                return false;
+            } finally {
+                if (btn) { btn.disabled = false; btn.textContent = originalText; }
             }
         }
 
@@ -5951,6 +6043,32 @@
             if (filteredRevenueEl) filteredRevenueEl.textContent = '$' + totalRevenue.toFixed(2);
             if (filteredCTREl) filteredCTREl.textContent = avgCTR.toFixed(1) + '%';
             if (blocksShowingEl) blocksShowingEl.textContent = filteredBlocks.length;
+
+            var chartsRoot = document.getElementById('analyticsCharts');
+            if (chartsRoot) {
+                var cards = chartsRoot.querySelectorAll('.analytics-chart-card');
+                var maxClicks = Math.max(1, Math.max.apply(null, filteredBlocks.map(function(b) { return b.clicks || 0; })));
+                var maxRev = Math.max(0.01, Math.max.apply(null, filteredBlocks.map(function(b) { return b.revenue || 0; })));
+                var maxCtr = Math.max(1, Math.max.apply(null, filteredBlocks.map(function(b) { return b.ctr || 0; })));
+                if (cards[0]) {
+                    cards[0].querySelector('.chart-bars').innerHTML = filteredBlocks.slice(0, 6).map(function(b, i) {
+                        var pct = maxClicks ? (100 * (b.clicks || 0) / maxClicks) : 0;
+                        return '<div style="flex:1; background:rgba(255,255,255,0.9); border-radius:6px 6px 0 0; min-height:4px; height:' + pct + '%; transition:height 0.6s ease ' + (i * 0.1) + 's;"></div>';
+                    }).join('');
+                }
+                if (cards[1]) {
+                    cards[1].querySelector('.chart-bars').innerHTML = filteredBlocks.slice(0, 6).map(function(b, i) {
+                        var pct = maxRev ? (100 * (b.revenue || 0) / maxRev) : 0;
+                        return '<div style="flex:1; background:rgba(255,255,255,0.9); border-radius:6px 6px 0 0; min-height:4px; height:' + pct + '%; transition:height 0.6s ease ' + (i * 0.1) + 's;"></div>';
+                    }).join('');
+                }
+                if (cards[2]) {
+                    cards[2].querySelector('.chart-bars').innerHTML = filteredBlocks.slice(0, 6).map(function(b, i) {
+                        var pct = maxCtr ? (100 * (b.ctr || 0) / maxCtr) : 0;
+                        return '<div style="flex:1; background:rgba(255,255,255,0.9); border-radius:6px 6px 0 0; min-height:4px; height:' + pct + '%; transition:height 0.6s ease ' + (i * 0.1) + 's;"></div>';
+                    }).join('');
+                }
+            }
             
             const tbody = document.querySelector('#analyticsTable tbody');
             if (tbody) {
@@ -7185,40 +7303,25 @@
         
         // Show notification function
         function showNotification(message, type = 'info', title = null) {
-            // Create notification element
             const notification = document.createElement('div');
-            notification.className = `notification notification-${type}`;
-            notification.style.cssText = `
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : type === 'warning' ? '#f59e0b' : '#3b82f6'};
-                color: white;
-                padding: 16px 20px;
-                border-radius: 8px;
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-                z-index: 10000;
-                max-width: 400px;
-                animation: slideIn 0.3s ease;
-            `;
-            
-            if (title) {
-                notification.innerHTML = `
-                    <div style="font-weight: 600; margin-bottom: 4px;">${title}</div>
-                    <div style="font-size: 0.9rem;">${message}</div>
-                `;
-            } else {
-                notification.textContent = message;
-            }
-            
-            document.body.appendChild(notification);
-            
-            setTimeout(() => {
+            notification.className = 'notification notification-' + type;
+            notification.style.cssText = 'position:fixed;top:20px;right:20px;background:' + (type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : type === 'warning' ? '#f59e0b' : '#3b82f6') + ';color:white;padding:16px 40px 16px 20px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.15);z-index:10000;max-width:400px;animation:slideIn 0.3s ease;';
+            function closeNotif() {
                 notification.style.animation = 'slideOut 0.3s ease';
-                setTimeout(() => {
-                    document.body.removeChild(notification);
+                setTimeout(function() {
+                    if (notification.parentNode) notification.parentNode.removeChild(notification);
                 }, 300);
-            }, 3000);
+            }
+            var closeBtn = '<button type="button" aria-label="Close" style="position:absolute;top:8px;right:8px;background:rgba(255,255,255,0.3);border:none;color:white;width:24px;height:24px;border-radius:50%;cursor:pointer;font-size:16px;line-height:1;padding:0;">&times;</button>';
+            if (title) {
+                notification.innerHTML = '<div style="font-weight:600;margin-bottom:4px;">' + title + '</div><div style="font-size:0.9rem;">' + message + '</div>' + closeBtn;
+            } else {
+                notification.innerHTML = '<span>' + message + '</span>' + closeBtn;
+            }
+            document.body.appendChild(notification);
+            var btn = notification.querySelector('button[aria-label="Close"]');
+            if (btn) btn.addEventListener('click', closeNotif);
+            setTimeout(closeNotif, 5000);
         }
         
         // Add CSS animations
@@ -7825,21 +7928,35 @@
                         const doc = new jsPDF();
                         doc.setFontSize(14);
                         doc.text(reportName, 10, 20);
+                        doc.setFontSize(10);
+                        doc.text('Summary chart', 10, 28);
+                        var maxC = Math.max(1, Math.max.apply(null, rows.map(function(r) { return r.clicks || 0; })));
+                        var barW = 12;
+                        var barMaxH = 35;
+                        var chartY = 34;
+                        var colors = [[59,130,246], [16,185,129], [245,158,11], [139,92,246], [236,72,153], [6,182,212]];
+                        rows.slice(0, 6).forEach(function(r, i) {
+                            var h = maxC ? (barMaxH * (r.clicks || 0) / maxC) : 0;
+                            if (h < 2) h = 2;
+                            var c = colors[i % colors.length];
+                            doc.setFillColor(c[0], c[1], c[2]);
+                            doc.rect(10 + i * (barW + 4), chartY + barMaxH - h, barW, h, 'F');
+                        });
                         doc.setFontSize(11);
-                        let y = 30;
-                        rows.forEach(r => {
+                        var y = chartY + barMaxH + 14;
+                        rows.forEach(function(r) {
                             if (y > 270) {
                                 doc.addPage();
                                 y = 20;
                             }
                             doc.text(
-                                `• ${r.title || 'Untitled'} — ${r.clicks || 0} clicks, ${r.ctr || 0}% CTR, $${(r.revenue || 0).toFixed(2)}`,
+                                '• ' + (r.title || 'Untitled') + ' — ' + (r.clicks || 0) + ' clicks, ' + (r.ctr || 0) + '% CTR, $' + (r.revenue || 0).toFixed(2),
                                 10,
                                 y
                             );
                             y += 8;
                         });
-                        doc.save(`${reportName}.pdf`);
+                        doc.save(reportName + '.pdf');
                         didUseJsPdf = true;
                     }
 
@@ -8031,8 +8148,17 @@
                 
                 // Update subscription and render billing plans when billing page is shown
                 if (pageName === 'billing') {
-                    updateCurrentSubscription();
-                    renderBillingPlans();
+                    var gate = document.getElementById('billing-access-gate');
+                    var content = document.getElementById('billing-content');
+                    if (typeof billingAccessUnlocked !== 'undefined' && billingAccessUnlocked) {
+                        if (gate) gate.style.display = 'none';
+                        if (content) content.style.display = 'block';
+                        updateCurrentSubscription();
+                        renderBillingPlans();
+                    } else {
+                        if (gate) gate.style.display = 'block';
+                        if (content) content.style.display = 'none';
+                    }
                 }
                 
                 // Load reports when reports page is shown
