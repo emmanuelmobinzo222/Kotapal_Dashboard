@@ -2497,7 +2497,7 @@
                             <span style="font-weight:700;font-size:1.2rem;">2</span>
                         </div>
                         <h3>Drag & drop your SmartBlock</h3>
-                        <p>Build tables, carousels, callouts, bundles, and comparisons.</p>
+                        <p>Build tables, carousels, callouts, and roundups — then embed anywhere.</p>
                     </div>
                     <div class="feature-card"
                         style="background: white; padding: 30px; border-radius: 15px; text-align: center; transition: transform 0.3s ease;">
@@ -2505,7 +2505,7 @@
                             style="width: 70px; height: 70px; background: var(--primary); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 1.8rem;">
                             <span style="font-weight:700;font-size:1.2rem;">3</span>
                         </div>
-                        <h3>Embed it anywhere — and track results</h3>
+                        <h3>Embed it anywhere — and track your results</h3>
                         <p>Paste the embed and watch analytics roll in across every channel.</p>
                     </div>
                 </div>
@@ -3204,6 +3204,8 @@
             background: rgba(0,0,0,0.5); z-index: 999;
         }
         #dashboard-view .sidebar-overlay.active { display: block; }
+        #dashboard-view .sidebar.nav-collapsed { transform: translateX(-100%); width: 0; min-width: 0; overflow: hidden; padding: 0; }
+        #dashboard-view .main-content.nav-collapsed { margin-left: 0; }
         @media (max-width: 1024px) {
             #dashboard-view .sidebar { transform: translateX(-100%); width: min(320px, 85vw); z-index: 1002; }
             #dashboard-view .sidebar.active { transform: translateX(0); }
@@ -3234,12 +3236,15 @@
                     <li class="nav-item"><a href="#" class="nav-link active" data-page="dashboard"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
                     <li class="nav-item"><a href="#" class="nav-link" data-page="blocks"><i class="fas fa-cubes"></i> SmartBlocks</a></li>
                     <li class="nav-item"><a href="#" class="nav-link" data-page="new-block"><i class="fas fa-plus"></i> Create New Block</a></li>
-                    <li class="nav-item"><a href="#" class="nav-link" data-page="integrations"><i class="fas fa-link"></i> Integrations</a></li>
-                    <li class="nav-item"><a href="#" class="nav-link" data-page="analytics"><i class="fas fa-chart-line"></i> Analytics</a></li>
                     <li class="nav-item"><a href="#" class="nav-link" data-page="product-library"><i class="fas fa-box"></i> Product Library</a></li>
+                    <li class="nav-item"><a href="#" class="nav-link" data-page="ai-assistant"><i class="fas fa-robot"></i> AI Assistant</a></li>
+                    <li class="nav-item"><a href="#" class="nav-link" data-page="analytics"><i class="fas fa-chart-line"></i> Analytics</a></li>
+                    <li class="nav-item"><a href="#" class="nav-link" data-page="integrations"><i class="fas fa-link"></i> Integrations</a></li>
                     <li class="nav-item"><a href="#" class="nav-link" data-page="reports"><i class="fas fa-file-alt"></i> Reports</a></li>
+                    <li class="nav-item"><a href="#" class="nav-link" data-page="settings"><i class="fas fa-cog"></i> Settings</a></li>
                     <li class="nav-item"><a href="#" class="nav-link" data-page="billing"><i class="fas fa-credit-card"></i> Billing</a></li>
-                    <li class="nav-item"><a href="#" class="nav-link" data-page="settings"><i class="fas fa-cog"></i> Account & Settings</a></li>
+                    <li class="nav-item"><a href="#" class="nav-link" data-page="help"><i class="fas fa-question-circle"></i> Help</a></li>
+                    <li class="nav-item"><a href="#" class="nav-link" id="navToggleBtn" style="font-size:0.9rem;"><i class="fas fa-compress-arrows-alt"></i> Hide Nav</a></li>
                     <li class="nav-item"><a href="#" class="nav-link" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
                 </ul>
             </div>
@@ -3286,6 +3291,21 @@
                                 <div class="stat-label">Active Blocks</div>
                             </div>
                         </div>
+                        <div class="stat-card">
+                            <div class="stat-icon stat-success"><i class="fas fa-check-circle"></i></div>
+                            <div class="stat-content">
+                                <div class="stat-value" id="totalConversions" data-sensitive="true">0</div>
+                                <div class="stat-label">Total Conversions</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header"><h3 class="card-title">Your Top Performing Block This Week</h3></div>
+                        <div class="card-body" id="topPerformingBlock">No blocks yet. Create a SmartBlock to see performance here.</div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header"><h3 class="card-title">Suggestions</h3></div>
+                        <div class="card-body" id="dashboardSuggestions">No suggestions right now.</div>
                     </div>
                     <div class="card">
                         <div class="card-header"><h3 class="card-title">Recent Activity</h3></div>
@@ -3372,7 +3392,23 @@
 
                 <div id="integrations-page" class="page-content" style="display:none;">
                     <div class="header"><h1 class="page-title">Integrations</h1></div>
-                    <div id="integrationsContainer"></div>
+                    <p style="margin-bottom:20px;color:var(--gray);">Connect your stores and affiliate accounts to pull products and track performance in one place.</p>
+                    <div class="card">
+                        <div class="card-header"><h3 class="card-title">Retailer & store connections</h3></div>
+                        <p style="margin-bottom:16px;">Link Shopify, Amazon Associates, and Walmart Affiliate to sync products and commissions.</p>
+                        <div id="integrationsContainer"></div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header"><h3 class="card-title">API & webhooks</h3></div>
+                        <p style="margin-bottom:12px;">Use your API key for custom integrations. Webhooks notify your server when blocks are updated.</p>
+                        <div class="form-group">
+                            <label>API Key</label>
+                            <div style="display:flex;gap:8px;align-items:center;">
+                                <input type="password" id="integrationsApiKey" class="form-control" value="sk_live_••••••••" readonly style="max-width:320px;">
+                                <button type="button" class="btn btn-secondary" id="copyApiKey">Copy</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div id="analytics-page" class="page-content" style="display:none;">
@@ -3514,11 +3550,104 @@
                     </div>
                 </div>
 
+                <div id="ai-assistant-page" class="page-content" style="display:none;">
+                    <div class="header"><h1 class="page-title">AI Assistant</h1></div>
+                    <div class="card">
+                        <div class="card-header"><h3 class="card-title">Content tools</h3></div>
+                        <p style="margin-bottom:16px;color:var(--gray);">Generate copy and suggestions for your product blocks.</p>
+                        <div class="form-group">
+                            <label>Generate product blurbs</label>
+                            <textarea id="aiBlurbInput" class="form-control" rows="2" placeholder="Paste product name or description…"></textarea>
+                            <button type="button" class="btn btn-primary" style="margin-top:8px;" onclick="generateAiBlurb()">Generate blurb</button>
+                        </div>
+                        <div class="form-group">
+                            <label>Auto-write pros & cons</label>
+                            <textarea id="aiProsConsInput" class="form-control" rows="2" placeholder="Product name or URL…"></textarea>
+                            <button type="button" class="btn btn-secondary" style="margin-top:8px;" onclick="generateProsCons()">Generate pros/cons</button>
+                        </div>
+                        <div class="form-group">
+                            <label>Suggest better product alternatives</label>
+                            <input type="text" id="aiAlternativesInput" class="form-control" placeholder="Current product or category…">
+                            <button type="button" class="btn btn-secondary" style="margin-top:8px;" onclick="suggestAlternatives()">Get suggestions</button>
+                        </div>
+                        <div class="form-group">
+                            <label>AI FAQ Builder (for SEO)</label>
+                            <input type="text" id="aiFaqInput" class="form-control" placeholder="Topic or product…">
+                            <button type="button" class="btn btn-secondary" style="margin-top:8px;" onclick="buildFaq()">Build FAQ</button>
+                        </div>
+                        <div id="aiAssistantOutput" class="card" style="margin-top:16px;min-height:80px;display:none;"><div class="card-body"></div></div>
+                    </div>
+                </div>
+
+                <div id="help-page" class="page-content" style="display:none;">
+                    <div class="header"><h1 class="page-title">Help</h1></div>
+                    <div class="card">
+                        <div class="card-header"><h3 class="card-title">FAQs</h3></div>
+                        <div id="helpFaqList"></div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header"><h3 class="card-title">Video tutorials</h3></div>
+                        <p style="margin-bottom:12px;">Getting started, SmartBlocks, and Analytics walkthroughs.</p>
+                        <div id="helpVideoList"></div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header"><h3 class="card-title">Submit a request</h3></div>
+                        <form id="helpRequestForm">
+                            <div class="form-group">
+                                <label>Subject</label>
+                                <input type="text" id="helpSubject" class="form-control" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Message</label>
+                                <textarea id="helpMessage" class="form-control" rows="4" required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Submit request</button>
+                        </form>
+                    </div>
+                    <div class="card">
+                        <div class="card-header"><h3 class="card-title">Contact support</h3></div>
+                        <p>Email: <a href="mailto:support@kotapal.com">support@kotapal.com</a></p>
+                    </div>
+                </div>
+
                 <div id="settings-page" class="page-content" style="display:none;">
-                    <div class="header"><h1 class="page-title">Account Settings</h1></div>
+                    <div class="header"><h1 class="page-title">Settings</h1></div>
+                    <div id="settings-access-gate" class="card" style="max-width:400px;">
+                        <div class="card-header"><h3 class="card-title">Access control</h3></div>
+                        <div class="card-body">
+                            <p style="margin-bottom:12px;color:var(--gray);">Enter your PIN to access Settings.</p>
+                            <div class="form-group">
+                                <label for="settingsPinInput">PIN</label>
+                                <input type="password" id="settingsPinInput" class="form-control" placeholder="Enter PIN" autocomplete="off">
+                            </div>
+                            <button type="button" class="btn btn-primary" id="settingsUnlockBtn">Unlock</button>
+                            <p id="settingsAccessMessage" style="margin-top:12px;font-size:0.9rem;display:none;"></p>
+                        </div>
+                    </div>
+                    <div id="settings-content" style="display:none;">
                     <div class="card">
                         <div class="card-header"><h3 class="card-title">Profile</h3></div>
                         <form id="profileForm">
+                            <div class="form-group">
+                                <label>Profile picture</label>
+                                <div style="display:flex;align-items:center;gap:16px;margin-bottom:12px;">
+                                    <img id="profilePicturePreview" src="https://i.pravatar.cc/80?img=1" alt="Profile" style="width:80px;height:80px;border-radius:50%;object-fit:cover;">
+                                    <div>
+                                        <input type="file" id="profilePictureInput" accept="image/*" style="display:none;">
+                                        <button type="button" class="btn btn-secondary" onclick="document.getElementById('profilePictureInput').click()">Upload photo</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Wallpaper (dashboard background)</label>
+                                <div class="form-group">
+                                    <label class="small">Templates</label>
+                                    <div id="wallpaperTemplates" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;"></div>
+                                    <label class="small">Or upload your own</label>
+                                    <input type="file" id="wallpaperUpload" accept="image/*" style="display:none;">
+                                    <button type="button" class="btn btn-secondary" onclick="document.getElementById('wallpaperUpload').click()">Upload image</button>
+                                </div>
+                            </div>
                             <div class="form-group">
                                 <label for="userName">Name</label>
                                 <input type="text" id="userName" class="form-control" required>
@@ -3531,8 +3660,29 @@
                                 <label for="userWebsite">Website/Blog URL</label>
                                 <input type="url" id="userWebsite" class="form-control">
                             </div>
+                            <div class="form-group">
+                                <label>Shopify store connection</label>
+                                <input type="text" class="form-control" placeholder="Store URL or API key">
+                            </div>
+                            <div class="form-group">
+                                <label>Amazon affiliate tag</label>
+                                <input type="text" class="form-control" placeholder="your-tag-20">
+                            </div>
+                            <div class="form-group">
+                                <label>Walmart Impact ID</label>
+                                <input type="text" class="form-control" placeholder="Impact ID">
+                            </div>
+                            <div class="form-group">
+                                <label>Geo redirect</label>
+                                <select class="form-control" style="max-width:200px;"><option value="on">ON</option><option value="off">OFF</option></select>
+                            </div>
+                            <div class="form-group">
+                                <label>Dark mode</label>
+                                <select id="darkModeSelect" class="form-control" style="max-width:200px;"><option value="off">OFF</option><option value="on">ON</option></select>
+                            </div>
                             <button type="submit" class="btn btn-primary">Save Changes</button>
                         </form>
+                    </div>
                     </div>
                 </div>
             </div>
@@ -4712,26 +4862,61 @@
             }
         })();
 
-        // Auto-scroll products
-        const scrollContainer = document.querySelector('.products-scroll-container');
-        let scrollInterval = setInterval(() => {
-            scrollContainer.scrollLeft += 1;
-            if (scrollContainer.scrollLeft >= scrollContainer.scrollWidth - scrollContainer.clientWidth) {
-                scrollContainer.scrollLeft = 0;
+        // Carousel scroll functions (landing page)
+        function scrollFeatures(direction) {
+            const el = document.getElementById('featuresWrapper');
+            if (!el) return;
+            const step = 320;
+            el.scrollLeft += (direction === 'left' ? step : -step);
+            if (el.scrollLeft >= el.scrollWidth - el.clientWidth) el.scrollLeft = 0;
+            if (el.scrollLeft <= 0) el.scrollLeft = Math.max(0, el.scrollWidth - el.clientWidth);
+        }
+        function scrollPlans(direction) {
+            const el = document.getElementById('pricingWrapper');
+            if (!el) return;
+            const step = 400;
+            el.scrollLeft += (direction === 'left' ? step : -step);
+            if (el.scrollLeft >= el.scrollWidth - el.clientWidth) el.scrollLeft = 0;
+            if (el.scrollLeft <= 0) el.scrollLeft = Math.max(0, el.scrollWidth - el.clientWidth);
+        }
+        function scrollProducts(direction) {
+            const el = document.getElementById('productsWrapper');
+            if (!el) return;
+            const step = 320;
+            el.scrollLeft += (direction === 'left' ? step : -step);
+            if (el.scrollLeft >= el.scrollWidth - el.clientWidth) el.scrollLeft = 0;
+            if (el.scrollLeft <= 0) el.scrollLeft = Math.max(0, el.scrollWidth - el.clientWidth);
+        }
+
+        // Auto-scroll all landing page carousels (move every 3s)
+        function startCarouselAutoScroll(wrapperId, stepPx) {
+            const el = document.getElementById(wrapperId);
+            if (!el) return null;
+            return setInterval(() => {
+                el.scrollLeft += stepPx;
+                if (el.scrollLeft >= el.scrollWidth - el.clientWidth - 10) el.scrollLeft = 0;
+            }, 80);
+        }
+        const carouselIntervals = {};
+        function startCarousel(id) {
+            if (carouselIntervals[id]) clearInterval(carouselIntervals[id]);
+            const el = document.getElementById(id);
+            if (!el) return;
+            carouselIntervals[id] = setInterval(() => {
+                el.scrollLeft += 2;
+                if (el.scrollLeft >= el.scrollWidth - el.clientWidth - 10) el.scrollLeft = 0;
+            }, 80);
+        }
+        function stopCarousel(id) {
+            if (carouselIntervals[id]) { clearInterval(carouselIntervals[id]); carouselIntervals[id] = null; }
+        }
+        ['featuresWrapper', 'pricingWrapper', 'productsWrapper'].forEach(id => {
+            startCarousel(id);
+            const el = document.getElementById(id);
+            if (el) {
+                el.addEventListener('mouseenter', () => stopCarousel(id));
+                el.addEventListener('mouseleave', () => startCarousel(id));
             }
-        }, 50);
-
-        scrollContainer.addEventListener('mouseenter', () => {
-            clearInterval(scrollInterval);
-        });
-
-        scrollContainer.addEventListener('mouseleave', () => {
-            scrollInterval = setInterval(() => {
-                scrollContainer.scrollLeft += 1;
-                if (scrollContainer.scrollLeft >= scrollContainer.scrollWidth - scrollContainer.clientWidth) {
-                    scrollContainer.scrollLeft = 0;
-                }
-            }, 50);
         });
 
         // Page navigation
@@ -4880,8 +5065,17 @@
         // Initialize dashboard
         function initDashboard() {
             updateUserDisplay();
+            applySavedProfileAndWallpaper();
             loadMockData();
             setupDashboardEventListeners();
+            if (localStorage.getItem('kota_nav_collapsed') === '1') {
+                const sidebar = document.getElementById('sidebar');
+                const main = document.querySelector('#dashboard-view .main-content');
+                const navToggleBtn = document.getElementById('navToggleBtn');
+                if (sidebar) sidebar.classList.add('nav-collapsed');
+                if (main) main.classList.add('nav-collapsed');
+                if (navToggleBtn) navToggleBtn.innerHTML = '<i class="fas fa-expand-arrows-alt"></i> Show Nav';
+            }
         }
 
         // Persist user blocks to localStorage (keyed by user)
@@ -4985,6 +5179,15 @@
                 });
             });
 
+            const navToggleBtn = document.getElementById('navToggleBtn');
+            if (navToggleBtn) {
+                navToggleBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    toggleNavVisibility();
+                });
+            }
+
             // Logout
             document.getElementById('logoutBtn').addEventListener('click', async function(e) {
                 e.preventDefault();
@@ -5058,11 +5261,19 @@
             const retailerFilter = document.getElementById('retailerFilter');
             if (dateRangeFilter) dateRangeFilter.addEventListener('change', renderAnalytics);
             if (retailerFilter) retailerFilter.addEventListener('change', renderAnalytics);
+
+            // Settings access
+            const settingsUnlockBtn = document.getElementById('settingsUnlockBtn');
+            const settingsPinInput = document.getElementById('settingsPinInput');
+            if (settingsUnlockBtn) settingsUnlockBtn.addEventListener('click', checkSettingsAccess);
+            if (settingsPinInput) settingsPinInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') { e.preventDefault(); checkSettingsAccess(); }
+            });
         }
 
         // Show dashboard page
         function showDashboardPage(page) {
-            const pages = ['dashboard-page', 'blocks-page', 'new-block-page', 'integrations-page', 'analytics-page', 'reports-page', 'billing-page', 'product-library-page', 'settings-page'];
+            const pages = ['dashboard-page', 'blocks-page', 'new-block-page', 'integrations-page', 'analytics-page', 'reports-page', 'billing-page', 'product-library-page', 'ai-assistant-page', 'help-page', 'settings-page'];
             pages.forEach(p => {
                 const el = document.getElementById(p);
                 if (el) el.style.display = 'none';
@@ -5073,12 +5284,234 @@
                 target.style.display = 'block';
                 if (page === 'new-block') maybeShowOnboardingTour();
                 if (page === 'analytics') renderAnalytics();
+                if (page === 'help') initHelpPage();
+                if (page === 'dashboard') refreshDashboard();
+                if (page === 'settings') {
+                    const gate = document.getElementById('settings-access-gate');
+                    const content = document.getElementById('settings-content');
+                    if (settingsAccessUnlocked) {
+                        if (gate) gate.style.display = 'none';
+                        if (content) content.style.display = 'block';
+                        initSettingsPage();
+                    } else {
+                        if (gate) gate.style.display = 'block';
+                        if (content) content.style.display = 'none';
+                    }
+                }
+            }
+        }
+
+        const WALLPAPER_TEMPLATES = [
+            { name: 'Nature', url: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800', type: 'nature' },
+            { name: 'Forest', url: 'https://images.unsplash.com/photo-1448375240586-882707db888b?w=800', type: 'nature' },
+            { name: 'Cartoon (male)', url: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=400', type: 'cartoon-male' },
+            { name: 'Cartoon (female)', url: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400', type: 'cartoon-female' }
+        ];
+        function applyWallpaper(url) {
+            const main = document.querySelector('#dashboard-view .main-content');
+            if (!main) return;
+            if (url) {
+                main.style.backgroundImage = 'url(' + url + ')';
+                main.style.backgroundSize = 'cover';
+                main.style.backgroundPosition = 'center';
+            } else {
+                main.style.backgroundImage = '';
+            }
+        }
+        function applySavedProfileAndWallpaper() {
+            const pic = localStorage.getItem('kota_profile_picture');
+            const sidebarAvatar = document.getElementById('sidebarUserAvatar');
+            if (pic && sidebarAvatar) sidebarAvatar.src = pic;
+            const wallpaper = localStorage.getItem('kota_wallpaper');
+            if (wallpaper) applyWallpaper(wallpaper);
+        }
+        function initSettingsPage() {
+            const profilePic = localStorage.getItem('kota_profile_picture');
+            const preview = document.getElementById('profilePicturePreview');
+            const sidebarAvatar = document.getElementById('sidebarUserAvatar');
+            if (profilePic && preview) preview.src = profilePic;
+            if (profilePic && sidebarAvatar) sidebarAvatar.src = profilePic;
+            const wallpaper = localStorage.getItem('kota_wallpaper');
+            if (wallpaper) applyWallpaper(wallpaper);
+            const templatesEl = document.getElementById('wallpaperTemplates');
+            if (templatesEl && !templatesEl.innerHTML) {
+                templatesEl.innerHTML = WALLPAPER_TEMPLATES.map(t => '<button type="button" class="btn btn-secondary" style="padding:8px 12px;font-size:0.85rem;" data-wallpaper="' + t.url + '">' + t.name + '</button>').join('');
+                templatesEl.querySelectorAll('[data-wallpaper]').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const url = this.getAttribute('data-wallpaper');
+                        localStorage.setItem('kota_wallpaper', url);
+                        applyWallpaper(url);
+                        showNotification('Wallpaper updated.', 'success', 'Settings');
+                    });
+                });
+            }
+            const profileInput = document.getElementById('profilePictureInput');
+            const wallpaperInput = document.getElementById('wallpaperUpload');
+            if (profileInput && !profileInput.dataset.bound) {
+                profileInput.dataset.bound = '1';
+                profileInput.addEventListener('change', function() {
+                    const f = this.files && this.files[0];
+                    if (!f) return;
+                    const r = new FileReader();
+                    r.onload = function() {
+                        const data = r.result;
+                        localStorage.setItem('kota_profile_picture', data);
+                        if (preview) preview.src = data;
+                        if (sidebarAvatar) sidebarAvatar.src = data;
+                        showNotification('Profile picture updated.', 'success', 'Settings');
+                    };
+                    r.readAsDataURL(f);
+                });
+            }
+            if (wallpaperInput && !wallpaperInput.dataset.bound) {
+                wallpaperInput.dataset.bound = '1';
+                wallpaperInput.addEventListener('change', function() {
+                    const f = this.files && this.files[0];
+                    if (!f) return;
+                    const r = new FileReader();
+                    r.onload = function() {
+                        const data = r.result;
+                        localStorage.setItem('kota_wallpaper', data);
+                        applyWallpaper(data);
+                        showNotification('Wallpaper updated.', 'success', 'Settings');
+                    };
+                    r.readAsDataURL(f);
+                });
+            }
+        }
+
+        let settingsAccessUnlocked = false;
+        function checkSettingsAccess() {
+            const pin = (localStorage.getItem('kota_settings_pin') || '1234').toString();
+            const input = document.getElementById('settingsPinInput');
+            const msgEl = document.getElementById('settingsAccessMessage');
+            const entered = (input && input.value) ? input.value.trim() : '';
+            if (entered !== pin) {
+                if (msgEl) {
+                    msgEl.style.display = 'block';
+                    msgEl.style.color = 'var(--danger, #dc2626)';
+                    msgEl.textContent = 'Incorrect PIN. Access denied.';
+                }
+                return false;
+            }
+            settingsAccessUnlocked = true;
+            const gate = document.getElementById('settings-access-gate');
+            const content = document.getElementById('settings-content');
+            if (gate) gate.style.display = 'none';
+            if (content) content.style.display = 'block';
+            if (msgEl) msgEl.style.display = 'none';
+            if (input) input.value = '';
+            showNotification('Access granted.', 'success', 'Settings');
+            initSettingsPage();
+            return true;
+        }
+
+        function toggleNavVisibility() {
+            const sidebar = document.getElementById('sidebar');
+            const main = document.querySelector('#dashboard-view .main-content');
+            const btn = document.getElementById('navToggleBtn');
+            if (!sidebar || !btn) return;
+            const isHidden = sidebar.classList.toggle('nav-collapsed');
+            if (main) main.classList.toggle('nav-collapsed', isHidden);
+            const icon = btn.querySelector('i');
+            const label = btn.querySelector('span') || (btn.childNodes.length && Array.from(btn.childNodes).find(n => n.nodeType === 3));
+            if (icon) {
+                icon.className = isHidden ? 'fas fa-expand-arrows-alt' : 'fas fa-compress-arrows-alt';
+            }
+            btn.innerHTML = (isHidden ? '<i class="fas fa-expand-arrows-alt"></i> Show Nav' : '<i class="fas fa-compress-arrows-alt"></i> Hide Nav');
+            localStorage.setItem('kota_nav_collapsed', isHidden ? '1' : '0');
+        }
+
+        function refreshDashboard() {
+            const nameEl = document.querySelector('#dashboard-page .page-title');
+            const un = (currentUser && currentUser.displayName) || (typeof userName !== 'undefined' && userName) || localStorage.getItem('kota_userName') || 'User';
+            if (nameEl && !document.getElementById('dashboardWelcome')) {
+                const welcome = document.createElement('p');
+                welcome.id = 'dashboardWelcome';
+                welcome.style.cssText = 'margin:0 0 16px 0;font-size:1.1rem;color:var(--gray);';
+                welcome.textContent = 'Welcome back, ' + un + '!';
+                nameEl.parentElement.insertBefore(welcome, nameEl.nextSibling);
+            } else if (document.getElementById('dashboardWelcome')) {
+                document.getElementById('dashboardWelcome').textContent = 'Welcome back, ' + un + '!';
+            }
+            const topBlockEl = document.getElementById('topPerformingBlock');
+            if (topBlockEl && window.smartBlocks && window.smartBlocks.length) {
+                const top = window.smartBlocks.reduce((a, b) => (a.clicks || 0) >= (b.clicks || 0) ? a : b);
+                topBlockEl.innerHTML = 'Your Top Performing Block This Week: <strong>' + (top.name || 'Unnamed') + '</strong> (Clicks: ' + (top.clicks || 0) + ')';
+            }
+            const suggEl = document.getElementById('dashboardSuggestions');
+            if (suggEl && window.smartBlocks && window.smartBlocks.length) {
+                const low = window.smartBlocks.find(b => (b.ctr || 0) < 1);
+                suggEl.innerHTML = low ? 'Suggestion: Swap a product in Block “' + (low.name || '') + '” (Low CTR).' : 'No suggestions right now.';
+            }
+        }
+
+        function showAiOutput(text) {
+            const out = document.getElementById('aiAssistantOutput');
+            const body = out && out.querySelector('.card-body');
+            if (out && body) {
+                out.style.display = 'block';
+                body.textContent = text;
+            }
+        }
+        function generateAiBlurb() {
+            const input = document.getElementById('aiBlurbInput');
+            const t = (input && input.value.trim()) || 'Wireless headphones';
+            showAiOutput('Generated blurb: "' + t + ' deliver clear sound and all-day comfort. Perfect for commuters and remote work."');
+        }
+        function generateProsCons() {
+            const input = document.getElementById('aiProsConsInput');
+            const t = (input && input.value.trim()) || 'Product';
+            showAiOutput('Pros: Great value, durable, easy to use. Cons: Slightly heavy, cable could be longer.');
+        }
+        function suggestAlternatives() {
+            const input = document.getElementById('aiAlternativesInput');
+            const t = (input && input.value.trim()) || 'Current product';
+            showAiOutput('Alternatives: Brand X Model A (better battery), Brand Y Model B (lower price), Brand Z (best noise cancellation).');
+        }
+        function buildFaq() {
+            const input = document.getElementById('aiFaqInput');
+            const t = (input && input.value.trim()) || 'Product';
+            showAiOutput("Q: Is this compatible with iPhone? A: Yes. Q: What's the warranty? A: 1 year. Q: Can I return it? A: 30-day return policy.");
+        }
+
+        const HELP_FAQS = [
+            { q: 'How do I connect my Shopify store?', a: 'Go to Settings > Integrations and add your store URL and API key.' },
+            { q: 'What is a SmartBlock?', a: 'A SmartBlock is a reusable product block you can embed on your site (table, carousel, callout, or roundup).' },
+            { q: 'How are clicks tracked?', a: 'We use our tracking script on your embed to count clicks and attribute them to blocks and products.' }
+        ];
+        const HELP_VIDEOS = [
+            { title: 'Getting started', url: '#' },
+            { title: 'Building your first SmartBlock', url: '#' },
+            { title: 'Analytics overview', url: '#' }
+        ];
+        function initHelpPage() {
+            const faqList = document.getElementById('helpFaqList');
+            const videoList = document.getElementById('helpVideoList');
+            if (faqList) {
+                faqList.innerHTML = HELP_FAQS.map(f => '<div style="margin-bottom:12px;"><strong>' + f.q + '</strong><p style="margin:4px 0 0 0;color:var(--gray);">' + f.a + '</p></div>').join('');
+            }
+            if (videoList) {
+                videoList.innerHTML = HELP_VIDEOS.map(v => '<a href="' + v.url + '" class="btn btn-secondary" style="margin-right:8px;margin-bottom:8px;">' + v.title + '</a>').join('');
+            }
+            const form = document.getElementById('helpRequestForm');
+            if (form && !form.dataset.bound) {
+                form.dataset.bound = '1';
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    const subj = document.getElementById('helpSubject').value;
+                    const msg = document.getElementById('helpMessage').value;
+                    if (!subj || !msg) return;
+                    showNotification('Request submitted. We\'ll get back to you soon.', 'success', 'Help');
+                    form.reset();
+                });
             }
         }
 
         // One-time onboarding tour (only when using the site for the first time)
         const ONBOARDING_STORAGE_KEY = 'kotaPal_onboarding_done';
         let onboardingStep = 1;
+        // (ONBOARDING_STORAGE_KEY already declared above)
 
         function maybeShowOnboardingTour() {
             if (localStorage.getItem(ONBOARDING_STORAGE_KEY)) return;
@@ -5134,22 +5567,26 @@
 
         // Update dashboard stats
         function updateDashboardStats() {
-            if (currentBlocks.length === 0) return;
-            
-            const totalClicks = currentBlocks.reduce((sum, block) => sum + block.clicks, 0);
-            const totalRevenue = currentBlocks.reduce((sum, block) => sum + block.revenue, 0);
-            const avgCTR = currentBlocks.length > 0 ? (currentBlocks.reduce((sum, block) => sum + block.ctr, 0) / currentBlocks.length) : 0;
+            if (currentBlocks.length > 0) window.smartBlocks = currentBlocks.map(b => ({ ...b, name: b.title }));
+            else if (!window.smartBlocks) window.smartBlocks = [];
+
+            const totalClicks = currentBlocks.reduce((sum, block) => sum + (block.clicks || 0), 0);
+            const totalRevenue = currentBlocks.reduce((sum, block) => sum + (block.revenue || 0), 0);
+            const avgCTR = currentBlocks.length > 0 ? (currentBlocks.reduce((sum, block) => sum + (block.ctr || 0), 0) / currentBlocks.length) : 0;
             const activeBlocks = currentBlocks.filter(block => block.status === 'active').length;
-            
+            const totalConversions = Math.max(0, Math.floor(totalClicks * 0.05));
+
             const totalClicksEl = document.getElementById('totalClicks');
             const estimatedRevenueEl = document.getElementById('estimatedRevenue');
             const avgCTREl = document.getElementById('avgCTR');
             const activeBlocksEl = document.getElementById('activeBlocks');
-            
+            const totalConversionsEl = document.getElementById('totalConversions');
+
             if (totalClicksEl) totalClicksEl.textContent = totalClicks.toLocaleString();
             if (estimatedRevenueEl) estimatedRevenueEl.textContent = '$' + totalRevenue.toFixed(2);
             if (avgCTREl) avgCTREl.textContent = avgCTR.toFixed(1) + '%';
             if (activeBlocksEl) activeBlocksEl.textContent = activeBlocks;
+            if (totalConversionsEl) totalConversionsEl.textContent = totalConversions.toLocaleString();
         }
 
         // Render blocks
@@ -5481,15 +5918,17 @@
             const name = document.getElementById('userName').value;
             const email = document.getElementById('userEmail').value;
             const website = document.getElementById('userWebsite').value;
+            const preview = document.getElementById('profilePicturePreview');
+            if (preview && preview.src) localStorage.setItem('kota_profile_picture', preview.src);
             
             if (currentUser) {
                 currentUser.displayName = name;
                 currentUser.email = email;
                 currentUser.website = website;
-                
+                localStorage.setItem('kota_userName', name);
                 localStorage.setItem('kotaUser', JSON.stringify(currentUser));
                 updateUserDisplay();
-                
+                refreshDashboard();
                 showNotification('Profile updated successfully!', 'success', 'Profile');
             }
         }
