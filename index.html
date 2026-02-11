@@ -3677,6 +3677,8 @@
                                         <button type="button" class="btn btn-primary" onclick="document.getElementById('profilePictureInput').click()">Upload photo</button>
                                     </div>
                                 </div>
+                                <p style="margin:0 0 8px 0; font-size:0.85rem; color:var(--gray);">Or choose a template (simple, natural, different colours):</p>
+                                <div id="profilePictureTemplates" style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:8px;"></div>
                             </div>
                             <div class="form-group">
                                 <label>Wallpaper (dashboard background)</label>
@@ -3714,11 +3716,17 @@
                             </div>
                             <div class="form-group">
                                 <label>Geo redirect</label>
-                                <select class="form-control" style="max-width:200px;"><option value="on">ON</option><option value="off">OFF</option></select>
+                                <div class="toggle-wrap">
+                                    <input type="checkbox" id="geoRedirectToggle" class="toggle-input" checked>
+                                    <label for="geoRedirectToggle" class="toggle-label"><span class="toggle-slider"></span><span class="toggle-text">ON</span></label>
+                                </div>
                             </div>
                             <div class="form-group">
                                 <label>Dark mode</label>
-                                <select id="darkModeSelect" class="form-control" style="max-width:200px;"><option value="off">OFF</option><option value="on">ON</option></select>
+                                <div class="toggle-wrap">
+                                    <input type="checkbox" id="darkModeToggle" class="toggle-input">
+                                    <label for="darkModeToggle" class="toggle-label"><span class="toggle-slider"></span><span class="toggle-text">OFF</span></label>
+                                </div>
                             </div>
                             <button type="submit" class="btn btn-primary">Save Changes</button>
                         </form>
@@ -4937,20 +4945,20 @@
             if (el.scrollLeft <= 0) el.scrollLeft = Math.max(0, el.scrollWidth - el.clientWidth);
         }
 
-        // Smooth auto-scroll: Features scrolls right-to-left, Pricing scrolls left-to-right
+        // Both carousels auto-scroll at all times: Features left, Pricing right (opposite directions)
         var carouselRAF = {};
-        var carouselSpeed = 0.5;
+        var carouselSpeed = 0.6;
         var carouselDirection = { featuresWrapper: 1, pricingWrapper: -1 };
         function carouselTick(id) {
             var el = document.getElementById(id);
             if (!el || !carouselRAF[id]) return;
             var dir = carouselDirection[id] !== undefined ? carouselDirection[id] : 1;
-            var maxScroll = el.scrollWidth - el.clientWidth - 10;
+            var maxScroll = el.scrollWidth - el.clientWidth - 5;
             if (maxScroll <= 0) {
                 carouselRAF[id] = requestAnimationFrame(function() { carouselTick(id); });
                 return;
             }
-            el.scrollLeft += carouselSpeed * dir;
+            el.scrollLeft = el.scrollLeft + carouselSpeed * dir;
             if (dir > 0 && el.scrollLeft >= maxScroll) el.scrollLeft = 0;
             if (dir < 0 && el.scrollLeft <= 0) el.scrollLeft = maxScroll;
             carouselRAF[id] = requestAnimationFrame(function() { carouselTick(id); });
@@ -4977,11 +4985,23 @@
                 }
             });
         }
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', initLandingCarousels);
-        } else {
+        function runWhenLandingReady() {
             initLandingCarousels();
+            setTimeout(initLandingCarousels, 400);
+            setTimeout(initLandingCarousels, 1200);
         }
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', runWhenLandingReady);
+        } else {
+            runWhenLandingReady();
+        }
+        setInterval(function() {
+            var landing = document.getElementById('landing-page-view');
+            if (landing && landing.style.display !== 'none' && document.getElementById('pricingWrapper')) {
+                if (!carouselRAF.pricingWrapper) startCarousel('pricingWrapper');
+                if (!carouselRAF.featuresWrapper) startCarousel('featuresWrapper');
+            }
+        }, 3000);
 
         // Page navigation
         function showPage(pageId) {
@@ -5285,7 +5305,7 @@
             const navToggleFloat = document.getElementById('navToggleFloat');
             if (navToggleFloat) {
                 navToggleFloat.addEventListener('click', function(e) {
-                    e.preventDefault();
+                e.preventDefault();
                     e.stopPropagation();
                     toggleNavVisibility();
                 });
@@ -5528,6 +5548,16 @@
             }
         }
 
+        const PROFILE_AVATAR_TEMPLATES = [
+            { name: 'Blue', url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=1&backgroundColor=3b82f6' },
+            { name: 'Green', url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=2&backgroundColor=10b981' },
+            { name: 'Purple', url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=3&backgroundColor=8b5cf6' },
+            { name: 'Orange', url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=4&backgroundColor=f59e0b' },
+            { name: 'Teal', url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=5&backgroundColor=14b8a6' },
+            { name: 'Rose', url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=6&backgroundColor=f43f5e' },
+            { name: 'Indigo', url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=7&backgroundColor=6366f1' },
+            { name: 'Amber', url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=8&backgroundColor=f59e0b' }
+        ];
         const WALLPAPER_TEMPLATES = [
             { name: 'Nature', url: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800', type: 'nature' },
             { name: 'Forest', url: 'https://images.unsplash.com/photo-1448375240586-882707db888b?w=800', type: 'nature' },
@@ -5569,6 +5599,26 @@
                         localStorage.setItem('kota_wallpaper', url);
                         applyWallpaper(url);
                         showNotification('Wallpaper updated.', 'success', 'Settings');
+                    });
+                });
+            }
+            const profileTemplatesEl = document.getElementById('profilePictureTemplates');
+            if (profileTemplatesEl && !profileTemplatesEl.dataset.bound) {
+                profileTemplatesEl.dataset.bound = '1';
+                profileTemplatesEl.innerHTML = PROFILE_AVATAR_TEMPLATES.map((t, i) =>
+                    '<button type="button" class="profile-avatar-btn" title="' + t.name + '" data-profile-url="' + t.url + '" style="width:48px;height:48px;border-radius:50%;border:3px solid transparent;padding:0;overflow:hidden;background:#eee;flex-shrink:0;">' +
+                    '<img src="' + t.url + '" alt="' + t.name + '" style="width:100%;height:100%;object-fit:cover;"></button>'
+                ).join('');
+                profileTemplatesEl.querySelectorAll('.profile-avatar-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const url = this.getAttribute('data-profile-url');
+                        if (!url) return;
+                        localStorage.setItem('kota_profile_picture', url);
+                        if (preview) preview.src = url;
+                        if (sidebarAvatar) sidebarAvatar.src = url;
+                        profileTemplatesEl.querySelectorAll('.profile-avatar-btn').forEach(b => b.style.borderColor = 'transparent');
+                        this.style.borderColor = 'var(--primary)';
+                        showNotification('Profile picture updated.', 'success', 'Settings');
                     });
                 });
             }
@@ -5827,7 +5877,7 @@
             const estimatedRevenueEl = document.getElementById('estimatedRevenue');
             const avgCTREl = document.getElementById('avgCTR');
             const activeBlocksEl = document.getElementById('activeBlocks');
-
+            
             if (totalClicksEl) totalClicksEl.textContent = totalClicks.toLocaleString();
             if (estimatedRevenueEl) estimatedRevenueEl.textContent = '$' + totalRevenue.toFixed(2);
             if (avgCTREl) avgCTREl.textContent = avgCTR.toFixed(1) + '%';
@@ -6129,6 +6179,8 @@
                 
                 filteredBlocks.forEach(block => {
                     const row = document.createElement('tr');
+                    const blockId = (block.id || '').replace(/"/g, '&quot;');
+                    const blockTitle = (block.title || '').replace(/"/g, '&quot;');
                     row.innerHTML = `
                         <td>${block.title}</td>
                         <td>${block.layout}</td>
@@ -6136,12 +6188,18 @@
                         <td>${block.ctr}%</td>
                         <td>$${block.revenue.toFixed(2)}</td>
                         <td><span class="block-status ${block.status === 'active' ? 'status-active' : 'status-draft'}">${block.status}</span></td>
-                        <td>
-                            <button class="btn btn-secondary btn-sm" style="padding: 5px 10px; font-size: 0.8rem;">Edit</button>
-                            <button class="btn btn-secondary btn-sm" style="padding: 5px 10px; font-size: 0.8rem;">Analytics</button>
+                        <td style="white-space:nowrap;">
+                            <button type="button" class="btn btn-secondary btn-sm analytics-view-btn" data-block-id="${blockId}" title="View block" style="padding:6px 10px; font-size:0.85rem;"><i class="fas fa-eye"></i> View</button>
                         </td>
                     `;
                     tbody.appendChild(row);
+                });
+                tbody.querySelectorAll('.analytics-view-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const id = this.getAttribute('data-block-id');
+                        const block = (currentBlocks || []).find(b => b.id === id);
+                        if (block) showNotification('Viewing: ' + (block.title || 'Block'), 'info', 'Block');
+                    });
                 });
             }
         }
@@ -7902,7 +7960,7 @@
             const range = getReportDateRange();
             showNotification('Generating report...', 'info', 'Reports');
             const baseName = type.charAt(0).toUpperCase() + type.slice(1) + ' Report - ' + new Date().toLocaleDateString();
-            const reports = JSON.parse(localStorage.getItem('kotaReports') || '[]');
+                const reports = JSON.parse(localStorage.getItem('kotaReports') || '[]');
             const timestamp = new Date().toISOString();
             ['PDF', 'Excel'].forEach(function(format) {
                 reports.unshift({
@@ -7911,12 +7969,12 @@
                     date: timestamp,
                     format: format
                 });
-            });
-            localStorage.setItem('kotaReports', JSON.stringify(reports));
-            loadReports();
+                });
+                localStorage.setItem('kotaReports', JSON.stringify(reports));
+                loadReports();
             showNotification('Report generated. Use Download to get PDF or Excel.', 'success', 'Reports');
         }
-
+        
         function loadReports() {
             const tbody = document.getElementById('reportsTableBody');
             if (!tbody) return;
@@ -8206,8 +8264,8 @@
                     if (typeof billingAccessUnlocked !== 'undefined' && billingAccessUnlocked) {
                         if (gate) gate.style.display = 'none';
                         if (content) content.style.display = 'block';
-                        updateCurrentSubscription();
-                        renderBillingPlans();
+                    updateCurrentSubscription();
+                    renderBillingPlans();
                     } else {
                         if (gate) gate.style.display = 'block';
                         if (content) content.style.display = 'none';
