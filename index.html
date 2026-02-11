@@ -3723,6 +3723,18 @@
             </div>
         </div>
     </div>
+    <!-- Download report format (in-website) -->
+    <div id="downloadReportFormatModal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 380px;">
+            <h3 style="margin: 0 0 16px 0;">Download report as</h3>
+            <p style="margin: 0 0 16px 0; color: var(--gray); font-size: 0.9rem;">Choose a format to download this report.</p>
+            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                <button type="button" class="btn btn-primary" id="downloadReportAsPdf" style="display: inline-flex; align-items: center; gap: 8px;"><i class="fas fa-file-pdf"></i> PDF</button>
+                <button type="button" class="btn btn-primary" id="downloadReportAsExcel" style="display: inline-flex; align-items: center; gap: 8px;"><i class="fas fa-file-excel"></i> Excel</button>
+            </div>
+            <button type="button" class="btn btn-secondary" style="margin-top: 16px;" id="downloadReportFormatCancel">Cancel</button>
+        </div>
+    </div>
     <!-- Logout confirmation (in-website) -->
     <div id="logoutConfirmModal" class="modal" style="display: none;">
         <div class="modal-content" style="max-width: 400px;">
@@ -4897,34 +4909,35 @@
             if (el.scrollLeft <= 0) el.scrollLeft = Math.max(0, el.scrollWidth - el.clientWidth);
         }
 
-        // Auto-scroll all landing page carousels (move every 3s)
-        function startCarouselAutoScroll(wrapperId, stepPx) {
-            const el = document.getElementById(wrapperId);
-            if (!el) return null;
-            return setInterval(() => {
-                el.scrollLeft += stepPx;
-                if (el.scrollLeft >= el.scrollWidth - el.clientWidth - 10) el.scrollLeft = 0;
-            }, 80);
+        // Smooth auto-scroll using requestAnimationFrame (no jerk)
+        const carouselRAF = {};
+        const carouselSpeed = 0.4;
+        function carouselTick(id) {
+            const el = document.getElementById(id);
+            if (!el || !carouselRAF[id]) return;
+            el.scrollLeft += carouselSpeed;
+            const maxScroll = el.scrollWidth - el.clientWidth - 10;
+            if (maxScroll > 0 && el.scrollLeft >= maxScroll) el.scrollLeft = 0;
+            carouselRAF[id] = requestAnimationFrame(function() { carouselTick(id); });
         }
-        const carouselIntervals = {};
         function startCarousel(id) {
-            if (carouselIntervals[id]) clearInterval(carouselIntervals[id]);
+            if (carouselRAF[id]) cancelAnimationFrame(carouselRAF[id]);
             const el = document.getElementById(id);
             if (!el) return;
-            carouselIntervals[id] = setInterval(() => {
-                el.scrollLeft += 2;
-                if (el.scrollLeft >= el.scrollWidth - el.clientWidth - 10) el.scrollLeft = 0;
-            }, 80);
+            carouselRAF[id] = requestAnimationFrame(function() { carouselTick(id); });
         }
         function stopCarousel(id) {
-            if (carouselIntervals[id]) { clearInterval(carouselIntervals[id]); carouselIntervals[id] = null; }
+            if (carouselRAF[id]) {
+                cancelAnimationFrame(carouselRAF[id]);
+                carouselRAF[id] = null;
+            }
         }
-        ['featuresWrapper', 'pricingWrapper', 'productsWrapper'].forEach(id => {
+        ['featuresWrapper', 'pricingWrapper', 'productsWrapper'].forEach(function(id) {
             startCarousel(id);
             const el = document.getElementById(id);
             if (el) {
-                el.addEventListener('mouseenter', () => stopCarousel(id));
-                el.addEventListener('mouseleave', () => startCarousel(id));
+                el.addEventListener('mouseenter', function() { stopCarousel(id); });
+                el.addEventListener('mouseleave', function() { startCarousel(id); });
             }
         });
 
@@ -7757,13 +7770,16 @@
                 return;
             }
             tbody.innerHTML = reports.map(function(report) {
-                return '<tr><td style="padding:10px; border-bottom:1px solid #e5e7eb;">' + (report.name || '') + '</td><td style="padding:10px; border-bottom:1px solid #e5e7eb;">' + (report.type ? report.type.charAt(0).toUpperCase() + report.type.slice(1) : '') + '</td><td style="padding:10px; border-bottom:1px solid #e5e7eb;">' + (report.date ? new Date(report.date).toLocaleString() : '') + '</td><td style="padding:10px; border-bottom:1px solid #e5e7eb;">' + (report.format || '') + '</td><td style="padding:10px; border-bottom:1px solid #e5e7eb; min-width:120px;"><button type="button" class="btn btn-secondary btn-sm report-download-btn" style="padding:8px 14px; font-size:0.875rem; visibility:visible; display:inline-block; cursor:pointer;" data-name="' + (report.name || '').replace(/"/g, '&quot;') + '" data-format="' + (report.format || 'PDF') + '">Download</button></td></tr>';
+                var name = (report.name || '').replace(/"/g, '&quot;');
+                return '<tr><td style="padding:10px; border-bottom:1px solid #e5e7eb;">' + (report.name || '') + '</td><td style="padding:10px; border-bottom:1px solid #e5e7eb;">' + (report.type ? report.type.charAt(0).toUpperCase() + report.type.slice(1) : '') + '</td><td style="padding:10px; border-bottom:1px solid #e5e7eb;">' + (report.date ? new Date(report.date).toLocaleString() : '') + '</td><td style="padding:10px; border-bottom:1px solid #e5e7eb;">' + (report.format || '') + '</td><td style="padding:10px; border-bottom:1px solid #e5e7eb; min-width:140px;"><button type="button" class="btn btn-primary report-download-btn" style="padding:8px 16px; font-size:0.875rem; display:inline-flex; align-items:center; gap:6px; cursor:pointer; background:#3b82f6; color:white; border:1px solid #3b82f6; border-radius:8px; font-weight:500;"><i class="fas fa-download"></i> Download</button></td></tr>';
             }).join('');
-            tbody.querySelectorAll('.report-download-btn').forEach(function(btn) {
+            tbody.querySelectorAll('.report-download-btn').forEach(function(btn, i) {
+                var report = reports[i];
+                var reportName = report && report.name ? report.name : '';
                 btn.addEventListener('click', function() {
-                    var name = this.getAttribute('data-name');
-                    var format = this.getAttribute('data-format') || 'PDF';
-                    downloadReport(name, format);
+                    window._downloadReportName = reportName;
+                    var modal = document.getElementById('downloadReportFormatModal');
+                    if (modal) modal.style.display = 'flex';
                 });
             });
         }
@@ -7855,6 +7871,29 @@
                 showNotification('Could not download report. Please try again.', 'error', 'Reports');
             }
         }
+
+        function getReportBaseName(fullName) {
+            if (!fullName) return fullName;
+            return fullName.replace(/\s*\((PDF|Excel)\)\s*$/i, '').trim() || fullName;
+        }
+
+        (function wireDownloadFormatModal() {
+            var modal = document.getElementById('downloadReportFormatModal');
+            var pdfBtn = document.getElementById('downloadReportAsPdf');
+            var excelBtn = document.getElementById('downloadReportAsExcel');
+            var cancelBtn = document.getElementById('downloadReportFormatCancel');
+            if (cancelBtn) cancelBtn.addEventListener('click', function() { if (modal) modal.style.display = 'none'; });
+            if (pdfBtn) pdfBtn.addEventListener('click', function() {
+                var name = getReportBaseName(window._downloadReportName);
+                if (name && typeof downloadReport === 'function') downloadReport(name, 'PDF');
+                if (modal) modal.style.display = 'none';
+            });
+            if (excelBtn) excelBtn.addEventListener('click', function() {
+                var name = getReportBaseName(window._downloadReportName);
+                if (name && typeof downloadReport === 'function') downloadReport(name, 'Excel');
+                if (modal) modal.style.display = 'none';
+            });
+        })();
         
         // Render Billing Plans
         function renderBillingPlans() {
