@@ -536,78 +536,7 @@
             border-color: #fecaca !important;
         }
 
-        /* Landing page dark mode: when body has theme-dark, invert landing colors – headings and text light on dark */
-        body.theme-dark { background: #0f172a !important; color: #e2e8f0 !important; }
-        body.theme-dark #landing-page-view { background: #0f172a !important; color: #e2e8f0 !important; }
-        body.theme-dark #landing-page-view nav { background: rgba(15, 23, 42, 0.98) !important; border-color: #1e293b !important; }
-        body.theme-dark #landing-page-view nav a, body.theme-dark #landing-page-view nav .nav-links a { color: #e2e8f0 !important; }
-        body.theme-dark #landing-page-view nav a:hover { color: #93c5fd !important; }
-        body.theme-dark #landing-page-view .hero,
-        body.theme-dark #landing-page-view section { background: #0f172a !important; color: #e2e8f0 !important; }
-        body.theme-dark #landing-page-view .features-apple-intro { background: #0f172a !important; color: #e2e8f0 !important; }
-        body.theme-dark #landing-page-view .testimonials { background: #0f172a !important; color: #e2e8f0 !important; }
-        /* All headings and descriptions on landing in dark mode – force light so visible */
-        body.theme-dark #landing-page-view .hero h1, body.theme-dark #landing-page-view .hero p,
-        body.theme-dark #landing-page-view h1, body.theme-dark #landing-page-view h2, body.theme-dark #landing-page-view h3,
-        body.theme-dark #landing-page-view h4, body.theme-dark #landing-page-view h5, body.theme-dark #landing-page-view h6,
-        body.theme-dark #landing-page-view p, body.theme-dark #landing-page-view .section-container,
-        body.theme-dark #landing-page-view .features-apple-intro h2, body.theme-dark #landing-page-view .features-apple-intro p,
-        body.theme-dark #landing-page-view .text-center,
-        body.theme-dark #landing-page-view .apple-feature-scroll .feature-card-scroll h3,
-        body.theme-dark #landing-page-view .apple-feature-scroll .feature-card-scroll p,
-        body.theme-dark #landing-page-view .feature-card-scroll h3, body.theme-dark #landing-page-view .feature-card-scroll p,
-        body.theme-dark #landing-page-view .stat-value, body.theme-dark #landing-page-view .stat-label,
-        body.theme-dark #landing-page-view .dashboard-stats .dashboard-card h3,
-        body.theme-dark #landing-page-view .dashboard-stats .dashboard-card p,
-        body.theme-dark #landing-page-view .about h2, body.theme-dark #landing-page-view .about h3, body.theme-dark #landing-page-view .about p,
-        body.theme-dark #landing-page-view .blog-content h3, body.theme-dark #landing-page-view .blog-content p,
-        body.theme-dark #landing-page-view .blog-category, body.theme-dark #landing-page-view .blog-date,
-        body.theme-dark #landing-page-view .contact h1, body.theme-dark #landing-page-view .contact h3, body.theme-dark #landing-page-view .contact h4,
-        body.theme-dark #landing-page-view .contact p, body.theme-dark #landing-page-view .contact label,
-        body.theme-dark #landing-page-view .contact-item p, body.theme-dark #landing-page-view .price-scroll,
-        body.theme-dark #landing-page-view .pricing-card-scroll h3, body.theme-dark #landing-page-view .product-title { color: #e2e8f0 !important; }
-        /* Catch-all: any text inside landing that was dark becomes light (override var(--dark) / black) */
-        body.theme-dark #landing-page-view * { color: #e2e8f0 !important; }
-        /* Keep primary/accent for links and buttons visible */
-        body.theme-dark #landing-page-view a:not(.btn) { color: #93c5fd !important; }
-        body.theme-dark #landing-page-view a.btn { color: #fff !important; }
-        /* Form inputs and textarea on contact in dark mode */
-        body.theme-dark #landing-page-view input, body.theme-dark #landing-page-view textarea,
-        body.theme-dark #landing-page-view .form-control { background: #1e293b !important; color: #e2e8f0 !important; border-color: #475569 !important; }
-        body.theme-dark #landing-page-view input::placeholder, body.theme-dark #landing-page-view textarea::placeholder { color: #94a3b8 !important; }
-        /* Testimonial cards: dark panel with light text */
-        body.theme-dark #landing-page-view .testimonial-card { background: #1e293b !important; border-color: #334155 !important; }
-        body.theme-dark #landing-page-view .testimonial-card * { color: #e2e8f0 !important; }
-        body.theme-dark #landing-page-view .testimonial-content { color: #e2e8f0 !important; }
-        /* Feature scroll cards: dark mode keep text light (section bg is dark) */
-        body.theme-dark #landing-page-view .feature-card-scroll { background: rgba(30, 41, 59, 0.6) !important; border-color: #334155 !important; }
-        body.theme-dark #landing-page-view .feature-icon-scroll { color: #93c5fd !important; }
-        /* Pricing cards in carousel: dark card with light text */
-        body.theme-dark #landing-page-view .pricing-card-scroll { background: #1e293b !important; border-color: #334155 !important; }
-        body.theme-dark #landing-page-view .pricing-card-scroll * { color: #e2e8f0 !important; }
-        body.theme-dark #landing-page-view .product-card { background: #1e293b !important; border-color: #334155 !important; }
-        body.theme-dark #landing-page-view .product-card * { color: #e2e8f0 !important; }
-        /* Blog cards */
-        body.theme-dark #landing-page-view .blog-card { background: #1e293b !important; border-color: #334155 !important; }
-        body.theme-dark #landing-page-view .blog-card * { color: #e2e8f0 !important; }
-        body.theme-dark #landing-page-view .blog-content .btn { color: #fff !important; }
-        /* Contact form area */
-        body.theme-dark #landing-page-view .contact-form, body.theme-dark #landing-page-view .contact-info { color: #e2e8f0 !important; }
-        body.theme-dark #landing-page-view .contact-item h4 { color: #e2e8f0 !important; }
-        body.theme-dark #landing-page-view footer { background: #1e293b !important; border-color: #334155 !important; color: #cbd5e1 !important; }
-        body.theme-dark #landing-page-view footer *, body.theme-dark #landing-page-view footer a { color: #cbd5e1 !important; }
-        body.theme-dark #landing-page-view footer a:hover { color: #f1f5f9 !important; }
-        /* Mobile nav dropdown in dark mode */
-        body.theme-dark .nav-links { background: #0f172a !important; border-color: #1e293b !important; }
-        body.theme-dark .nav-links a { color: #e2e8f0 !important; }
-        /* Modals (auth, plan detail) when opened in dark mode: keep light panel and dark text for readability */
-        body.theme-dark .modal-content, body.theme-dark .plan-modal-content {
-            background: #ffffff !important; color: #111827 !important; border-color: #e5e7eb !important;
-        }
-        body.theme-dark .modal-content *, body.theme-dark .plan-modal-content * { color: #111827 !important; }
-        body.theme-dark .modal-content h2, body.theme-dark .plan-modal-content h2,
-        body.theme-dark .modal-content h3, body.theme-dark .plan-modal-content h3,
-        body.theme-dark .modal-content label, body.theme-dark .plan-modal-content label { color: #111827 !important; }
+        /* Dark mode applies only to #dashboard-view; landing page is never changed by theme */
 
         .toggle-switch .toggle-text {
             position: absolute;
@@ -3419,13 +3348,24 @@
         #dashboard-view .table-container th, #dashboard-view .table-container td { padding: 15px; text-align: left; border-bottom: 1px solid #e5e7eb; }
         #dashboard-view .table-container th { background: #f8fafc; font-weight: 600; color: var(--dark); }
         #dashboard-view .table-container tr:hover { background: #f9fafb; }
+        /* Show Sensitive Data button: blue like Show analytics button */
         #dashboard-view .sensitive-toggle {
-            display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px;
-            background: #f3f4f6; border: 1px solid #d1d5db; border-radius: 8px; cursor: pointer;
-            font-size: 0.875rem; color: #4b5563; transition: all 0.2s ease; font-weight: 500;
+            display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px;
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            border: 1px solid #2563eb; border-radius: 8px; cursor: pointer;
+            font-size: 0.875rem; color: #ffffff !important; font-weight: 500; transition: all 0.2s ease;
+            box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
         }
-        #dashboard-view .sensitive-toggle:hover { background: #e5e7eb; border-color: #9ca3af; }
-        #dashboard-view .sensitive-toggle.active { background: #dbeafe; border-color: #3b82f6; color: #1e40af; }
+        #dashboard-view .sensitive-toggle:hover { background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: #ffffff !important; box-shadow: 0 4px 8px rgba(59, 130, 246, 0.35); }
+        #dashboard-view .sensitive-toggle.active { background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%); border-color: #1e40af; color: #ffffff !important; }
+        #dashboard-view .sensitive-toggle i, #dashboard-view .sensitive-toggle span { color: #ffffff !important; }
+        #dashboard-view.theme-dark .sensitive-toggle {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
+            border-color: #2563eb !important; color: #ffffff !important;
+        }
+        #dashboard-view.theme-dark .sensitive-toggle:hover,
+        #dashboard-view.theme-dark .sensitive-toggle.active { background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important; color: #ffffff !important; }
+        #dashboard-view.theme-dark .sensitive-toggle *, #dashboard-view.theme-dark .sensitive-toggle i, #dashboard-view.theme-dark .sensitive-toggle span { color: #ffffff !important; }
         #dashboard-view [data-sensitive="true"] { filter: blur(8px); user-select: none; transition: filter 0.3s ease; }
         #dashboard-view [data-sensitive="true"].revealed { filter: none; }
         #dashboard-view .sidebar-toggle {
@@ -4697,7 +4637,13 @@
             if (nav) nav.style.display = 'flex';
             if (footer) footer.style.display = 'block';
             var darkOn = localStorage.getItem('kota_dark_mode') === '1';
-            if (darkOn) document.body.classList.add('theme-dark'); else document.body.classList.remove('theme-dark');
+            if (darkOn) {
+                var dash = document.getElementById('dashboard-view');
+                if (dash) dash.classList.add('theme-dark');
+            } else {
+                var dash = document.getElementById('dashboard-view');
+                if (dash) dash.classList.remove('theme-dark');
+            }
             
             // Only clear explicit login flag if it doesn't exist (first visit)
             // Don't clear it if user just logged in
@@ -5916,7 +5862,6 @@
             if (dash) {
                 if (darkOn) dash.classList.add('theme-dark'); else dash.classList.remove('theme-dark');
             }
-            if (darkOn) document.body.classList.add('theme-dark'); else document.body.classList.remove('theme-dark');
             const cb = document.getElementById('darkModeToggle');
             const textEl = document.querySelector('#darkModeToggle + .toggle-label .toggle-text');
             if (cb) cb.checked = darkOn;
@@ -5983,7 +5928,6 @@
                     localStorage.setItem('kota_dark_mode', on ? '1' : '0');
                     var dash = document.getElementById('dashboard-view');
                     if (dash) { if (on) dash.classList.add('theme-dark'); else dash.classList.remove('theme-dark'); }
-                    if (on) document.body.classList.add('theme-dark'); else document.body.classList.remove('theme-dark');
                     var t = document.querySelector('#darkModeToggle + .toggle-label .toggle-text');
                     if (t) t.textContent = on ? 'ON' : 'OFF';
                     showNotification(on ? 'Dark mode on.' : 'Dark mode off.', 'success', 'Settings');
