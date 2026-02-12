@@ -569,7 +569,7 @@
             overflow-x: scroll;
             overflow-y: hidden;
             padding: 30px 0;
-            scroll-behavior: smooth;
+            scroll-behavior: auto;
             -webkit-overflow-scrolling: touch;
         }
 
@@ -3213,23 +3213,28 @@
         #dashboard-view .dashboard { display: flex; min-height: 100vh; width: 100%; }
         #dashboard-view .sidebar {
             width: 260px; background: white; box-shadow: 2px 0 8px rgba(0,0,0,0.04);
-            padding: 6px 0 24px 0; position: fixed; left: 0; top: 0; height: 100vh; overflow-y: auto; overflow-x: hidden; z-index: 1000;
+            padding: 0 0 16px 0; position: fixed; left: 0; top: 0; height: 100vh; overflow-x: hidden; z-index: 1000;
             border-right: 1px solid #e5e7eb; transition: transform 0.3s ease;
             scrollbar-width: none; -ms-overflow-style: none;
+            display: flex; flex-direction: column;
         }
         #dashboard-view .sidebar::-webkit-scrollbar { display: none; }
         #dashboard-view .sidebar.hidden { transform: translateX(-100%); }
         #dashboard-view .sidebar .logo {
-            padding: 6px 20px 12px 20px; border-bottom: 1px solid #e5e7eb;
-            display: flex; align-items: center; justify-content: center;
+            padding: 0 20px 6px 20px; border-bottom: 1px solid #e5e7eb;
+            display: flex; align-items: center; justify-content: center; flex-shrink: 0;
         }
-        #dashboard-view .sidebar .logo img { max-width: 100%; height: 72px; width: 200px; object-fit: contain; }
-        #dashboard-view .user-info { padding: 0 20px 24px; border-bottom: 1px solid #e5e7eb; margin-bottom: 24px; }
+        #dashboard-view .sidebar .logo img { max-width: 100%; height: 64px; width: 200px; object-fit: contain; }
+        #dashboard-view .sidebar .user-info { padding: 6px 20px 8px; border-bottom: 1px solid #e5e7eb; margin-bottom: 4px; flex-shrink: 0; }
         #dashboard-view .user-avatar { width: 40px; height: 40px; border-radius: 50%; margin-right: 10px; object-fit: cover; }
         #dashboard-view .user-name { font-weight: 600; color: var(--dark); font-size: 0.9375rem; }
         #dashboard-view .user-plan { font-size: 0.8rem; color: var(--gray); margin-top: 4px; }
-        #dashboard-view .nav-menu { list-style: none; padding: 0 10px; }
-        #dashboard-view .nav-item { margin-bottom: 5px; }
+        #dashboard-view .sidebar .nav-menu {
+            list-style: none; padding: 0 10px 16px 20px; margin: 0; flex: 1; overflow-y: auto; overflow-x: hidden; min-height: 0;
+            scrollbar-width: none; -ms-overflow-style: none;
+        }
+        #dashboard-view .sidebar .nav-menu::-webkit-scrollbar { display: none; }
+        #dashboard-view .nav-item { margin-bottom: 2px; }
         #dashboard-view .nav-link {
             display: flex; align-items: center; padding: 10px 20px; color: #4b5563; border-radius: 8px;
             transition: all 0.2s ease; font-weight: 500; font-size: 0.9375rem; margin: 2px 12px; text-decoration: none;
@@ -3351,7 +3356,7 @@
         <div class="dashboard">
             <div class="sidebar" id="sidebar">
                 <div class="logo">
-                    <img src="images/IMG_4258.png" alt="KotaPal Logo" style="height: 80px; width: 200px; object-fit: contain;" onerror="this.style.display='none';" />
+                    <img src="images/IMG_4258.png" alt="KotaPal Logo" onerror="this.style.display='none';" />
                 </div>
                 <div class="user-info">
                     <div style="display: flex; align-items: center;">
@@ -5167,23 +5172,20 @@
             if (style.display === 'none' || style.visibility === 'hidden') return;
             if (!carouselRAF.pricingWrapper) startCarousel('pricingWrapper');
         }, 1000);
-        // Carousels: move RIGHT TO LEFT at all times (scrollLeft += speed).
+        // Carousels: move RIGHT TO LEFT at all times. Run whenever wrappers exist and are visible.
         function tickAllCarousels() {
-            var landing = document.getElementById('landing-page-view');
-            var home = document.getElementById('home-page');
-            if (!landing || landing.style.display === 'none') return;
-            if (!home || home.style.display === 'none') return;
-            var wrappers = home.querySelectorAll('.scrollable-wrapper');
-            wrappers.forEach(function(el) {
-                var id = el.id || '';
+            var ids = ['featuresWrapper', 'pricingWrapper', 'productsWrapper'];
+            ids.forEach(function(id) {
+                var el = document.getElementById(id);
+                if (!el || !el.offsetParent) return;
                 var content = el.querySelector('.scrollable-content');
-                if (content && content.scrollWidth <= el.clientWidth + 10 && !content.dataset.loopReady) {
+                if (content && !content.dataset.loopReady) {
                     content.innerHTML = content.innerHTML + content.innerHTML;
                     content.dataset.loopReady = '1';
                 }
                 var maxScroll = el.scrollWidth - el.clientWidth - 5;
                 if (maxScroll <= 0) return;
-                var speed = (id === 'pricingWrapper') ? 1.4 : 1;
+                var speed = (id === 'pricingWrapper') ? 1.5 : 1;
                 el.scrollLeft += speed;
                 if (el.scrollLeft >= maxScroll) el.scrollLeft = 0;
             });
