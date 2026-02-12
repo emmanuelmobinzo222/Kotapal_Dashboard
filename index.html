@@ -173,11 +173,12 @@
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
             border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-            height: 60px;
+            min-height: 88px;
+            height: auto;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 0;
+            padding: 14px 0;
             overflow: hidden;
         }
 
@@ -189,6 +190,15 @@
             margin: 0 auto;
             padding: 0 20px;
             width: 100%;
+        }
+
+        .nav-container .logo img,
+        .landing-logo {
+            max-height: 72px !important;
+            height: 72px !important;
+            width: 140px !important;
+            object-fit: contain !important;
+            filter: drop-shadow(0 1px 4px rgba(0,0,0,0.12));
         }
 
         .logo {
@@ -2489,8 +2499,8 @@
     <nav>
         <div class="nav-container">
             <div class="logo">
-                <img src="images/IMG_4258.png" alt="KotaPal Logo"
-                    style="height: 80px; width: 100px; object-fit: contain; vertical-align: middle;"
+                <img src="images/IMG_4258.png" alt="KotaPal Logo" class="landing-logo"
+                    style="height: 72px; width: 140px; object-fit: contain; vertical-align: middle;"
                     onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='block';" />
                 <span style="display:none; font-weight: 700; font-size: 1.5rem; color: var(--primary);">KotaPal</span>
             </div>
@@ -5122,6 +5132,8 @@
         }
         function runWhenLandingReady() {
             initLandingCarousels();
+            requestAnimationFrame(function() { initLandingCarousels(); });
+            setTimeout(initLandingCarousels, 100);
             setTimeout(initLandingCarousels, 400);
             setTimeout(initLandingCarousels, 1200);
             setTimeout(initLandingCarousels, 2500);
@@ -5153,7 +5165,7 @@
             if (style.display === 'none' || style.visibility === 'hidden') return;
             if (!carouselRAF.pricingWrapper) startCarousel('pricingWrapper');
         }, 1000);
-        // Single loop: move all homepage carousels every frame so they never stop.
+        // Animate all homepage carousels every frame (smooth 60fps).
         function tickAllCarousels() {
             var landing = document.getElementById('landing-page-view');
             var home = document.getElementById('home-page');
@@ -5162,13 +5174,18 @@
             var wrappers = home.querySelectorAll('.scrollable-wrapper');
             wrappers.forEach(function(el) {
                 var id = el.id || '';
-                var speed = (id === 'pricingWrapper') ? 0.85 : 0.55;
+                var speed = (id === 'pricingWrapper') ? 1.2 : 0.8;
                 var maxScroll = el.scrollWidth - el.clientWidth - 5;
                 if (maxScroll <= 0) return;
                 el.scrollLeft += speed;
                 if (el.scrollLeft >= maxScroll) el.scrollLeft = 0;
             });
         }
+        function carouselAnimationLoop() {
+            tickAllCarousels();
+            requestAnimationFrame(carouselAnimationLoop);
+        }
+        requestAnimationFrame(carouselAnimationLoop);
         setInterval(tickAllCarousels, 16);
 
         // Landing page navigation (unique name so dashboard showPage does not overwrite)
