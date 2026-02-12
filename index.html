@@ -566,6 +566,11 @@
             transition: transform 0.5s ease;
             will-change: transform;
         }
+        .btn, .card, .stat-card, .block-card, .nav-link, .feature-card-scroll, .pricing-card-scroll {
+            transition: transform 0.25s ease, box-shadow 0.25s ease, opacity 0.25s ease;
+        }
+        .animate-reveal { opacity: 0; transform: translateY(18px); }
+        .animate-reveal.is-visible { opacity: 1; transform: translateY(0); }
 
         /* Hide native scrollbars */
         .scrollable-wrapper::-webkit-scrollbar {
@@ -2494,7 +2499,7 @@
                 <li><a href="#dashboard-preview" onclick="scrollToSection('dashboard-preview')">Dashboard</a></li>
                 <li><a href="#about" onclick="scrollToSection('about')">About</a></li>
                 <!-- <li><a href="#" onclick="showPage('blog-page')">Blog</a></li> -->
-                <li><a href="#" onclick="showPage('contact-page')">Contact</a></li>
+                <li><a href="#" onclick="goToContactForm()">Contact</a></li>
                 <li><a href="#" id="loginBtn">Login</a></li>
             </ul>
 
@@ -3087,7 +3092,7 @@
                     <ul class="footer-links">
                         <li><a href="#about" onclick="scrollToSection('about')">About Us</a></li>
                         <li><a href="#" onclick="showPage('blog-page')">Blog</a></li>
-                        <li><a href="#" onclick="showPage('contact-page')">Contact</a></li>
+                        <li><a href="#" onclick="goToContactForm()">Contact</a></li>
                         <li><a href="#" id="privacyLink">Privacy Policy</a></li>
                         <li><a href="#" id="tosLink">Terms of Service</a></li>
                     </ul>
@@ -3768,7 +3773,8 @@
                     </div>
                     <div class="card">
                         <div class="card-header"><h3 class="card-title">Contact support</h3></div>
-                        <p>Email: <a href="mailto:support@kotapal.com">support@kotapal.com</a></p>
+                        <p style="margin-bottom:10px;">Email: <a href="mailto:support@kotapal.com">support@kotapal.com</a></p>
+                        <button type="button" class="btn btn-primary" onclick="goToContactForm()">Contact Us Form</button>
                     </div>
                 </div>
 
@@ -4079,7 +4085,7 @@
                         loginBtn.addEventListener('click', (e) => {
                             e.preventDefault();
                             if (typeof showNotification === 'function') showNotification('Firebase is not configured yet. Please update the firebaseConfig object in index.html with your Firebase project credentials. See FIREBASE_SETUP.md for instructions.', 'error', 'Setup');
-                            else alert('Firebase is not configured yet. Please update the firebaseConfig object in index.html with your Firebase project credentials.\n\nSee FIREBASE_SETUP.md for instructions.');
+                            else console.error('Firebase is not configured yet. Please update the firebaseConfig object in index.html with your Firebase project credentials. See FIREBASE_SETUP.md for instructions.');
                         });
                     }
                 });
@@ -4103,7 +4109,7 @@
         } catch (error) {
             console.error('Firebase initialization error:', error);
             if (typeof showNotification === 'function') showNotification('Firebase initialization failed. Please check your configuration.', 'error', 'Error');
-            else alert('Firebase initialization failed. Please check your configuration.');
+            else console.error('Firebase initialization failed. Please check your configuration.');
         }
 
         // ============================================
@@ -5058,10 +5064,11 @@
             if (el.scrollLeft <= 0) el.scrollLeft = Math.max(0, el.scrollWidth - el.clientWidth);
         }
 
-        // Both carousels auto-scroll at all times: Features left, Pricing right (opposite directions)
+        // Homepage carousels auto-scroll at all times
         var carouselRAF = {};
         var carouselSpeed = 0.6;
-        var carouselDirection = { featuresWrapper: 1, pricingWrapper: -1 };
+        // Positive scrollLeft motion makes cards move right-to-left visually.
+        var carouselDirection = { featuresWrapper: 1, pricingWrapper: 1, productsWrapper: 1 };
         function ensureCarouselScrollable(id) {
             var el = document.getElementById(id);
             if (!el) return;
@@ -5102,7 +5109,7 @@
             }
         }
         function initLandingCarousels() {
-            ['featuresWrapper', 'pricingWrapper'].forEach(function(id) {
+            ['featuresWrapper', 'pricingWrapper', 'productsWrapper'].forEach(function(id) {
                 var el = document.getElementById(id);
                 if (el) {
                     startCarousel(id);
@@ -5124,6 +5131,7 @@
             if (landing && landing.style.display !== 'none' && document.getElementById('pricingWrapper')) {
                 if (!carouselRAF.pricingWrapper) startCarousel('pricingWrapper');
                 if (!carouselRAF.featuresWrapper) startCarousel('featuresWrapper');
+                if (document.getElementById('productsWrapper') && !carouselRAF.productsWrapper) startCarousel('productsWrapper');
             }
         }, 3000);
         // Extra watchdog: keep pricing carousel moving whenever it's present and visible.
@@ -5140,8 +5148,23 @@
             if (!el) return;
             var maxScroll = el.scrollWidth - el.clientWidth - 5;
             if (maxScroll <= 0) return;
-            el.scrollLeft += 0.8;
+            el.scrollLeft += 0.9;
             if (el.scrollLeft >= maxScroll) el.scrollLeft = 0;
+        }, 16);
+        // Keep every homepage carousel moving continuously.
+        setInterval(function() {
+            var home = document.getElementById('home-page');
+            if (!home || home.style.display === 'none') return;
+            home.querySelectorAll('.scrollable-wrapper').forEach(function(el) {
+                var id = el.id || '';
+                var dir = 1;
+                var speed = (id === 'pricingWrapper') ? 0.9 : 0.6;
+                var maxScroll = el.scrollWidth - el.clientWidth - 5;
+                if (maxScroll <= 0) return;
+                el.scrollLeft += speed * dir;
+                if (dir > 0 && el.scrollLeft >= maxScroll) el.scrollLeft = 0;
+                if (dir < 0 && el.scrollLeft <= 0) el.scrollLeft = maxScroll;
+            });
         }, 16);
 
         // Page navigation
@@ -5167,6 +5190,27 @@
                 // Then scroll to the section
                 section.scrollIntoView({ behavior: 'smooth' });
             }
+        }
+        function goToContactForm() {
+            // Always use direct visibility toggles here to avoid showPage() name collisions.
+            var landing = document.getElementById('landing-page-view');
+            var dashboard = document.getElementById('dashboard-view');
+            var nav = document.querySelector('nav');
+            var footer = document.querySelector('footer');
+            var home = document.getElementById('home-page');
+            var blog = document.getElementById('blog-page');
+            var contact = document.getElementById('contact-page');
+            if (dashboard) dashboard.style.display = 'none';
+            if (landing) landing.style.display = 'block';
+            if (nav) nav.style.display = 'flex';
+            if (footer) footer.style.display = 'block';
+            if (home) home.style.display = 'none';
+            if (blog) blog.style.display = 'none';
+            if (contact) contact.style.display = 'block';
+            setTimeout(function() {
+                var form = document.getElementById('contactForm');
+                if (form) form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 80);
         }
 
         // Content Modals
@@ -7584,6 +7628,28 @@
             if (btn) btn.addEventListener('click', closeNotif);
             setTimeout(closeNotif, 5000);
         }
+        // Replace native browser dialogs with in-website notifications.
+        (function() {
+            if (window.__kotapalDialogsPatched) return;
+            window.__kotapalDialogsPatched = true;
+            window.alert = function(message) {
+                if (typeof showNotification === 'function') {
+                    showNotification(String(message || ''), 'info', 'Notice');
+                }
+            };
+            window.confirm = function(message) {
+                if (typeof showNotification === 'function') {
+                    showNotification(String(message || ''), 'warning', 'Confirmation');
+                }
+                return true;
+            };
+            window.prompt = function(message, defaultValue) {
+                if (typeof showNotification === 'function') {
+                    showNotification(String(message || ''), 'info', 'Input');
+                }
+                return defaultValue || '';
+            };
+        })();
         
         // Add CSS animations
         const style = document.createElement('style');
@@ -8600,34 +8666,48 @@
                 `Your monthly charge will increase from $${currentPlanPrice} to $${newPlanPrice}.` :
                 `Your monthly charge will decrease from $${currentPlanPrice} to $${newPlanPrice}.`;
             
-            const confirmMessage = `Are you sure you want to ${action} to the ${planNames[planId]} plan?\n\n${priceChange}\n\nChanges will take effect immediately.`;
-            
-            if (confirm(confirmMessage)) {
-                // Update user plan
-                currentUser.plan = planId;
-                const userData = JSON.parse(localStorage.getItem('kotaUser') || '{}');
-                userData.plan = planId;
-                userData.planChangeDate = new Date().toISOString();
-                userData.previousPlan = currentUser.plan;
-                localStorage.setItem('kotaUser', JSON.stringify(userData));
-                
-                // Update sidebar
-                const userPlanDisplay = document.querySelector('.user-plan');
-                if (userPlanDisplay) {
-                    userPlanDisplay.textContent = `${planNames[planId]} Plan`;
-                }
-                
-                hidePlanChangeModal();
-                renderBillingPlans();
-                updateCurrentSubscription();
-                
-                const actionText = isUpgrade ? 'upgraded' : 'downgraded';
-                showNotification(`Plan ${actionText} to ${planNames[planId]}! Changes are now active.`, 'success', 'Plan Updated');
+            showNotification(`${action.toUpperCase()}: ${priceChange} Switching to ${planNames[planId]} now...`, 'info', 'Plan Change');
+            // Update user plan
+            currentUser.plan = planId;
+            const userData = JSON.parse(localStorage.getItem('kotaUser') || '{}');
+            userData.plan = planId;
+            userData.planChangeDate = new Date().toISOString();
+            userData.previousPlan = currentUser.plan;
+            localStorage.setItem('kotaUser', JSON.stringify(userData));
+            // Update sidebar
+            const userPlanDisplay = document.querySelector('.user-plan');
+            if (userPlanDisplay) {
+                userPlanDisplay.textContent = `${planNames[planId]} Plan`;
             }
+            hidePlanChangeModal();
+            renderBillingPlans();
+            updateCurrentSubscription();
+            const actionText = isUpgrade ? 'upgraded' : 'downgraded';
+            showNotification(`Plan ${actionText} to ${planNames[planId]}! Changes are now active.`, 'success', 'Plan Updated');
+        }
+
+        function initGlobalAnimations() {
+            var selectors = '.hero-content, .features .section-container, .feature-card, .feature-card-scroll, .pricing-card-scroll, .card, .stat-card, .block-card';
+            var nodes = document.querySelectorAll(selectors);
+            nodes.forEach(function(el) { el.classList.add('animate-reveal'); });
+            if (!('IntersectionObserver' in window)) {
+                nodes.forEach(function(el) { el.classList.add('is-visible'); });
+                return;
+            }
+            var observer = new IntersectionObserver(function(entries) {
+                entries.forEach(function(entry) {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('is-visible');
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.1 });
+            nodes.forEach(function(el) { observer.observe(el); });
         }
         
         // Setup product search functionality
         document.addEventListener('DOMContentLoaded', () => {
+            initGlobalAnimations();
             const productSearchInput = document.getElementById('productSearch');
             const retailerSelect = document.getElementById('retailerSelect');
             
