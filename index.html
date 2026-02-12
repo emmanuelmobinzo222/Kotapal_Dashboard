@@ -179,6 +179,7 @@
             justify-content: center;
             padding: 0;
             overflow: hidden;
+            overflow-x: hidden;
         }
 
         .nav-container {
@@ -189,6 +190,7 @@
             margin: 0 auto;
             padding: 0 20px;
             width: 100%;
+            overflow-x: hidden;
         }
 
         .logo {
@@ -213,13 +215,9 @@
             flex-shrink: 0;
         }
 
-        nav { overflow-x: hidden; overflow-y: visible; }
-        .nav-container { overflow: hidden; min-width: 0; }
         .nav-links {
             display: flex;
             list-style: none;
-            flex-wrap: nowrap;
-            overflow: visible;
         }
 
         .nav-links li {
@@ -5127,12 +5125,19 @@
             initLandingCarousels();
             setTimeout(initLandingCarousels, 400);
             setTimeout(initLandingCarousels, 1200);
+            setTimeout(initLandingCarousels, 2500);
         }
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', runWhenLandingReady);
         } else {
             runWhenLandingReady();
         }
+        document.addEventListener('visibilitychange', function() {
+            if (document.visibilityState === 'visible') {
+                var landing = document.getElementById('landing-page-view');
+                if (landing && landing.style.display !== 'none') runWhenLandingReady();
+            }
+        });
         setInterval(function() {
             var landing = document.getElementById('landing-page-view');
             if (landing && landing.style.display !== 'none' && document.getElementById('pricingWrapper')) {
@@ -5149,32 +5154,23 @@
             if (style.display === 'none' || style.visibility === 'hidden') return;
             if (!carouselRAF.pricingWrapper) startCarousel('pricingWrapper');
         }, 1000);
-        // Hard fallback: continuously advance pricing carousel even if RAF is interrupted.
-        setInterval(function() {
-            var el = document.getElementById('pricingWrapper');
-            if (!el) return;
-            var maxScroll = el.scrollWidth - el.clientWidth - 5;
-            if (maxScroll <= 0) return;
-            el.scrollLeft += 0.9;
-            if (el.scrollLeft >= maxScroll) el.scrollLeft = 0;
-        }, 16);
-        // Keep every homepage carousel moving continuously.
-        setInterval(function() {
+        // Single loop: move all homepage carousels every frame so they never stop.
+        function tickAllCarousels() {
             var landing = document.getElementById('landing-page-view');
             var home = document.getElementById('home-page');
             if (!landing || landing.style.display === 'none') return;
             if (!home || home.style.display === 'none') return;
-            home.querySelectorAll('.scrollable-wrapper').forEach(function(el) {
+            var wrappers = home.querySelectorAll('.scrollable-wrapper');
+            wrappers.forEach(function(el) {
                 var id = el.id || '';
-                var dir = 1;
-                var speed = (id === 'pricingWrapper') ? 0.9 : 0.6;
+                var speed = (id === 'pricingWrapper') ? 0.85 : 0.55;
                 var maxScroll = el.scrollWidth - el.clientWidth - 5;
                 if (maxScroll <= 0) return;
-                el.scrollLeft += speed * dir;
-                if (dir > 0 && el.scrollLeft >= maxScroll) el.scrollLeft = 0;
-                if (dir < 0 && el.scrollLeft <= 0) el.scrollLeft = maxScroll;
+                el.scrollLeft += speed;
+                if (el.scrollLeft >= maxScroll) el.scrollLeft = 0;
             });
-        }, 16);
+        }
+        setInterval(tickAllCarousels, 16);
 
         // Landing page navigation (unique name so dashboard showPage does not overwrite)
         function showLandingPage(pageId) {
@@ -5202,7 +5198,6 @@
             }
         }
         function goToContactForm() {
-            // Always use direct visibility toggles here to avoid showPage() name collisions.
             var landing = document.getElementById('landing-page-view');
             var dashboard = document.getElementById('dashboard-view');
             var nav = document.querySelector('nav');
@@ -5219,7 +5214,10 @@
             if (contact) contact.style.display = 'block';
             setTimeout(function() {
                 var heading = document.querySelector('#contact-page h1');
-                if (heading) heading.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                if (heading) {
+                    var y = heading.getBoundingClientRect().top + window.pageYOffset;
+                    window.scrollTo({ top: Math.max(0, y - 20), behavior: 'smooth' });
+                }
             }, 80);
         }
 
