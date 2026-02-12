@@ -213,9 +213,13 @@
             flex-shrink: 0;
         }
 
+        nav { overflow-x: hidden; overflow-y: visible; }
+        .nav-container { overflow: hidden; min-width: 0; }
         .nav-links {
             display: flex;
             list-style: none;
+            flex-wrap: nowrap;
+            overflow: visible;
         }
 
         .nav-links li {
@@ -449,6 +453,9 @@
         #dashboard-view.theme-dark .nav-link.active { background: rgba(59,130,246,0.2); color: #93c5fd !important; }
         #dashboard-view.theme-dark .sidebar-toggle,
         #dashboard-view.theme-dark .nav-toggle-float { background: #1f2937 !important; color: #e5e7eb !important; border-color: #374151 !important; }
+        #logoutConfirmCancel { background: #f1f5f9 !important; color: #1e293b !important; border: 2px solid #94a3b8 !important; font-weight: 600 !important; }
+        #dashboard-view.theme-dark ~ #logoutConfirmModal #logoutConfirmCancel,
+        #dashboard-view.theme-dark ~ * #logoutConfirmCancel { background: #334155 !important; color: #f1f5f9 !important; border: 2px solid #64748b !important; }
         #dashboard-view.theme-dark .card,
         #dashboard-view.theme-dark .stat-card,
         #dashboard-view.theme-dark .table-container,
@@ -2492,14 +2499,14 @@
             </div>
 
             <ul class="nav-links">
-                <li><a href="#" onclick="showPage('home-page')" class="active">Home</a></li>
-                <li><a href="#features" onclick="scrollToSection('features')">Features</a></li>
-                <li><a href="#pricing" onclick="scrollToSection('pricing')">Pricing</a></li>
-                <li><a href="#testimonials" onclick="scrollToSection('testimonials')">Testimonials</a></li>
-                <li><a href="#dashboard-preview" onclick="scrollToSection('dashboard-preview')">Dashboard</a></li>
-                <li><a href="#about" onclick="scrollToSection('about')">About</a></li>
-                <!-- <li><a href="#" onclick="showPage('blog-page')">Blog</a></li> -->
-                <li><a href="#" onclick="goToContactForm()">Contact</a></li>
+                <li><a href="#" onclick="showLandingPage('home-page'); return false;" class="active">Home</a></li>
+                <li><a href="#features" onclick="scrollToSection('features'); return false;">Features</a></li>
+                <li><a href="#pricing" onclick="scrollToSection('pricing'); return false;">Pricing</a></li>
+                <li><a href="#testimonials" onclick="scrollToSection('testimonials'); return false;">Testimonials</a></li>
+                <li><a href="#dashboard-preview" onclick="scrollToSection('dashboard-preview'); return false;">Dashboard</a></li>
+                <li><a href="#about" onclick="scrollToSection('about'); return false;">About</a></li>
+                <!-- <li><a href="#" onclick="showLandingPage('blog-page')">Blog</a></li> -->
+                <li><a href="#" onclick="goToContactForm(); return false;">Contact</a></li>
                 <li><a href="#" id="loginBtn">Login</a></li>
             </ul>
 
@@ -3090,9 +3097,9 @@
                 <div class="footer-column">
                     <h3>Company</h3>
                     <ul class="footer-links">
-                        <li><a href="#about" onclick="scrollToSection('about')">About Us</a></li>
-                        <li><a href="#" onclick="showPage('blog-page')">Blog</a></li>
-                        <li><a href="#" onclick="goToContactForm()">Contact</a></li>
+                        <li><a href="#about" onclick="scrollToSection('about'); return false;">About Us</a></li>
+                        <li><a href="#" onclick="showLandingPage('blog-page'); return false;">Blog</a></li>
+                        <li><a href="#" onclick="goToContactForm(); return false;">Contact</a></li>
                         <li><a href="#" id="privacyLink">Privacy Policy</a></li>
                         <li><a href="#" id="tosLink">Terms of Service</a></li>
                     </ul>
@@ -3896,7 +3903,7 @@
             <h3 style="margin: 0 0 16px 0;">Log out</h3>
             <p style="margin: 0 0 20px 0; color: var(--gray);">Are you sure you would like to logout?</p>
             <div style="display: flex; gap: 12px; justify-content: flex-end;">
-                <button type="button" class="btn btn-secondary" id="logoutConfirmCancel">Cancel</button>
+                <button type="button" class="btn btn-secondary" id="logoutConfirmCancel" style="background:#f1f5f9 !important; color:#1e293b !important; border:2px solid #94a3b8 !important;">Cancel</button>
                 <button type="button" class="btn btn-primary" id="logoutConfirmBtn">Logout</button>
             </div>
         </div>
@@ -5153,7 +5160,9 @@
         }, 16);
         // Keep every homepage carousel moving continuously.
         setInterval(function() {
+            var landing = document.getElementById('landing-page-view');
             var home = document.getElementById('home-page');
+            if (!landing || landing.style.display === 'none') return;
             if (!home || home.style.display === 'none') return;
             home.querySelectorAll('.scrollable-wrapper').forEach(function(el) {
                 var id = el.id || '';
@@ -5167,28 +5176,29 @@
             });
         }, 16);
 
-        // Page navigation
-        function showPage(pageId) {
-            // Hide all pages
-            document.getElementById('home-page').style.display = 'none';
-            document.getElementById('blog-page').style.display = 'none';
-            document.getElementById('contact-page').style.display = 'none';
-            
-            // Show selected page
-            document.getElementById(pageId).style.display = 'block';
-            
-            // Scroll to top
+        // Landing page navigation (unique name so dashboard showPage does not overwrite)
+        function showLandingPage(pageId) {
+            var home = document.getElementById('home-page');
+            var blog = document.getElementById('blog-page');
+            var contact = document.getElementById('contact-page');
+            var el = document.getElementById(pageId);
+            if (home) home.style.display = (pageId === 'home-page') ? 'block' : 'none';
+            if (blog) blog.style.display = (pageId === 'blog-page') ? 'block' : 'none';
+            if (contact) contact.style.display = (pageId === 'contact-page') ? 'block' : 'none';
+            if (el) el.style.display = 'block';
             window.scrollTo(0, 0);
+            var nl = document.querySelector('.nav-links');
+            if (nl) nl.classList.remove('active');
+            var mbtn = document.getElementById('mobileMenuBtn');
+            if (mbtn) mbtn.classList.remove('active');
         }
 
-        // Smooth scroll to section
+        // Smooth scroll to section (landing home only)
         function scrollToSection(sectionId) {
-            const section = document.getElementById(sectionId);
+            showLandingPage('home-page');
+            var section = document.getElementById(sectionId);
             if (section) {
-                // First ensure we're on the home page
-                showPage('home-page');
-                // Then scroll to the section
-                section.scrollIntoView({ behavior: 'smooth' });
+                setTimeout(function() { section.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 50);
             }
         }
         function goToContactForm() {
@@ -5208,8 +5218,8 @@
             if (blog) blog.style.display = 'none';
             if (contact) contact.style.display = 'block';
             setTimeout(function() {
-                var form = document.getElementById('contactForm');
-                if (form) form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                var heading = document.querySelector('#contact-page h1');
+                if (heading) heading.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }, 80);
         }
 
@@ -5309,22 +5319,11 @@
             }, 5000);
         }
 
-        // Show specific page (for landing page navigation)
-        function showPage(pageId) {
-            // Hide all pages
-            document.getElementById('home-page').style.display = 'none';
-            document.getElementById('blog-page').style.display = 'none';
-            document.getElementById('contact-page').style.display = 'none';
-            
-            // Show selected page
-            document.getElementById(pageId).style.display = 'block';
-            
-            // Scroll to top
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-
-            // Close mobile menu if open
-            document.querySelector('.nav-links').classList.remove('active');
-            document.getElementById('mobileMenuBtn').classList.remove('active');
+        // Landing page switcher (used by mobile/other; dashboard has its own showPage)
+        function showLandingPageFromLegacy(pageId) {
+            if (pageId === 'home-page' || pageId === 'blog-page' || pageId === 'contact-page') {
+                showLandingPage(pageId);
+            }
         }
 
         // ============================================
@@ -5466,6 +5465,10 @@
                 if (landingView) landingView.style.display = 'block';
                 if (nav) nav.style.display = 'flex';
                 if (footer) footer.style.display = 'block';
+                var homePage = document.getElementById('home-page');
+                var contactPage = document.getElementById('contact-page');
+                if (homePage) homePage.style.display = 'block';
+                if (contactPage) contactPage.style.display = 'none';
             } catch (error) {
                 console.error('Logout error:', error);
                 showNotification('Error signing out. Please try again.', 'error', 'Logout');
