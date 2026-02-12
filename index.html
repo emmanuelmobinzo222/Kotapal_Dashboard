@@ -384,6 +384,104 @@
         .toggle-switch.active::after {
             transform: translateX(24px);
         }
+        /* Stylish checkbox-based toggles (Geo redirect, Dark mode) */
+        .toggle-wrap {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .toggle-wrap .toggle-input {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            opacity: 0;
+            margin: -1px;
+            overflow: hidden;
+        }
+        .toggle-wrap .toggle-label {
+            display: inline-flex;
+            align-items: center;
+            cursor: pointer;
+            padding: 0;
+            margin: 0;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--gray);
+        }
+        .toggle-wrap .toggle-slider {
+            display: inline-block;
+            width: 52px;
+            height: 28px;
+            background: #d1d5db;
+            border-radius: 28px;
+            position: relative;
+            transition: background 0.25s ease, box-shadow 0.2s ease;
+            flex-shrink: 0;
+        }
+        .toggle-wrap .toggle-slider::after {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 22px;
+            height: 22px;
+            background: #fff;
+            border-radius: 50%;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+            transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .toggle-wrap .toggle-input:checked + .toggle-label .toggle-slider {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.3);
+        }
+        .toggle-wrap .toggle-input:checked + .toggle-label .toggle-slider::after {
+            transform: translateX(24px);
+        }
+        .toggle-wrap .toggle-text {
+            margin-left: 10px;
+            min-width: 28px;
+            font-weight: 600;
+            color: var(--dark);
+        }
+        #dashboard-view.theme-dark .toggle-wrap .toggle-text { color: #e5e7eb; }
+        /* Dark theme: ensure all info, buttons and data are visible */
+        #dashboard-view.theme-dark,
+        #dashboard-view.theme-dark .main-content { background: #111827 !important; }
+        #dashboard-view.theme-dark .sidebar { background: #0f172a !important; border-color: #1e293b; }
+        #dashboard-view.theme-dark .card,
+        #dashboard-view.theme-dark .table-container { background: #1f2937 !important; border-color: #374151; color: #e5e7eb; }
+        #dashboard-view.theme-dark .card-title,
+        #dashboard-view.theme-dark .page-title,
+        #dashboard-view.theme-dark .user-name,
+        #dashboard-view.theme-dark .stat-value,
+        #dashboard-view.theme-dark .header h1,
+        #dashboard-view.theme-dark .block-title,
+        #dashboard-view.theme-dark th,
+        #dashboard-view.theme-dark td,
+        #dashboard-view.theme-dark .form-control,
+        #dashboard-view.theme-dark label,
+        #dashboard-view.theme-dark .nav-link,
+        #dashboard-view.theme-dark .block-meta,
+        #dashboard-view.theme-dark .block-status { color: #e5e7eb !important; }
+        #dashboard-view.theme-dark .nav-link:hover,
+        #dashboard-view.theme-dark .nav-link.active { background: rgba(59,130,246,0.2); color: #93c5fd !important; }
+        #dashboard-view.theme-dark .table-container th { background: #374151 !important; color: #f3f4f6 !important; }
+        #dashboard-view.theme-dark .table-container td { border-color: #374151; color: #e5e7eb !important; }
+        #dashboard-view.theme-dark .card-header { border-color: #374151; }
+        #dashboard-view.theme-dark .btn-primary { background: #2563eb !important; color: #fff !important; border-color: #2563eb !important; }
+        #dashboard-view.theme-dark .btn-secondary { background: #374151 !important; color: #e5e7eb !important; border-color: #4b5563 !important; }
+        #dashboard-view.theme-dark .form-control { background: #374151 !important; border-color: #4b5563 !important; }
+        #dashboard-view.theme-dark .block-card { background: #1f2937 !important; border-color: #374151 !important; }
+        #dashboard-view.theme-dark .user-plan,
+        #dashboard-view.theme-dark .stat-label,
+        #dashboard-view.theme-dark .small { color: #9ca3af !important; }
+        #dashboard-view.theme-dark .status-active { background: #065f46 !important; color: #6ee7b7 !important; }
+        #dashboard-view.theme-dark .status-draft { background: #78350f !important; color: #fcd34d !important; }
+        #dashboard-view.theme-dark .analytics-view-btn,
+        #dashboard-view.theme-dark .btn-publish,
+        #dashboard-view.theme-dark .btn-publish-toggle { color: #e5e7eb !important; }
+        #dashboard-view.theme-dark .sidebar-toggle,
+        #dashboard-view.theme-dark .nav-toggle-float { background: #1f2937 !important; color: #e5e7eb !important; border-color: #374151 !important; }
 
         .toggle-text {
             position: absolute;
@@ -3290,8 +3388,8 @@
                             <table id="activityTable">
                                 <thead>
                                     <tr>
+                                        <th></th>
                                         <th>Block Name</th>
-                                        <th>Layout</th>
                                         <th>Clicks</th>
                                         <th>Revenue</th>
                                         <th>Status</th>
@@ -3469,8 +3567,8 @@
                                 <table id="analyticsTable">
                                 <thead>
                                     <tr>
+                                        <th></th>
                                         <th>Block</th>
-                                        <th>Layout</th>
                                         <th>Clicks</th>
                                         <th>CTR</th>
                                         <th>Revenue</th>
@@ -4949,6 +5047,18 @@
         var carouselRAF = {};
         var carouselSpeed = 0.6;
         var carouselDirection = { featuresWrapper: 1, pricingWrapper: -1 };
+        function ensureCarouselScrollable(id) {
+            var el = document.getElementById(id);
+            if (!el) return;
+            var content = el.querySelector('.scrollable-content');
+            if (!content) return;
+            if (content.dataset.loopReady === '1') return;
+            // Duplicate cards once so there is always scrollable width for seamless motion.
+            if (content.scrollWidth <= el.clientWidth + 20) {
+                content.innerHTML = content.innerHTML + content.innerHTML;
+            }
+            content.dataset.loopReady = '1';
+        }
         function carouselTick(id) {
             var el = document.getElementById(id);
             if (!el || !carouselRAF[id]) return;
@@ -4967,6 +5077,7 @@
             if (carouselRAF[id]) cancelAnimationFrame(carouselRAF[id]);
             var el = document.getElementById(id);
             if (!el) return;
+            ensureCarouselScrollable(id);
             carouselRAF[id] = requestAnimationFrame(function() { carouselTick(id); });
         }
         function stopCarousel(id) {
@@ -4980,8 +5091,6 @@
                 var el = document.getElementById(id);
                 if (el) {
                     startCarousel(id);
-                    el.addEventListener('mouseenter', function() { stopCarousel(id); });
-                    el.addEventListener('mouseleave', function() { startCarousel(id); });
                 }
             });
         }
@@ -5002,6 +5111,14 @@
                 if (!carouselRAF.featuresWrapper) startCarousel('featuresWrapper');
             }
         }, 3000);
+        // Extra watchdog: keep pricing carousel moving whenever it's present and visible.
+        setInterval(function() {
+            var el = document.getElementById('pricingWrapper');
+            if (!el) return;
+            var style = window.getComputedStyle(el);
+            if (style.display === 'none' || style.visibility === 'hidden') return;
+            if (!carouselRAF.pricingWrapper) startCarousel('pricingWrapper');
+        }, 1000);
 
         // Page navigation
         function showPage(pageId) {
@@ -5556,7 +5673,13 @@
             { name: 'Teal', url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=5&backgroundColor=14b8a6' },
             { name: 'Rose', url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=6&backgroundColor=f43f5e' },
             { name: 'Indigo', url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=7&backgroundColor=6366f1' },
-            { name: 'Amber', url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=8&backgroundColor=f59e0b' }
+            { name: 'Amber', url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=8&backgroundColor=f59e0b' },
+            { name: 'Natural (soft)', url: 'https://api.dicebear.com/7.x/lorelei/svg?seed=a&backgroundColor=f0fdf4' },
+            { name: 'Natural (warm)', url: 'https://api.dicebear.com/7.x/lorelei/svg?seed=b&backgroundColor=fffbeb' },
+            { name: 'Natural (cool)', url: 'https://api.dicebear.com/7.x/lorelei/svg?seed=c&backgroundColor=f0f9ff' },
+            { name: 'Simple (mint)', url: 'https://api.dicebear.com/7.x/notionists/svg?seed=1&backgroundColor=a7f3d0' },
+            { name: 'Simple (lavender)', url: 'https://api.dicebear.com/7.x/notionists/svg?seed=2&backgroundColor=e9d5ff' },
+            { name: 'Simple (peach)', url: 'https://api.dicebear.com/7.x/notionists/svg?seed=3&backgroundColor=fed7aa' }
         ];
         const WALLPAPER_TEMPLATES = [
             { name: 'Nature', url: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800', type: 'nature' },
@@ -5581,6 +5704,25 @@
             if (pic && sidebarAvatar) sidebarAvatar.src = pic;
             const wallpaper = localStorage.getItem('kota_wallpaper');
             if (wallpaper) applyWallpaper(wallpaper);
+            applyDarkModeFromStorage();
+        }
+        function applyDarkModeFromStorage() {
+            const dash = document.getElementById('dashboard-view');
+            const darkOn = localStorage.getItem('kota_dark_mode') === '1';
+            if (dash) {
+                if (darkOn) dash.classList.add('theme-dark'); else dash.classList.remove('theme-dark');
+            }
+            const cb = document.getElementById('darkModeToggle');
+            const textEl = document.querySelector('#darkModeToggle + .toggle-label .toggle-text');
+            if (cb) cb.checked = darkOn;
+            if (textEl) textEl.textContent = darkOn ? 'ON' : 'OFF';
+        }
+        function applyGeoRedirectFromStorage() {
+            const on = localStorage.getItem('kota_geo_redirect') !== '0';
+            const cb = document.getElementById('geoRedirectToggle');
+            const textEl = document.querySelector('#geoRedirectToggle + .toggle-label .toggle-text');
+            if (cb) cb.checked = on;
+            if (textEl) textEl.textContent = on ? 'ON' : 'OFF';
         }
         function initSettingsPage() {
             const profilePic = localStorage.getItem('kota_profile_picture');
@@ -5653,6 +5795,32 @@
                         showNotification('Wallpaper updated.', 'success', 'Settings');
                     };
                     r.readAsDataURL(f);
+                });
+            }
+            applyGeoRedirectFromStorage();
+            applyDarkModeFromStorage();
+            var darkToggle = document.getElementById('darkModeToggle');
+            var geoToggle = document.getElementById('geoRedirectToggle');
+            if (darkToggle && !darkToggle.dataset.bound) {
+                darkToggle.dataset.bound = '1';
+                darkToggle.addEventListener('change', function() {
+                    var on = this.checked;
+                    localStorage.setItem('kota_dark_mode', on ? '1' : '0');
+                    var dash = document.getElementById('dashboard-view');
+                    if (dash) { if (on) dash.classList.add('theme-dark'); else dash.classList.remove('theme-dark'); }
+                    var t = document.querySelector('#darkModeToggle + .toggle-label .toggle-text');
+                    if (t) t.textContent = on ? 'ON' : 'OFF';
+                    showNotification(on ? 'Dark mode on.' : 'Dark mode off.', 'success', 'Settings');
+                });
+            }
+            if (geoToggle && !geoToggle.dataset.bound) {
+                geoToggle.dataset.bound = '1';
+                geoToggle.addEventListener('change', function() {
+                    var on = this.checked;
+                    localStorage.setItem('kota_geo_redirect', on ? '1' : '0');
+                    var t = document.querySelector('#geoRedirectToggle + .toggle-label .toggle-text');
+                    if (t) t.textContent = on ? 'ON' : 'OFF';
+                    showNotification(on ? 'Geo redirect on.' : 'Geo redirect off.', 'success', 'Settings');
                 });
             }
         }
@@ -5895,7 +6063,7 @@
                 const blockCard = document.createElement('div');
                 blockCard.className = 'block-card';
                 
-                const productsPreviewHtml = (block.productsList || []).slice(0, 3).map(p => `
+                const productsPreviewHtml = (block.productsList || []).slice(0, 1).map(p => `
                     <img src="${(p && p.image ? p.image : 'https://via.placeholder.com/64').replace(/"/g, '&quot;')}"
                          alt="${((p && p.title) || '').replace(/"/g, '&quot;')}"
                          class="block-product-image"
@@ -5911,7 +6079,6 @@
                     </div>
                     <div class="block-body">
                         <div class="block-meta">
-                            <span>Layout: ${block.layout}</span>
                             <span>Products: ${block.products}</span>
                         </div>
                         <div class="block-meta">
@@ -5927,7 +6094,7 @@
                         </div>
                         <div class="block-actions">
                             <button class="block-btn btn-edit" data-id="${block.id}">Edit</button>
-                            <button class="block-btn ${block.status === 'draft' ? 'btn-publish' : 'btn-secondary'}" data-id="${block.id}" data-action="${block.status === 'draft' ? 'publish' : 'unpublish'}">
+                            <button type="button" class="block-btn btn-publish-toggle ${block.status === 'draft' ? 'btn-publish' : 'btn-secondary'}" data-id="${block.id}" data-action="${block.status === 'draft' ? 'publish' : 'unpublish'}" onclick="toggleBlockPublish('${block.id}')">
                                 ${block.status === 'draft' ? 'Publish' : 'Unpublish'}
                             </button>
                             <button class="block-btn btn-delete" data-id="${block.id}">Delete</button>
@@ -5955,23 +6122,7 @@
                     });
                 });
                 
-                document.querySelectorAll('.btn-publish, .btn-secondary').forEach(btn => {
-                    if (btn.getAttribute('data-action')) {
-                        btn.addEventListener('click', function() {
-                            const blockId = this.getAttribute('data-id');
-                            const action = this.getAttribute('data-action');
-                            const blockIndex = currentBlocks.findIndex(b => b.id === blockId);
-                            if (blockIndex !== -1) {
-                                currentBlocks[blockIndex].status = action === 'publish' ? 'active' : 'draft';
-                                saveUserBlocks();
-                                renderBlocks();
-                                updateDashboardStats();
-                                renderActivityTable();
-                                showNotification('Block ' + (action === 'publish' ? 'published' : 'unpublished') + ' successfully!', 'success', 'Block');
-                            }
-                        });
-                    }
-                });
+                // Publish/unpublish handled via global onclick toggleBlockPublish().
                 
                 document.querySelectorAll('.btn-delete').forEach(btn => {
                     btn.addEventListener('click', function() {
@@ -5981,6 +6132,20 @@
                     });
                 });
             }, 100);
+        }
+
+        function toggleBlockPublish(blockId) {
+            if (!blockId) return;
+            var blockIndex = currentBlocks.findIndex(function(b) { return b.id === blockId; });
+            if (blockIndex === -1) return;
+            var isDraft = currentBlocks[blockIndex].status === 'draft';
+            currentBlocks[blockIndex].status = isDraft ? 'active' : 'draft';
+            saveUserBlocks();
+            renderBlocks();
+            updateDashboardStats();
+            renderActivityTable();
+            renderAnalytics();
+            showNotification('Block ' + (isDraft ? 'published' : 'unpublished') + ' successfully!', 'success', 'Block');
         }
 
         // Render integrations
@@ -6076,16 +6241,13 @@
             
             tbody.innerHTML = '';
             
-            currentBlocks.slice(0, 5).forEach(block => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${block.title}</td>
-                    <td>${block.layout}</td>
-                    <td>${block.clicks}</td>
-                    <td>$${block.revenue.toFixed(2)}</td>
-                    <td><span class="block-status ${block.status === 'active' ? 'status-active' : 'status-draft'}">${block.status}</span></td>
-                    <td>${block.lastUpdated}</td>
-                `;
+            var thumb = function(b) {
+                var img = (b.productsList && b.productsList[0] && b.productsList[0].image) ? b.productsList[0].image : 'https://via.placeholder.com/48?text=Block';
+                return '<img src="' + img.replace(/"/g, '&quot;') + '" alt="" style="width:40px;height:40px;object-fit:cover;border-radius:8px;" onerror="this.src=\'https://via.placeholder.com/48?text=Block\'">';
+            };
+            currentBlocks.slice(0, 5).forEach(function(block) {
+                var row = document.createElement('tr');
+                row.innerHTML = '<td style="vertical-align:middle;">' + thumb(block) + '</td><td>' + (block.title || '') + '</td><td>' + (block.clicks || 0) + '</td><td>$' + (block.revenue != null ? block.revenue.toFixed(2) : '0.00') + '</td><td><span class="block-status ' + (block.status === 'active' ? 'status-active' : 'status-draft') + '">' + (block.status || 'draft') + '</span></td><td>' + (block.lastUpdated || '') + '</td>';
                 tbody.appendChild(row);
             });
         }
@@ -6177,21 +6339,14 @@
             if (tbody) {
                 tbody.innerHTML = '';
                 
-                filteredBlocks.forEach(block => {
-                    const row = document.createElement('tr');
-                    const blockId = (block.id || '').replace(/"/g, '&quot;');
-                    const blockTitle = (block.title || '').replace(/"/g, '&quot;');
-                    row.innerHTML = `
-                        <td>${block.title}</td>
-                        <td>${block.layout}</td>
-                        <td>${block.clicks}</td>
-                        <td>${block.ctr}%</td>
-                        <td>$${block.revenue.toFixed(2)}</td>
-                        <td><span class="block-status ${block.status === 'active' ? 'status-active' : 'status-draft'}">${block.status}</span></td>
-                        <td style="white-space:nowrap;">
-                            <button type="button" class="btn btn-secondary btn-sm analytics-view-btn" data-block-id="${blockId}" title="View block" style="padding:6px 10px; font-size:0.85rem;"><i class="fas fa-eye"></i> View</button>
-                        </td>
-                    `;
+                var thumb = function(b) {
+                    var img = (b.productsList && b.productsList[0] && b.productsList[0].image) ? b.productsList[0].image : 'https://via.placeholder.com/48?text=Block';
+                    return '<img src="' + img.replace(/"/g, '&quot;') + '" alt="" style="width:40px;height:40px;object-fit:cover;border-radius:8px;" onerror="this.src=\'https://via.placeholder.com/48?text=Block\'">';
+                };
+                filteredBlocks.forEach(function(block) {
+                    var row = document.createElement('tr');
+                    var blockId = (block.id || '').replace(/"/g, '&quot;');
+                    row.innerHTML = '<td style="vertical-align:middle;">' + thumb(block) + '</td><td>' + (block.title || '') + '</td><td>' + (block.clicks || 0) + '</td><td>' + (block.ctr != null ? block.ctr : 0) + '%</td><td>$' + (block.revenue != null ? block.revenue.toFixed(2) : '0.00') + '</td><td><span class="block-status ' + (block.status === 'active' ? 'status-active' : 'status-draft') + '">' + (block.status || 'draft') + '</span></td><td style="white-space:nowrap;"><button type="button" class="btn btn-secondary btn-sm analytics-view-btn" data-block-id="' + blockId + '" title="View block" style="padding:6px 10px; font-size:0.85rem;"><i class="fas fa-eye"></i> View</button></td>';
                     tbody.appendChild(row);
                 });
                 tbody.querySelectorAll('.analytics-view-btn').forEach(btn => {
