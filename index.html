@@ -179,7 +179,6 @@
             justify-content: center;
             padding: 0;
             overflow: hidden;
-            overflow-x: hidden;
         }
 
         .nav-container {
@@ -190,7 +189,6 @@
             margin: 0 auto;
             padding: 0 20px;
             width: 100%;
-            overflow-x: hidden;
         }
 
         .logo {
@@ -538,20 +536,21 @@
             opacity: 0;
         }
 
-        /* NEW: Scrollable Container Styling */
+        /* NEW: Scrollable Container Styling - arrows hidden, carousels auto-run 24/7 */
+        .scrollable-container .scroll-btn { display: none !important; }
         .scrollable-container {
             position: relative;
             margin-top: 40px;
             margin-left: 20px;
             margin-right: 20px;
-            padding: 0 60px;
+            padding: 0 20px;
             overflow: visible;
         }
 
         .scrollable-container[style*="width: 100%"] {
             margin-left: 0;
             margin-right: 0;
-            padding: 0 60px;
+            padding: 0 20px;
         }
 
         .scrollable-wrapper {
@@ -3204,9 +3203,11 @@
         #dashboard-view .dashboard { display: flex; min-height: 100vh; width: 100%; }
         #dashboard-view .sidebar {
             width: 260px; background: white; box-shadow: 2px 0 8px rgba(0,0,0,0.04);
-            padding: 24px 0; position: fixed; left: 0; top: 0; height: 100vh; overflow-y: auto; z-index: 1000;
+            padding: 24px 0; position: fixed; left: 0; top: 0; height: 100vh; overflow-y: auto; overflow-x: hidden; z-index: 1000;
             border-right: 1px solid #e5e7eb; transition: transform 0.3s ease;
+            scrollbar-width: none; -ms-overflow-style: none;
         }
+        #dashboard-view .sidebar::-webkit-scrollbar { display: none; }
         #dashboard-view .sidebar.hidden { transform: translateX(-100%); }
         #dashboard-view .sidebar .logo {
             padding: 24px 20px; border-bottom: 1px solid #e5e7eb;
@@ -5080,10 +5081,8 @@
             var content = el.querySelector('.scrollable-content');
             if (!content) return;
             if (content.dataset.loopReady === '1') return;
-            // Duplicate cards once so there is always scrollable width for seamless motion.
-            if (content.scrollWidth <= el.clientWidth + 20) {
-                content.innerHTML = content.innerHTML + content.innerHTML;
-            }
+            // Always duplicate so carousel repeats seamlessly and runs 24/7.
+            content.innerHTML = content.innerHTML + content.innerHTML;
             content.dataset.loopReady = '1';
         }
         function carouselTick(id) {
