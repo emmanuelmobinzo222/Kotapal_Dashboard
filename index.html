@@ -438,18 +438,32 @@
             transform: translateX(24px);
         }
         .toggle-wrap .toggle-text {
-            margin-left: 10px;
-            min-width: 28px;
-            font-weight: 600;
-            color: var(--dark);
+            display: none;
         }
-        #dashboard-view.theme-dark .toggle-wrap .toggle-text { color: #e5e7eb; }
-        /* Dark theme: ensure all info, buttons and data are visible */
+        /* Dark theme: keep white panels readable (black text on white) */
         #dashboard-view.theme-dark,
         #dashboard-view.theme-dark .main-content { background: #111827 !important; }
         #dashboard-view.theme-dark .sidebar { background: #0f172a !important; border-color: #1e293b; }
+        #dashboard-view.theme-dark .nav-link { color: #e5e7eb !important; }
+        #dashboard-view.theme-dark .nav-link:hover,
+        #dashboard-view.theme-dark .nav-link.active { background: rgba(59,130,246,0.2); color: #93c5fd !important; }
+        #dashboard-view.theme-dark .sidebar-toggle,
+        #dashboard-view.theme-dark .nav-toggle-float { background: #1f2937 !important; color: #e5e7eb !important; border-color: #374151 !important; }
         #dashboard-view.theme-dark .card,
-        #dashboard-view.theme-dark .table-container { background: #1f2937 !important; border-color: #374151; color: #e5e7eb; }
+        #dashboard-view.theme-dark .stat-card,
+        #dashboard-view.theme-dark .table-container,
+        #dashboard-view.theme-dark .table-container table,
+        #dashboard-view.theme-dark .block-card,
+        #dashboard-view.theme-dark .modal-content,
+        #dashboard-view.theme-dark [style*="background: white"],
+        #dashboard-view.theme-dark [style*="background:#fff"],
+        #dashboard-view.theme-dark [style*="background: #fff"],
+        #dashboard-view.theme-dark [style*="background:#ffffff"],
+        #dashboard-view.theme-dark [style*="background-color: white"] {
+            background: #ffffff !important;
+            color: #111827 !important;
+            border-color: #e5e7eb !important;
+        }
         #dashboard-view.theme-dark .card-title,
         #dashboard-view.theme-dark .page-title,
         #dashboard-view.theme-dark .user-name,
@@ -458,32 +472,39 @@
         #dashboard-view.theme-dark .block-title,
         #dashboard-view.theme-dark th,
         #dashboard-view.theme-dark td,
-        #dashboard-view.theme-dark .form-control,
         #dashboard-view.theme-dark label,
-        #dashboard-view.theme-dark .nav-link,
         #dashboard-view.theme-dark .block-meta,
-        #dashboard-view.theme-dark .block-status { color: #e5e7eb !important; }
-        #dashboard-view.theme-dark .nav-link:hover,
-        #dashboard-view.theme-dark .nav-link.active { background: rgba(59,130,246,0.2); color: #93c5fd !important; }
-        #dashboard-view.theme-dark .table-container th { background: #374151 !important; color: #f3f4f6 !important; }
-        #dashboard-view.theme-dark .table-container td { border-color: #374151; color: #e5e7eb !important; }
-        #dashboard-view.theme-dark .card-header { border-color: #374151; }
-        #dashboard-view.theme-dark .btn-primary { background: #2563eb !important; color: #fff !important; border-color: #2563eb !important; }
-        #dashboard-view.theme-dark .btn-secondary { background: #374151 !important; color: #e5e7eb !important; border-color: #4b5563 !important; }
-        #dashboard-view.theme-dark .form-control { background: #374151 !important; border-color: #4b5563 !important; }
-        #dashboard-view.theme-dark .block-card { background: #1f2937 !important; border-color: #374151 !important; }
+        #dashboard-view.theme-dark .block-status,
+        #dashboard-view.theme-dark p,
+        #dashboard-view.theme-dark span,
+        #dashboard-view.theme-dark small,
+        #dashboard-view.theme-dark li {
+            color: #111827 !important;
+        }
+        #dashboard-view.theme-dark .table-container th { background: #f8fafc !important; color: #111827 !important; }
+        #dashboard-view.theme-dark .table-container td { border-color: #e5e7eb !important; color: #111827 !important; }
+        #dashboard-view.theme-dark .card-header { border-color: #e5e7eb !important; }
+        #dashboard-view.theme-dark .form-control { background: #ffffff !important; border-color: #d1d5db !important; color: #111827 !important; }
         #dashboard-view.theme-dark .user-plan,
         #dashboard-view.theme-dark .stat-label,
-        #dashboard-view.theme-dark .small { color: #9ca3af !important; }
-        #dashboard-view.theme-dark .status-active { background: #065f46 !important; color: #6ee7b7 !important; }
-        #dashboard-view.theme-dark .status-draft { background: #78350f !important; color: #fcd34d !important; }
-        #dashboard-view.theme-dark .analytics-view-btn,
-        #dashboard-view.theme-dark .btn-publish,
-        #dashboard-view.theme-dark .btn-publish-toggle { color: #e5e7eb !important; }
-        #dashboard-view.theme-dark .sidebar-toggle,
-        #dashboard-view.theme-dark .nav-toggle-float { background: #1f2937 !important; color: #e5e7eb !important; border-color: #374151 !important; }
+        #dashboard-view.theme-dark .small { color: #374151 !important; }
+        #dashboard-view.theme-dark .status-active { background: #dcfce7 !important; color: #166534 !important; }
+        #dashboard-view.theme-dark .status-draft { background: #fef3c7 !important; color: #92400e !important; }
+        #dashboard-view .btn-publish-toggle { display: inline-block !important; visibility: visible !important; opacity: 1 !important; }
+        #dashboard-view .btn-publish-toggle.btn-secondary,
+        #dashboard-view .btn-unpublish {
+            background: #fee2e2 !important;
+            color: #b91c1c !important;
+            border: 1px solid #fecaca !important;
+        }
+        #dashboard-view.theme-dark .btn-publish-toggle.btn-secondary,
+        #dashboard-view.theme-dark .btn-unpublish {
+            background: #fee2e2 !important;
+            color: #b91c1c !important;
+            border-color: #fecaca !important;
+        }
 
-        .toggle-text {
+        .toggle-switch .toggle-text {
             position: absolute;
             top: 50%;
             transform: translateY(-50%);
@@ -494,12 +515,12 @@
             transition: all 0.3s ease;
         }
 
-        .toggle-text.on {
+        .toggle-switch .toggle-text.on {
             left: 6px;
             opacity: 0;
         }
 
-        .toggle-text.off {
+        .toggle-switch .toggle-text.off {
             right: 6px;
             opacity: 1;
         }
@@ -3251,6 +3272,10 @@
         #dashboard-view .block-btn { flex: 1; padding: 8px 12px; border-radius: 5px; font-size: 0.8rem; text-align: center; cursor: pointer; border: 1px solid transparent; font-weight: 500; transition: all 0.2s ease; }
         #dashboard-view .btn-edit { background: #dbeafe; color: #1d4ed8; border: 1px solid #93c5fd; }
         #dashboard-view .btn-publish { background: #dcfce7; color: #16a34a; border: 1px solid #86efac; }
+        #dashboard-view .btn-unpublish { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
+        #dashboard-view .btn-unpublish:hover { background: #fecaca; color: #7f1d1d; }
+        #dashboard-view .btn-secondary { background: #e5e7eb; color: #1f2937; border: 1px solid #cbd5e1; }
+        #dashboard-view .btn-secondary:hover { background: #d1d5db; color: #111827; }
         #dashboard-view .btn-delete { background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; }
         #dashboard-view .table-container { overflow-x: auto; border-radius: 8px; }
         #dashboard-view .table-container table { width: 100%; border-collapse: collapse; background: white; }
@@ -3777,16 +3802,6 @@
                                 </div>
                                 <p style="margin:0 0 8px 0; font-size:0.85rem; color:var(--gray);">Or choose a template (simple, natural, different colours):</p>
                                 <div id="profilePictureTemplates" style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:8px;"></div>
-                            </div>
-                            <div class="form-group">
-                                <label>Wallpaper (dashboard background)</label>
-                                <div class="form-group">
-                                    <label class="small">Templates</label>
-                                    <div id="wallpaperTemplates" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;"></div>
-                                    <label class="small">Or upload your own</label>
-                                    <input type="file" id="wallpaperUpload" accept="image/*" style="display:none;">
-                                    <button type="button" class="btn btn-secondary" onclick="document.getElementById('wallpaperUpload').click()">Upload image</button>
-                                </div>
                             </div>
                             <div class="form-group">
                                 <label for="userName">Name</label>
@@ -5119,6 +5134,15 @@
             if (style.display === 'none' || style.visibility === 'hidden') return;
             if (!carouselRAF.pricingWrapper) startCarousel('pricingWrapper');
         }, 1000);
+        // Hard fallback: continuously advance pricing carousel even if RAF is interrupted.
+        setInterval(function() {
+            var el = document.getElementById('pricingWrapper');
+            if (!el) return;
+            var maxScroll = el.scrollWidth - el.clientWidth - 5;
+            if (maxScroll <= 0) return;
+            el.scrollLeft += 0.8;
+            if (el.scrollLeft >= maxScroll) el.scrollLeft = 0;
+        }, 16);
 
         // Page navigation
         function showPage(pageId) {
@@ -5679,31 +5703,17 @@
             { name: 'Natural (cool)', url: 'https://api.dicebear.com/7.x/lorelei/svg?seed=c&backgroundColor=f0f9ff' },
             { name: 'Simple (mint)', url: 'https://api.dicebear.com/7.x/notionists/svg?seed=1&backgroundColor=a7f3d0' },
             { name: 'Simple (lavender)', url: 'https://api.dicebear.com/7.x/notionists/svg?seed=2&backgroundColor=e9d5ff' },
-            { name: 'Simple (peach)', url: 'https://api.dicebear.com/7.x/notionists/svg?seed=3&backgroundColor=fed7aa' }
+            { name: 'Simple (peach)', url: 'https://api.dicebear.com/7.x/notionists/svg?seed=3&backgroundColor=fed7aa' },
+            { name: 'Natural (olive)', url: 'https://api.dicebear.com/7.x/lorelei/svg?seed=d&backgroundColor=ecfccb' },
+            { name: 'Natural (sky)', url: 'https://api.dicebear.com/7.x/lorelei/svg?seed=e&backgroundColor=e0f2fe' },
+            { name: 'Natural (rose)', url: 'https://api.dicebear.com/7.x/lorelei/svg?seed=f&backgroundColor=ffe4e6' },
+            { name: 'Simple (sand)', url: 'https://api.dicebear.com/7.x/notionists/svg?seed=4&backgroundColor=fef3c7' },
+            { name: 'Simple (bluegray)', url: 'https://api.dicebear.com/7.x/notionists/svg?seed=5&backgroundColor=dbeafe' }
         ];
-        const WALLPAPER_TEMPLATES = [
-            { name: 'Nature', url: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800', type: 'nature' },
-            { name: 'Forest', url: 'https://images.unsplash.com/photo-1448375240586-882707db888b?w=800', type: 'nature' },
-            { name: 'Cartoon (male)', url: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=400', type: 'cartoon-male' },
-            { name: 'Cartoon (female)', url: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400', type: 'cartoon-female' }
-        ];
-        function applyWallpaper(url) {
-            const main = document.querySelector('#dashboard-view .main-content');
-            if (!main) return;
-            if (url) {
-                main.style.backgroundImage = 'url(' + url + ')';
-                main.style.backgroundSize = 'cover';
-                main.style.backgroundPosition = 'center';
-            } else {
-                main.style.backgroundImage = '';
-            }
-        }
         function applySavedProfileAndWallpaper() {
             const pic = localStorage.getItem('kota_profile_picture');
             const sidebarAvatar = document.getElementById('sidebarUserAvatar');
             if (pic && sidebarAvatar) sidebarAvatar.src = pic;
-            const wallpaper = localStorage.getItem('kota_wallpaper');
-            if (wallpaper) applyWallpaper(wallpaper);
             applyDarkModeFromStorage();
         }
         function applyDarkModeFromStorage() {
@@ -5730,20 +5740,6 @@
             const sidebarAvatar = document.getElementById('sidebarUserAvatar');
             if (profilePic && preview) preview.src = profilePic;
             if (profilePic && sidebarAvatar) sidebarAvatar.src = profilePic;
-            const wallpaper = localStorage.getItem('kota_wallpaper');
-            if (wallpaper) applyWallpaper(wallpaper);
-            const templatesEl = document.getElementById('wallpaperTemplates');
-            if (templatesEl && !templatesEl.innerHTML) {
-                templatesEl.innerHTML = WALLPAPER_TEMPLATES.map(t => '<button type="button" class="btn btn-secondary" style="padding:8px 12px;font-size:0.85rem;" data-wallpaper="' + t.url + '">' + t.name + '</button>').join('');
-                templatesEl.querySelectorAll('[data-wallpaper]').forEach(btn => {
-                    btn.addEventListener('click', function() {
-                        const url = this.getAttribute('data-wallpaper');
-                        localStorage.setItem('kota_wallpaper', url);
-                        applyWallpaper(url);
-                        showNotification('Wallpaper updated.', 'success', 'Settings');
-                    });
-                });
-            }
             const profileTemplatesEl = document.getElementById('profilePictureTemplates');
             if (profileTemplatesEl && !profileTemplatesEl.dataset.bound) {
                 profileTemplatesEl.dataset.bound = '1';
@@ -5765,7 +5761,6 @@
                 });
             }
             const profileInput = document.getElementById('profilePictureInput');
-            const wallpaperInput = document.getElementById('wallpaperUpload');
             if (profileInput && !profileInput.dataset.bound) {
                 profileInput.dataset.bound = '1';
                 profileInput.addEventListener('change', function() {
@@ -5778,21 +5773,6 @@
                         if (preview) preview.src = data;
                         if (sidebarAvatar) sidebarAvatar.src = data;
                         showNotification('Profile picture updated.', 'success', 'Settings');
-                    };
-                    r.readAsDataURL(f);
-                });
-            }
-            if (wallpaperInput && !wallpaperInput.dataset.bound) {
-                wallpaperInput.dataset.bound = '1';
-                wallpaperInput.addEventListener('change', function() {
-                    const f = this.files && this.files[0];
-                    if (!f) return;
-                    const r = new FileReader();
-                    r.onload = function() {
-                        const data = r.result;
-                        localStorage.setItem('kota_wallpaper', data);
-                        applyWallpaper(data);
-                        showNotification('Wallpaper updated.', 'success', 'Settings');
                     };
                     r.readAsDataURL(f);
                 });
@@ -6353,7 +6333,22 @@
                     btn.addEventListener('click', function() {
                         const id = this.getAttribute('data-block-id');
                         const block = (currentBlocks || []).find(b => b.id === id);
-                        if (block) showNotification('Viewing: ' + (block.title || 'Block'), 'info', 'Block');
+                        if (block) {
+                            showPage('blocks');
+                            setTimeout(function() {
+                                const targetBtn = document.querySelector('.btn-edit[data-id="' + id.replace(/"/g, '&quot;') + '"]');
+                                const card = targetBtn ? targetBtn.closest('.block-card') : null;
+                                if (card) {
+                                    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                    card.style.outline = '2px solid var(--primary)';
+                                    card.style.outlineOffset = '2px';
+                                    setTimeout(function() {
+                                        card.style.outline = '';
+                                        card.style.outlineOffset = '';
+                                    }, 1800);
+                                }
+                            }, 120);
+                        }
                     });
                 });
             }
