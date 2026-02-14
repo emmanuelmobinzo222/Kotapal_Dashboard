@@ -1543,6 +1543,9 @@
             -webkit-overflow-scrolling: touch;
         }
 
+        .plan-card.selected { border-color: var(--primary) !important; box-shadow: 0 0 0 2px rgba(59,130,246,0.3) !important; }
+        .plan-card:hover { border-color: #cbd5e1 !important; }
+
         /* Make signup panel scrollable and keep submit button visible */
         #authModal .auth-form.active {
             max-height: none;
@@ -3357,7 +3360,7 @@
         #dashboard-view .block-carousel-wrap .block-product-image { max-height: 120px; object-fit: contain; cursor: pointer; border-radius: 6px; transition: opacity 0.3s ease; }
         #dashboard-view .block-carousel-wrap .block-product-image:hover { opacity: 0.9; }
         /* Block carousel: auto-scroll to preview products; constrained width so content overflows and scrolls */
-        #dashboard-view .block-carousel-wrap { position: relative; min-height: 120px; max-width: 140px; margin: 0 auto; overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; }
+        #dashboard-view .block-carousel-wrap { position: relative; min-height: 120px; width: 160px; max-width: 160px; margin: 0 auto; overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; }
         #dashboard-view .block-carousel-wrap::-webkit-scrollbar { display: none; }
         #dashboard-view .block-carousel-wrap { -ms-overflow-style: none; scrollbar-width: none; }
         #dashboard-view .block-carousel-slides { display: flex; flex-wrap: nowrap; gap: 12px; align-items: center; padding: 8px 0; min-height: 120px; }
@@ -4173,34 +4176,47 @@
                     </div>
                     <div class="form-group">
                         <label>Select Plan</label>
+                        <input type="hidden" name="signupPlan" id="signupPlanInput" value="free">
                         <div id="planCards"
-                            style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-top:10px;">
+                            style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-top:10px;">
+                            <div class="card plan-card selected" data-plan="free"
+                                style="cursor:pointer;border:2px solid #e5e7eb;transition:border-color .2s,box-shadow .2s;">
+                                <div style="padding:14px;">
+                                    <div style="font-weight:700;font-size:1.1rem;">Free</div>
+                                    <div style="font-size:1.25rem;font-weight:700;color:var(--primary);margin:8px 0;">$0</div>
+                                    <div class="stat-label" style="font-size:0.85rem;">1 store • Limited blocks • Basic analytics</div>
+                                </div>
+                            </div>
                             <div class="card plan-card" data-plan="starter"
-                                style="cursor:pointer;border:2px solid #e5e7eb;">
-                                <div style="padding:12px;">
-                                    <div style="font-weight:700;">Starter</div>
-                                    <div class="stat-label">Free • Basic features</div>
+                                style="cursor:pointer;border:2px solid #e5e7eb;transition:border-color .2s,box-shadow .2s;">
+                                <div style="padding:14px;">
+                                    <div style="font-weight:700;font-size:1.1rem;">Starter</div>
+                                    <div style="font-size:1.25rem;font-weight:700;color:var(--primary);margin:8px 0;">$19<span style="font-size:0.9rem;font-weight:500;color:var(--gray);">/mo</span></div>
+                                    <div class="stat-label" style="font-size:0.85rem;">Unlimited blocks • Basic analytics • 10K views</div>
                                 </div>
                             </div>
                             <div class="card plan-card" data-plan="pro"
-                                style="cursor:pointer;border:2px solid #e5e7eb;">
-                                <div style="padding:12px;">
-                                    <div style="font-weight:700;">Pro</div>
-                                    <div class="stat-label">$19/mo • Analytics & more</div>
+                                style="cursor:pointer;border:2px solid #e5e7eb;transition:border-color .2s,box-shadow .2s;">
+                                <div style="padding:14px;">
+                                    <div style="font-weight:700;font-size:1.1rem;">Pro</div>
+                                    <div style="font-size:1.25rem;font-weight:700;color:var(--primary);margin:8px 0;">$49<span style="font-size:0.9rem;font-weight:500;color:var(--gray);">/mo</span></div>
+                                    <div class="stat-label" style="font-size:0.85rem;">AI Writer • Geo Redirect • 50K views</div>
                                 </div>
                             </div>
                             <div class="card plan-card" data-plan="creatorplus"
-                                style="cursor:pointer;border:2px solid #e5e7eb;">
-                                <div style="padding:12px;">
-                                    <div style="font-weight:700;">Creator+</div>
-                                    <div class="stat-label">$49/mo • Unlimited, SmartAlerts</div>
+                                style="cursor:pointer;border:2px solid #e5e7eb;transition:border-color .2s,box-shadow .2s;">
+                                <div style="padding:14px;">
+                                    <div style="font-weight:700;font-size:1.1rem;">Creator+</div>
+                                    <div style="font-size:1.25rem;font-weight:700;color:var(--primary);margin:8px 0;">$99<span style="font-size:0.9rem;font-weight:500;color:var(--gray);">/mo</span></div>
+                                    <div class="stat-label" style="font-size:0.85rem;">YouTube blocks • Heatmaps • 200K views</div>
                                 </div>
                             </div>
                             <div class="card plan-card" data-plan="agency"
-                                style="cursor:pointer;border:2px solid #e5e7eb;">
-                                <div style="padding:12px;">
-                                    <div style="font-weight:700;">Agency</div>
-                                    <div class="stat-label">$199/mo • White-label, Multi-client</div>
+                                style="cursor:pointer;border:2px solid #e5e7eb;transition:border-color .2s,box-shadow .2s;">
+                                <div style="padding:14px;">
+                                    <div style="font-weight:700;font-size:1.1rem;">Agency</div>
+                                    <div style="font-size:1.25rem;font-weight:700;color:var(--primary);margin:8px 0;">$199<span style="font-size:0.9rem;font-weight:500;color:var(--gray);">/mo</span></div>
+                                    <div class="stat-label" style="font-size:0.85rem;">Whitelabel • Multi-client • Unlimited</div>
                                 </div>
                             </div>
                         </div>
@@ -4988,6 +5004,23 @@
                 console.error('Login form not found!');
             }
 
+            // Plan card selection (Sign Up)
+            document.querySelectorAll('.plan-card').forEach(function(card) {
+                card.addEventListener('click', function() {
+                    var plan = this.getAttribute('data-plan');
+                    var input = document.getElementById('signupPlanInput');
+                    if (input) input.value = plan;
+                    document.querySelectorAll('.plan-card').forEach(function(c) {
+                        c.classList.remove('selected');
+                        c.style.borderColor = '#e5e7eb';
+                        c.style.boxShadow = 'none';
+                    });
+                    this.classList.add('selected');
+                    this.style.borderColor = 'var(--primary)';
+                    this.style.boxShadow = '0 0 0 2px rgba(59,130,246,0.3)';
+                });
+            });
+
             // Signup form submission
             const signupForm = document.getElementById('signupFormInner');
             if (signupForm) {
@@ -4998,8 +5031,8 @@
                         const name = document.getElementById('signupName').value;
                         const email = document.getElementById('signupEmail').value;
                         const password = document.getElementById('signupPassword').value;
-                        const planInput = document.querySelector('input[name="signupPlan"]:checked');
-                        const plan = planInput ? planInput.value : 'starter';
+                        const planInput = document.getElementById('signupPlanInput');
+                        const plan = planInput ? planInput.value : 'free';
                         console.log('Signup attempt:', email, plan);
                         await handleFirebaseSignup(name, email, password, plan);
                     } catch (error) {
@@ -5352,21 +5385,24 @@
                 el.scrollLeft += speed;
                 if (el.scrollLeft >= maxScroll) el.scrollLeft = 0;
             });
-            // SmartBlock carousels: auto-scroll so users can preview products on each block
-            var blockWraps = document.querySelectorAll('#dashboard-view .block-carousel-wrap');
+        }
+        function tickBlockCarousels() {
+            var blocksPage = document.getElementById('blocks-page');
+            var dash = document.getElementById('dashboard-view');
+            if (!blocksPage || !dash || window.getComputedStyle(blocksPage).display === 'none' || window.getComputedStyle(dash).display === 'none') return;
+            var blockWraps = document.querySelectorAll('.block-carousel-wrap');
             blockWraps.forEach(function(wrap) {
                 if (!wrap.offsetParent) return;
-                var blocksPage = document.getElementById('blocks-page');
-                if (blocksPage && window.getComputedStyle(blocksPage).display === 'none') return;
                 var maxScroll = wrap.scrollWidth - wrap.clientWidth - 5;
                 if (maxScroll <= 0) return;
-                wrap.scrollLeft += 0.4;
+                wrap.scrollLeft += 0.5;
                 var third = wrap.scrollWidth / 3;
                 if (wrap.scrollLeft >= third - 5) wrap.scrollLeft = 0;
             });
         }
         function carouselAnimationLoop() {
             tickAllCarousels();
+            tickBlockCarousels();
             requestAnimationFrame(carouselAnimationLoop);
         }
         requestAnimationFrame(carouselAnimationLoop);
