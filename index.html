@@ -3357,7 +3357,7 @@
         #dashboard-view .block-carousel-wrap .block-product-image { max-height: 120px; object-fit: contain; cursor: pointer; border-radius: 6px; transition: opacity 0.3s ease; }
         #dashboard-view .block-carousel-wrap .block-product-image:hover { opacity: 0.9; }
         /* Block carousel: auto-scroll to preview products; constrained width so content overflows and scrolls */
-        #dashboard-view .block-carousel-wrap { position: relative; min-height: 120px; max-width: 180px; margin: 0 auto; overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; }
+        #dashboard-view .block-carousel-wrap { position: relative; min-height: 120px; max-width: 140px; margin: 0 auto; overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; }
         #dashboard-view .block-carousel-wrap::-webkit-scrollbar { display: none; }
         #dashboard-view .block-carousel-wrap { -ms-overflow-style: none; scrollbar-width: none; }
         #dashboard-view .block-carousel-slides { display: flex; flex-wrap: nowrap; gap: 12px; align-items: center; padding: 8px 0; min-height: 120px; }
@@ -5355,14 +5355,14 @@
             // SmartBlock carousels: auto-scroll so users can preview products on each block
             var blockWraps = document.querySelectorAll('#dashboard-view .block-carousel-wrap');
             blockWraps.forEach(function(wrap) {
-                var parent = wrap.closest('#blocks-page');
-                if (parent && parent.style.display === 'none') return;
                 if (!wrap.offsetParent) return;
+                var blocksPage = document.getElementById('blocks-page');
+                if (blocksPage && window.getComputedStyle(blocksPage).display === 'none') return;
                 var maxScroll = wrap.scrollWidth - wrap.clientWidth - 5;
                 if (maxScroll <= 0) return;
                 wrap.scrollLeft += 0.4;
-                var half = wrap.scrollWidth / 2;
-                if (wrap.scrollLeft >= half - 5) wrap.scrollLeft = 0;
+                var third = wrap.scrollWidth / 3;
+                if (wrap.scrollLeft >= third - 5) wrap.scrollLeft = 0;
             });
         }
         function carouselAnimationLoop() {
@@ -6335,7 +6335,7 @@
                         </div>
                         <div class="block-products-preview">
                             <div class="block-carousel-wrap" data-block-id="${(block.id || '').replace(/"/g, '&quot;')}">
-                                <div class="block-carousel-slides">${productsPreviewHtml}${productsPreviewHtml}</div>
+                                <div class="block-carousel-slides">${productsPreviewHtml}${productsPreviewHtml}${productsPreviewHtml}</div>
                             </div>
                         </div>
                         <div class="block-actions">
