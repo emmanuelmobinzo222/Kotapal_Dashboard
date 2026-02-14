@@ -97,6 +97,7 @@
             max-width: 100vw;
             overflow-x: hidden;
         }
+        /* Landing page, nav, footer: never receive theme-dark; dark mode applies only to #dashboard-view */
 
         section {
             padding: 80px 0;
@@ -3332,8 +3333,48 @@
         #dashboard-view .block-body { padding: 20px; }
         #dashboard-view .block-meta { display: flex; justify-content: space-between; margin-bottom: 15px; font-size: 0.9rem; }
         #dashboard-view .block-meta span { color: var(--gray); }
-        #dashboard-view .block-products-preview { display: flex; justify-content: center; align-items: center; margin: 12px 0; }
-        #dashboard-view .block-product-image { display: block; margin-left: auto; margin-right: auto; max-width: 100%; }
+        #dashboard-view .block-products-preview {
+            display: flex; justify-content: center; align-items: center; margin: 12px 0;
+            position: relative; overflow: hidden; min-height: 80px; border-radius: 8px; background: #f8fafc;
+        }
+        #dashboard-view .block-carousel-inner {
+            display: flex; align-items: center; justify-content: center; width: 100%; position: relative;
+        }
+        #dashboard-view .block-carousel-inner .block-product-image {
+            max-width: 100%; max-height: 120px; width: auto; height: auto; object-fit: contain;
+            cursor: pointer; border-radius: 6px; transition: opacity 0.2s ease;
+        }
+        #dashboard-view .block-carousel-inner .block-product-image:hover { opacity: 0.9; }
+        #dashboard-view .block-product-image { display: block; margin-left: auto; margin-right: auto; max-width: 100%; cursor: pointer; }
+        #dashboard-view .block-carousel-wrap { position: relative; width: 100%; min-height: 100px; }
+        #dashboard-view .block-carousel-wrap .block-product-image { max-height: 120px; object-fit: contain; cursor: pointer; border-radius: 6px; transition: opacity 0.3s ease; }
+        #dashboard-view .block-carousel-wrap .block-product-image:hover { opacity: 0.9; }
+        /* Block carousel: auto-rotate slides; one visible at a time */
+        #dashboard-view .block-carousel-wrap { position: relative; min-height: 120px; overflow: hidden; }
+        #dashboard-view .block-carousel-slides { position: relative; width: 100%; min-height: 120px; }
+        #dashboard-view .block-carousel-slide { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.5s ease; pointer-events: none; }
+        #dashboard-view .block-carousel-slide.active { opacity: 1; z-index: 1; pointer-events: auto; }
+        #dashboard-view .block-carousel-slide img { max-height: 120px; max-width: 100%; object-fit: contain; cursor: pointer; border-radius: 6px; }
+        /* Block image lightbox (gallery) */
+        #blockImageLightbox {
+            display: none; position: fixed; inset: 0; z-index: 10000; background: rgba(0,0,0,0.9);
+            align-items: center; justify-content: center; padding: 20px; box-sizing: border-box;
+        }
+        #blockImageLightbox.active { display: flex; }
+        #blockImageLightbox .lightbox-content { position: relative; max-width: 90vw; max-height: 90vh; }
+        #blockImageLightbox .lightbox-content img { max-width: 100%; max-height: 85vh; object-fit: contain; border-radius: 8px; }
+        #blockImageLightbox .lightbox-close, #blockImageLightbox .lightbox-prev, #blockImageLightbox .lightbox-next {
+            position: absolute; background: rgba(255,255,255,0.2); border: none; color: #fff;
+            width: 44px; height: 44px; border-radius: 50%; cursor: pointer; font-size: 1.2rem;
+            display: flex; align-items: center; justify-content: center; transition: background 0.2s;
+        }
+        #blockImageLightbox .lightbox-close:hover, #blockImageLightbox .lightbox-prev:hover, #blockImageLightbox .lightbox-next:hover {
+            background: rgba(255,255,255,0.35);
+        }
+        #blockImageLightbox .lightbox-close { top: -50px; right: 0; }
+        #blockImageLightbox .lightbox-prev { left: -50px; top: 50%; transform: translateY(-50%); }
+        #blockImageLightbox .lightbox-next { right: -50px; top: 50%; transform: translateY(-50%); }
+        #blockImageLightbox .lightbox-counter { color: #fff; text-align: center; margin-top: 10px; font-size: 0.9rem; }
         #dashboard-view .block-actions { display: flex; gap: 10px; }
         #dashboard-view .block-btn { flex: 1; padding: 8px 12px; border-radius: 5px; font-size: 0.8rem; text-align: center; cursor: pointer; border: 1px solid transparent; font-weight: 500; transition: all 0.2s ease; }
         #dashboard-view .btn-edit { background: #dbeafe; color: #1d4ed8; border: 1px solid #93c5fd; }
@@ -3348,24 +3389,54 @@
         #dashboard-view .table-container th, #dashboard-view .table-container td { padding: 15px; text-align: left; border-bottom: 1px solid #e5e7eb; }
         #dashboard-view .table-container th { background: #f8fafc; font-weight: 600; color: var(--dark); }
         #dashboard-view .table-container tr:hover { background: #f9fafb; }
-        /* Show Sensitive Data button: blue like Show analytics button */
-        #dashboard-view .sensitive-toggle {
-            display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px;
-            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-            border: 1px solid #2563eb; border-radius: 8px; cursor: pointer;
-            font-size: 0.875rem; color: #ffffff !important; font-weight: 500; transition: all 0.2s ease;
-            box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
-        }
-        #dashboard-view .sensitive-toggle:hover { background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: #ffffff !important; box-shadow: 0 4px 8px rgba(59, 130, 246, 0.35); }
-        #dashboard-view .sensitive-toggle.active { background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%); border-color: #1e40af; color: #ffffff !important; }
-        #dashboard-view .sensitive-toggle i, #dashboard-view .sensitive-toggle span { color: #ffffff !important; }
-        #dashboard-view.theme-dark .sensitive-toggle {
+        /* Show Sensitive Data button: blue like Create Block / Show analytics – never white; always visible in light and dark */
+        #dashboard-view button.sensitive-toggle,
+        #dashboard-view.theme-dark button.sensitive-toggle {
+            display: inline-flex !important; align-items: center; gap: 8px; padding: 10px 18px;
             background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
-            border-color: #2563eb !important; color: #ffffff !important;
+            background-color: #3b82f6 !important;
+            border: 1px solid #2563eb !important; border-radius: 8px; cursor: pointer;
+            font-size: 0.875rem; color: #ffffff !important; font-weight: 500; transition: all 0.2s ease;
+            box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3); appearance: none; -webkit-appearance: none;
         }
-        #dashboard-view.theme-dark .sensitive-toggle:hover,
-        #dashboard-view.theme-dark .sensitive-toggle.active { background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important; color: #ffffff !important; }
-        #dashboard-view.theme-dark .sensitive-toggle *, #dashboard-view.theme-dark .sensitive-toggle i, #dashboard-view.theme-dark .sensitive-toggle span { color: #ffffff !important; }
+        #dashboard-view button.sensitive-toggle:hover,
+        #dashboard-view.theme-dark button.sensitive-toggle:hover {
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
+            background-color: #2563eb !important;
+            color: #ffffff !important;
+            box-shadow: 0 4px 8px rgba(59, 130, 246, 0.35);
+        }
+        #dashboard-view button.sensitive-toggle.active,
+        #dashboard-view.theme-dark button.sensitive-toggle.active {
+            background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%) !important;
+            background-color: #1d4ed8 !important;
+            border-color: #1e40af !important;
+            color: #ffffff !important;
+        }
+        #dashboard-view button.sensitive-toggle i, #dashboard-view button.sensitive-toggle span,
+        #dashboard-view.theme-dark button.sensitive-toggle i, #dashboard-view.theme-dark button.sensitive-toggle span {
+            color: #ffffff !important;
+        }
+        /* Force Show/Hide Sensitive Data buttons to always look blue (like Show Analytics) in light and dark mode */
+        #dashboard-view #globalSensitiveToggle, #dashboard-view #globalSensitiveToggleAnalytics {
+            display: inline-flex !important; align-items: center; gap: 8px; padding: 10px 18px !important;
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
+            background-color: #3b82f6 !important;
+            border: 1px solid #2563eb !important; border-radius: 8px; cursor: pointer;
+            font-size: 0.875rem; color: #ffffff !important; font-weight: 500;
+            box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3); appearance: none; -webkit-appearance: none;
+        }
+        #dashboard-view #globalSensitiveToggle:hover, #dashboard-view #globalSensitiveToggleAnalytics:hover,
+        #dashboard-view.theme-dark #globalSensitiveToggle:hover, #dashboard-view.theme-dark #globalSensitiveToggleAnalytics:hover {
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
+            color: #ffffff !important;
+        }
+        #dashboard-view #globalSensitiveToggle i, #dashboard-view #globalSensitiveToggle span,
+        #dashboard-view #globalSensitiveToggleAnalytics i, #dashboard-view #globalSensitiveToggleAnalytics span,
+        #dashboard-view.theme-dark #globalSensitiveToggle i, #dashboard-view.theme-dark #globalSensitiveToggle span,
+        #dashboard-view.theme-dark #globalSensitiveToggleAnalytics i, #dashboard-view.theme-dark #globalSensitiveToggleAnalytics span {
+            color: #ffffff !important;
+        }
         #dashboard-view [data-sensitive="true"] { filter: blur(8px); user-select: none; transition: filter 0.3s ease; }
         #dashboard-view [data-sensitive="true"].revealed { filter: none; }
         #dashboard-view .sidebar-toggle {
@@ -3456,7 +3527,7 @@
                             <button class="btn btn-primary" id="createBlockBtn">Create New Block</button>
                         </div>
                         <div style="display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; width: 100%; margin-top: 12px;">
-                            <button type="button" class="sensitive-toggle" id="globalSensitiveToggle" onclick="toggleAllSensitive()">
+                            <button type="button" class="btn btn-primary sensitive-toggle" id="globalSensitiveToggle" onclick="toggleAllSensitive()">
                                 <i class="fas fa-eye-slash"></i>
                                 <span>Show Sensitive Data</span>
                             </button>
@@ -3987,6 +4058,17 @@
                 <button type="button" class="btn btn-secondary" id="logoutConfirmCancel" style="background:#f1f5f9 !important; color:#1e293b !important; border:2px solid #94a3b8 !important;">Cancel</button>
                 <button type="button" class="btn btn-primary" id="logoutConfirmBtn">Logout</button>
             </div>
+        </div>
+    </div>
+
+    <!-- SmartBlock image gallery lightbox -->
+    <div id="blockImageLightbox" aria-hidden="true">
+        <div class="lightbox-content">
+            <button type="button" class="lightbox-close" id="blockLightboxClose" aria-label="Close">&times;</button>
+            <button type="button" class="lightbox-prev" id="blockLightboxPrev" aria-label="Previous"><i class="fas fa-chevron-left"></i></button>
+            <img id="blockLightboxImg" src="" alt="">
+            <button type="button" class="lightbox-next" id="blockLightboxNext" aria-label="Next"><i class="fas fa-chevron-right"></i></button>
+            <div class="lightbox-counter" id="blockLightboxCounter"></div>
         </div>
     </div>
 
@@ -4633,17 +4715,13 @@
                 dashboardView.style.display = 'none';
                 dashboardView.classList.remove('active');
             }
-            if (landingView) landingView.style.display = 'block';
+            if (landingView) { landingView.style.display = 'block'; landingView.classList.remove('theme-dark'); }
             if (nav) nav.style.display = 'flex';
             if (footer) footer.style.display = 'block';
+            /* Dark mode only on dashboard; never on body so landing page always stays original */
             var darkOn = localStorage.getItem('kota_dark_mode') === '1';
-            if (darkOn) {
-                var dash = document.getElementById('dashboard-view');
-                if (dash) dash.classList.add('theme-dark');
-            } else {
-                var dash = document.getElementById('dashboard-view');
-                if (dash) dash.classList.remove('theme-dark');
-            }
+            var dash = document.getElementById('dashboard-view');
+            if (dash) { if (darkOn) dash.classList.add('theme-dark'); else dash.classList.remove('theme-dark'); }
             
             // Only clear explicit login flag if it doesn't exist (first visit)
             // Don't clear it if user just logged in
@@ -4759,7 +4837,10 @@
                         dashboardView.style.display = 'none';
                         dashboardView.classList.remove('active');
                     }
-                    if (landingView) landingView.style.display = 'block';
+                    if (landingView) {
+                        landingView.style.display = 'block';
+                        landingView.classList.remove('theme-dark'); /* Landing never uses dark mode */
+                    }
                     if (nav) nav.style.display = 'flex';
                     if (footer) footer.style.display = 'block';
                     
@@ -5272,6 +5353,8 @@
 
         // Landing page navigation (unique name so dashboard showPage does not overwrite)
         function showLandingPage(pageId) {
+            var landingView = document.getElementById('landing-page-view');
+            if (landingView) landingView.classList.remove('theme-dark');
             var home = document.getElementById('home-page');
             var blog = document.getElementById('blog-page');
             var contact = document.getElementById('contact-page');
@@ -5555,7 +5638,7 @@
                 const nav = document.querySelector('nav');
                 const footer = document.querySelector('footer');
                 if (dashboardView) { dashboardView.style.display = 'none'; }
-                if (landingView) landingView.style.display = 'block';
+                if (landingView) { landingView.style.display = 'block'; landingView.classList.remove('theme-dark'); }
                 if (nav) nav.style.display = 'flex';
                 if (footer) footer.style.display = 'block';
                 var homePage = document.getElementById('home-page');
@@ -5859,6 +5942,7 @@
         function applyDarkModeFromStorage() {
             const dash = document.getElementById('dashboard-view');
             const darkOn = localStorage.getItem('kota_dark_mode') === '1';
+            document.body.classList.remove('theme-dark');
             if (dash) {
                 if (darkOn) dash.classList.add('theme-dark'); else dash.classList.remove('theme-dark');
             }
@@ -5926,6 +6010,7 @@
                     darkToggle.addEventListener('change', function() {
                     var on = this.checked;
                     localStorage.setItem('kota_dark_mode', on ? '1' : '0');
+                    document.body.classList.remove('theme-dark');
                     var dash = document.getElementById('dashboard-view');
                     if (dash) { if (on) dash.classList.add('theme-dark'); else dash.classList.remove('theme-dark'); }
                     var t = document.querySelector('#darkModeToggle + .toggle-label .toggle-text');
@@ -6183,12 +6268,16 @@
                 const blockCard = document.createElement('div');
                 blockCard.className = 'block-card';
                 
-                const productsPreviewHtml = (block.productsList || []).slice(0, 1).map(p => `
-                    <img src="${(p && p.image ? p.image : 'https://via.placeholder.com/64').replace(/"/g, '&quot;')}"
-                         alt="${((p && p.title) || '').replace(/"/g, '&quot;')}"
-                         class="block-product-image"
-                         onerror="this.src='https://via.placeholder.com/64'">
-                `).join('');
+                const products = block.productsList || [];
+                const images = products.length > 0 ? products : [{ image: 'https://via.placeholder.com/64', title: 'No products' }];
+                const productsPreviewHtml = images.map((p, idx) => {
+                    const imgUrl = (p && p.image ? p.image : 'https://via.placeholder.com/64').replace(/"/g, '&quot;');
+                    const alt = ((p && p.title) || '').replace(/"/g, '&quot;');
+                    return `<div class="block-carousel-slide ${idx === 0 ? 'active' : ''}" data-index="${idx}">
+                        <img src="${imgUrl}" alt="${alt}" class="block-product-image" data-src="${imgUrl}" data-alt="${alt}"
+                             onerror="this.src='https://via.placeholder.com/64'">
+                    </div>`;
+                }).join('');
 
                 blockCard.innerHTML = `
                     <div class="block-header">
@@ -6210,7 +6299,9 @@
                             <span>Last Updated: ${block.lastUpdated}</span>
                         </div>
                         <div class="block-products-preview">
-                            ${productsPreviewHtml}
+                            <div class="block-carousel-wrap" data-block-id="${(block.id || '').replace(/"/g, '&quot;')}">
+                                <div class="block-carousel-slides">${productsPreviewHtml}</div>
+                            </div>
                         </div>
                         <div class="block-actions">
                             <button class="block-btn btn-edit" data-id="${block.id}">Edit</button>
@@ -6251,7 +6342,80 @@
                         if (modal) modal.style.display = 'flex';
                     });
                 });
+                initBlockCarousels();
+                initBlockImageLightbox();
             }, 100);
+        }
+
+        function initBlockCarousels() {
+            if (window._blockCarouselTimer) clearInterval(window._blockCarouselTimer);
+            window._blockCarouselTimer = setInterval(function() {
+                document.querySelectorAll('.block-carousel-wrap').forEach(function(wrap) {
+                    const slides = wrap.querySelectorAll('.block-carousel-slide');
+                    if (slides.length <= 1) return;
+                    const active = wrap.querySelector('.block-carousel-slide.active');
+                    const idx = active ? parseInt(active.dataset.index || '0', 10) : 0;
+                    const nextIdx = (idx + 1) % slides.length;
+                    active && active.classList.remove('active');
+                    slides[nextIdx] && slides[nextIdx].classList.add('active');
+                });
+            }, 4000);
+        }
+
+        var blockLightboxImages = [];
+        var blockLightboxIndex = 0;
+
+        function initBlockImageLightbox() {
+            document.querySelectorAll('#blocksContainer .block-product-image').forEach(function(img) {
+                img.addEventListener('click', function() {
+                    const wrap = this.closest('.block-carousel-wrap');
+                    if (!wrap) return;
+                    const blockId = wrap.dataset.blockId;
+                    const block = (currentBlocks || []).find(function(b) { return b.id === blockId; });
+                    const products = (block && block.productsList) || [];
+                    blockLightboxImages = products.length > 0 ? products.map(function(p) { return p && p.image ? p.image : 'https://via.placeholder.com/64'; }) : ['https://via.placeholder.com/64'];
+                    const slide = this.closest('.block-carousel-slide');
+                    blockLightboxIndex = slide ? parseInt(slide.dataset.index || '0', 10) : 0;
+                    openBlockLightbox();
+                });
+            });
+            if (window._blockLightboxBound) return;
+            window._blockLightboxBound = true;
+            var closeBtn = document.getElementById('blockLightboxClose');
+            var prevBtn = document.getElementById('blockLightboxPrev');
+            var nextBtn = document.getElementById('blockLightboxNext');
+            var lb = document.getElementById('blockImageLightbox');
+            if (closeBtn) closeBtn.addEventListener('click', closeBlockLightbox);
+            if (prevBtn) prevBtn.addEventListener('click', function() { blockLightboxIndex = (blockLightboxIndex - 1 + blockLightboxImages.length) % blockLightboxImages.length; updateBlockLightboxImg(); });
+            if (nextBtn) nextBtn.addEventListener('click', function() { blockLightboxIndex = (blockLightboxIndex + 1) % blockLightboxImages.length; updateBlockLightboxImg(); });
+            if (lb) lb.addEventListener('click', function(e) { if (e.target === lb) closeBlockLightbox(); });
+            document.addEventListener('keydown', function(e) {
+                if (!lb || !lb.classList.contains('active')) return;
+                if (e.key === 'Escape') closeBlockLightbox();
+                if (e.key === 'ArrowLeft') { blockLightboxIndex = (blockLightboxIndex - 1 + blockLightboxImages.length) % blockLightboxImages.length; updateBlockLightboxImg(); }
+                if (e.key === 'ArrowRight') { blockLightboxIndex = (blockLightboxIndex + 1) % blockLightboxImages.length; updateBlockLightboxImg(); }
+            });
+        }
+
+        function openBlockLightbox() {
+            var lb = document.getElementById('blockImageLightbox');
+            if (lb) { lb.classList.add('active'); lb.setAttribute('aria-hidden', 'false'); document.body.style.overflow = 'hidden'; }
+            updateBlockLightboxImg();
+        }
+
+        function closeBlockLightbox() {
+            var lb = document.getElementById('blockImageLightbox');
+            if (lb) { lb.classList.remove('active'); lb.setAttribute('aria-hidden', 'true'); document.body.style.overflow = ''; }
+        }
+
+        function updateBlockLightboxImg() {
+            var img = document.getElementById('blockLightboxImg');
+            var counter = document.getElementById('blockLightboxCounter');
+            if (img && blockLightboxImages.length > 0) {
+                img.src = blockLightboxImages[blockLightboxIndex];
+                img.alt = 'Gallery image ' + (blockLightboxIndex + 1);
+            }
+            if (counter) counter.textContent = (blockLightboxImages.length > 0) ? (blockLightboxIndex + 1) + ' / ' + blockLightboxImages.length : '';
         }
 
         function toggleBlockPublish(blockId) {
