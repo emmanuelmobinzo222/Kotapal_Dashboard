@@ -3346,6 +3346,7 @@
         #dashboard-view .block-products-preview {
             display: flex; justify-content: center; align-items: center; margin: 12px 0;
             position: relative; overflow: hidden; min-height: 80px; border-radius: 8px; background: #f8fafc;
+            width: 100%;
         }
         #dashboard-view .block-carousel-inner {
             display: flex; align-items: center; justify-content: center; width: 100%; position: relative;
@@ -3359,8 +3360,8 @@
         #dashboard-view .block-carousel-wrap { position: relative; width: 100%; min-height: 100px; }
         #dashboard-view .block-carousel-wrap .block-product-image { max-height: 120px; object-fit: contain; cursor: pointer; border-radius: 6px; transition: opacity 0.3s ease; }
         #dashboard-view .block-carousel-wrap .block-product-image:hover { opacity: 0.9; }
-        /* Block carousel: full width, animated right-to-left */
-        #dashboard-view .block-carousel-wrap { position: relative; min-height: 120px; width: 100%; overflow-x: hidden; overflow-y: hidden; }
+        /* Block carousel: same length as smartblock, animated right-to-left */
+        #dashboard-view .block-carousel-wrap { position: relative; min-height: 120px; width: 100%; max-width: 100%; overflow-x: hidden; overflow-y: hidden; }
         #dashboard-view .block-carousel-wrap::-webkit-scrollbar { display: none; }
         #dashboard-view .block-carousel-wrap { -ms-overflow-style: none; scrollbar-width: none; }
         @keyframes blockCarouselScroll {
