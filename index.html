@@ -3359,11 +3359,15 @@
         #dashboard-view .block-carousel-wrap { position: relative; width: 100%; min-height: 100px; }
         #dashboard-view .block-carousel-wrap .block-product-image { max-height: 120px; object-fit: contain; cursor: pointer; border-radius: 6px; transition: opacity 0.3s ease; }
         #dashboard-view .block-carousel-wrap .block-product-image:hover { opacity: 0.9; }
-        /* Block carousel: auto-scroll to preview products; constrained width so content overflows and scrolls */
-        #dashboard-view .block-carousel-wrap { position: relative; min-height: 120px; width: 160px; max-width: 160px; margin: 0 auto; overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; }
+        /* Block carousel: animated right-to-left; constrained width so content overflows */
+        #dashboard-view .block-carousel-wrap { position: relative; min-height: 120px; width: 160px; max-width: 160px; margin: 0 auto; overflow-x: hidden; overflow-y: hidden; }
         #dashboard-view .block-carousel-wrap::-webkit-scrollbar { display: none; }
         #dashboard-view .block-carousel-wrap { -ms-overflow-style: none; scrollbar-width: none; }
-        #dashboard-view .block-carousel-slides { display: flex; flex-wrap: nowrap; gap: 12px; align-items: center; padding: 8px 0; min-height: 120px; }
+        @keyframes blockCarouselScroll {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-33.333%); }
+        }
+        #dashboard-view .block-carousel-slides { display: flex; flex-wrap: nowrap; gap: 12px; align-items: center; padding: 8px 0; min-height: 120px; animation: blockCarouselScroll 12s linear infinite; }
         #dashboard-view .block-carousel-slide { flex: 0 0 auto; display: flex; align-items: center; justify-content: center; min-width: 80px; }
         #dashboard-view .block-carousel-slide img { max-height: 100px; max-width: 100px; width: auto; height: auto; object-fit: contain; cursor: pointer; border-radius: 6px; transition: opacity 0.2s ease; }
         #dashboard-view .block-carousel-slide img:hover { opacity: 0.9; }
@@ -4178,45 +4182,75 @@
                         <label>Select Plan</label>
                         <input type="hidden" name="signupPlan" id="signupPlanInput" value="free">
                         <div id="planCards"
-                            style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-top:10px;">
+                            style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-top:10px;">
                             <div class="card plan-card selected" data-plan="free"
                                 style="cursor:pointer;border:2px solid #e5e7eb;transition:border-color .2s,box-shadow .2s;">
-                                <div style="padding:14px;">
-                                    <div style="font-weight:700;font-size:1.1rem;">Free</div>
-                                    <div style="font-size:1.25rem;font-weight:700;color:var(--primary);margin:8px 0;">$0</div>
-                                    <div class="stat-label" style="font-size:0.85rem;">1 store • Limited blocks • Basic analytics</div>
+                                <div style="padding:16px;">
+                                    <div style="font-weight:700;font-size:1.15rem;">Free</div>
+                                    <div style="font-size:1.5rem;font-weight:700;color:var(--primary);margin:10px 0;">$0<span style="font-size:0.9rem;font-weight:500;color:var(--gray);">/free</span></div>
+                                    <ul style="margin:12px 0 0 0;padding-left:0;font-size:0.85rem;color:var(--gray);line-height:1.8;list-style:none;">
+                                        <li><i class="fas fa-check" style="color:var(--success);margin-right:6px;"></i>1 Shopify store</li>
+                                        <li><i class="fas fa-check" style="color:var(--success);margin-right:6px;"></i>Amazon or Walmart only</li>
+                                        <li><i class="fas fa-check" style="color:var(--success);margin-right:6px;"></i>Limited blocks</li>
+                                        <li><i class="fas fa-check" style="color:var(--success);margin-right:6px;"></i>Watermarked embed</li>
+                                        <li><i class="fas fa-check" style="color:var(--success);margin-right:6px;"></i>Basic analytics</li>
+                                    </ul>
                                 </div>
                             </div>
                             <div class="card plan-card" data-plan="starter"
                                 style="cursor:pointer;border:2px solid #e5e7eb;transition:border-color .2s,box-shadow .2s;">
-                                <div style="padding:14px;">
-                                    <div style="font-weight:700;font-size:1.1rem;">Starter</div>
-                                    <div style="font-size:1.25rem;font-weight:700;color:var(--primary);margin:8px 0;">$19<span style="font-size:0.9rem;font-weight:500;color:var(--gray);">/mo</span></div>
-                                    <div class="stat-label" style="font-size:0.85rem;">Unlimited blocks • Basic analytics • 10K views</div>
+                                <div style="padding:16px;">
+                                    <div style="font-weight:700;font-size:1.15rem;">Starter</div>
+                                    <div style="font-size:1.5rem;font-weight:700;color:var(--primary);margin:10px 0;">$19<span style="font-size:0.9rem;font-weight:500;color:var(--gray);">/mo</span></div>
+                                    <ul style="margin:12px 0 0 0;padding-left:0;font-size:0.85rem;color:var(--gray);line-height:1.8;list-style:none;">
+                                        <li><i class="fas fa-check" style="color:var(--success);margin-right:6px;"></i>Unlimited blocks</li>
+                                        <li><i class="fas fa-check" style="color:var(--success);margin-right:6px;"></i>Shopify + 1 Affiliate Network</li>
+                                        <li><i class="fas fa-check" style="color:var(--success);margin-right:6px;"></i>Basic analytics</li>
+                                        <li><i class="fas fa-check" style="color:var(--success);margin-right:6px;"></i>Email support</li>
+                                        <li><i class="fas fa-check" style="color:var(--success);margin-right:6px;"></i>10,000 monthly views</li>
+                                    </ul>
                                 </div>
                             </div>
                             <div class="card plan-card" data-plan="pro"
                                 style="cursor:pointer;border:2px solid #e5e7eb;transition:border-color .2s,box-shadow .2s;">
-                                <div style="padding:14px;">
-                                    <div style="font-weight:700;font-size:1.1rem;">Pro</div>
-                                    <div style="font-size:1.25rem;font-weight:700;color:var(--primary);margin:8px 0;">$49<span style="font-size:0.9rem;font-weight:500;color:var(--gray);">/mo</span></div>
-                                    <div class="stat-label" style="font-size:0.85rem;">AI Writer • Geo Redirect • 50K views</div>
+                                <div style="padding:16px;">
+                                    <div style="font-weight:700;font-size:1.15rem;">Pro</div>
+                                    <div style="font-size:1.5rem;font-weight:700;color:var(--primary);margin:10px 0;">$49<span style="font-size:0.9rem;font-weight:500;color:var(--gray);">/mo</span></div>
+                                    <ul style="margin:12px 0 0 0;padding-left:0;font-size:0.85rem;color:var(--gray);line-height:1.8;list-style:none;">
+                                        <li><i class="fas fa-check" style="color:var(--success);margin-right:6px;"></i>Shopify + Amazon + Walmart</li>
+                                        <li><i class="fas fa-check" style="color:var(--success);margin-right:6px;"></i>AI Writer & Optimizer</li>
+                                        <li><i class="fas fa-check" style="color:var(--success);margin-right:6px;"></i>Smart Geo Redirect</li>
+                                        <li><i class="fas fa-check" style="color:var(--success);margin-right:6px;"></i>Email-friendly exports</li>
+                                        <li><i class="fas fa-check" style="color:var(--success);margin-right:6px;"></i>50,000 monthly views</li>
+                                    </ul>
                                 </div>
                             </div>
                             <div class="card plan-card" data-plan="creatorplus"
                                 style="cursor:pointer;border:2px solid #e5e7eb;transition:border-color .2s,box-shadow .2s;">
-                                <div style="padding:14px;">
-                                    <div style="font-weight:700;font-size:1.1rem;">Creator+</div>
-                                    <div style="font-size:1.25rem;font-weight:700;color:var(--primary);margin:8px 0;">$99<span style="font-size:0.9rem;font-weight:500;color:var(--gray);">/mo</span></div>
-                                    <div class="stat-label" style="font-size:0.85rem;">YouTube blocks • Heatmaps • 200K views</div>
+                                <div style="padding:16px;">
+                                    <div style="font-weight:700;font-size:1.15rem;">Creator+</div>
+                                    <div style="font-size:1.5rem;font-weight:700;color:var(--primary);margin:10px 0;">$99<span style="font-size:0.9rem;font-weight:500;color:var(--gray);">/mo</span></div>
+                                    <ul style="margin:12px 0 0 0;padding-left:0;font-size:0.85rem;color:var(--gray);line-height:1.8;list-style:none;">
+                                        <li><i class="fas fa-check" style="color:var(--success);margin-right:6px;"></i>YouTube Overlay Blocks</li>
+                                        <li><i class="fas fa-check" style="color:var(--success);margin-right:6px;"></i>Conversion tracking</li>
+                                        <li><i class="fas fa-check" style="color:var(--success);margin-right:6px;"></i>Newsletter block formats</li>
+                                        <li><i class="fas fa-check" style="color:var(--success);margin-right:6px;"></i>Heatmaps & CTR insights</li>
+                                        <li><i class="fas fa-check" style="color:var(--success);margin-right:6px;"></i>200,000 monthly views</li>
+                                    </ul>
                                 </div>
                             </div>
                             <div class="card plan-card" data-plan="agency"
                                 style="cursor:pointer;border:2px solid #e5e7eb;transition:border-color .2s,box-shadow .2s;">
-                                <div style="padding:14px;">
-                                    <div style="font-weight:700;font-size:1.1rem;">Agency</div>
-                                    <div style="font-size:1.25rem;font-weight:700;color:var(--primary);margin:8px 0;">$199<span style="font-size:0.9rem;font-weight:500;color:var(--gray);">/mo</span></div>
-                                    <div class="stat-label" style="font-size:0.85rem;">Whitelabel • Multi-client • Unlimited</div>
+                                <div style="padding:16px;">
+                                    <div style="font-weight:700;font-size:1.15rem;">Agency</div>
+                                    <div style="font-size:1.5rem;font-weight:700;color:var(--primary);margin:10px 0;">$199<span style="font-size:0.9rem;font-weight:500;color:var(--gray);">/mo</span></div>
+                                    <ul style="margin:12px 0 0 0;padding-left:0;font-size:0.85rem;color:var(--gray);line-height:1.8;list-style:none;">
+                                        <li><i class="fas fa-check" style="color:var(--success);margin-right:6px;"></i>Whitelabel embeds</li>
+                                        <li><i class="fas fa-check" style="color:var(--success);margin-right:6px;"></i>Multiple client management</li>
+                                        <li><i class="fas fa-check" style="color:var(--success);margin-right:6px;"></i>Custom domains & branding</li>
+                                        <li><i class="fas fa-check" style="color:var(--success);margin-right:6px;"></i>Priority support</li>
+                                        <li><i class="fas fa-check" style="color:var(--success);margin-right:6px;"></i>Unlimited monthly views</li>
+                                    </ul>
                                 </div>
                             </div>
                         </div>
@@ -5386,23 +5420,8 @@
                 if (el.scrollLeft >= maxScroll) el.scrollLeft = 0;
             });
         }
-        function tickBlockCarousels() {
-            var blocksPage = document.getElementById('blocks-page');
-            var dash = document.getElementById('dashboard-view');
-            if (!blocksPage || !dash || window.getComputedStyle(blocksPage).display === 'none' || window.getComputedStyle(dash).display === 'none') return;
-            var blockWraps = document.querySelectorAll('.block-carousel-wrap');
-            blockWraps.forEach(function(wrap) {
-                if (!wrap.offsetParent) return;
-                var maxScroll = wrap.scrollWidth - wrap.clientWidth - 5;
-                if (maxScroll <= 0) return;
-                wrap.scrollLeft += 0.5;
-                var third = wrap.scrollWidth / 3;
-                if (wrap.scrollLeft >= third - 5) wrap.scrollLeft = 0;
-            });
-        }
         function carouselAnimationLoop() {
             tickAllCarousels();
-            tickBlockCarousels();
             requestAnimationFrame(carouselAnimationLoop);
         }
         requestAnimationFrame(carouselAnimationLoop);
