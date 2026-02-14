@@ -3356,8 +3356,10 @@
         #dashboard-view .block-carousel-wrap { position: relative; width: 100%; min-height: 100px; }
         #dashboard-view .block-carousel-wrap .block-product-image { max-height: 120px; object-fit: contain; cursor: pointer; border-radius: 6px; transition: opacity 0.3s ease; }
         #dashboard-view .block-carousel-wrap .block-product-image:hover { opacity: 0.9; }
-        /* Block carousel: all images visible, horizontal scroll, click opens gallery */
+        /* Block carousel: all images visible, auto-scroll like landing page, click opens gallery */
         #dashboard-view .block-carousel-wrap { position: relative; min-height: 120px; overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; }
+        #dashboard-view .block-carousel-wrap::-webkit-scrollbar { display: none; }
+        #dashboard-view .block-carousel-wrap { -ms-overflow-style: none; scrollbar-width: none; }
         #dashboard-view .block-carousel-slides { display: flex; flex-wrap: nowrap; gap: 12px; align-items: center; padding: 8px 0; min-height: 120px; }
         #dashboard-view .block-carousel-slide { flex: 0 0 auto; display: flex; align-items: center; justify-content: center; min-width: 80px; }
         #dashboard-view .block-carousel-slide img { max-height: 100px; max-width: 100px; width: auto; height: auto; object-fit: contain; cursor: pointer; border-radius: 6px; transition: opacity 0.2s ease; }
@@ -5350,6 +5352,15 @@
                 el.scrollLeft += speed;
                 if (el.scrollLeft >= maxScroll) el.scrollLeft = 0;
             });
+            // SmartBlock carousels: auto-scroll like landing page (seamless loop: content is duplicated)
+            document.querySelectorAll('#blocksContainer .block-carousel-wrap').forEach(function(wrap) {
+                if (!wrap.offsetParent) return;
+                var maxScroll = wrap.scrollWidth - wrap.clientWidth - 5;
+                if (maxScroll <= 0) return;
+                wrap.scrollLeft += 0.35;
+                var half = wrap.scrollWidth / 2;
+                if (wrap.scrollLeft >= half - 5) wrap.scrollLeft = 0;
+            });
         }
         function carouselAnimationLoop() {
             tickAllCarousels();
@@ -6321,7 +6332,7 @@
                         </div>
                         <div class="block-products-preview">
                             <div class="block-carousel-wrap" data-block-id="${(block.id || '').replace(/"/g, '&quot;')}">
-                                <div class="block-carousel-slides">${productsPreviewHtml}</div>
+                                <div class="block-carousel-slides">${productsPreviewHtml}${productsPreviewHtml}</div>
                             </div>
                         </div>
                         <div class="block-actions">
