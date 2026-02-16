@@ -4082,6 +4082,17 @@
             </div>
         </div>
     </div>
+    <!-- Inactivity logout warning (countdown) -->
+    <div id="inactivityWarningModal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 420px;">
+            <h3 style="margin: 0 0 12px 0; color: #dc2626;"><i class="fas fa-clock"></i> Session expiring</h3>
+            <p style="margin: 0 0 16px 0; color: var(--gray);">You will be logged out due to inactivity in <strong id="inactivityCountdown">60</strong> seconds.</p>
+            <p style="margin: 0 0 20px 0; font-size: 0.9rem; color: var(--gray);">Click "Stay logged in" to continue your session.</p>
+            <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                <button type="button" class="btn btn-secondary" id="inactivityStayBtn" style="background:#f1f5f9 !important; color:#1e293b !important; border:2px solid #94a3b8 !important;">Stay logged in</button>
+            </div>
+        </div>
+    </div>
 
     <!-- SmartBlock image gallery lightbox -->
     <div id="blockImageLightbox" aria-hidden="true">
@@ -5554,11 +5565,57 @@
         // ============================================
 
         // Initialize dashboard
+        // Inactivity logout: 15 min idle -> 60 sec countdown -> auto logout
+        var inactivityTimeoutMs = 15 * 60 * 1000;
+        var warningCountdownSec = 60;
+        var inactivityTimerId = null;
+        var countdownIntervalId = null;
+
+        function resetInactivityTimer() {
+            if (inactivityTimerId) clearTimeout(inactivityTimerId);
+            if (countdownIntervalId) clearInterval(countdownIntervalId);
+            var modal = document.getElementById('inactivityWarningModal');
+            if (modal) modal.style.display = 'none';
+            var dv = document.getElementById('dashboard-view');
+            if (!dv || dv.style.display !== 'block') return;
+            inactivityTimerId = setTimeout(function() {
+                inactivityTimerId = null;
+                showInactivityWarning();
+            }, inactivityTimeoutMs);
+        }
+
+        function showInactivityWarning() {
+            var modal = document.getElementById('inactivityWarningModal');
+            var countEl = document.getElementById('inactivityCountdown');
+            if (!modal || !countEl) return;
+            modal.style.display = 'flex';
+            var sec = warningCountdownSec;
+            countEl.textContent = sec;
+            countdownIntervalId = setInterval(function() {
+                sec--;
+                countEl.textContent = sec;
+                if (sec <= 0) {
+                    clearInterval(countdownIntervalId);
+                    countdownIntervalId = null;
+                    modal.style.display = 'none';
+                    if (typeof performLogout === 'function') performLogout();
+                }
+            }, 1000);
+        }
+
+        function stopInactivityTimer() {
+            if (inactivityTimerId) { clearTimeout(inactivityTimerId); inactivityTimerId = null; }
+            if (countdownIntervalId) { clearInterval(countdownIntervalId); countdownIntervalId = null; }
+            var modal = document.getElementById('inactivityWarningModal');
+            if (modal) modal.style.display = 'none';
+        }
+
         function initDashboard() {
             updateUserDisplay();
             applySavedProfileAndWallpaper();
             loadMockData();
             setupDashboardEventListeners();
+            resetInactivityTimer();
             if (localStorage.getItem('kota_nav_collapsed') === '1') {
                 const sidebar = document.getElementById('sidebar');
                 const main = document.querySelector('#dashboard-view .main-content');
@@ -5670,6 +5727,7 @@
         async function performLogout() {
             const modal = document.getElementById('logoutConfirmModal');
             if (modal) modal.style.display = 'none';
+            if (typeof stopInactivityTimer === 'function') stopInactivityTimer();
             try {
                 if (typeof auth !== 'undefined' && auth) {
                     await auth.signOut();
@@ -5732,6 +5790,27 @@
             const logoutConfirmCancel = document.getElementById('logoutConfirmCancel');
             if (logoutConfirmCancel) logoutConfirmCancel.addEventListener('click', function() { if (logoutConfirmModal) logoutConfirmModal.style.display = 'none'; });
             if (logoutConfirmBtn) logoutConfirmBtn.addEventListener('click', performLogout);
+
+            // Inactivity warning - Stay logged in
+            const inactivityStayBtn = document.getElementById('inactivityStayBtn');
+            if (inactivityStayBtn) inactivityStayBtn.addEventListener('click', function() {
+                stopInactivityTimer();
+                resetInactivityTimer();
+            });
+
+            // Activity listeners to reset inactivity timer (only when dashboard visible)
+            if (!window._inactivityListenersAttached) {
+                window._inactivityListenersAttached = true;
+                var activityEvents = ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart'];
+                function onActivity() {
+                    var dv = document.getElementById('dashboard-view');
+                    var warnModal = document.getElementById('inactivityWarningModal');
+                    if (dv && dv.style.display === 'block' && (!warnModal || warnModal.style.display === 'none') && typeof resetInactivityTimer === 'function') resetInactivityTimer();
+                }
+                activityEvents.forEach(function(ev) {
+                    document.addEventListener(ev, onActivity, { passive: true });
+                });
+            }
 
             // Edit block title modal
             const editBlockTitleModal = document.getElementById('editBlockTitleModal');
