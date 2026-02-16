@@ -3329,10 +3329,11 @@
         #dashboard-view .stat-content { flex: 1; text-align: left; }
         #dashboard-view .stat-value { font-size: 1.875rem; font-weight: 700; margin-bottom: 4px; color: var(--dark); line-height: 1.2; }
         #dashboard-view .stat-label { color: #6b7280; font-size: 0.875rem; font-weight: 500; }
-        #dashboard-view .blocks-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+        #dashboard-view .blocks-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 320px)); gap: 20px; justify-content: start; }
         #dashboard-view .block-card {
             background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.08);
             border: 1px solid #e5e7eb; transition: all 0.2s ease;
+            width: 320px; max-width: 320px;
         }
         #dashboard-view .block-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-color: #d1d5db; transform: translateY(-2px); }
         #dashboard-view .block-header { padding: 20px; border-bottom: 1px solid #eee; }
@@ -3697,12 +3698,16 @@
                     <div id="analyticsBlurWrapper" style="filter:blur(6px); transition:filter 0.4s ease;">
                         <div class="card">
                             <div class="card-body">
-                                <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:15px;">
-                                    <select id="dateRangeFilter" class="form-control" style="max-width:200px;">
-                                        <option value="last7days">Last 7 days</option>
-                                        <option value="last30days">Last 30 days</option>
-                                        <option value="last90days">Last 90 days</option>
-                                    </select>
+                                <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:15px; align-items:center;">
+                                    <label style="font-size:0.9rem; color:var(--gray);">From</label>
+                                    <input type="date" id="dateRangeFrom" class="form-control" style="max-width:160px;">
+                                    <label style="font-size:0.9rem; color:var(--gray);">To</label>
+                                    <input type="date" id="dateRangeTo" class="form-control" style="max-width:160px;">
+                                    <div style="display:flex; gap:6px;">
+                                        <button type="button" class="btn btn-secondary" id="datePreset7" style="font-size:0.85rem; padding:6px 10px;">7 days</button>
+                                        <button type="button" class="btn btn-secondary" id="datePreset30" style="font-size:0.85rem; padding:6px 10px;">30 days</button>
+                                        <button type="button" class="btn btn-secondary" id="datePreset90" style="font-size:0.85rem; padding:6px 10px;">90 days</button>
+                                    </div>
                                     <select id="retailerFilter" class="form-control" style="max-width:200px;">
                                         <option value="all">All Retailers</option>
                                         <option value="amazon">Amazon</option>
@@ -4048,8 +4053,8 @@
         <div class="modal-content" style="max-width: 400px;">
             <h3 style="margin: 0 0 16px 0;">Delete block</h3>
             <p style="margin: 0 0 20px 0; color: var(--gray);">Are you sure you want to delete this block?</p>
-            <div style="display: flex; gap: 12px; justify-content: flex-end;">
-                <button type="button" class="btn btn-secondary" id="deleteBlockCancel">Cancel</button>
+            <div style="display: flex; gap: 12px; justify-content: flex-end; flex-wrap: wrap;">
+                <button type="button" class="btn btn-secondary" id="deleteBlockCancel" style="background:#f1f5f9 !important; color:#1e293b !important; border:2px solid #94a3b8 !important;">Cancel</button>
                 <button type="button" class="btn btn-primary" id="deleteBlockConfirm" style="background:#dc2626; border-color:#dc2626;">Delete</button>
             </div>
         </div>
@@ -5835,10 +5840,27 @@
                 });
             }
 
-            // Filters
-            const dateRangeFilter = document.getElementById('dateRangeFilter');
+            // Filters - date range picker
+            const dateRangeFrom = document.getElementById('dateRangeFrom');
+            const dateRangeTo = document.getElementById('dateRangeTo');
             const retailerFilter = document.getElementById('retailerFilter');
-            if (dateRangeFilter) dateRangeFilter.addEventListener('change', renderAnalytics);
+            function setDateRangePreset(days) {
+                var end = new Date();
+                var start = new Date();
+                start.setDate(start.getDate() - days);
+                if (dateRangeFrom) dateRangeFrom.value = start.toISOString().slice(0, 10);
+                if (dateRangeTo) dateRangeTo.value = end.toISOString().slice(0, 10);
+                renderAnalytics();
+            }
+            if (dateRangeFrom) dateRangeFrom.addEventListener('change', renderAnalytics);
+            if (dateRangeTo) dateRangeTo.addEventListener('change', renderAnalytics);
+            if (dateRangeFrom && dateRangeTo && (!dateRangeFrom.value || !dateRangeTo.value)) setDateRangePreset(7);
+            var preset7 = document.getElementById('datePreset7');
+            var preset30 = document.getElementById('datePreset30');
+            var preset90 = document.getElementById('datePreset90');
+            if (preset7) preset7.addEventListener('click', function() { setDateRangePreset(7); });
+            if (preset30) preset30.addEventListener('click', function() { setDateRangePreset(30); });
+            if (preset90) preset90.addEventListener('click', function() { setDateRangePreset(90); });
             if (retailerFilter) retailerFilter.addEventListener('change', renderAnalytics);
 
             // Settings access
@@ -6578,17 +6600,37 @@
 
         // Render analytics
         function renderAnalytics() {
-            const dateRangeFilter = document.getElementById('dateRangeFilter');
+            const dateRangeFrom = document.getElementById('dateRangeFrom');
+            const dateRangeTo = document.getElementById('dateRangeTo');
             const retailerFilter = document.getElementById('retailerFilter');
             
-            if (!dateRangeFilter || !retailerFilter) return;
+            if (!retailerFilter) return;
             
-            const dateRange = dateRangeFilter.value;
+            const fromVal = dateRangeFrom ? dateRangeFrom.value : '';
+            const toVal = dateRangeTo ? dateRangeTo.value : '';
             const retailer = retailerFilter.value;
+            
+            function parseBlockDate(d) {
+                if (!d) return null;
+                var dt = typeof d === 'string' ? new Date(d) : d;
+                return isNaN(dt.getTime()) ? null : dt;
+            }
             
             let filteredBlocks = currentBlocks;
             if (retailer !== 'all') {
                 filteredBlocks = filteredBlocks.filter(block => block.retailer === retailer);
+            }
+            if (fromVal || toVal) {
+                var fromDate = fromVal ? new Date(fromVal) : null;
+                var toDate = toVal ? new Date(toVal) : null;
+                if (toDate) toDate.setHours(23, 59, 59, 999);
+                filteredBlocks = filteredBlocks.filter(function(block) {
+                    var bd = parseBlockDate(block.lastUpdated);
+                    if (!bd) return true;
+                    if (fromDate && bd < fromDate) return false;
+                    if (toDate && bd > toDate) return false;
+                    return true;
+                });
             }
             
             const totalClicks = filteredBlocks.reduce((sum, block) => sum + block.clicks, 0);
