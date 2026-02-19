@@ -143,30 +143,50 @@
         .btn {
             cursor: pointer;
             border: none;
-            border-radius: 50px;
-            padding: 04px 15px;
+            border-radius: 8px;
+            padding: 10px 20px;
             font-weight: 600;
-            transition: all 0.3s ease;
+            font-size: 0.95rem;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            min-height: 40px;
         }
 
         .btn-primary {
-            background: linear-gradient(to right, var(--primary), var(--secondary));
+            background: var(--primary);
             color: white;
+            border: 1px solid var(--primary);
         }
 
         .btn-primary:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3);
+            background: var(--primary-dark);
+            border-color: var(--primary-dark);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
         }
 
         .btn-secondary {
             background: transparent;
-            border: 2px solid white;
-            color: white;
+            border: 1px solid var(--gray);
+            color: var(--dark);
         }
 
         .btn-secondary:hover {
-            background: rgba(255, 255, 255, 0.1);
+            background: var(--light);
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .btn-secondary:active {
+            background: #e5e7eb;
         }
 
         .text-center {
@@ -647,11 +667,11 @@
         .feature-card-scroll {
             min-width: 500px;
             background: white;
-            border-radius: 15px;
+            border-radius: 12px;
             padding: 40px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            border: 1px solid rgba(0, 0, 0, 0.05);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid #e5e7eb;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -660,8 +680,8 @@
         }
 
         .feature-card-scroll:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.12);
+            transform: translateY(-4px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
         }
 
         .feature-icon-scroll {
@@ -695,11 +715,11 @@
             width: 380px;
             height: auto;
             background: white;
-            border-radius: 15px;
+            border-radius: 12px;
             padding: 30px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            border: 1px solid rgba(0, 0, 0, 0.05);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid #e5e7eb;
             display: flex;
             flex-direction: column;
             position: relative;
@@ -709,8 +729,8 @@
         }
 
         .pricing-card-scroll:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.12);
+            transform: translateY(-4px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
         }
 
         .pricing-card-scroll.popular {
@@ -784,7 +804,7 @@
         .plan-modal-content {
             background-color: white;
             padding: 40px;
-            border-radius: 15px;
+            border-radius: 12px;
             width: 90%;
             max-width: 600px;
             max-height: calc(90vh - 120px);
@@ -879,25 +899,31 @@
             top: 50%;
             transform: translateY(-50%);
             z-index: 50;
-            width: 50px;
-            height: 60px;
-            border-radius: 50%;
-            background: rgba(152, 148, 148, 0.511);
-            border: 1px solid #ebedf1;
+            width: 44px;
+            height: 44px;
+            border-radius: 8px;
+            background: white;
+            border: 1px solid #e5e7eb;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 1.2rem;
             color: var(--primary);
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
         }
 
         .scroll-btn:hover {
-            background: var(--primary);
-            color: white;
-            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+            background: var(--light);
+            border-color: var(--primary);
+            color: var(--primary-dark);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+            transform: translateY(-50%) scale(1.05);
+        }
+
+        .scroll-btn:active {
+            transform: translateY(-50%) scale(0.95);
         }
 
         .scroll-btn-left {
@@ -962,16 +988,16 @@
 
         .testimonial-card {
             background: white;
-            border-radius: 15px;
+            border-radius: 12px;
             padding: 30px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-            transition: transform 0.3s ease;
-            border: 1px solid rgba(0, 0, 0, 0.05);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid #e5e7eb;
         }
 
         .testimonial-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.12);
+            transform: translateY(-4px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
         }
 
         .testimonial-content {
@@ -1062,16 +1088,16 @@
 
         .stat-card {
             background: rgba(255, 255, 255, 0.08);
-            border-radius: 15px;
+            border-radius: 12px;
             padding: 25px;
             text-align: center;
-            transition: all 0.3s ease;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
         .stat-card:hover {
             background: rgba(255, 255, 255, 0.12);
-            transform: translateY(-5px);
+            transform: translateY(-4px);
         }
 
         .stat-value {
@@ -1100,7 +1126,7 @@
 
         .dashboard-feature {
             background: rgba(255, 255, 255, 0.05);
-            border-radius: 15px;
+            border-radius: 12px;
             padding: 25px;
             border-left: 4px solid var(--primary);
         }
@@ -1135,17 +1161,18 @@
             width: 380px;
             height: 450px;
             background: white;
-            border-radius: 15px;
+            border-radius: 12px;
             overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-            transition: transform 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             flex-shrink: 0;
             display: flex;
             flex-direction: column;
         }
 
         .product-card:hover {
-            transform: translateY(-10px);
+            transform: translateY(-4px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
         }
 
         .product-image {
@@ -1319,14 +1346,16 @@
 
         .blog-card {
             background: white;
-            border-radius: 15px;
+            border-radius: 12px;
             overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-            transition: transform 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid #e5e7eb;
         }
 
         .blog-card:hover {
-            transform: translateY(-10px);
+            transform: translateY(-4px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
         }
 
         .blog-image {
@@ -1374,7 +1403,7 @@
         .contact-form {
             background: var(--light);
             padding: 30px;
-            border-radius: 15px;
+            border-radius: 12px;
         }
 
         .form-group {
@@ -1388,20 +1417,32 @@
         }
 
         .form-group input,
-        .form-group textarea {
+        .form-group textarea,
+        .form-control,
+        select {
             width: 100%;
-            padding: 15px;
-            border: 1px solid #ddd;
+            padding: 10px 12px;
+            border: 1px solid #d1d5db;
             border-radius: 8px;
             font-size: 1rem;
             font-family: inherit;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+            background: white;
+            color: var(--dark);
         }
 
         .form-group input:focus,
-        .form-group textarea:focus {
+        .form-group textarea:focus,
+        .form-control:focus,
+        select:focus {
             outline: none;
             border-color: var(--primary);
             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .form-group input::placeholder,
+        .form-group textarea::placeholder {
+            color: #9ca3af;
         }
 
         .form-group textarea {
@@ -1586,11 +1627,11 @@
             background-color: white;
             margin: 0 auto;
             padding: 30px;
-            border-radius: 15px;
+            border-radius: 12px;
             width: 90%;
             max-width: 500px;
             position: relative;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
             max-height: calc(90vh - 120px);
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
