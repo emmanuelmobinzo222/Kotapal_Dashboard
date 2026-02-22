@@ -355,6 +355,48 @@
             justify-content: center;
         }
 
+         /* Round Scroll Buttons - New */
+        .scroll-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 50;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: white;
+            border: 1px solid #e5e7eb;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            color: var(--primary);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .scroll-btn:hover {
+            background: var(--light);
+            border-color: var(--primary);
+            color: var(--primary-dark);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .scroll-btn:active {
+            transform: translateY(-50%) scale(0.95);
+        }
+
+        .scroll-btn-left {
+            left: 0;
+        }
+
+        .scroll-btn-right {
+            right: 0;
+        }
+
+
         /* UPDATED: Scroll Control - Horizontal Scrollbar */
         .scroll-control {
             position: absolute;
