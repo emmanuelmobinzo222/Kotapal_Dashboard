@@ -21,12 +21,18 @@
             --light: #f9fafb;
             --gray: #6b7280;
         }
+        html { scrollbar-width: thin; scrollbar-color: rgba(59,130,246,0.5) transparent; }
+        html::-webkit-scrollbar { width: 8px; }
+        html::-webkit-scrollbar-thumb { background: rgba(59,130,246,0.4); border-radius: 4px; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: #f3f4f6;
             color: var(--dark);
             min-height: 100vh;
         }
+        .scroll-arrows { position: fixed; right: 12px; top: 50%; transform: translateY(-50%); z-index: 999; display: flex; flex-direction: column; gap: 4px; opacity: 0.8; }
+        .scroll-arrow-btn { width: 40px; height: 40px; border-radius: 50%; background: rgba(59,130,246,0.9); color: white; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; box-shadow: 0 2px 8px rgba(0,0,0,0.15); transition: transform 0.2s; }
+        .scroll-arrow-btn:hover { transform: scale(1.08); }
         .admin-login {
             min-height: 100vh;
             display: flex;
@@ -101,6 +107,25 @@
             display: none;
         }
         .login-error.show { display: block; }
+        .create-admin-box {
+            margin-top: 20px;
+            padding: 16px;
+            background: #f0fdf4;
+            border: 1px solid #86efac;
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+        .create-admin-box p { margin-bottom: 12px; color: #166534; }
+        .create-admin-box .btn-create-admin {
+            background: #16a34a;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .create-admin-box .btn-create-admin:hover { background: #15803d; }
         .btn-return {
             display: inline-flex;
             align-items: center;
@@ -323,6 +348,18 @@
     </style>
 </head>
 <body>
+    <!-- Scroll arrows -->
+    <div class="scroll-arrows" id="scrollArrows" style="display:none;">
+        <button type="button" class="scroll-arrow-btn" id="scrollUpBtn"><i class="fas fa-chevron-up"></i></button>
+        <button type="button" class="scroll-arrow-btn" id="scrollDownBtn"><i class="fas fa-chevron-down"></i></button>
+    </div>
+    <script>
+        (function(){var u=document.getElementById('scrollUpBtn'),d=document.getElementById('scrollDownBtn'),s=document.getElementById('scrollArrows');
+        function scroll(dir){var el=document.scrollingElement||document.documentElement;el.scrollTo({top:dir==='up'?Math.max(0,el.scrollTop-300):Math.min(el.scrollHeight-el.clientHeight,el.scrollTop+300),behavior:'smooth'});}
+        if(u)u.onclick=function(){scroll('up');};if(d)d.onclick=function(){scroll('down');};
+        if(s){function show(){s.style.display=document.scrollingElement.scrollHeight>window.innerHeight?'flex':'none';}
+        show();window.addEventListener('resize',show);window.addEventListener('scroll',show);}})();
+    </script>
     <!-- Admin Login -->
     <div id="adminLogin" class="admin-login">
         <div class="login-card">
@@ -340,6 +377,10 @@
                     <input type="password" id="adminPassword" class="form-control" placeholder="••••••••" required>
                 </div>
                 <button type="submit" class="btn btn-primary">Sign In</button>
+                <div id="createAdminBox" class="create-admin-box" style="display:none;">
+                    <p>No admin account found with this email. Create the first admin account?</p>
+                    <button type="button" class="btn-create-admin" id="createAdminBtn">Create Admin Account</button>
+                </div>
             </form>
         </div>
     </div>
@@ -615,6 +656,21 @@
                         <button type="button" class="btn btn-primary" id="saveSettingsBtn">Save Settings</button>
                     </div>
                 </div>
+                <div class="card" style="margin-top:24px;">
+                    <div class="card-header"><h3>Admin Users</h3></div>
+                    <div class="card-body">
+                        <p style="color:var(--gray);font-size:0.9rem;margin-bottom:16px;">Add a new admin. The user must already have an account (sign up from the main app first) or use the login page to create the first admin.</p>
+                        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;">
+                            <div class="form-group" style="margin-bottom:0;flex:1;min-width:200px;">
+                                <label for="newAdminEmail">New Admin Email</label>
+                                <input type="email" id="newAdminEmail" class="form-control" placeholder="admin2@kotapal.com">
+                            </div>
+                            <button type="button" class="btn btn-primary" id="addAdminBtn"><i class="fas fa-user-plus"></i> Add Admin</button>
+                        </div>
+                        <div id="addAdminError" style="color:var(--danger);font-size:0.9rem;margin-top:8px;display:none;"></div>
+                        <div id="adminEmailsList" style="margin-top:16px;font-size:0.9rem;color:var(--gray);"></div>
+                    </div>
+                </div>
             </div>
         </main>
     </div>
@@ -630,11 +686,12 @@
             measurementId: "G-8GQ7JGDZ7P"
         };
 
-        const ADMIN_EMAILS = ['admin@kotapal.com'];
+        const ADMIN_EMAILS_FALLBACK = ['admin@kotapal.com'];
         let auth, db;
         let adminUsers = [];
         let adminBlocks = [];
         let userMap = {};
+        let adminEmailsList = [];
 
         try {
             firebase.initializeApp(firebaseConfig);
@@ -642,8 +699,24 @@
             db = firebase.firestore();
         } catch (e) { console.warn('Firebase init:', e); }
 
+        async function loadAdminEmails() {
+            if (!db) return;
+            try {
+                const snap = await db.collection('config').doc('admins').get();
+                if (snap.exists && snap.data().emails) {
+                    adminEmailsList = snap.data().emails;
+                } else {
+                    adminEmailsList = ADMIN_EMAILS_FALLBACK.slice();
+                }
+            } catch (e) {
+                adminEmailsList = ADMIN_EMAILS_FALLBACK.slice();
+            }
+        }
+
         function isAdminEmail(email) {
-            return email && ADMIN_EMAILS.includes(email.trim().toLowerCase());
+            const e = email && email.trim().toLowerCase();
+            if (!e) return false;
+            return ADMIN_EMAILS_FALLBACK.includes(e) || adminEmailsList.includes(e);
         }
 
         function showAdminDashboard(email) {
@@ -661,6 +734,8 @@
             document.getElementById('adminLogin').style.display = 'flex';
             document.getElementById('adminEmail').value = '';
             document.getElementById('adminPassword').value = '';
+            const createAdminBox = document.getElementById('createAdminBox');
+            if (createAdminBox) createAdminBox.style.display = 'none';
         }
 
         document.getElementById('adminLoginForm').addEventListener('submit', async function(e) {
@@ -668,17 +743,22 @@
             const email = document.getElementById('adminEmail').value.trim();
             const password = document.getElementById('adminPassword').value;
             const errorEl = document.getElementById('loginError');
+            const createAdminBox = document.getElementById('createAdminBox');
 
             if (!auth) {
                 errorEl.textContent = 'Firebase not configured. Please check your setup.';
                 errorEl.classList.add('show');
+                if (createAdminBox) createAdminBox.style.display = 'none';
                 return;
             }
+
+            await loadAdminEmails();
 
             try {
                 const cred = await auth.signInWithEmailAndPassword(email, password);
                 if (isAdminEmail(cred.user.email)) {
                     errorEl.classList.remove('show');
+                    if (createAdminBox) createAdminBox.style.display = 'none';
                     sessionStorage.setItem('kotapal_admin', 'true');
                     sessionStorage.setItem('kotapal_admin_email', email);
                     showAdminDashboard(email);
@@ -686,16 +766,70 @@
                     await auth.signOut();
                     errorEl.textContent = 'Access denied. Admin email required.';
                     errorEl.classList.add('show');
+                    if (createAdminBox) createAdminBox.style.display = 'none';
                 }
             } catch (err) {
                 errorEl.textContent = err.message || 'Invalid credentials.';
                 errorEl.classList.add('show');
+                if (err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
+                    if (createAdminBox) createAdminBox.style.display = 'block';
+                } else {
+                    if (createAdminBox) createAdminBox.style.display = 'none';
+                }
+            }
+        });
+
+        document.getElementById('createAdminBtn').addEventListener('click', async function() {
+            const email = document.getElementById('adminEmail').value.trim();
+            const password = document.getElementById('adminPassword').value;
+            const errorEl = document.getElementById('loginError');
+            const createAdminBox = document.getElementById('createAdminBox');
+            const btn = this;
+
+            if (!email || !password) {
+                errorEl.textContent = 'Please enter email and password.';
+                errorEl.classList.add('show');
+                return;
+            }
+            if (password.length < 6) {
+                errorEl.textContent = 'Password must be at least 6 characters.';
+                errorEl.classList.add('show');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = 'Creating...';
+            errorEl.classList.remove('show');
+
+            try {
+                const cred = await auth.createUserWithEmailAndPassword(email, password);
+                if (db) {
+                    const adminsRef = db.collection('config').doc('admins');
+                    const snap = await adminsRef.get();
+                    const emails = snap.exists && snap.data().emails ? snap.data().emails : [];
+                    if (!emails.includes(email.toLowerCase())) {
+                        emails.push(email.toLowerCase());
+                        await adminsRef.set({ emails }, { merge: true });
+                    }
+                }
+                adminEmailsList.push(email.toLowerCase());
+                if (createAdminBox) createAdminBox.style.display = 'none';
+                sessionStorage.setItem('kotapal_admin', 'true');
+                sessionStorage.setItem('kotapal_admin_email', email);
+                showAdminDashboard(email);
+            } catch (err) {
+                errorEl.textContent = err.message || 'Could not create admin account.';
+                errorEl.classList.add('show');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Create Admin Account';
             }
         });
 
         document.getElementById('adminLogoutBtn').addEventListener('click', clearAdminAuth);
 
-        auth && auth.onAuthStateChanged(function(user) {
+        auth && auth.onAuthStateChanged(async function(user) {
+            await loadAdminEmails();
             if (user && isAdminEmail(user.email)) {
                 sessionStorage.setItem('kotapal_admin', 'true');
                 sessionStorage.setItem('kotapal_admin_email', user.email);
@@ -854,6 +988,47 @@
             alert('Settings saved (implement with backend)');
         });
 
+        document.getElementById('addAdminBtn').addEventListener('click', async function() {
+            const emailInput = document.getElementById('newAdminEmail');
+            const errorEl = document.getElementById('addAdminError');
+            const email = emailInput && emailInput.value.trim();
+            if (!email) {
+                if (errorEl) { errorEl.textContent = 'Please enter an email.'; errorEl.style.display = 'block'; }
+                return;
+            }
+            if (!db) {
+                if (errorEl) { errorEl.textContent = 'Firestore not available.'; errorEl.style.display = 'block'; }
+                return;
+            }
+            if (errorEl) errorEl.style.display = 'none';
+            try {
+                const adminsRef = db.collection('config').doc('admins');
+                const snap = await adminsRef.get();
+                const emails = snap.exists && snap.data().emails ? snap.data().emails : [];
+                const emailLower = email.toLowerCase();
+                if (emails.includes(emailLower)) {
+                    if (errorEl) { errorEl.textContent = 'This email is already an admin.'; errorEl.style.display = 'block'; }
+                    return;
+                }
+                emails.push(emailLower);
+                await adminsRef.set({ emails }, { merge: true });
+                adminEmailsList = emails;
+                if (emailInput) emailInput.value = '';
+                if (errorEl) errorEl.style.display = 'none';
+                renderAdminEmailsList();
+                alert('Admin added. The user must sign up from the main app first if they do not have an account.');
+            } catch (err) {
+                if (errorEl) { errorEl.textContent = err.message || 'Could not add admin.'; errorEl.style.display = 'block'; }
+            }
+        });
+
+        function renderAdminEmailsList() {
+            const el = document.getElementById('adminEmailsList');
+            if (!el) return;
+            const list = [...new Set([...ADMIN_EMAILS_FALLBACK, ...adminEmailsList])];
+            el.innerHTML = list.length ? '<strong>Current admins:</strong> ' + list.join(', ') : 'No admins in database.';
+        }
+
         document.querySelectorAll('.admin-nav a').forEach(link => {
             link.addEventListener('click', function(e) {
                 e.preventDefault();
@@ -867,6 +1042,7 @@
                 if (page === 'payments') loadPaymentsPage();
                 if (page === 'activity-log') loadActivityLogPage();
                 if (page === 'support') loadSupportPage();
+                if (page === 'settings') { loadAdminEmails(); renderAdminEmailsList(); }
             });
         });
 

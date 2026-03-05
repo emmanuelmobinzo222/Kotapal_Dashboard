@@ -12,29 +12,41 @@ firebase deploy --only firestore
 
 Or copy the contents of `firestore.rules` into **Firebase Console → Firestore → Rules** and publish.
 
-## 2. Create Admin User
+## 2. Create First Admin User
 
-Create an admin account in Firebase Authentication:
+**Option A – Create Admin from Login Page (recommended)**
 
-1. Open the main KotaPal app and click **Login** → **Admin login**
-2. Or go to **Firebase Console → Authentication → Users**
-3. Add a user with email `admin@kotapal.com` and password `Admin123!` (or your chosen password)
+1. Open `admin.html` (or click **Admin login** from the main app)
+2. Enter your email (e.g. `admin@kotapal.com`) and a password (at least 6 characters)
+3. Click **Sign In**
+4. If you see "Invalid credentials", a **Create Admin Account** button will appear
+5. Click **Create Admin Account** – this creates the user in Firebase Auth and adds them to the admin list in Firestore (`config/admins`)
 
-Alternatively, use the main app’s **Sign Up** form to register `admin@kotapal.com` with your desired password.
+**Option B – Manual setup**
+
+- Use the main app's **Sign Up** form to register `admin@kotapal.com` with your desired password
+- Then add the email to Firestore: create document `config/admins` with field `emails: ["admin@kotapal.com"]`
 
 ## 3. Enable Firestore
 
 1. Go to **Firebase Console → Firestore Database**
 2. Create a database if needed (start in production or test mode)
-3. The `users` and `blocks` collections are created automatically when users sign up and create blocks
+3. The `users`, `blocks`, and `config` collections are created automatically
 
 ## 4. Data Flow
 
 - **Main app**: On signup/login, user data is written to `users/{uid}`. Blocks are written to `blocks` when created or updated.
-- **Admin dashboard**: Logs in with Firebase Auth and reads from `users` and `blocks` in Firestore.
+- **Admin dashboard**: Logs in with Firebase Auth, reads from `users` and `blocks`, and manages admins via `config/admins`.
 
-## 5. Admin Login
+## 5. Add More Admins
 
-- **URL**: `admin.html` or click **Admin login** in the main app’s login modal
-- **Email**: `admin@kotapal.com` (must exist in Firebase Auth)
-- **Password**: The password you set when creating the admin user
+1. Log in to the admin dashboard
+2. Go to **Settings**
+3. Under **Admin Users**, enter the new admin's email and click **Add Admin**
+4. The user must already have an account (sign up from the main app first) before they can log in as admin
+
+## 6. Admin Login
+
+- **URL**: `admin.html` or click **Admin login** in the main app's login modal
+- **Email**: Any email in the `config/admins` list (or `admin@kotapal.com` as fallback)
+- **Password**: The password set when the user was created
