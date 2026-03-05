@@ -143,50 +143,30 @@
         .btn {
             cursor: pointer;
             border: none;
-            border-radius: 8px;
-            padding: 10px 20px;
+            border-radius: 50px;
+            padding: 12px 28px;
             font-weight: 600;
-            font-size: 0.95rem;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            min-height: 40px;
+            transition: all 0.3s ease;
         }
 
         .btn-primary {
-            background: var(--primary);
+            background: linear-gradient(to right, var(--primary), var(--secondary));
             color: white;
-            border: 1px solid var(--primary);
         }
 
         .btn-primary:hover {
-            background: var(--primary-dark);
-            border-color: var(--primary-dark);
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-            transform: translateY(-1px);
-        }
-
-        .btn-primary:active {
-            transform: translateY(0);
-            box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3);
         }
 
         .btn-secondary {
             background: transparent;
-            border: 1px solid var(--gray);
-            color: var(--dark);
+            border: 2px solid white;
+            color: white;
         }
 
         .btn-secondary:hover {
-            background: var(--light);
-            border-color: var(--primary);
-            color: var(--primary);
-        }
-
-        .btn-secondary:active {
-            background: #e5e7eb;
+            background: rgba(255, 255, 255, 0.1);
         }
 
         .text-center {
@@ -708,11 +688,11 @@
         .feature-card-scroll {
             min-width: 500px;
             background: white;
-            border-radius: 12px;
+            border-radius: 15px;
             padding: 40px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-            transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            border: 1px solid #e5e7eb;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 1px solid rgba(0, 0, 0, 0.05);
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -721,8 +701,8 @@
         }
 
         .feature-card-scroll:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+            transform: translateY(-10px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.12);
         }
 
         .feature-icon-scroll {
@@ -756,11 +736,11 @@
             width: 380px;
             height: auto;
             background: white;
-            border-radius: 12px;
+            border-radius: 15px;
             padding: 30px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-            transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            border: 1px solid #e5e7eb;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 1px solid rgba(0, 0, 0, 0.05);
             display: flex;
             flex-direction: column;
             position: relative;
@@ -770,8 +750,8 @@
         }
 
         .pricing-card-scroll:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+            transform: translateY(-10px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.12);
         }
 
         .pricing-card-scroll.popular {
@@ -951,7 +931,7 @@
         .plan-modal-content {
             background-color: white;
             padding: 40px;
-            border-radius: 12px;
+            border-radius: 15px;
             width: 90%;
             max-width: 600px;
             max-height: calc(90vh - 120px);
@@ -1046,31 +1026,25 @@
             top: 50%;
             transform: translateY(-50%);
             z-index: 50;
-            width: 44px;
-            height: 44px;
-            border-radius: 8px;
-            background: white;
-            border: 1px solid #e5e7eb;
+            width: 50px;
+            height: 60px;
+            border-radius: 50%;
+            background: rgba(152, 148, 148, 0.511);
+            border: 1px solid #ebedf1;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 1.2rem;
             color: var(--primary);
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
 
         .scroll-btn:hover {
-            background: var(--light);
-            border-color: var(--primary);
-            color: var(--primary-dark);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
-            transform: translateY(-50%) scale(1.05);
-        }
-
-        .scroll-btn:active {
-            transform: translateY(-50%) scale(0.95);
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
         }
 
         .scroll-btn-left {
@@ -1135,16 +1109,16 @@
 
         .testimonial-card {
             background: white;
-            border-radius: 12px;
+            border-radius: 15px;
             padding: 30px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-            transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            border: 1px solid #e5e7eb;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s ease;
+            border: 1px solid rgba(0, 0, 0, 0.05);
         }
 
         .testimonial-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.12);
         }
 
         .testimonial-content {
@@ -1235,16 +1209,16 @@
 
         .stat-card {
             background: rgba(255, 255, 255, 0.08);
-            border-radius: 12px;
+            border-radius: 15px;
             padding: 25px;
             text-align: center;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.3s ease;
             border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
         .stat-card:hover {
             background: rgba(255, 255, 255, 0.12);
-            transform: translateY(-4px);
+            transform: translateY(-5px);
         }
 
         .stat-value {
@@ -1273,7 +1247,7 @@
 
         .dashboard-feature {
             background: rgba(255, 255, 255, 0.05);
-            border-radius: 12px;
+            border-radius: 15px;
             padding: 25px;
             border-left: 4px solid var(--primary);
         }
@@ -1308,18 +1282,17 @@
             width: 380px;
             height: 450px;
             background: white;
-            border-radius: 12px;
+            border-radius: 15px;
             overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-            transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
             flex-shrink: 0;
             display: flex;
             flex-direction: column;
         }
 
         .product-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+            transform: translateY(-10px);
         }
 
         .product-image {
@@ -1362,54 +1335,6 @@
             display: flex;
             align-items: center;
             gap: 8px;
-        }
-
-        .product-card-dashboard {
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-            border: 1px solid #e5e7eb;
-            border-radius: 8px;
-            overflow: hidden;
-            background: white;
-            transition: all 0.2s ease;
-        }
-
-        .product-card-dashboard:hover {
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            transform: translateY(-2px);
-        }
-
-        .product-image-dashboard {
-            width: 100%;
-            height: 200px;
-            object-fit: cover;
-            display: block;
-        }
-
-        .product-card-dashboard .product-title {
-            height: 60px;
-            margin: 0;
-            padding: 12px;
-            font-size: 0.95rem;
-            line-height: 1.3;
-            overflow-y: auto;
-            scrollbar-width: thin;
-        }
-       
-        .product-card-dashboard .product-price {
-            padding: 0 12px;
-            margin: 0;
-            font-size: 1.1rem;
-            min-height: 32px;
-        }
-
-        .product-card-dashboard .product-retailer {
-            padding: 8px 12px;
-            margin-top: auto;
-            font-size: 0.85rem;
-            color: var(--gray);
-            border-top: 1px solid #f3f4f6;
         }
 
         .price-change {
@@ -1495,16 +1420,14 @@
 
         .blog-card {
             background: white;
-            border-radius: 12px;
+            border-radius: 15px;
             overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-            transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            border: 1px solid #e5e7eb;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
         }
 
         .blog-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+            transform: translateY(-10px);
         }
 
         .blog-image {
@@ -1552,7 +1475,7 @@
         .contact-form {
             background: var(--light);
             padding: 30px;
-            border-radius: 12px;
+            border-radius: 15px;
         }
 
         .form-group {
@@ -1566,32 +1489,20 @@
         }
 
         .form-group input,
-        .form-group textarea,
-        .form-control,
-        select {
+        .form-group textarea {
             width: 100%;
-            padding: 10px 12px;
-            border: 1px solid #d1d5db;
+            padding: 15px;
+            border: 1px solid #ddd;
             border-radius: 8px;
             font-size: 1rem;
             font-family: inherit;
-            transition: border-color 0.2s ease, box-shadow 0.2s ease;
-            background: white;
-            color: var(--dark);
         }
 
         .form-group input:focus,
-        .form-group textarea:focus,
-        .form-control:focus,
-        select:focus {
+        .form-group textarea:focus {
             outline: none;
             border-color: var(--primary);
             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-        }
-
-        .form-group input::placeholder,
-        .form-group textarea::placeholder {
-            color: #9ca3af;
         }
 
         .form-group textarea {
@@ -1776,11 +1687,11 @@
             background-color: white;
             margin: 0 auto;
             padding: 30px;
-            border-radius: 12px;
+            border-radius: 15px;
             width: 90%;
             max-width: 500px;
             position: relative;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
             max-height: calc(90vh - 120px);
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
@@ -1808,7 +1719,7 @@
 
         #authModal .auth-form button[type="submit"] {
             display: block;
-            width: 50;
+            width: 100%;
             margin-top: 15px;
         }
 
@@ -3721,7 +3632,7 @@
             display: flex; align-items: center; justify-content: center; width: 100%; position: relative;
         }
         #dashboard-view .block-carousel-inner .block-product-image {
-            max-width: 100%; max-height: 250px; width: auto; height: auto; object-fit: contain;
+            max-width: 100%; max-height: 120px; width: auto; height: auto; object-fit: contain;
             cursor: pointer; border-radius: 6px; transition: opacity 0.2s ease;
         }
         #dashboard-view .block-carousel-inner .block-product-image:hover { opacity: 0.9; }
@@ -4261,7 +4172,7 @@
                                     <option value="name">Name A–Z</option>
                                 </select>
                             </div>
-                            <div id="productLibraryContainer" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:16px; align-items: stretch;"></div>
+                            <div id="productLibraryContainer" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:16px;"></div>
                         </div>
                     </div>
                 </div>
@@ -4497,6 +4408,9 @@
                     </div>
                     <button type="submit" class="btn btn-primary">Login</button>
                     <div id="authMessage" class="form-status" style="display: none;"></div>
+                    <div style="text-align: center; margin-top: 16px; padding-top: 16px; border-top: 1px solid #e5e7eb;">
+                        <a href="admin.html" class="forgot-password" style="font-size: 0.9rem;">Admin login</a>
+                    </div>
                 </form>
             </div>
 
