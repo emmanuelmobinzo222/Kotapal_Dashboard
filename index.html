@@ -649,6 +649,47 @@
         .animate-reveal { opacity: 0; transform: translateY(18px); }
         .animate-reveal.is-visible { opacity: 1; transform: translateY(0); }
 
+        /* Section Reveal Animation */
+        .section-reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1), transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .section-reveal.revealed {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Page Loader */
+        .page-loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+        .page-loader.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+        .loader-spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid #e5e7eb;
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
         /* Hide native scrollbars */
         .scrollable-wrapper::-webkit-scrollbar {
             display: none;
@@ -782,6 +823,112 @@
             margin-top: 3px;
             flex-shrink: 0;
         }
+
+        /* Product Cards - Trending */
+        .product-card {
+            width: 380px;
+            height: 450px;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+        .product-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+        }
+        .product-trending-badge {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: var(--primary);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 25px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            z-index: 2;
+        }
+        .product-image {
+            height: 200px;
+            background-color: #f3f4f6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .product-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            mix-blend-mode: multiply;
+        }
+        .product-info {
+            padding: 20px;
+        }
+        .product-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+            line-height: 1.4;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+        }
+        .product-price {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .price-change {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 12px;
+        }
+        .price-change.up {
+            color: var(--success);
+            background: rgba(16, 185, 129, 0.1);
+        }
+        .price-change.down {
+            color: var(--danger);
+            background: rgba(239, 68, 68, 0.1);
+        }
+        .product-source {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #e5e7eb;
+            font-size: 0.9rem;
+            color: var(--gray);
+        }
+        .source-badge {
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            background: #f3f4f6;
+        }
+        .source-badge.amazon { background: #FF9900; color: white; }
+        .source-badge.walmart { background: #0071ce; color: white; }
+        .source-badge.shopify { background: #96BF48; color: white; }
+        .source-badge.apple { background: #000000; color: white; }
+        .source-badge.bestbuy { background: #FFDE00; color: #000; }
 
         /* Plan Detail Modal */
         .plan-detail-modal {
@@ -2646,6 +2793,11 @@
 </head>
 
 <body>
+    <!-- Page Loader -->
+    <div class="page-loader" id="pageLoader">
+        <div class="loader-spinner"></div>
+    </div>
+
     <div id="landing-page-view">
     <!-- Navigation -->
     <nav>
@@ -2658,14 +2810,14 @@
             </div>
 
             <ul class="nav-links">
-                <li><a href="#" onclick="showLandingPage('home-page'); return false;" class="active">Home</a></li>
-                <li><a href="#features" onclick="scrollToSection('features'); return false;">Features</a></li>
-                <li><a href="#pricing" onclick="scrollToSection('pricing'); return false;">Pricing</a></li>
-                <li><a href="#testimonials" onclick="scrollToSection('testimonials'); return false;">Testimonials</a></li>
-                <li><a href="#dashboard-preview" onclick="scrollToSection('dashboard-preview'); return false;">Dashboard</a></li>
-                <li><a href="#about" onclick="scrollToSection('about'); return false;">About</a></li>
-                <!-- <li><a href="#" onclick="showLandingPage('blog-page')">Blog</a></li> -->
-                <li><a href="#" onclick="goToContactForm(); return false;">Contact</a></li>
+                <li><a href="#home" class="nav-link" data-section="home" onclick="scrollToSection('home'); return false;">Home</a></li>
+                <li><a href="#features" class="nav-link" data-section="features" onclick="scrollToSection('features'); return false;">Features</a></li>
+                <li><a href="#pricing" class="nav-link" data-section="pricing" onclick="scrollToSection('pricing'); return false;">Pricing</a></li>
+                <li><a href="#trending-products" class="nav-link" data-section="trending-products" onclick="scrollToSection('trending-products'); return false;">Trending</a></li>
+                <li><a href="#testimonials" class="nav-link" data-section="testimonials" onclick="scrollToSection('testimonials'); return false;">Testimonials</a></li>
+                <li><a href="#dashboard-preview" class="nav-link" data-section="dashboard-preview" onclick="scrollToSection('dashboard-preview'); return false;">Dashboard</a></li>
+                <li><a href="#about" class="nav-link" data-section="about" onclick="scrollToSection('about'); return false;">About</a></li>
+                <li><a href="#" class="nav-link" data-section="contact" onclick="goToContactForm(); return false;">Contact</a></li>
                 <li><a href="#" id="loginBtn">Login</a></li>
             </ul>
 
@@ -2680,7 +2832,7 @@
     <!-- Home Page Content -->
     <div id="home-page">
         <!-- Hero Section -->
-        <section class="hero" id="home">
+        <section class="hero section-reveal" id="home">
             <div class="hero-content">
                 <h1>No coding required</h1>
                 <p>KotaPal empowers creators, bloggers, and e-commerce sellers to merge products with retail affiliate offers into AI-powered product blocks. Seamlessly integrate them across your blog, online store, YouTube channel, and email campaigns.</p>
@@ -2688,7 +2840,7 @@
         </section>
 
         <!-- Core Features Section - Apple Style Horizontal Scrollable -->
-        <section class="features" id="features">
+        <section class="features section-reveal" id="features">
             <div class="features-apple-intro">
                 <div class="section-container">
                     <h2 class="text-center">Core Features</h2>
@@ -2766,7 +2918,7 @@
         </section>
 
         <!-- How It Works Section -->
-        <section class="features" style="background:#f9fafb;">
+        <section class="features section-reveal" style="background:#f9fafb;">
             <div class="section-container">
                 <h2 class="text-center">How It Works</h2>
                 <div class="features-grid"
@@ -2803,7 +2955,7 @@
         </section>
 
         <!-- Pricing Section - Horizontal Scrollable Cards -->
-        <section class="pricing" id="pricing" style="background-color: var(--light);">
+        <section class="pricing section-reveal" id="pricing" style="background-color: var(--light);">
             <div class="section-container">
                 <h2 class="text-center">Simple Plans That Scale With You</h2>
                 <p class="text-center">Pick the plan that matches your growth</p>
@@ -2816,7 +2968,7 @@
 
                 <div class="scrollable-wrapper" id="pricingWrapper">
                     <div class="scrollable-content" id="pricingScroll">
-                        <div class="pricing-card-scroll" data-plan="free">
+                        <div class="pricing-card-scroll" data-plan="free" onclick="showPlanDetails('free')">
                                 <h3>Free</h3>
                                 <div class="price-scroll">$0<span class="price-period-scroll">/free</span></div>
                                 <ul class="features-list-scroll">
@@ -2826,10 +2978,10 @@
                                     <li><i class="fas fa-check"></i> Watermarked embed</li>
                                     <li><i class="fas fa-check"></i> Basic analytics</li>
                                 </ul>
-                                <button class="btn btn-primary pricing-signup-btn">Sign Up</button>
+                                <button class="btn btn-primary pricing-signup-btn" onclick="event.stopPropagation(); showAuthModal();">Sign Up</button>
                             </div>
 
-                            <div class="pricing-card-scroll" data-plan="starter">
+                            <div class="pricing-card-scroll" data-plan="starter" onclick="showPlanDetails('starter')">
                                 <h3>Starter</h3>
                                 <div class="price-scroll">$19<span class="price-period-scroll">/mo</span></div>
                                 <ul class="features-list-scroll">
@@ -2839,10 +2991,10 @@
                                     <li><i class="fas fa-check"></i> Email support</li>
                                     <li><i class="fas fa-check"></i> 10,000 monthly views</li>
                                 </ul>
-                                <button class="btn btn-primary pricing-signup-btn">Sign Up</button>
+                                <button class="btn btn-primary pricing-signup-btn" onclick="event.stopPropagation(); showAuthModal();">Sign Up</button>
                             </div>
 
-                            <div class="pricing-card-scroll popular" data-plan="pro">
+                            <div class="pricing-card-scroll popular" data-plan="pro" onclick="showPlanDetails('pro')">
                                 <div class="popular-tag-scroll">Most Popular</div>
                                 <h3>Pro</h3>
                                 <div class="price-scroll">$49<span class="price-period-scroll">/mo</span></div>
@@ -2853,10 +3005,10 @@
                                     <li><i class="fas fa-check"></i> Email-friendly exports</li>
                                     <li><i class="fas fa-check"></i> 50,000 monthly views</li>
                                 </ul>
-                                <button class="btn btn-primary pricing-signup-btn">Sign Up</button>
+                                <button class="btn btn-primary pricing-signup-btn" onclick="event.stopPropagation(); showAuthModal();">Sign Up</button>
                             </div>
 
-                            <div class="pricing-card-scroll" data-plan="creatorplus">
+                            <div class="pricing-card-scroll" data-plan="creatorplus" onclick="showPlanDetails('creatorplus')">
                                 <h3>Creator+</h3>
                                 <div class="price-scroll">$99<span class="price-period-scroll">/mo</span></div>
                                 <ul class="features-list-scroll">
@@ -2866,10 +3018,10 @@
                                     <li><i class="fas fa-check"></i> Heatmaps & CTR insights</li>
                                     <li><i class="fas fa-check"></i> 200,000 monthly views</li>
                                 </ul>
-                                <button class="btn btn-primary pricing-signup-btn">Sign Up</button>
+                                <button class="btn btn-primary pricing-signup-btn" onclick="event.stopPropagation(); showAuthModal();">Sign Up</button>
                             </div>
 
-                            <div class="pricing-card-scroll" data-plan="agency">
+                            <div class="pricing-card-scroll" data-plan="agency" onclick="showPlanDetails('agency')">
                                 <div class="popular-tag-scroll">Top Tier</div>
                                 <h3>Agency</h3>
                                 <div class="price-scroll">$199<span class="price-period-scroll">/mo</span></div>
@@ -2880,7 +3032,7 @@
                                     <li><i class="fas fa-check"></i> Priority support</li>
                                     <li><i class="fas fa-check"></i> Unlimited monthly views</li>
                                 </ul>
-                                <button class="btn btn-primary pricing-signup-btn">Sign Up</button>
+                                <button class="btn btn-primary pricing-signup-btn" onclick="event.stopPropagation(); showAuthModal();">Sign Up</button>
                             </div>
                         </div>
                     </div>
@@ -2896,8 +3048,120 @@
             </div>
         </section>
 
+        <!-- Trending Products Section -->
+        <section class="products section-reveal" id="trending-products">
+            <div class="section-container">
+                <h2 class="text-center">Trending Products</h2>
+                <p class="text-center">Most popular items our creators are monetizing right now</p>
+            </div>
+
+            <div class="scrollable-container">
+                <button class="scroll-btn scroll-btn-left" onclick="scrollTrendingProducts('right')">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+
+                <div class="scrollable-wrapper" id="trendingProductsWrapper">
+                    <div class="scrollable-content" id="trendingProductsScroll">
+                        <div class="product-card">
+                            <span class="product-trending-badge"><i class="fas fa-fire"></i> Hot</span>
+                            <div class="product-image">
+                                <img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" alt="Sony Headphones">
+                            </div>
+                            <div class="product-info">
+                                <h3 class="product-title">Sony WH-1000XM5</h3>
+                                <div class="product-price">$299.99 <span class="price-change up"><i class="fas fa-arrow-up"></i> 12%</span></div>
+                                <div class="product-source">
+                                    <span class="source-badge amazon">Amazon</span>
+                                    <span>1.2k clicks</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="product-card">
+                            <span class="product-trending-badge"><i class="fas fa-chart-line"></i> Trending</span>
+                            <div class="product-image">
+                                <img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" alt="Nike Air Max">
+                            </div>
+                            <div class="product-info">
+                                <h3 class="product-title">Nike Air Max 270</h3>
+                                <div class="product-price">$150.00 <span class="price-change up"><i class="fas fa-arrow-up"></i> 8%</span></div>
+                                <div class="product-source">
+                                    <span class="source-badge shopify">Shopify</span>
+                                    <span>856 clicks</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="product-card">
+                            <span class="product-trending-badge"><i class="fas fa-star"></i> Top Pick</span>
+                            <div class="product-image">
+                                <img src="https://images.unsplash.com/photo-1586023492125-27b2c045efd7?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" alt="Instant Pot">
+                            </div>
+                            <div class="product-info">
+                                <h3 class="product-title">Instant Pot Duo 7-in-1</h3>
+                                <div class="product-price">$89.99 <span class="price-change down"><i class="fas fa-arrow-down"></i> 5%</span></div>
+                                <div class="product-source">
+                                    <span class="source-badge walmart">Walmart</span>
+                                    <span>2.1k clicks</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="product-card">
+                            <span class="product-trending-badge"><i class="fas fa-fire"></i> Hot</span>
+                            <div class="product-image">
+                                <img src="https://images.unsplash.com/photo-1572569511254-d8f925fe2cbb?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" alt="iPad Pro">
+                            </div>
+                            <div class="product-info">
+                                <h3 class="product-title">iPad Pro 12.9"</h3>
+                                <div class="product-price">$1099.00 <span class="price-change up"><i class="fas fa-arrow-up"></i> 3%</span></div>
+                                <div class="product-source">
+                                    <span class="source-badge apple">Apple</span>
+                                    <span>645 clicks</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="product-card">
+                            <span class="product-trending-badge"><i class="fas fa-chart-line"></i> Trending</span>
+                            <div class="product-image">
+                                <img src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" alt="Smart Watch">
+                            </div>
+                            <div class="product-info">
+                                <h3 class="product-title">Apple Watch Series 9</h3>
+                                <div class="product-price">$399.00 <span class="price-change up"><i class="fas fa-arrow-up"></i> 15%</span></div>
+                                <div class="product-source">
+                                    <span class="source-badge amazon">Amazon</span>
+                                    <span>3.4k clicks</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="product-card">
+                            <span class="product-trending-badge"><i class="fas fa-star"></i> Top Pick</span>
+                            <div class="product-image">
+                                <img src="https://images.unsplash.com/photo-1593642702821-c8da6771f0c6?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" alt="MacBook">
+                            </div>
+                            <div class="product-info">
+                                <h3 class="product-title">MacBook Air M2</h3>
+                                <div class="product-price">$1199.00 <span class="price-change down"><i class="fas fa-arrow-down"></i> 2%</span></div>
+                                <div class="product-source">
+                                    <span class="source-badge bestbuy">Best Buy</span>
+                                    <span>987 clicks</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="scroll-btn scroll-btn-right" onclick="scrollTrendingProducts('left')">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+        </section>
+
         <!-- NEW: Dashboard Preview Section -->
-        <section class="dashboard-preview" id="dashboard-preview">
+        <section class="dashboard-preview section-reveal" id="dashboard-preview">
             <div class="dashboard-container">
                 <h2 class="text-center">Powerful Dashboard Insights</h2>
                 <p class="text-center" style="color: rgba(255, 255, 255, 0.8); max-width: 800px; margin: 0 auto 30px;">
@@ -2956,7 +3220,7 @@
         </section>
 
         <!-- About Section -->
-        <section class="about" id="about" style="background-color: var(--light);">
+        <section class="about section-reveal" id="about" style="background-color: var(--light);">
             <div class="section-container text-center">
                 <h2>We Believe Creators Deserve Smarter Tools</h2>
                 <p class="text-center" style="max-width: 800px; margin: 0 auto; font-size: 1.2rem;">
@@ -2986,7 +3250,7 @@
         </section>
 
         <!-- NEW: Testimonials Section (Replaced Social Proof) -->
-        <section class="testimonials" id="testimonials">
+        <section class="testimonials section-reveal" id="testimonials">
             <div class="section-container">
                 <h2 class="text-center">What Our Creators Say</h2>
                 <p class="text-center">Join thousands of creators who have transformed their content monetization</p>
@@ -3261,6 +3525,7 @@
                         <li><a href="#" onclick="goToContactForm(); return false;">Contact</a></li>
                         <li><a href="#" id="privacyLink">Privacy Policy</a></li>
                         <li><a href="#" id="tosLink">Terms of Service</a></li>
+                        <li><a href="admin.html" style="opacity:0.7;">Admin</a></li>
                     </ul>
                 </div>
 
@@ -4873,6 +5138,47 @@
                 // This is a fresh page load, ensure landing page is shown
             }
             
+            // Page loader - hide after load
+            window.addEventListener('load', function() {
+                setTimeout(function() {
+                    var loader = document.getElementById('pageLoader');
+                    if (loader) loader.classList.add('hidden');
+                    document.body.classList.add('loaded');
+                }, 500);
+            });
+            
+            // Nav scroll highlight (updateActiveMenu)
+            function updateActiveMenu() {
+                var sections = document.querySelectorAll('section[id]');
+                var navLinks = document.querySelectorAll('.nav-links a[data-section]');
+                var currentSection = '';
+                sections.forEach(function(section) {
+                    var sectionTop = section.offsetTop - 100;
+                    var sectionHeight = section.clientHeight;
+                    if (window.scrollY >= sectionTop && window.scrollY < sectionTop + sectionHeight) {
+                        currentSection = section.getAttribute('id');
+                    }
+                });
+                navLinks.forEach(function(link) {
+                    link.classList.remove('active');
+                    if (link.getAttribute('data-section') === currentSection) link.classList.add('active');
+                });
+            }
+            window.addEventListener('scroll', updateActiveMenu);
+            window.addEventListener('load', updateActiveMenu);
+            
+            // Section reveal animation
+            function initSectionReveal() {
+                var sections = document.querySelectorAll('.section-reveal');
+                var observer = new IntersectionObserver(function(entries) {
+                    entries.forEach(function(entry) {
+                        if (entry.isIntersecting) entry.target.classList.add('revealed');
+                    });
+                }, { threshold: 0.1 });
+                sections.forEach(function(section) { observer.observe(section); });
+            }
+            initSectionReveal();
+            
             isInitialLoad = false;
         });
         
@@ -5401,12 +5707,19 @@
             if (el.scrollLeft >= el.scrollWidth - el.clientWidth) el.scrollLeft = 0;
             if (el.scrollLeft <= 0) el.scrollLeft = Math.max(0, el.scrollWidth - el.clientWidth);
         }
+        function scrollTrendingProducts(direction) {
+            const el = document.getElementById('trendingProductsWrapper');
+            if (!el) return;
+            const step = 320;
+            const newScrollLeft = direction === 'left' ? el.scrollLeft + step : el.scrollLeft - step;
+            el.scrollTo({ left: Math.max(0, Math.min(newScrollLeft, el.scrollWidth - el.clientWidth)), behavior: 'smooth' });
+        }
 
         // Homepage carousels auto-scroll at all times
         var carouselRAF = {};
         var carouselSpeed = 0.6;
         // Positive scrollLeft motion makes cards move right-to-left visually.
-        var carouselDirection = { featuresWrapper: 1, pricingWrapper: 1, productsWrapper: 1 };
+        var carouselDirection = { featuresWrapper: 1, pricingWrapper: 1, productsWrapper: 1, trendingProductsWrapper: 1 };
         function ensureCarouselScrollable(id) {
             var el = document.getElementById(id);
             if (!el) return;
@@ -5445,7 +5758,7 @@
             }
         }
         function initLandingCarousels() {
-            ['featuresWrapper', 'pricingWrapper', 'productsWrapper'].forEach(function(id) {
+            ['featuresWrapper', 'pricingWrapper', 'productsWrapper', 'trendingProductsWrapper'].forEach(function(id) {
                 var el = document.getElementById(id);
                 if (el) {
                     startCarousel(id);
@@ -5489,7 +5802,7 @@
         }, 1000);
         // Carousels: move RIGHT TO LEFT at all times. Run whenever wrappers exist and are visible.
         function tickAllCarousels() {
-            var ids = ['featuresWrapper', 'pricingWrapper', 'productsWrapper'];
+            var ids = ['featuresWrapper', 'pricingWrapper', 'productsWrapper', 'trendingProductsWrapper'];
             ids.forEach(function(id) {
                 var el = document.getElementById(id);
                 if (!el || !el.offsetParent) return;
