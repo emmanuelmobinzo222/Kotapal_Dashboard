@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KotaPal Admin Dashboard</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         :root {
@@ -98,6 +101,20 @@
             display: none;
         }
         .login-error.show { display: block; }
+        .btn-return {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 20px;
+            color: var(--gray);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+        .btn-return:hover {
+            color: var(--primary);
+        }
 
         /* Admin Dashboard Layout */
         .admin-dashboard { display: none; }
@@ -292,9 +309,16 @@
             margin-bottom: 16px;
             opacity: 0.5;
         }
+        /* Cross-platform compatibility */
         @media (max-width: 768px) {
             .admin-sidebar { width: 100%; }
             .admin-dashboard.active { flex-direction: column; }
+        }
+        @media (-webkit-min-device-pixel-ratio: 0) {
+            input, select, textarea { font-size: 16px; }
+        }
+        @supports (-webkit-touch-callout: none) {
+            input, select, textarea { font-size: 16px !important; }
         }
     </style>
 </head>
@@ -302,6 +326,7 @@
     <!-- Admin Login -->
     <div id="adminLogin" class="admin-login">
         <div class="login-card">
+            <a href="index.html" class="btn-return"><i class="fas fa-arrow-left"></i> Return to Home</a>
             <h1><i class="fas fa-shield-alt"></i> Admin Access</h1>
             <p class="subtitle">KotaPal Admin Dashboard</p>
             <div id="loginError" class="login-error"></div>
@@ -330,9 +355,14 @@
                 <li><a href="#" class="active" data-page="overview"><i class="fas fa-tachometer-alt"></i> Overview</a></li>
                 <li><a href="#" data-page="users"><i class="fas fa-users"></i> User Management</a></li>
                 <li><a href="#" data-page="blocks"><i class="fas fa-cubes"></i> All Blocks</a></li>
+                <li><a href="#" data-page="subscriptions"><i class="fas fa-credit-card"></i> Subscriptions</a></li>
+                <li><a href="#" data-page="payments"><i class="fas fa-money-bill-wave"></i> Payments</a></li>
+                <li><a href="#" data-page="activity-log"><i class="fas fa-history"></i> Activity Log</a></li>
+                <li><a href="#" data-page="support"><i class="fas fa-headset"></i> Support</a></li>
                 <li><a href="#" data-page="moderation"><i class="fas fa-flag"></i> Moderation</a></li>
                 <li><a href="#" data-page="analytics"><i class="fas fa-chart-line"></i> Analytics</a></li>
                 <li><a href="#" data-page="settings"><i class="fas fa-cog"></i> Settings</a></li>
+                <li><a href="index.html" style="margin-top: 16px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.1);"><i class="fas fa-arrow-left"></i> Return to Home</a></li>
             </ul>
         </aside>
         <main class="admin-main">
@@ -379,6 +409,7 @@
                                         <th>Action</th>
                                         <th>User</th>
                                         <th>Details</th>
+                                        <th style="min-width:80px;">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody id="recentActivityBody"></tbody>
@@ -455,6 +486,73 @@
                 </div>
             </div>
 
+            <!-- Subscriptions Page -->
+            <div id="page-subscriptions" class="page-content">
+                <div class="card">
+                    <div class="card-header"><h3>Subscription Management</h3></div>
+                    <div class="card-body">
+                        <div class="table-container">
+                            <table>
+                                <thead><tr><th>User</th><th>Plan</th><th>Status</th><th>Start Date</th><th>Actions</th></tr></thead>
+                                <tbody id="subscriptionsTableBody"></tbody>
+                            </table>
+                        </div>
+                        <div id="subscriptionsEmpty" class="empty-state">Subscription data from Firestore</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payments Page -->
+            <div id="page-payments" class="page-content">
+                <div class="card">
+                    <div class="card-header"><h3>Payment History</h3></div>
+                    <div class="card-body">
+                        <div class="table-container">
+                            <table>
+                                <thead><tr><th>Date</th><th>User</th><th>Amount</th><th>Status</th><th>Invoice</th></tr></thead>
+                                <tbody id="paymentsTableBody"></tbody>
+                            </table>
+                        </div>
+                        <div id="paymentsEmpty" class="empty-state">Payment history will appear here</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Activity Log Page -->
+            <div id="page-activity-log" class="page-content">
+                <div class="card">
+                    <div class="card-header"><h3>System Activity Log</h3></div>
+                    <div class="card-body">
+                        <div class="table-container">
+                            <table>
+                                <thead><tr><th>Timestamp</th><th>Action</th><th>User</th><th>Details</th></tr></thead>
+                                <tbody id="activityLogTableBody"></tbody>
+                            </table>
+                        </div>
+                        <div id="activityLogEmpty" class="empty-state">Activity logs will appear here</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Support Page -->
+            <div id="page-support" class="page-content">
+                <div class="card">
+                    <div class="card-header"><h3>Support Tickets</h3></div>
+                    <div class="card-body">
+                        <div style="display:flex; gap:12px; margin-bottom:16px;">
+                            <button type="button" class="btn btn-primary" id="newAnnouncementBtn"><i class="fas fa-bullhorn"></i> New Announcement</button>
+                        </div>
+                        <div class="table-container">
+                            <table>
+                                <thead><tr><th>ID</th><th>Subject</th><th>User</th><th>Status</th><th>Created</th><th>Actions</th></tr></thead>
+                                <tbody id="supportTableBody"></tbody>
+                            </table>
+                        </div>
+                        <div id="supportEmpty" class="empty-state">Support tickets and inquiries will appear here</div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Moderation Page -->
             <div id="page-moderation" class="page-content">
                 <div class="card">
@@ -522,89 +620,164 @@
     </div>
 
     <script>
-        // Admin credentials (in production, use secure backend auth)
-        const ADMIN_EMAIL = 'admin@kotapal.com';
-        const ADMIN_PASSWORD = 'Admin123!';
+        const firebaseConfig = {
+            apiKey: "AIzaSyCNU1QFZhmUuk2QWDeNi4ff3-le4KNnbrU",
+            authDomain: "kotapal-1e8f6.firebaseapp.com",
+            projectId: "kotapal-1e8f6",
+            storageBucket: "kotapal-1e8f6.firebasestorage.app",
+            messagingSenderId: "487227333489",
+            appId: "1:487227333489:web:a370f5e07b9e4c3d79f4d0",
+            measurementId: "G-8GQ7JGDZ7P"
+        };
 
-        // Mock data for demo
-        let adminUsers = [
-            { id: '1', name: 'John Doe', email: 'john.doe@example.com', plan: 'pro', joined: '2024-01-15', status: 'active' },
-            { id: '2', name: 'Jane Smith', email: 'jane@example.com', plan: 'starter', joined: '2024-02-20', status: 'active' },
-            { id: '3', name: 'Mike Wilson', email: 'mike@example.com', plan: 'free', joined: '2024-03-10', status: 'active' }
-        ];
-        let adminBlocks = [
-            { id: 'blk_1', title: 'Best Headphones 2024', owner: 'John Doe', retailer: 'Amazon', clicks: 1247, revenue: 89.42, status: 'active' },
-            { id: 'blk_2', title: 'Top Smart TVs', owner: 'John Doe', retailer: 'Walmart', clicks: 892, revenue: 67.85, status: 'active' }
-        ];
-        let adminActivity = [
-            { time: '2 min ago', action: 'New block created', user: 'John Doe', details: 'Best Headphones 2024' },
-            { time: '15 min ago', action: 'User signed up', user: 'Mike Wilson', details: 'Free plan' },
-            { time: '1 hour ago', action: 'Integration connected', user: 'Jane Smith', details: 'Amazon Associates' }
-        ];
+        const ADMIN_EMAILS = ['admin@kotapal.com'];
+        let auth, db;
+        let adminUsers = [];
+        let adminBlocks = [];
+        let userMap = {};
 
-        function checkAdminAuth() {
-            return sessionStorage.getItem('kotapal_admin') === 'true';
+        try {
+            firebase.initializeApp(firebaseConfig);
+            auth = firebase.auth();
+            db = firebase.firestore();
+        } catch (e) { console.warn('Firebase init:', e); }
+
+        function isAdminEmail(email) {
+            return email && ADMIN_EMAILS.includes(email.trim().toLowerCase());
         }
 
-        function setAdminAuth(email) {
-            sessionStorage.setItem('kotapal_admin', 'true');
-            sessionStorage.setItem('kotapal_admin_email', email);
+        function showAdminDashboard(email) {
+            document.getElementById('adminLogin').style.display = 'none';
+            document.getElementById('adminDashboard').classList.add('active');
+            document.getElementById('adminEmailDisplay').textContent = email;
+            loadAdminDataFromFirestore();
         }
 
         function clearAdminAuth() {
+            if (auth) auth.signOut();
             sessionStorage.removeItem('kotapal_admin');
             sessionStorage.removeItem('kotapal_admin_email');
+            document.getElementById('adminDashboard').classList.remove('active');
+            document.getElementById('adminLogin').style.display = 'flex';
+            document.getElementById('adminEmail').value = '';
+            document.getElementById('adminPassword').value = '';
         }
 
-        document.getElementById('adminLoginForm').addEventListener('submit', function(e) {
+        document.getElementById('adminLoginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             const email = document.getElementById('adminEmail').value.trim();
             const password = document.getElementById('adminPassword').value;
             const errorEl = document.getElementById('loginError');
 
-            if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
-                errorEl.classList.remove('show');
-                setAdminAuth(email);
-                document.getElementById('adminLogin').style.display = 'none';
-                document.getElementById('adminDashboard').classList.add('active');
-                document.getElementById('adminEmailDisplay').textContent = email;
-                loadAdminData();
-            } else {
-                errorEl.textContent = 'Invalid admin credentials.';
+            if (!auth) {
+                errorEl.textContent = 'Firebase not configured. Please check your setup.';
+                errorEl.classList.add('show');
+                return;
+            }
+
+            try {
+                const cred = await auth.signInWithEmailAndPassword(email, password);
+                if (isAdminEmail(cred.user.email)) {
+                    errorEl.classList.remove('show');
+                    sessionStorage.setItem('kotapal_admin', 'true');
+                    sessionStorage.setItem('kotapal_admin_email', email);
+                    showAdminDashboard(email);
+                } else {
+                    await auth.signOut();
+                    errorEl.textContent = 'Access denied. Admin email required.';
+                    errorEl.classList.add('show');
+                }
+            } catch (err) {
+                errorEl.textContent = err.message || 'Invalid credentials.';
                 errorEl.classList.add('show');
             }
         });
 
-        document.getElementById('adminLogoutBtn').addEventListener('click', function() {
-            clearAdminAuth();
-            document.getElementById('adminDashboard').classList.remove('active');
-            document.getElementById('adminLogin').style.display = 'flex';
-            document.getElementById('adminEmail').value = '';
-            document.getElementById('adminPassword').value = '';
+        document.getElementById('adminLogoutBtn').addEventListener('click', clearAdminAuth);
+
+        auth && auth.onAuthStateChanged(function(user) {
+            if (user && isAdminEmail(user.email)) {
+                sessionStorage.setItem('kotapal_admin', 'true');
+                sessionStorage.setItem('kotapal_admin_email', user.email);
+                showAdminDashboard(user.email);
+            }
         });
 
-        if (checkAdminAuth()) {
-            document.getElementById('adminLogin').style.display = 'none';
-            document.getElementById('adminDashboard').classList.add('active');
-            document.getElementById('adminEmailDisplay').textContent = sessionStorage.getItem('kotapal_admin_email') || ADMIN_EMAIL;
-            loadAdminData();
+        async function loadAdminDataFromFirestore() {
+            if (!db) {
+                loadFallbackData();
+                return;
+            }
+            try {
+                const usersSnap = await db.collection('users').get();
+                adminUsers = usersSnap.docs.map(d => {
+                    const dta = d.data();
+                    return { id: d.id, name: dta.displayName || dta.email || '—', email: dta.email || '', plan: dta.plan || 'free', joined: dta.signupDate || '—', status: 'active' };
+                });
+                userMap = {};
+                adminUsers.forEach(u => { userMap[u.id] = u.name; });
+
+                const blocksSnap = await db.collection('blocks').get();
+                adminBlocks = blocksSnap.docs.map(d => {
+                    const dta = d.data();
+                    return { id: d.id, title: dta.title || '—', owner: userMap[dta.userId] || dta.userId || '—', retailer: dta.retailer || '—', clicks: dta.clicks || 0, revenue: dta.revenue || 0, status: dta.status || 'active' };
+                });
+
+                const deletedIds = JSON.parse(localStorage.getItem('admin_deleted_activity') || '[]');
+                const activity = adminBlocks.slice(0, 10).filter(b => !deletedIds.includes(b.id)).map(b => ({
+                    id: b.id,
+                    time: b.lastUpdated || '—',
+                    action: 'Block',
+                    user: b.owner,
+                    details: b.title
+                }));
+                const activityBody = document.getElementById('recentActivityBody');
+                activityBody.innerHTML = activity.length ? activity.map(a => `<tr data-activity-id="${a.id}"><td>${a.time}</td><td>${a.action}</td><td>${a.user}</td><td>${a.details}</td><td><button type="button" class="btn btn-sm btn-danger activity-delete-btn" data-id="${a.id}" title="Remove this activity entry"><i class="fas fa-trash-alt"></i></button></td></tr>`).join('') : '<tr><td colspan="5">No recent activity</td></tr>';
+                document.getElementById('recentActivityEmpty').style.display = activity.length ? 'none' : 'block';
+                activityBody.querySelectorAll('.activity-delete-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const id = this.getAttribute('data-id');
+                        if (confirm('Remove this activity entry? This will hide it from the activity list.')) {
+                            const deleted = JSON.parse(localStorage.getItem('admin_deleted_activity') || '[]');
+                            if (!deleted.includes(id)) deleted.push(id);
+                            localStorage.setItem('admin_deleted_activity', JSON.stringify(deleted));
+                            loadAdminDataFromFirestore();
+                        }
+                    });
+                });
+
+                updateAdminStats();
+                renderUsersTable(adminUsers);
+                renderBlocksTable(adminBlocks);
+            } catch (err) {
+                console.warn('Firestore load:', err);
+                loadFallbackData();
+            }
+        }
+
+        function loadFallbackData() {
+            if (!adminUsers.length) adminUsers = [];
+            if (!adminBlocks.length) adminBlocks = [];
+            updateAdminStats();
+            renderUsersTable(adminUsers);
+            renderBlocksTable(adminBlocks);
+            document.getElementById('recentActivityBody').innerHTML = '<tr><td colspan="4">Connect Firebase to see live data</td></tr>';
+        }
+
+        function updateAdminStats() {
+            const totalClicks = adminBlocks.reduce((s, b) => s + (b.clicks || 0), 0);
+            const totalRevenue = adminBlocks.reduce((s, b) => s + (b.revenue || 0), 0);
+            document.getElementById('statTotalUsers').textContent = adminUsers.length;
+            document.getElementById('statTotalBlocks').textContent = adminBlocks.length;
+            document.getElementById('statTotalClicks').textContent = totalClicks.toLocaleString();
+            document.getElementById('statTotalRevenue').textContent = '$' + totalRevenue.toFixed(2);
+            document.getElementById('analyticsClicks').textContent = totalClicks.toLocaleString();
+            const avgCtr = adminBlocks.length ? (adminBlocks.reduce((s, b) => s + (b.ctr || 0), 0) / adminBlocks.length).toFixed(1) : 0;
+            document.getElementById('analyticsCTR').textContent = avgCtr + '%';
         }
 
         function loadAdminData() {
-            document.getElementById('statTotalUsers').textContent = adminUsers.length;
-            document.getElementById('statTotalBlocks').textContent = adminBlocks.length;
-            const totalClicks = adminBlocks.reduce((s, b) => s + (b.clicks || 0), 0);
-            const totalRevenue = adminBlocks.reduce((s, b) => s + (b.revenue || 0), 0);
-            document.getElementById('statTotalClicks').textContent = totalClicks.toLocaleString();
-            document.getElementById('statTotalRevenue').textContent = '$' + totalRevenue.toFixed(2);
-
-            const activityBody = document.getElementById('recentActivityBody');
-            activityBody.innerHTML = adminActivity.map(a =>
-                `<tr><td>${a.time}</td><td>${a.action}</td><td>${a.user}</td><td>${a.details}</td></tr>`
-            ).join('');
-
-            renderUsersTable(adminUsers);
-            renderBlocksTable(adminBlocks);
+            loadAdminDataFromFirestore();
         }
 
         function renderUsersTable(users) {
@@ -688,9 +861,39 @@
                 document.querySelectorAll('.admin-nav a').forEach(a => a.classList.remove('active'));
                 this.classList.add('active');
                 document.querySelectorAll('.page-content').forEach(p => p.classList.remove('active'));
-                document.getElementById('page-' + page).classList.add('active');
+                const pageEl = document.getElementById('page-' + page);
+                if (pageEl) pageEl.classList.add('active');
+                if (page === 'subscriptions') loadSubscriptionsPage();
+                if (page === 'payments') loadPaymentsPage();
+                if (page === 'activity-log') loadActivityLogPage();
+                if (page === 'support') loadSupportPage();
             });
         });
+
+        function loadSubscriptionsPage() {
+            const tbody = document.getElementById('subscriptionsTableBody');
+            if (!tbody) return;
+            const rows = adminUsers.map(u => `<tr><td>${u.name}</td><td><span class="badge badge-info">${u.plan}</span></td><td><span class="badge badge-success">${u.status}</span></td><td>${u.joined}</td><td>—</td></tr>`).join('');
+            tbody.innerHTML = rows || '<tr><td colspan="5">No subscription data</td></tr>';
+        }
+        function loadPaymentsPage() {
+            const tbody = document.getElementById('paymentsTableBody');
+            if (!tbody) return;
+            tbody.innerHTML = '<tr><td colspan="5">Payment history will sync from your payment provider</td></tr>';
+        }
+        function loadActivityLogPage() {
+            const tbody = document.getElementById('activityLogTableBody');
+            if (!tbody) return;
+            const entries = adminBlocks.slice(0, 20).map(b => ({ time: b.lastUpdated || '—', action: 'Block', user: b.owner, details: b.title }));
+            const rows = entries.map(e => `<tr><td>${e.time}</td><td>${e.action}</td><td>${e.user}</td><td>${e.details}</td></tr>`).join('');
+            tbody.innerHTML = rows || '<tr><td colspan="4">No activity logs</td></tr>';
+        }
+        function loadSupportPage() {
+            const tbody = document.getElementById('supportTableBody');
+            if (!tbody) return;
+            tbody.innerHTML = '<tr><td colspan="6">Support tickets will appear here when customers submit inquiries</td></tr>';
+        }
+        document.getElementById('newAnnouncementBtn')?.addEventListener('click', () => alert('New Announcement: Create an announcement to send to all users. (Integrate with your notification system)'));
     </script>
 </body>
 </html>

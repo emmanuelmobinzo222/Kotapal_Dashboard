@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>KotaPal – Monetize Content with Smart Product Blocks | USA Creators & E-Commerce</title>
     <meta name="description"
         content="KotaPal helps US creators, bloggers & e-commerce sellers monetize content with AI-powered Shopify + Amazon + Walmart product blocks. Trusted by 10,000+ US creators.">
@@ -68,7 +69,8 @@
             --warning: #f59e0b;
         }
 
-        html { overflow-x: hidden; }
+        /* Cross-platform: Chrome, Firefox, Safari, Edge, Windows, macOS */
+        html { overflow-x: hidden; -webkit-text-size-adjust: 100%; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
             color: #333;
@@ -1717,6 +1719,23 @@
             padding-bottom: 20px;
         }
 
+        #authModal .auth-login-admin-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            text-decoration: none;
+            margin: 0;
+            background: #f3f4f6;
+            color: #1f2937;
+            border: 2px solid #d1d5db;
+            cursor: pointer;
+        }
+        #authModal .auth-login-admin-btn:hover {
+            background: #e5e7eb;
+            border-color: #9ca3af;
+        }
         #authModal .auth-form button[type="submit"] {
             display: block;
             width: 100%;
@@ -4092,13 +4111,12 @@
                                 <button class="btn btn-primary" onclick="generateReport('performance')">Performance Report</button>
                                 <button class="btn btn-secondary" onclick="generateReport('payout')">Payout Report</button>
                             </div>
-                            <p style="margin-bottom:12px; color:var(--gray); font-size:0.9rem;">Recent reports — download as PDF or Excel.</p>
+                            <p style="margin-bottom:12px; color:var(--gray); font-size:0.9rem;">Recent reports — download as PDF or Excel. Report titles shown in the table below.</p>
                             <div class="table-container" style="overflow-x: auto;">
                                 <table id="reportsTable" style="width:100%; border-collapse:collapse; min-width:500px;">
                                     <thead>
                                         <tr>
-                                            <th style="text-align:left; padding:10px; border-bottom:1px solid #e5e7eb;">Name</th>
-                                            <th style="text-align:left; padding:10px; border-bottom:1px solid #e5e7eb;">Type</th>
+                                            <th style="text-align:left; padding:10px; border-bottom:1px solid #e5e7eb;">Report Title</th>
                                             <th style="text-align:left; padding:10px; border-bottom:1px solid #e5e7eb;">Date</th>
                                             <th style="text-align:left; padding:10px; border-bottom:1px solid #e5e7eb;">Format</th>
                                             <th style="text-align:left; padding:10px; border-bottom:1px solid #e5e7eb; min-width:120px;">Action</th>
@@ -4275,7 +4293,8 @@
                             </div>
                             <div class="form-group">
                                 <label for="userEmail">Email</label>
-                                <input type="email" id="userEmail" class="form-control" required>
+                                <input type="email" id="userEmail" class="form-control" readonly disabled style="background:#e5e7eb; color:#6b7280; cursor:not-allowed;" title="Email cannot be changed. Contact an administrator for email updates.">
+                                <small style="color:var(--gray); font-size:0.85rem; margin-top:4px;">Email cannot be changed. Contact an administrator for updates.</small>
                             </div>
                             <div class="form-group">
                                 <label for="userWebsite">Website/Blog URL</label>
@@ -4409,7 +4428,7 @@
                     <button type="submit" class="btn btn-primary">Login</button>
                     <div id="authMessage" class="form-status" style="display: none;"></div>
                     <div style="text-align: center; margin-top: 16px; padding-top: 16px; border-top: 1px solid #e5e7eb;">
-                        <a href="admin.html" class="forgot-password" style="font-size: 0.9rem;">Admin login</a>
+                        <a href="admin.html" class="btn auth-login-admin-btn"><i class="fas fa-shield-alt"></i> Admin login</a>
                     </div>
                 </form>
             </div>
@@ -4585,6 +4604,7 @@
             } else {
                 firebase.initializeApp(firebaseConfig);
                 auth = firebase.auth();
+                window.firestoreDb = firebase.firestore();
                 
                 // Set persistence to LOCAL so users stay logged in across browser sessions
                 // This ensures the session persists even after closing the browser
@@ -4675,7 +4695,7 @@
                 const savedUserData = JSON.parse(localStorage.getItem('kotaUser') || '{}');
                 const displayName = user.displayName || savedUserData.displayName || user.email.split('@')[0];
                 
-                // Store user data in localStorage
+                // Store user data in localStorage and sync to Firestore
                 const userData = {
                     uid: user.uid,
                     email: user.email,
@@ -4684,6 +4704,15 @@
                     plan: savedUserData.plan || 'starter',
                     signupDate: savedUserData.signupDate || new Date().toISOString()
                 };
+                if (window.firestoreDb) {
+                    window.firestoreDb.collection('users').doc(user.uid).set({
+                        email: user.email,
+                        displayName: displayName,
+                        plan: userData.plan,
+                        signupDate: userData.signupDate,
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    }, { merge: true }).catch(function(err) { console.warn('Firestore user sync:', err); });
+                }
                 // Set explicit login flag in BOTH sessionStorage AND localStorage for maximum persistence
                 // Set these IMMEDIATELY before any async operations to prevent race conditions
                 sessionStorage.setItem('kotapal_explicit_login', 'true');
@@ -4825,7 +4854,7 @@
                     // Continue even if profile update fails
                 }
                 
-                // Store user data in localStorage
+                // Store user data in localStorage and Firestore
                 const userData = {
                     uid: user.uid,
                     email: user.email,
@@ -4834,7 +4863,15 @@
                     plan: plan || 'starter',
                     signupDate: new Date().toISOString()
                 };
-                // Set explicit login flag FIRST, before any state changes
+                if (window.firestoreDb) {
+                    window.firestoreDb.collection('users').doc(user.uid).set({
+                        email: user.email,
+                        displayName: name.trim(),
+                        plan: plan || 'starter',
+                        signupDate: new Date().toISOString(),
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    }, { merge: true }).catch(function(err) { console.warn('Firestore user save:', err); });
+                }
                 sessionStorage.setItem('kotapal_explicit_login', 'true');
                 localStorage.setItem('kotaUser', JSON.stringify(userData));
                 currentUser = userData;
@@ -5963,14 +6000,51 @@
             }
         }
 
-        // Persist user blocks to localStorage (keyed by user)
+        // Persist user blocks to localStorage and Firestore (keyed by user)
         function saveUserBlocks() {
             const uid = currentUser?.uid;
-            if (uid) localStorage.setItem('kotaBlocks_' + uid, JSON.stringify(currentBlocks));
+            if (uid) {
+                localStorage.setItem('kotaBlocks_' + uid, JSON.stringify(currentBlocks));
+                if (window.firestoreDb) {
+                    const batch = window.firestoreDb.batch();
+                    currentBlocks.forEach(function(blk) {
+                        const ref = window.firestoreDb.collection('blocks').doc(blk.id);
+                        batch.set(ref, { ...blk, userId: uid, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+                    });
+                    batch.commit().catch(function(err) { console.warn('Firestore blocks sync:', err); });
+                }
+            }
         }
 
-        // Load user data: blocks from localStorage, then mock only if empty
+        // Load user data: blocks from Firestore first, then localStorage, then mock only if empty
         function loadMockData() {
+            const uid = currentUser?.uid;
+            if (uid && window.firestoreDb) {
+                window.firestoreDb.collection('blocks').where('userId', '==', uid).get()
+                    .then(function(snap) {
+                        if (!snap.empty) {
+                            currentBlocks = snap.docs.map(function(d) {
+                                var dta = d.data();
+                                dta.id = d.id;
+                                return dta;
+                            });
+                            localStorage.setItem('kotaBlocks_' + uid, JSON.stringify(currentBlocks));
+                            updateDashboardStats();
+                            renderBlocks();
+                            renderIntegrations();
+                            renderActivityTable();
+                            renderAnalytics();
+                            renderAlerts();
+                            return;
+                        }
+                        tryLoadFromLocalStorage();
+                    })
+                    .catch(function() { tryLoadFromLocalStorage(); });
+                return;
+            }
+            tryLoadFromLocalStorage();
+        }
+        function tryLoadFromLocalStorage() {
             const uid = currentUser?.uid;
             if (uid) {
                 try {
@@ -6178,6 +6252,9 @@
             if (deleteBlockConfirm) deleteBlockConfirm.addEventListener('click', function() {
                 const blockId = window._deleteBlockId;
                 if (blockId) {
+                    if (window.firestoreDb && currentUser?.uid) {
+                        window.firestoreDb.collection('blocks').doc(blockId).delete().catch(function(err) { console.warn('Firestore delete:', err); });
+                    }
                     currentBlocks = currentBlocks.filter(function(b) { return b.id !== blockId; });
                     saveUserBlocks();
                     renderBlocks();
@@ -6207,7 +6284,7 @@
             if (profileForm) {
                 profileForm.addEventListener('submit', handleProfileUpdate);
                 var autoSaveProfile = debounce(handleProfileUpdate, 600);
-                ['userName', 'userEmail', 'userWebsite'].forEach(function(id) {
+                ['userName', 'userWebsite'].forEach(function(id) {
                     var el = document.getElementById(id);
                     if (el) { el.addEventListener('input', autoSaveProfile); el.addEventListener('change', autoSaveProfile); el.addEventListener('blur', autoSaveProfile); }
                 });
@@ -7204,11 +7281,10 @@
             });
         }
 
-        // Handle profile update (also used for auto-save)
+        // Handle profile update (also used for auto-save) - email is read-only, managed by admins only
         function handleProfileUpdate(e) {
             if (e) e.preventDefault();
             const name = document.getElementById('userName')?.value || '';
-            const email = document.getElementById('userEmail')?.value || '';
             const website = document.getElementById('userWebsite')?.value || '';
             const preview = document.getElementById('profilePicturePreview');
             if (preview && preview.src) {
@@ -7217,7 +7293,6 @@
             }
             if (currentUser) {
                 currentUser.displayName = name;
-                currentUser.email = email;
                 currentUser.website = website;
                 localStorage.setItem('kota_userName', name);
                 localStorage.setItem('kotaUser', JSON.stringify(currentUser));
@@ -8952,16 +9027,16 @@
             if (!tbody) return;
             const reports = JSON.parse(localStorage.getItem('kotaReports') || '[]');
             if (reports.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--gray);">No reports yet. Click a report type above to generate.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:40px;color:var(--gray);">No reports yet. Click a report type above to generate.</td></tr>';
                 return;
             }
             tbody.innerHTML = reports.map(function(report) {
-                var name = (report.name || '').replace(/"/g, '&quot;');
-                return '<tr><td style="padding:10px; border-bottom:1px solid #e5e7eb;">' + (report.name || '') + '</td><td style="padding:10px; border-bottom:1px solid #e5e7eb;">' + (report.type ? report.type.charAt(0).toUpperCase() + report.type.slice(1) : '') + '</td><td style="padding:10px; border-bottom:1px solid #e5e7eb;">' + (report.date ? new Date(report.date).toLocaleString() : '') + '</td><td style="padding:10px; border-bottom:1px solid #e5e7eb;">' + (report.format || '') + '</td><td style="padding:10px; border-bottom:1px solid #e5e7eb; min-width:140px;"><button type="button" class="btn btn-primary report-download-btn" style="padding:8px 16px; font-size:0.875rem; display:inline-flex; align-items:center; gap:6px; cursor:pointer; background:#3b82f6; color:white; border:1px solid #3b82f6; border-radius:8px; font-weight:500;"><i class="fas fa-download"></i> Download</button></td></tr>';
+                var reportTitle = report.name || report.title || 'Untitled Report';
+                return '<tr><td style="padding:10px; border-bottom:1px solid #e5e7eb; font-weight:500;">' + reportTitle + '</td><td style="padding:10px; border-bottom:1px solid #e5e7eb;">' + (report.date ? new Date(report.date).toLocaleString() : '') + '</td><td style="padding:10px; border-bottom:1px solid #e5e7eb;">' + (report.format || '') + '</td><td style="padding:10px; border-bottom:1px solid #e5e7eb; min-width:140px;"><button type="button" class="btn btn-primary report-download-btn" style="padding:8px 16px; font-size:0.875rem; display:inline-flex; align-items:center; gap:6px; cursor:pointer; background:#3b82f6; color:white; border:1px solid #3b82f6; border-radius:8px; font-weight:500;"><i class="fas fa-download"></i> Download</button></td></tr>';
             }).join('');
             tbody.querySelectorAll('.report-download-btn').forEach(function(btn, i) {
                 var report = reports[i];
-                var reportName = report && report.name ? report.name : '';
+                var reportName = report && (report.name || report.title) ? (report.name || report.title) : 'Untitled Report';
                 btn.addEventListener('click', function() {
                     window._downloadReportName = reportName;
                     var modal = document.getElementById('downloadReportFormatModal');
@@ -9569,14 +9644,12 @@
                 e.preventDefault();
                 try {
                     const userName = document.getElementById('userName').value;
-                    const userEmail = document.getElementById('userEmail').value;
                     const userWebsite = document.getElementById('userWebsite').value;
                     const profilePicture = document.getElementById('profilePicturePreview')?.src;
                     
-                    // Update user data
+                    // Update user data (email is read-only, managed by admins only)
                     const userData = JSON.parse(localStorage.getItem('kotaUser') || '{}');
                     userData.displayName = userName;
-                    userData.email = userEmail;
                     userData.website = userWebsite;
                     if (profilePicture) {
                         userData.profilePicture = profilePicture;
@@ -9590,9 +9663,6 @@
                             await auth.currentUser.updateProfile({
                                 displayName: userName
                             });
-                            if (userEmail !== auth.currentUser.email) {
-                                await auth.currentUser.updateEmail(userEmail);
-                            }
                         } catch (error) {
                             console.error('Error updating Firebase profile:', error);
                         }
