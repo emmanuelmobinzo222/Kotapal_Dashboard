@@ -70,7 +70,7 @@
         }
 
         /* Cross-platform: Chrome, Firefox, Safari, Edge, Windows, macOS */
-        html { overflow-x: hidden; -webkit-text-size-adjust: 100%; }
+        html { overflow-x: hidden; overflow-y: auto; -webkit-text-size-adjust: 100%; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
             color: #333;
@@ -79,49 +79,60 @@
             background-color: #fff;
             min-width: 280px;
         }
-        /* Single scrollbar: hide scrollbars on nested scroll areas, use thin scrollbar on root */
+        /* Single scrollbar: one thin scrollbar on root only */
         html { scrollbar-width: thin; scrollbar-color: rgba(59,130,246,0.5) transparent; }
-        html::-webkit-scrollbar { width: 8px; }
+        html::-webkit-scrollbar { width: 6px; }
         html::-webkit-scrollbar-track { background: transparent; }
-        html::-webkit-scrollbar-thumb { background: rgba(59,130,246,0.4); border-radius: 4px; }
+        html::-webkit-scrollbar-thumb { background: rgba(59,130,246,0.4); border-radius: 3px; }
         html::-webkit-scrollbar-thumb:hover { background: rgba(59,130,246,0.6); }
-        /* Scroll arrows - alternative to scrollbar */
-        .scroll-arrows {
+        body { overflow-x: hidden; overflow-y: visible; }
+        /* Single dynamic scroll control - one arrow on the right */
+        .scroll-control-single {
             position: fixed;
-            right: 12px;
+            right: 8px;
             top: 50%;
             transform: translateY(-50%);
             z-index: 999;
+            width: 32px;
+            padding: 8px 0;
             display: flex;
-            flex-direction: column;
-            gap: 4px;
-            opacity: 0.7;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255,255,255,0.95);
+            border: 1px solid rgba(0,0,0,0.08);
+            border-radius: 20px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            cursor: pointer;
+            opacity: 0.85;
+            transition: opacity 0.2s, background 0.2s;
         }
-        .scroll-arrows:hover { opacity: 1; }
-        .scroll-arrow-btn {
-            width: 40px;
-            height: 40px;
+        .scroll-control-single:hover { opacity: 1; background: #fff; }
+        .scroll-control-single i { font-size: 1rem; color: var(--primary); }
+        body.dashboard-active .scroll-control-single { display: none !important; }
+        @media (max-width: 768px) {
+            .scroll-control-single { right: 6px; width: 28px; }
+            .scroll-control-single i { font-size: 0.9rem; }
+        }
+        /* Dark/Light mode toggle - fixed top right */
+        .theme-toggle-fixed {
+            position: fixed;
+            top: 16px;
+            right: 16px;
+            z-index: 1000;
+            width: 44px;
+            height: 44px;
             border-radius: 50%;
-            background: rgba(59,130,246,0.9);
-            color: white;
-            border: none;
+            background: rgba(255,255,255,0.95);
+            border: 1px solid rgba(0,0,0,0.08);
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.2rem;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-            transition: transform 0.2s, background 0.2s;
+            transition: background 0.2s, transform 0.2s;
         }
-        .scroll-arrow-btn:hover {
-            background: var(--primary);
-            transform: scale(1.08);
-        }
-        .scroll-arrow-btn:active { transform: scale(0.95); }
-        @media (max-width: 768px) {
-            .scroll-arrows { right: 8px; }
-            .scroll-arrow-btn { width: 36px; height: 36px; font-size: 1rem; }
-        }
+        .theme-toggle-fixed:hover { background: #fff; transform: scale(1.05); }
+        .theme-toggle-fixed i { font-size: 1.2rem; color: var(--primary); }
 
         .container {
             width: 100%;
@@ -517,8 +528,8 @@
         #dashboard-view.theme-dark .sidebar-toggle,
         #dashboard-view.theme-dark .nav-toggle-inline { background: #1f2937 !important; color: #e5e7eb !important; border-color: #374151 !important; }
         #dashboard-view.theme-dark .sidebar-toggle i,
-        #dashboard-view.theme-dark .nav-toggle-inline i,
-        #dashboard-view.theme-dark .nav-toggle-inline .nav-toggle-text { color: #e5e7eb !important; }
+        #dashboard-view.theme-dark .nav-toggle-inline i { color: #e5e7eb !important; }
+        #dashboard-view.theme-dark .nav-toggle-inline.nav-collapsed { background: #1f2937 !important; }
         #logoutConfirmCancel { background: #f1f5f9 !important; color: #1e293b !important; border: 2px solid #94a3b8 !important; font-weight: 600 !important; }
         #dashboard-view.theme-dark ~ #logoutConfirmModal #logoutConfirmCancel,
         #dashboard-view.theme-dark ~ * #logoutConfirmCancel { background: #334155 !important; color: #f1f5f9 !important; border: 2px solid #64748b !important; }
@@ -2770,11 +2781,15 @@
 </head>
 
 <body>
-    <!-- Scroll arrows (alternative to scrollbar) -->
-    <div class="scroll-arrows" id="scrollArrows" aria-label="Scroll page">
-        <button type="button" class="scroll-arrow-btn" id="scrollUpBtn" aria-label="Scroll up"><i class="fas fa-chevron-up"></i></button>
-        <button type="button" class="scroll-arrow-btn" id="scrollDownBtn" aria-label="Scroll down"><i class="fas fa-chevron-down"></i></button>
+    <!-- Single dynamic scroll control -->
+    <div class="scroll-control-single" id="scrollControl" aria-label="Scroll" style="display:none;">
+        <i class="fas fa-chevron-down" id="scrollControlIcon"></i>
     </div>
+
+    <!-- Dark/Light mode toggle - top right -->
+    <button type="button" class="theme-toggle-fixed" id="themeToggleFixed" aria-label="Toggle dark mode" title="Dark mode">
+        <i class="fas fa-moon" id="themeToggleIcon"></i>
+    </button>
 
     <!-- Page Loader -->
     <div class="page-loader" id="pageLoader">
@@ -3827,16 +3842,13 @@
         #dashboard-view .main-content.nav-collapsed { margin-left: 0; }
         #dashboard-view .nav-toggle-inline {
             position: fixed; left: 250px; top: 50%; transform: translateY(-50%); z-index: 1003;
-            background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 10px 14px;
-            cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 8px;
-            transition: left 0.3s ease, background 0.2s ease; font-weight: 500; color: var(--dark);
+            background: white; border: 1px solid #e5e7eb; border-radius: 0 8px 8px 0; padding: 12px 10px;
+            cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.08); display: flex; align-items: center; justify-content: center;
+            transition: left 0.3s ease, background 0.2s ease, border-radius 0.2s; font-weight: 500; color: var(--dark);
         }
+        #dashboard-view .nav-toggle-inline.nav-collapsed { border-radius: 0 8px 8px 0; background: #f8fafc; border-left: none; left: 0 !important; }
         #dashboard-view .nav-toggle-inline:hover { background: #f9fafb; border-color: #d1d5db; }
-        #dashboard-view .nav-toggle-inline i { font-size: 1.2rem; color: var(--dark); }
-        #dashboard-view .nav-toggle-inline .nav-toggle-text { font-size: 0.875rem; white-space: nowrap; }
-        @media (max-width: 1024px) {
-            #dashboard-view .nav-toggle-inline .nav-toggle-text { display: none; }
-        }
+        #dashboard-view .nav-toggle-inline i { font-size: 1.1rem; color: var(--dark); }
         @media (max-width: 1024px) {
             #dashboard-view .sidebar { transform: translateX(-100%); width: min(320px, 85vw); z-index: 1002; }
             #dashboard-view .sidebar.active { transform: translateX(0); }
@@ -3896,7 +3908,6 @@
             </div>
             <button type="button" class="nav-toggle-inline" id="navToggleFloat" aria-label="Hide navigation" title="Hide navigation">
                 <i class="fas fa-angle-double-left"></i>
-                <span class="nav-toggle-text">Hide navigation</span>
             </button>
             <div class="main-content">
                 <div id="dashboard-page" class="page-content">
@@ -4815,6 +4826,7 @@
                     if (dashboardView) {
                         dashboardView.style.display = 'block';
                         dashboardView.classList.add('active');
+                        document.body.classList.add('dashboard-active');
                     }
                     
                     if (typeof initDashboard === 'function') {
@@ -4961,6 +4973,7 @@
                     if (dashboardView) {
                         dashboardView.style.display = 'block';
                         dashboardView.classList.add('active');
+                        document.body.classList.add('dashboard-active');
                     }
                     
                     updateSidebarUserInfo();
@@ -5138,6 +5151,7 @@
             if (dashboardView) {
                 dashboardView.style.display = 'none';
                 dashboardView.classList.remove('active');
+                document.body.classList.remove('dashboard-active');
             }
             if (landingView) { landingView.style.display = 'block'; landingView.classList.remove('theme-dark'); }
             if (nav) nav.style.display = 'flex';
@@ -5259,6 +5273,7 @@
                     if (dashboardView) {
                         dashboardView.style.display = 'block';
                         dashboardView.classList.add('active');
+                        document.body.classList.add('dashboard-active');
                     }
                     
                     // Initialize dashboard
@@ -5306,6 +5321,7 @@
                         landingView.style.display = 'block';
                         landingView.classList.remove('theme-dark'); /* Landing never uses dark mode */
                     }
+                    document.body.classList.remove('dashboard-active');
                     if (nav) nav.style.display = 'flex';
                     if (footer) footer.style.display = 'block';
                     
@@ -5333,31 +5349,66 @@
         // Set current year in footer
         document.getElementById('currentYear').textContent = new Date().getFullYear();
 
-        // Scroll arrows - alternative to scrollbar (shown when page is scrollable)
+        // Single dynamic scroll control
         (function() {
             var scrollStep = 300;
-            var upBtn = document.getElementById('scrollUpBtn');
-            var downBtn = document.getElementById('scrollDownBtn');
-            var arrows = document.getElementById('scrollArrows');
-            function scrollPage(direction) {
-                var el = document.scrollingElement || document.documentElement;
-                var target = direction === 'up' ? Math.max(0, el.scrollTop - scrollStep) : Math.min(el.scrollHeight - el.clientHeight, el.scrollTop + scrollStep);
+            var ctrl = document.getElementById('scrollControl');
+            var icon = document.getElementById('scrollControlIcon');
+            function getScrollEl() { return document.scrollingElement || document.documentElement; }
+            function updateScrollControl() {
+                if (!ctrl || !icon || document.body.classList.contains('dashboard-active')) return;
+                var el = getScrollEl();
+                var canScroll = el.scrollHeight > window.innerHeight;
+                ctrl.style.display = canScroll ? 'flex' : 'none';
+                if (!canScroll) return;
+                var atTop = el.scrollTop < 10;
+                var atBottom = el.scrollTop >= el.scrollHeight - el.clientHeight - 10;
+                if (atBottom) { icon.className = 'fas fa-chevron-up'; ctrl.title = 'Scroll up'; }
+                else { icon.className = 'fas fa-chevron-down'; ctrl.title = 'Scroll down'; }
+            }
+            function scrollPage() {
+                var el = getScrollEl();
+                var atBottom = el.scrollTop >= el.scrollHeight - el.clientHeight - 10;
+                var target = atBottom ? Math.max(0, el.scrollTop - scrollStep) : Math.min(el.scrollHeight - el.clientHeight, el.scrollTop + scrollStep);
                 el.scrollTo({ top: target, behavior: 'smooth' });
             }
-            function toggleArrows() {
-                if (arrows) {
-                    var el = document.scrollingElement || document.documentElement;
-                    arrows.style.display = (el.scrollHeight > window.innerHeight) ? 'flex' : 'none';
-                }
+            if (ctrl) {
+                ctrl.addEventListener('click', scrollPage);
+                window.addEventListener('load', updateScrollControl);
+                window.addEventListener('resize', updateScrollControl);
+                window.addEventListener('scroll', updateScrollControl);
+                setTimeout(updateScrollControl, 500);
             }
-            if (upBtn) upBtn.addEventListener('click', function() { scrollPage('up'); });
-            if (downBtn) downBtn.addEventListener('click', function() { scrollPage('down'); });
-            if (arrows) {
-                window.addEventListener('load', toggleArrows);
-                window.addEventListener('resize', toggleArrows);
-                window.addEventListener('scroll', toggleArrows);
-                setTimeout(toggleArrows, 500);
+        })();
+
+        // Fixed theme toggle (top right)
+        (function() {
+            var btn = document.getElementById('themeToggleFixed');
+            if (!btn) return;
+            btn.addEventListener('click', function() {
+                var darkOn = localStorage.getItem('kota_dark_mode') === '1';
+                var on = !darkOn;
+                localStorage.setItem('kota_dark_mode', on ? '1' : '0');
+                document.body.classList.remove('theme-dark');
+                var dash = document.getElementById('dashboard-view');
+                if (dash) { if (on) dash.classList.add('theme-dark'); else dash.classList.remove('theme-dark'); }
+                var cb = document.getElementById('darkModeToggle');
+                var textEl = document.querySelector('#darkModeToggle + .toggle-label .toggle-text');
+                if (cb) cb.checked = on;
+                if (textEl) textEl.textContent = on ? 'ON' : 'OFF';
+                var icon = document.getElementById('themeToggleIcon');
+                if (icon) icon.className = on ? 'fas fa-sun' : 'fas fa-moon';
+                btn.title = on ? 'Light mode' : 'Dark mode';
+                if (typeof showNotification === 'function') showNotification(on ? 'Dark mode on.' : 'Dark mode off.', 'success', 'Theme');
+            });
+            function syncFixedThemeIcon() {
+                var darkOn = localStorage.getItem('kota_dark_mode') === '1';
+                var icon = document.getElementById('themeToggleIcon');
+                if (icon) icon.className = darkOn ? 'fas fa-sun' : 'fas fa-moon';
+                btn.title = darkOn ? 'Light mode' : 'Dark mode';
             }
+            window.addEventListener('load', syncFixedThemeIcon);
+            setTimeout(syncFixedThemeIcon, 100);
         })();
 
         // Mobile menu toggle
@@ -5904,6 +5955,7 @@
             var contact = document.getElementById('contact-page');
             if (dashboard) dashboard.style.display = 'none';
             if (landing) landing.style.display = 'block';
+            document.body.classList.remove('dashboard-active');
             if (nav) nav.style.display = 'flex';
             if (footer) footer.style.display = 'block';
             if (home) home.style.display = 'none';
@@ -6081,15 +6133,17 @@
                 if (sidebar) sidebar.classList.add('nav-collapsed');
                 if (main) main.classList.add('nav-collapsed');
                 if (navToggleFloat) {
-                    navToggleFloat.innerHTML = '<i class="fas fa-angle-double-right"></i><span class="nav-toggle-text">Show navigation</span>';
-                    navToggleFloat.style.left = '10px';
+                    navToggleFloat.classList.add('nav-collapsed');
+                    navToggleFloat.innerHTML = '<i class="fas fa-angle-double-right"></i>';
+                    navToggleFloat.style.left = '0';
                     navToggleFloat.title = 'Show navigation';
                     navToggleFloat.setAttribute('aria-label', 'Show navigation');
                 }
             } else {
                 const navToggleFloat = document.getElementById('navToggleFloat');
                 if (navToggleFloat) {
-                    navToggleFloat.innerHTML = '<i class="fas fa-angle-double-left"></i><span class="nav-toggle-text">Hide navigation</span>';
+                    navToggleFloat.classList.remove('nav-collapsed');
+                    navToggleFloat.innerHTML = '<i class="fas fa-angle-double-left"></i>';
                     navToggleFloat.style.left = '250px';
                     navToggleFloat.title = 'Hide navigation';
                     navToggleFloat.setAttribute('aria-label', 'Hide navigation');
@@ -6244,6 +6298,7 @@
                 const nav = document.querySelector('nav');
                 const footer = document.querySelector('footer');
                 if (dashboardView) { dashboardView.style.display = 'none'; }
+                document.body.classList.remove('dashboard-active');
                 if (landingView) { landingView.style.display = 'block'; landingView.classList.remove('theme-dark'); }
                 if (nav) nav.style.display = 'flex';
                 if (footer) footer.style.display = 'block';
@@ -6609,6 +6664,10 @@
             const textEl = document.querySelector('#darkModeToggle + .toggle-label .toggle-text');
             if (cb) cb.checked = darkOn;
             if (textEl) textEl.textContent = darkOn ? 'ON' : 'OFF';
+            var fixedBtn = document.getElementById('themeToggleFixed');
+            var fixedIcon = document.getElementById('themeToggleIcon');
+            if (fixedBtn) fixedBtn.title = darkOn ? 'Light mode' : 'Dark mode';
+            if (fixedIcon) fixedIcon.className = darkOn ? 'fas fa-sun' : 'fas fa-moon';
         }
         function applyGeoRedirectFromStorage() {
             const on = localStorage.getItem('kota_geo_redirect') !== '0';
@@ -6676,6 +6735,10 @@
                     if (dash) { if (on) dash.classList.add('theme-dark'); else dash.classList.remove('theme-dark'); }
                     var t = document.querySelector('#darkModeToggle + .toggle-label .toggle-text');
                     if (t) t.textContent = on ? 'ON' : 'OFF';
+                    var fixedBtn = document.getElementById('themeToggleFixed');
+                    var fixedIcon = document.getElementById('themeToggleIcon');
+                    if (fixedBtn) fixedBtn.title = on ? 'Light mode' : 'Dark mode';
+                    if (fixedIcon) fixedIcon.className = on ? 'fas fa-sun' : 'fas fa-moon';
                     showNotification(on ? 'Dark mode on.' : 'Dark mode off.', 'success', 'Settings');
                 });
             }
@@ -6748,8 +6811,9 @@
             if (!sidebar || !btn) return;
             const isHidden = sidebar.classList.toggle('nav-collapsed');
             if (main) main.classList.toggle('nav-collapsed', isHidden);
-            btn.style.left = isHidden ? '10px' : '250px';
-            btn.innerHTML = isHidden ? '<i class="fas fa-angle-double-right"></i><span class="nav-toggle-text">Show navigation</span>' : '<i class="fas fa-angle-double-left"></i><span class="nav-toggle-text">Hide navigation</span>';
+            btn.classList.toggle('nav-collapsed', isHidden);
+            btn.style.left = isHidden ? '0' : '250px';
+            btn.innerHTML = isHidden ? '<i class="fas fa-angle-double-right"></i>' : '<i class="fas fa-angle-double-left"></i>';
             btn.title = isHidden ? 'Show navigation' : 'Hide navigation';
             btn.setAttribute('aria-label', isHidden ? 'Show navigation' : 'Hide navigation');
             localStorage.setItem('kota_nav_collapsed', isHidden ? '1' : '0');

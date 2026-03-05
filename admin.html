@@ -839,7 +839,7 @@
 
         async function loadAdminDataFromFirestore() {
             if (!db) {
-                loadFallbackData();
+                loadFallbackData(true);
                 return;
             }
             try {
@@ -885,17 +885,21 @@
                 renderBlocksTable(adminBlocks);
             } catch (err) {
                 console.warn('Firestore load:', err);
-                loadFallbackData();
+                loadFallbackData(false);
             }
         }
 
-        function loadFallbackData() {
+        function loadFallbackData(firebaseNotConfigured) {
             if (!adminUsers.length) adminUsers = [];
             if (!adminBlocks.length) adminBlocks = [];
             updateAdminStats();
             renderUsersTable(adminUsers);
             renderBlocksTable(adminBlocks);
-            document.getElementById('recentActivityBody').innerHTML = '<tr><td colspan="4">Connect Firebase to see live data</td></tr>';
+            const activityMsg = firebaseNotConfigured
+                ? 'Connect Firebase to see live data'
+                : 'No recent activity';
+            const activityBody = document.getElementById('recentActivityBody');
+            if (activityBody) activityBody.innerHTML = '<tr><td colspan="5">' + activityMsg + '</td></tr>';
         }
 
         function updateAdminStats() {
