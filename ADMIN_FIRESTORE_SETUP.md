@@ -20,7 +20,7 @@ Or copy the contents of `firestore.rules` into **Firebase Console → Firestore 
 2. Enter your email (e.g. `admin@kotapal.com`) and a password (at least 6 characters)
 3. Click **Sign In**
 4. If you see "Invalid credentials", a **Create Admin Account** button will appear
-5. Click **Create Admin Account** – this creates the user in Firebase Auth and adds them to the admin list in Firestore (`config/admins`)
+5. Click **Create Admin Account** – this creates the user in Firebase Auth, adds them to `config/admins`, and creates their profile in `users/{uid}` so they appear in User Management
 
 **Option B – Manual setup**
 
@@ -36,7 +36,7 @@ Or copy the contents of `firestore.rules` into **Firebase Console → Firestore 
 ## 4. Data Flow
 
 - **Main app**: On signup/login, user data is written to `users/{uid}`. Blocks are written to `blocks` when created or updated.
-- **Admin dashboard**: Logs in with Firebase Auth, reads from `users` and `blocks`, and manages admins via `config/admins`.
+- **Admin dashboard**: Logs in with Firebase Auth, reads from `users` and `blocks`, and manages admins via `config/admins`. When an admin logs in, their profile is automatically synced to `users/{uid}` so they appear in User Management.
 
 ## 5. Add More Admins
 
@@ -50,3 +50,12 @@ Or copy the contents of `firestore.rules` into **Firebase Console → Firestore 
 - **URL**: `admin.html` or click **Admin login** in the main app's login modal
 - **Email**: Any email in the `config/admins` list (or `admin@kotapal.com` as fallback)
 - **Password**: The password set when the user was created
+
+## 7. Troubleshooting: "No users found"
+
+If User Management shows "No users found" even though users exist:
+
+1. **Deploy Firestore rules**: Run `firebase deploy --only firestore` to ensure the latest rules are active.
+2. **Check config/admins**: In Firebase Console → Firestore → `config` collection → `admins` document, ensure your admin email (exactly as you log in) is in the `emails` array. Add both variants (e.g. `Admin@example.com` and `admin@example.com`) if you use mixed case when logging in.
+3. **Users collection**: Users are written to `users/{uid}` when they sign up or log in via the main app. Ensure users have signed up at least once through the main app.
+4. **Refresh**: Click the **Refresh** button in the admin header to reload data from Firestore.
