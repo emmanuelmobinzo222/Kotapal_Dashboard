@@ -31,9 +31,8 @@
             -moz-text-size-adjust: 100%;
             -ms-text-size-adjust: 100%;
         }
-        html { scrollbar-width: thin; scrollbar-color: rgba(59,130,246,0.5) transparent; }
-        html::-webkit-scrollbar { width: 8px; }
-        html::-webkit-scrollbar-thumb { background: rgba(59,130,246,0.4); border-radius: 4px; }
+        html { scrollbar-width: none; -ms-overflow-style: none; }
+        html::-webkit-scrollbar { display: none; width: 0; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
             background: #f3f4f6;
@@ -425,6 +424,14 @@
         </aside>
         <main class="admin-main">
             <div class="admin-header">
+                <div id="permissionBanner" style="display:none;background:#fef3c7;border:1px solid #f59e0b;border-radius:8px;padding:12px 16px;margin-bottom:16px;width:100%;">
+                    <strong><i class="fas fa-exclamation-triangle"></i> Permission denied</strong>
+                    <p style="margin:8px 0 12px 0;font-size:0.9rem;">Deploy Firestore rules and ensure your email is in config/admins. If this is your first setup, try bootstrapping.</p>
+                    <div style="display:flex;gap:12px;flex-wrap:wrap;">
+                        <button type="button" class="btn btn-primary" id="bootstrapAdminBtn" style="padding:8px 16px;"><i class="fas fa-magic"></i> Bootstrap Admin Config</button>
+                        <a href="https://console.firebase.google.com/project/kotapal-1e8f6/firestore/rules" target="_blank" rel="noopener" class="btn btn-secondary" style="padding:8px 16px;text-decoration:none;"><i class="fas fa-external-link-alt"></i> Open Firestore Rules</a>
+                    </div>
+                </div>
                 <h1>Admin Dashboard</h1>
                 <div class="admin-user" style="display:flex;align-items:center;gap:12px;">
                     <button type="button" class="btn btn-secondary" id="refreshAdminDataBtn" style="padding:8px 14px;" title="Reload users and blocks from Firestore"><i class="fas fa-sync-alt"></i> Refresh</button>
@@ -720,6 +727,10 @@
             db = firebase.firestore();
         } catch (e) { console.warn('Firebase init:', e); }
 
+        /* SECURITY: Clear any existing session on admin page load. Require explicit admin login. */
+        let adminLoginInProgress = false;
+        let adminSignOutComplete = false;
+
         async function loadAdminEmails() {
             if (!db) return;
             try {
@@ -817,7 +828,9 @@
             } catch (err) {
                 errorEl.textContent = err.message || 'Invalid credentials.';
                 errorEl.classList.add('show');
-                if (err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
+                /* SECURITY: Only show Create Admin for admin@kotapal.com bootstrap - never for arbitrary emails */
+                if ((err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') &&
+                    email.toLowerCase() === 'admin@kotapal.com') {
                     if (createAdminBox) createAdminBox.style.display = 'block';
                 } else {
                     if (createAdminBox) createAdminBox.style.display = 'none';
@@ -832,6 +845,12 @@
             const createAdminBox = document.getElementById('createAdminBox');
             const btn = this;
 
+            /* SECURITY: Only allow bootstrap for admin@kotapal.com when config/admins is empty */
+            if (email.toLowerCase() !== 'admin@kotapal.com') {
+                errorEl.textContent = 'Create Admin is only for bootstrapping the first admin (admin@kotapal.com).';
+                errorEl.classList.add('show');
+                return;
+            }
             if (!email || !password) {
                 errorEl.textContent = 'Please enter email and password.';
                 errorEl.classList.add('show');
@@ -852,17 +871,23 @@
                 if (db) {
                     const adminsRef = db.collection('config').doc('admins');
                     const snap = await adminsRef.get();
-                    const emails = snap.exists && snap.data().emails ? snap.data().emails : [];
-                    const authEmail = cred.user.email;
-                    const authEmailLower = authEmail.toLowerCase();
-                    if (!emails.includes(authEmail) && !emails.includes(authEmailLower)) {
-                        emails.push(authEmail);
-                        if (authEmail !== authEmailLower) emails.push(authEmailLower);
-                        await adminsRef.set({ emails }, { merge: true });
+                    if (snap.exists && snap.data().emails && snap.data().emails.length) {
+                        await auth.signOut();
+                        errorEl.textContent = 'config/admins already exists. Ask an existing admin to add you.';
+                        errorEl.classList.add('show');
+                        return;
+                    }
+                    try {
+                        await adminsRef.set({ emails: [email, email.toLowerCase()] });
+                    } catch (firestoreErr) {
+                        await auth.signOut();
+                        errorEl.textContent = 'Could not create admin config. Deploy Firestore rules: firebase deploy --only firestore';
+                        errorEl.classList.add('show');
+                        return;
                     }
                     await db.collection('users').doc(cred.user.uid).set({
-                        email: authEmail,
-                        displayName: authEmail.split('@')[0],
+                        email: cred.user.email,
+                        displayName: cred.user.email.split('@')[0],
                         plan: 'starter',
                         signupDate: new Date().toISOString(),
                         isAdmin: true,
@@ -886,6 +911,86 @@
 
         document.getElementById('adminLogoutBtn').addEventListener('click', clearAdminAuth);
 
+        /* SECURITY: Await signOut before processing auth state - prevents race where logged-in normal user gets admin access */
+        (function initAdminAuth() {
+            if (!auth) {
+                document.getElementById('adminLogin').style.display = 'flex';
+                document.getElementById('adminDashboard').classList.remove('active');
+                return;
+            }
+            auth.signOut().then(function() {
+                adminSignOutComplete = true;
+                sessionStorage.removeItem('kotapal_admin');
+                sessionStorage.removeItem('kotapal_admin_email');
+            }).catch(function() {
+                adminSignOutComplete = true;
+            }).then(function() {
+                auth.onAuthStateChanged(async function(user) {
+                    if (!adminSignOutComplete) return;
+                    await loadAdminEmails();
+                    if (!user) {
+                        document.getElementById('adminDashboard').classList.remove('active');
+                        document.getElementById('adminLogin').style.display = 'flex';
+                        sessionStorage.removeItem('kotapal_admin');
+                        sessionStorage.removeItem('kotapal_admin_email');
+                        return;
+                    }
+                    if (isAdminEmail(user.email)) {
+                        sessionStorage.setItem('kotapal_admin', 'true');
+                        sessionStorage.setItem('kotapal_admin_email', user.email);
+                        showAdminDashboard(user.email);
+                    } else {
+                        await auth.signOut();
+                        sessionStorage.removeItem('kotapal_admin');
+                        sessionStorage.removeItem('kotapal_admin_email');
+                        document.getElementById('adminDashboard').classList.remove('active');
+                        document.getElementById('adminLogin').style.display = 'flex';
+                        var err = document.getElementById('loginError');
+                        if (err) { err.textContent = 'Access denied. Your email is not in the admin list. Deploy Firestore rules (firebase deploy --only firestore) and ensure your admin email is in config/admins.'; err.classList.add('show'); }
+                    }
+                });
+            });
+        })();
+
+        document.getElementById('bootstrapAdminBtn').addEventListener('click', async function() {
+            const btn = this;
+            if (!db || !auth || !auth.currentUser) {
+                alert('You must be logged in.');
+                return;
+            }
+            const email = auth.currentUser.email;
+            if (!email) {
+                alert('No email found for your account.');
+                return;
+            }
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Bootstrapping...';
+            try {
+                const adminsRef = db.collection('config').doc('admins');
+                const snap = await adminsRef.get();
+                if (snap.exists) {
+                    const emails = snap.data().emails || [];
+                    if (emails.includes(email) || emails.includes(email.toLowerCase())) {
+                        alert('Your email is already in config/admins. Try refreshing. If it still fails, deploy Firestore rules.');
+                    } else {
+                        alert('config/admins already exists but your email is not in it. Ask an existing admin to add you via Settings, or add manually in Firebase Console → Firestore → config/admins → emails array.');
+                    }
+                } else {
+                    const emails = [email];
+                    if (email !== email.toLowerCase()) emails.push(email.toLowerCase());
+                    await adminsRef.set({ emails });
+                    alert('Admin config created! Refreshing...');
+                    document.getElementById('permissionBanner').style.display = 'none';
+                    await loadAdminDataFromFirestore();
+                }
+            } catch (err) {
+                alert('Bootstrap failed: ' + (err.message || err) + '\n\nEnsure Firestore rules are deployed: firebase deploy --only firestore');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-magic"></i> Bootstrap Admin Config';
+            }
+        });
+
         document.getElementById('refreshAdminDataBtn').addEventListener('click', function() {
             const btn = this;
             btn.disabled = true;
@@ -899,14 +1004,7 @@
             loadAdminDataFromFirestore();
         });
 
-        auth && auth.onAuthStateChanged(async function(user) {
-            await loadAdminEmails();
-            if (user && isAdminEmail(user.email)) {
-                sessionStorage.setItem('kotapal_admin', 'true');
-                sessionStorage.setItem('kotapal_admin_email', user.email);
-                showAdminDashboard(user.email);
-            }
-        });
+        /* Auth state listener is registered inside initAdminAuth() after signOut completes */
 
         async function loadAdminDataFromFirestore() {
             if (!db) {
@@ -970,14 +1068,17 @@
             updateAdminStats();
             renderUsersTable(adminUsers);
             renderBlocksTable(adminBlocks);
+            const isPerm = errMsg && errMsg.toLowerCase().includes('permission');
+            const banner = document.getElementById('permissionBanner');
+            if (banner) banner.style.display = isPerm ? 'block' : 'none';
             const activityMsg = firebaseNotConfigured
                 ? 'Connect Firebase to see live data'
-                : (errMsg && errMsg.toLowerCase().includes('permission') ? 'Permission denied. Deploy Firestore rules (firebase deploy --only firestore) and ensure your admin email is in config/admins.' : 'No recent activity');
+                : (isPerm ? 'Permission denied. Deploy Firestore rules (firebase deploy --only firestore) and ensure your admin email is in config/admins.' : 'No recent activity');
             const activityBody = document.getElementById('recentActivityBody');
             if (activityBody) activityBody.innerHTML = '<tr><td colspan="5">' + activityMsg + '</td></tr>';
             const usersEmpty = document.getElementById('usersEmpty');
             if (usersEmpty) {
-                usersEmpty.innerHTML = (errMsg && errMsg.toLowerCase().includes('permission'))
+                usersEmpty.innerHTML = isPerm
                     ? '<i class="fas fa-lock"></i><p>Permission denied. Deploy Firestore rules and ensure your admin email is in config/admins.</p><p style="font-size:0.85rem;margin-top:8px;">Run: firebase deploy --only firestore</p>'
                     : '<i class="fas fa-users"></i><p>No users found</p>';
             }

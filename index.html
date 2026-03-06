@@ -98,13 +98,58 @@
         /* Touch-friendly: iOS, Android */
         a, button { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
         input, select, textarea { font-size: 16px; } /* Prevents iOS zoom on focus */
-        /* Single scrollbar: one thin scrollbar on root only */
-        html { scrollbar-width: thin; scrollbar-color: rgba(59,130,246,0.5) transparent; }
-        html::-webkit-scrollbar { width: 6px; }
-        html::-webkit-scrollbar-track { background: transparent; }
-        html::-webkit-scrollbar-thumb { background: rgba(59,130,246,0.4); border-radius: 3px; }
-        html::-webkit-scrollbar-thumb:hover { background: rgba(59,130,246,0.6); }
+        /* No scrollbar - section arrows for navigation only; use full width without scrollbar track/line */
+        html { overflow-x: hidden; overflow-y: scroll; scrollbar-width: none; -ms-overflow-style: none; }
+        html::-webkit-scrollbar { display: none !important; width: 0 !important; height: 0 !important; }
+        html::-webkit-scrollbar-track, html::-webkit-scrollbar-thumb, html::-webkit-scrollbar-corner { display: none !important; background: transparent !important; width: 0 !important; }
+        * { scrollbar-width: none; -ms-overflow-style: none; }
+        *::-webkit-scrollbar { display: none !important; width: 0 !important; }
         body { overflow-x: hidden; overflow-y: visible; }
+        /* Per-section scroll arrows - seamless, integrated at bottom of each section */
+        /* Cross-platform: Safari macOS/iOS, Chrome, Firefox, Edge */
+        .section-nav-arrows {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 12px;
+            padding: 24px 0 16px;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .section-nav-arrows button {
+            width: 44px;
+            min-width: 44px;
+            height: 44px;
+            min-height: 44px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(59,130,246,0.12);
+            color: var(--primary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            transition: background 0.2s, transform 0.2s;
+            -webkit-appearance: none;
+            appearance: none;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        .section-nav-arrows button:hover {
+            background: rgba(59,130,246,0.25);
+            transform: scale(1.08);
+        }
+        .section-nav-arrows button:active {
+            transform: scale(0.98);
+        }
+        .section-nav-arrows button.hidden { display: none !important; }
+        body.dashboard-active .section-nav-arrows { display: none !important; }
+        /* Fallback for older Safari (< 14.1) that doesn't support flex gap */
+        @supports not (gap: 12px) {
+            .section-nav-arrows button + button { margin-left: 12px; }
+        }
         /* Dark/Light mode toggle - fixed top right */
         .theme-toggle-fixed {
             position: fixed;
@@ -2150,6 +2195,16 @@
                 padding: 30px 20px;
             }
 
+            .section-nav-arrows {
+                padding: 20px 0 12px;
+            }
+            .section-nav-arrows button {
+                width: 40px;
+                min-width: 40px;
+                height: 40px;
+                min-height: 40px;
+            }
+
             .apple-feature-scroll .feature-icon-scroll {
                 width: 50px;
                 height: 50px;
@@ -2492,6 +2547,16 @@
                 margin-right: 8px;
             }
 
+            .section-nav-arrows {
+                padding: 16px 0 10px;
+            }
+            .section-nav-arrows button {
+                width: 44px;
+                min-width: 44px;
+                height: 44px;
+                min-height: 44px;
+            }
+
             .scrollable-container {
                 padding: 0 35px;
             }
@@ -2825,6 +2890,10 @@
                 <h1>No coding required</h1>
                 <p>KotaPal empowers creators, bloggers, and e-commerce sellers to merge products with retail affiliate offers into AI-powered product blocks. Seamlessly integrate them across your blog, online store, YouTube channel, and email campaigns.</p>
             </div>
+            <div class="section-nav-arrows" data-section="home">
+                <button type="button" class="section-arrow-up hidden" aria-label="Previous section"><i class="fas fa-chevron-up"></i></button>
+                <button type="button" class="section-arrow-down" aria-label="Next section"><i class="fas fa-chevron-down"></i></button>
+            </div>
         </section>
 
         <!-- Core Features Section - Apple Style Horizontal Scrollable -->
@@ -2902,6 +2971,10 @@
                 <button class="scroll-btn scroll-btn-right" id="featuresScrollRight" onclick="scrollFeatures('left')">
                     <i class="fas fa-chevron-right"></i>
                 </button>
+            </div>
+            <div class="section-nav-arrows" data-section="features">
+                <button type="button" class="section-arrow-up" aria-label="Previous section"><i class="fas fa-chevron-up"></i></button>
+                <button type="button" class="section-arrow-down" aria-label="Next section"><i class="fas fa-chevron-down"></i></button>
             </div>
         </section>
 
@@ -3030,7 +3103,10 @@
                     </button>
                 </div>
             </div>
-
+            <div class="section-nav-arrows" data-section="pricing">
+                <button type="button" class="section-arrow-up" aria-label="Previous section"><i class="fas fa-chevron-up"></i></button>
+                <button type="button" class="section-arrow-down" aria-label="Next section"><i class="fas fa-chevron-down"></i></button>
+            </div>
             <div class="section-container">
                 <p class="text-center" style="margin-top: 60px;">All plans include a 7-day free trial.</p>
             </div>
@@ -3146,6 +3222,10 @@
                     <i class="fas fa-chevron-right"></i>
                 </button>
             </div>
+            <div class="section-nav-arrows" data-section="trending-products">
+                <button type="button" class="section-arrow-up" aria-label="Previous section"><i class="fas fa-chevron-up"></i></button>
+                <button type="button" class="section-arrow-down" aria-label="Next section"><i class="fas fa-chevron-down"></i></button>
+            </div>
         </section>
 
         <!-- NEW: Dashboard Preview Section -->
@@ -3205,6 +3285,10 @@
                     </div>
                 </div>
             </div>
+            <div class="section-nav-arrows" data-section="dashboard-preview">
+                <button type="button" class="section-arrow-up" aria-label="Previous section"><i class="fas fa-chevron-up"></i></button>
+                <button type="button" class="section-arrow-down" aria-label="Next section"><i class="fas fa-chevron-down"></i></button>
+            </div>
         </section>
 
         <!-- About Section -->
@@ -3234,6 +3318,10 @@
                         <p>We're growing — want to help? Join us or give feedback!</p>
                     </div>
                 </div>
+            </div>
+            <div class="section-nav-arrows" data-section="about">
+                <button type="button" class="section-arrow-up" aria-label="Previous section"><i class="fas fa-chevron-up"></i></button>
+                <button type="button" class="section-arrow-down" aria-label="Next section"><i class="fas fa-chevron-down"></i></button>
             </div>
         </section>
 
@@ -3334,6 +3422,10 @@
                         </div>
                     </div>
                 </div>
+            </div>
+            <div class="section-nav-arrows" data-section="testimonials">
+                <button type="button" class="section-arrow-up" aria-label="Previous section"><i class="fas fa-chevron-up"></i></button>
+                <button type="button" class="section-arrow-down hidden" aria-label="Next section"><i class="fas fa-chevron-down"></i></button>
             </div>
         </section>
     </div>
@@ -5341,7 +5433,7 @@
 
         // Nav link active state (scroll spy) - highlight current section
         (function() {
-            var sectionIds = ['home','features','pricing','trending-products','testimonials','dashboard-preview','about'];
+            var sectionIds = ['home','features','pricing','trending-products','dashboard-preview','about','testimonials'];
             function setNavActive(sectionId) {
                 document.querySelectorAll('nav .nav-link[data-section]').forEach(function(a) {
                     a.classList.toggle('active', a.getAttribute('data-section') === sectionId);
@@ -5371,6 +5463,61 @@
             window.addEventListener('load', updateFromScroll);
             window.addEventListener('resize', updateFromScroll);
             window.updateNavActive = setNavActive;
+        })();
+
+        // Per-section scroll arrows - up/down navigation (integrated into each section)
+        (function() {
+            var sectionIds = ['home','features','pricing','trending-products','dashboard-preview','about','testimonials'];
+            function getCurrentSectionIndex() {
+                var contactPage = document.getElementById('contact-page');
+                if (contactPage && contactPage.style.display !== 'none') return -1;
+                var homePage = document.getElementById('home-page');
+                if (!homePage || homePage.style.display === 'none') return -1;
+                var scrollTop = (document.scrollingElement || document.documentElement).scrollTop;
+                var best = null, bestOffset = Infinity;
+                sectionIds.forEach(function(id) {
+                    var el = document.getElementById(id);
+                    if (!el) return;
+                    var rect = el.getBoundingClientRect();
+                    var top = rect.top;
+                    if (top <= window.innerHeight * 0.4 && top > -rect.height * 0.6) {
+                        var offset = Math.abs(top);
+                        if (offset < bestOffset) { bestOffset = offset; best = id; }
+                    }
+                });
+                if (!best && scrollTop < 50) best = 'home';
+                return best ? sectionIds.indexOf(best) : 0;
+            }
+            function updateSectionArrows() {
+                if (document.body.classList.contains('dashboard-active')) return;
+                var idx = getCurrentSectionIndex();
+                if (idx < 0) return;
+                document.querySelectorAll('.section-nav-arrows').forEach(function(wrap) {
+                    var sid = wrap.getAttribute('data-section');
+                    var sectionIdx = sectionIds.indexOf(sid);
+                    if (sectionIdx < 0) return;
+                    var upBtn = wrap.querySelector('.section-arrow-up');
+                    var downBtn = wrap.querySelector('.section-arrow-down');
+                    if (upBtn) upBtn.classList.toggle('hidden', sectionIdx <= 0);
+                    if (downBtn) downBtn.classList.toggle('hidden', sectionIdx >= sectionIds.length - 1);
+                });
+            }
+            document.querySelectorAll('.section-nav-arrows').forEach(function(wrap) {
+                var sid = wrap.getAttribute('data-section');
+                var sectionIdx = sectionIds.indexOf(sid);
+                if (sectionIdx < 0) return;
+                var upBtn = wrap.querySelector('.section-arrow-up');
+                var downBtn = wrap.querySelector('.section-arrow-down');
+                if (upBtn) upBtn.addEventListener('click', function() {
+                    if (sectionIdx > 0) scrollToSection(sectionIds[sectionIdx - 1]);
+                });
+                if (downBtn) downBtn.addEventListener('click', function() {
+                    if (sectionIdx < sectionIds.length - 1) scrollToSection(sectionIds[sectionIdx + 1]);
+                });
+            });
+            window.addEventListener('scroll', updateSectionArrows, { passive: true });
+            window.addEventListener('load', updateSectionArrows);
+            window.addEventListener('resize', updateSectionArrows);
         })();
 
         // Fixed theme toggle (top right)

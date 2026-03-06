@@ -19,8 +19,8 @@ Or copy the contents of `firestore.rules` into **Firebase Console → Firestore 
 1. Open `admin.html` (or click **Admin login** from the main app)
 2. Enter your email (e.g. `admin@kotapal.com`) and a password (at least 6 characters)
 3. Click **Sign In**
-4. If you see "Invalid credentials", a **Create Admin Account** button will appear
-5. Click **Create Admin Account** – this creates the user in Firebase Auth, adds them to `config/admins`, and creates their profile in `users/{uid}` so they appear in User Management
+4. If you see "Invalid credentials" and you entered `admin@kotapal.com`, a **Create Admin Account** button will appear (only for the bootstrap admin email)
+5. Click **Create Admin Account** – this creates the user in Firebase Auth, adds them to `config/admins`, and creates their profile in `users/{uid}`. **Note:** Create Admin is only available for `admin@kotapal.com` when `config/admins` does not exist yet.
 
 **Option B – Manual setup**
 

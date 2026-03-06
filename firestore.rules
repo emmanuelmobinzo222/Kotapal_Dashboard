@@ -6,15 +6,21 @@ service cloud.firestore {
       return request.auth != null && (
         request.auth.token.email == 'admin@kotapal.com' ||
         (exists(/databases/$(database)/documents/config/admins) && 
-         get(/databases/$(database)/documents/config/admins).data.emails.hasAny([request.auth.token.email]))
+         request.auth.token.email in get(/databases/$(database)/documents/config/admins).data.emails)
       );
     }
     
-    // Config - admins list: first user can create; only admins can update
+    // Config - admins list: only admin@kotapal.com can create when empty; only admins can read/update
     match /config/admins {
-      allow read: if request.auth != null;
-      allow create: if request.auth != null && !exists(/databases/$(database)/documents/config/admins);
-      allow update: if request.auth != null && resource.data.emails.hasAny([request.auth.token.email]);
+      allow read: if request.auth != null && (
+        request.auth.token.email == 'admin@kotapal.com' ||
+        (exists(/databases/$(database)/documents/config/admins) && 
+         request.auth.token.email in get(/databases/$(database)/documents/config/admins).data.emails)
+      );
+      allow create: if request.auth != null && 
+        !exists(/databases/$(database)/documents/config/admins) && 
+        request.auth.token.email == 'admin@kotapal.com';
+      allow update: if request.auth != null && request.auth.token.email in resource.data.emails;
       allow delete: if false;
     }
     
