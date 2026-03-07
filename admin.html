@@ -406,10 +406,6 @@
                     <input type="password" id="adminPassword" class="form-control" placeholder="••••••••" required>
                 </div>
                 <button type="submit" class="btn btn-primary">Sign In</button>
-                <div id="createAdminBox" class="create-admin-box" style="display:none;">
-                    <p>No admin account found with this email. Create the first admin account?</p>
-                    <button type="button" class="btn-create-admin" id="createAdminBtn">Create Admin Account</button>
-                </div>
             </form>
         </div>
     </div>
@@ -437,14 +433,6 @@
         </aside>
         <main class="admin-main">
             <div class="admin-header">
-                <div id="permissionBanner" style="display:none;background:#fef3c7;border:1px solid #f59e0b;border-radius:8px;padding:12px 16px;margin-bottom:16px;width:100%;">
-                    <strong><i class="fas fa-exclamation-triangle"></i> Permission denied</strong>
-                    <p style="margin:8px 0 12px 0;font-size:0.9rem;">Deploy Firestore rules and ensure your email is in config/admins. If this is your first setup, try bootstrapping.</p>
-                    <div style="display:flex;gap:12px;flex-wrap:wrap;">
-                        <button type="button" class="btn btn-primary" id="bootstrapAdminBtn" style="padding:8px 16px;"><i class="fas fa-magic"></i> Bootstrap Admin Config</button>
-                        <a href="https://console.firebase.google.com/project/kotapal-1e8f6/firestore/rules" target="_blank" rel="noopener" class="btn btn-secondary" style="padding:8px 16px;text-decoration:none;"><i class="fas fa-external-link-alt"></i> Open Firestore Rules</a>
-                    </div>
-                </div>
                 <h1>Admin Dashboard</h1>
                 <div class="admin-user" style="display:flex;align-items:center;gap:12px;">
                     <button type="button" class="btn btn-secondary" id="refreshAdminDataBtn" style="padding:8px 14px;" title="Reload users and blocks from Firestore"><i class="fas fa-sync-alt"></i> Refresh</button>
@@ -805,8 +793,6 @@
             document.getElementById('adminLogin').style.display = 'flex';
             document.getElementById('adminEmail').value = '';
             document.getElementById('adminPassword').value = '';
-            const createAdminBox = document.getElementById('createAdminBox');
-            if (createAdminBox) createAdminBox.style.display = 'none';
         }
 
         document.getElementById('adminLoginForm').addEventListener('submit', async function(e) {
@@ -814,12 +800,10 @@
             const email = document.getElementById('adminEmail').value.trim();
             const password = document.getElementById('adminPassword').value;
             const errorEl = document.getElementById('loginError');
-            const createAdminBox = document.getElementById('createAdminBox');
 
             if (!auth) {
-                errorEl.textContent = 'Firebase not configured. Please check your setup.';
+                errorEl.textContent = 'Firebase not configured. Please contact support.';
                 errorEl.classList.add('show');
-                if (createAdminBox) createAdminBox.style.display = 'none';
                 return;
             }
 
@@ -829,7 +813,6 @@
                 const cred = await auth.signInWithEmailAndPassword(email, password);
                 if (isAdminEmail(cred.user.email)) {
                     errorEl.classList.remove('show');
-                    if (createAdminBox) createAdminBox.style.display = 'none';
                     sessionStorage.setItem('kotapal_admin', 'true');
                     sessionStorage.setItem('kotapal_admin_email', email);
                     showAdminDashboard(email);
@@ -837,89 +820,10 @@
                     await auth.signOut();
                     errorEl.textContent = 'Access denied. Admin email required.';
                     errorEl.classList.add('show');
-                    if (createAdminBox) createAdminBox.style.display = 'none';
                 }
             } catch (err) {
                 errorEl.textContent = err.message || 'Invalid credentials.';
                 errorEl.classList.add('show');
-                /* SECURITY: Only show Create Admin for admin@kotapal.com bootstrap - never for arbitrary emails */
-                if ((err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') &&
-                    email.toLowerCase() === 'admin@kotapal.com') {
-                    if (createAdminBox) createAdminBox.style.display = 'block';
-                } else {
-                    if (createAdminBox) createAdminBox.style.display = 'none';
-                }
-            }
-        });
-
-        document.getElementById('createAdminBtn').addEventListener('click', async function() {
-            const email = document.getElementById('adminEmail').value.trim();
-            const password = document.getElementById('adminPassword').value;
-            const errorEl = document.getElementById('loginError');
-            const createAdminBox = document.getElementById('createAdminBox');
-            const btn = this;
-
-            /* SECURITY: Only allow bootstrap for admin@kotapal.com when config/admins is empty */
-            if (email.toLowerCase() !== 'admin@kotapal.com') {
-                errorEl.textContent = 'Create Admin is only for bootstrapping the first admin (admin@kotapal.com).';
-                errorEl.classList.add('show');
-                return;
-            }
-            if (!email || !password) {
-                errorEl.textContent = 'Please enter email and password.';
-                errorEl.classList.add('show');
-                return;
-            }
-            if (password.length < 6) {
-                errorEl.textContent = 'Password must be at least 6 characters.';
-                errorEl.classList.add('show');
-                return;
-            }
-
-            btn.disabled = true;
-            btn.textContent = 'Creating...';
-            errorEl.classList.remove('show');
-
-            try {
-                const cred = await auth.createUserWithEmailAndPassword(email, password);
-                if (db) {
-                    const adminsRef = db.collection('config').doc('admins');
-                    const snap = await adminsRef.get();
-                    if (snap.exists && snap.data().emails && snap.data().emails.length) {
-                        await auth.signOut();
-                        errorEl.textContent = 'config/admins already exists. Ask an existing admin to add you.';
-                        errorEl.classList.add('show');
-                        return;
-                    }
-                    try {
-                        await adminsRef.set({ emails: [email, email.toLowerCase()] });
-                    } catch (firestoreErr) {
-                        await auth.signOut();
-                        errorEl.textContent = 'Could not create admin config. Deploy Firestore rules: firebase deploy --only firestore';
-                        errorEl.classList.add('show');
-                        return;
-                    }
-                    await db.collection('users').doc(cred.user.uid).set({
-                        email: cred.user.email,
-                        displayName: cred.user.email.split('@')[0],
-                        plan: 'starter',
-                        signupDate: new Date().toISOString(),
-                        isAdmin: true,
-                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                    }, { merge: true });
-                }
-                adminEmailsList.push(cred.user.email);
-                adminEmailsList.push(cred.user.email.toLowerCase());
-                if (createAdminBox) createAdminBox.style.display = 'none';
-                sessionStorage.setItem('kotapal_admin', 'true');
-                sessionStorage.setItem('kotapal_admin_email', email);
-                showAdminDashboard(email);
-            } catch (err) {
-                errorEl.textContent = err.message || 'Could not create admin account.';
-                errorEl.classList.add('show');
-            } finally {
-                btn.disabled = false;
-                btn.textContent = 'Create Admin Account';
             }
         });
 
@@ -966,45 +870,6 @@
             });
         })();
 
-        document.getElementById('bootstrapAdminBtn').addEventListener('click', async function() {
-            const btn = this;
-            if (!db || !auth || !auth.currentUser) {
-                alert('You must be logged in.');
-                return;
-            }
-            const email = auth.currentUser.email;
-            if (!email) {
-                alert('No email found for your account.');
-                return;
-            }
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Bootstrapping...';
-            try {
-                const adminsRef = db.collection('config').doc('admins');
-                const snap = await adminsRef.get();
-                if (snap.exists) {
-                    const emails = snap.data().emails || [];
-                    if (emails.includes(email) || emails.includes(email.toLowerCase())) {
-                        alert('Your email is already in config/admins. Try refreshing. If it still fails, deploy Firestore rules.');
-                    } else {
-                        alert('config/admins already exists but your email is not in it. Ask an existing admin to add you via Settings, or add manually in Firebase Console → Firestore → config/admins → emails array.');
-                    }
-                } else {
-                    const emails = [email];
-                    if (email !== email.toLowerCase()) emails.push(email.toLowerCase());
-                    await adminsRef.set({ emails });
-                    alert('Admin config created! Refreshing...');
-                    document.getElementById('permissionBanner').style.display = 'none';
-                    await loadAdminDataFromFirestore();
-                }
-            } catch (err) {
-                alert('Bootstrap failed: ' + (err.message || err) + '\n\nEnsure Firestore rules are deployed: firebase deploy --only firestore');
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-magic"></i> Bootstrap Admin Config';
-            }
-        });
-
         document.getElementById('refreshAdminDataBtn').addEventListener('click', function() {
             const btn = this;
             btn.disabled = true;
@@ -1032,7 +897,7 @@
                     let joined = dta.signupDate || dta.createdAt || '—';
                     if (joined && joined.toDate) joined = joined.toDate().toLocaleDateString();
                     else if (typeof joined === 'string' && joined !== '—') joined = new Date(joined).toLocaleDateString();
-                    return { id: d.id, name: dta.displayName || dta.email || '—', email: dta.email || '', plan: dta.plan || 'free', joined: joined, status: 'active' };
+                    return { id: d.id, name: dta.displayName || dta.email || '—', email: dta.email || '', plan: dta.plan || 'free', joined: joined, status: dta.status || 'active' };
                 });
                 userMap = {};
                 adminUsers.forEach(u => { userMap[u.id] = u.name; });
@@ -1083,8 +948,6 @@
             renderUsersTable(adminUsers);
             renderBlocksTable(adminBlocks);
             const isPerm = errMsg && errMsg.toLowerCase().includes('permission');
-            const banner = document.getElementById('permissionBanner');
-            if (banner) banner.style.display = isPerm ? 'block' : 'none';
             const activityMsg = firebaseNotConfigured
                 ? 'Connect Firebase to see live data'
                 : (isPerm ? 'Permission denied. Deploy Firestore rules (firebase deploy --only firestore) and ensure your admin email is in config/admins.' : 'No recent activity');
@@ -1129,7 +992,7 @@
                     <td>${u.email}</td>
                     <td><span class="badge badge-info">${u.plan}</span></td>
                     <td>${u.joined}</td>
-                    <td><span class="badge badge-success">${u.status}</span></td>
+                    <td><span class="badge ${u.status === 'suspended' ? 'badge-danger' : 'badge-success'}">${u.status}</span></td>
                     <td>
                         <button class="btn btn-sm btn-secondary" onclick="viewUser('${u.id}')">View</button>
                         <button class="btn btn-sm btn-primary change-plan-btn" data-user-id="${u.id}" data-email="${(u.email||'').replace(/"/g,'&quot;')}" data-plan="${u.plan||'free'}" title="Change plan">Plan</button>
@@ -1186,7 +1049,16 @@
                 alert('Failed to update: ' + (err.message || err));
             });
         }
-        function suspendUser(id) { if (confirm('Suspend this user?')) alert('User suspended (implement with backend)'); }
+        function suspendUser(id) {
+            if (!confirm('Suspend this user? They will not be able to access the dashboard.')) return;
+            if (!db) { alert('Firestore not available'); return; }
+            db.collection('users').doc(id).update({ status: 'suspended', suspendedAt: firebase.firestore.FieldValue.serverTimestamp() }).then(function() {
+                alert('User suspended.');
+                loadAdminDataFromFirestore();
+            }).catch(function(err) {
+                alert('Failed to suspend: ' + (err.message || err));
+            });
+        }
         function viewBlock(id) { alert('View block ' + id + ' (implement with backend)'); }
         function flagBlock(id) { if (confirm('Flag this block for review?')) alert('Block flagged (implement with backend)'); }
 

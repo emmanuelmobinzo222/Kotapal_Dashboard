@@ -105,8 +105,7 @@
         * { scrollbar-width: none; -ms-overflow-style: none; }
         *::-webkit-scrollbar { display: none !important; width: 0 !important; }
         body { overflow-x: hidden; overflow-y: visible; }
-        /* Per-section scroll arrows - seamless, integrated at bottom of each section */
-        /* Cross-platform: Safari macOS/iOS, Chrome, Firefox, Edge */
+        /* Per-section scroll arrows - embedded in section, match section color */
         .section-nav-arrows {
             display: flex;
             justify-content: center;
@@ -122,8 +121,6 @@
             min-height: 44px;
             border-radius: 50%;
             border: none;
-            background: rgba(59,130,246,0.12);
-            color: var(--primary);
             cursor: pointer;
             display: flex;
             align-items: center;
@@ -137,16 +134,31 @@
             -webkit-user-select: none;
             user-select: none;
         }
-        .section-nav-arrows button:hover {
-            background: rgba(59,130,246,0.25);
-            transform: scale(1.08);
-        }
-        .section-nav-arrows button:active {
-            transform: scale(0.98);
-        }
+        .section-nav-arrows button:hover { transform: scale(1.08); }
+        .section-nav-arrows button:active { transform: scale(0.98); }
         .section-nav-arrows button.hidden { display: none !important; }
         body.dashboard-active .section-nav-arrows { display: none !important; }
-        /* Fallback for older Safari (< 14.1) that doesn't support flex gap */
+        /* Hero - dark section: white/light arrows */
+        .hero .section-nav-arrows button { background: rgba(255,255,255,0.2); color: #fff; }
+        .hero .section-nav-arrows button:hover { background: rgba(255,255,255,0.35); }
+        /* Features - white section */
+        .features .section-nav-arrows button { background: rgba(59,130,246,0.12); color: var(--primary); }
+        .features .section-nav-arrows button:hover { background: rgba(59,130,246,0.25); }
+        /* Pricing - light gray section */
+        #pricing .section-nav-arrows button { background: rgba(59,130,246,0.15); color: var(--primary); }
+        #pricing .section-nav-arrows button:hover { background: rgba(59,130,246,0.28); }
+        /* Trending products - white */
+        #trending-products .section-nav-arrows button { background: rgba(59,130,246,0.12); color: var(--primary); }
+        #trending-products .section-nav-arrows button:hover { background: rgba(59,130,246,0.25); }
+        /* Dashboard preview - dark section */
+        #dashboard-preview .section-nav-arrows button { background: rgba(255,255,255,0.2); color: #fff; }
+        #dashboard-preview .section-nav-arrows button:hover { background: rgba(255,255,255,0.35); }
+        /* About - light section */
+        #about .section-nav-arrows button { background: rgba(59,130,246,0.12); color: var(--primary); }
+        #about .section-nav-arrows button:hover { background: rgba(59,130,246,0.25); }
+        /* Testimonials */
+        #testimonials .section-nav-arrows button { background: rgba(59,130,246,0.12); color: var(--primary); }
+        #testimonials .section-nav-arrows button:hover { background: rgba(59,130,246,0.25); }
         @supports not (gap: 12px) {
             .section-nav-arrows button + button { margin-left: 12px; }
         }
@@ -371,10 +383,51 @@
             font-weight: 600;
         }
 
+        /* Nav scroll arrows - clean uniform look, embedded in navigation */
+        .nav-scroll-arrows {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-left: 8px;
+        }
+        .nav-arrow {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 1px solid rgba(0,0,0,0.1);
+            background: rgba(255,255,255,0.9);
+            color: var(--gray);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            transition: all 0.2s;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+        .nav-arrow:hover {
+            background: #fff;
+            color: var(--primary);
+            border-color: var(--primary);
+        }
+        .nav-arrow.hidden { display: none !important; }
+
         .mobile-menu-btn {
             display: none;
             flex-direction: column;
+            align-items: center;
+            justify-content: center;
             cursor: pointer;
+            min-width: 44px;
+            min-height: 44px;
+            padding: 12px;
+            border: none;
+            background: transparent;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+            -webkit-appearance: none;
+            appearance: none;
         }
 
         .mobile-menu-btn span {
@@ -383,6 +436,7 @@
             background: var(--dark);
             margin: 3px 0;
             transition: 0.3s;
+            display: block;
         }
 
         /* Hero Section */
@@ -2167,6 +2221,7 @@
             .nav-links.active {
                 display: flex;
             }
+            .nav-scroll-arrows { display: none; }
 
             .nav-links li {
                 margin: 10px 0;
@@ -2925,14 +2980,18 @@
                 <li><a href="#dashboard-preview" class="nav-link" data-section="dashboard-preview" onclick="scrollToSection('dashboard-preview'); return false;">Dashboard</a></li>
                 <li><a href="#about" class="nav-link" data-section="about" onclick="scrollToSection('about'); return false;">About</a></li>
                 <li><a href="#" class="nav-link" data-section="contact" onclick="goToContactForm(); return false;">Contact</a></li>
+                <li class="nav-scroll-arrows">
+                    <button type="button" class="nav-arrow nav-arrow-up" id="navScrollUp" aria-label="Previous section"><i class="fas fa-chevron-up"></i></button>
+                    <button type="button" class="nav-arrow nav-arrow-down" id="navScrollDown" aria-label="Next section"><i class="fas fa-chevron-down"></i></button>
+                </li>
                 <li><a href="#" id="loginBtn">Login</a></li>
             </ul>
 
-            <div class="mobile-menu-btn" id="mobileMenuBtn">
+            <button type="button" class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Open menu">
                 <span></span>
                 <span></span>
                 <span></span>
-            </div>
+            </button>
         </div>
     </nav>
 
@@ -5519,9 +5578,11 @@
             window.updateNavActive = setNavActive;
         })();
 
-        // Per-section scroll arrows - up/down navigation (integrated into each section)
+        // Per-section scroll arrows + nav arrows - up/down navigation
         (function() {
             var sectionIds = ['home','features','pricing','trending-products','dashboard-preview','about','testimonials'];
+            var navUp = document.getElementById('navScrollUp');
+            var navDown = document.getElementById('navScrollDown');
             function getCurrentSectionIndex() {
                 var contactPage = document.getElementById('contact-page');
                 if (contactPage && contactPage.style.display !== 'none') return -1;
@@ -5546,6 +5607,8 @@
                 if (document.body.classList.contains('dashboard-active')) return;
                 var idx = getCurrentSectionIndex();
                 if (idx < 0) return;
+                if (navUp) navUp.classList.toggle('hidden', idx <= 0);
+                if (navDown) navDown.classList.toggle('hidden', idx >= sectionIds.length - 1);
                 document.querySelectorAll('.section-nav-arrows').forEach(function(wrap) {
                     var sid = wrap.getAttribute('data-section');
                     var sectionIdx = sectionIds.indexOf(sid);
@@ -5568,6 +5631,14 @@
                 if (downBtn) downBtn.addEventListener('click', function() {
                     if (sectionIdx < sectionIds.length - 1) scrollToSection(sectionIds[sectionIdx + 1]);
                 });
+            });
+            if (navUp) navUp.addEventListener('click', function() {
+                var idx = getCurrentSectionIndex();
+                if (idx > 0) scrollToSection(sectionIds[idx - 1]);
+            });
+            if (navDown) navDown.addEventListener('click', function() {
+                var idx = getCurrentSectionIndex();
+                if (idx >= 0 && idx < sectionIds.length - 1) scrollToSection(sectionIds[idx + 1]);
             });
             window.addEventListener('scroll', updateSectionArrows, { passive: true });
             window.addEventListener('load', updateSectionArrows);
@@ -5604,11 +5675,22 @@
             setTimeout(syncFixedThemeIcon, 100);
         })();
 
-        // Mobile menu toggle
-        document.getElementById('mobileMenuBtn').addEventListener('click', function() {
-            this.classList.toggle('active');
-            document.querySelector('.nav-links').classList.toggle('active');
-        });
+        // Mobile menu toggle - iOS, Android, Safari, Chrome, Edge (44px touch target)
+        (function() {
+            var btn = document.getElementById('mobileMenuBtn');
+            var navLinks = document.querySelector('.nav-links');
+            if (!btn || !navLinks) return;
+            var lastToggle = 0;
+            function toggleMenu(e) {
+                if (e) e.preventDefault();
+                if (Date.now() - lastToggle < 400) return;
+                lastToggle = Date.now();
+                btn.classList.toggle('active');
+                navLinks.classList.toggle('active');
+            }
+            btn.addEventListener('click', toggleMenu);
+            btn.addEventListener('touchend', toggleMenu, { passive: false });
+        })();
 
         // Auth Modal Functions
         const authModal = document.getElementById('authModal');
@@ -5799,20 +5881,8 @@
         
         // Mobile Optimizations - iOS, Android, Safari, Chrome, Firefox, Edge
         (function() {
-            // Prevent double-tap zoom ONLY on non-interactive elements - never block form submit/button taps
-            let lastTouchEnd = 0;
-            document.addEventListener('touchend', function(event) {
-                var target = event.target;
-                if (target.closest('button') || target.closest('input') || target.closest('select') || 
-                    target.closest('textarea') || target.closest('a') || target.closest('[role="button"]')) {
-                    return; // Allow taps on buttons, inputs, links - critical for login/signup
-                }
-                var now = Date.now();
-                if (now - lastTouchEnd <= 300) {
-                    event.preventDefault();
-                }
-                lastTouchEnd = now;
-            }, false);
+            // DISABLED: touchend preventDefault was blocking mobile menu, login, and other taps on iOS
+            // Rely on touch-action: manipulation and 16px inputs to reduce zoom issues instead
             
             if ('ontouchstart' in window) {
                 document.body.style.cursor = 'pointer';
