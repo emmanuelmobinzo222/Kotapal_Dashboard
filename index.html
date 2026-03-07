@@ -1742,12 +1742,18 @@
             top: 0;
             width: 100%;
             height: 100%;
+            min-height: 100vh;
+            min-height: 100dvh;
             background-color: rgba(0, 0, 0, 0.5);
             backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
             padding: 120px 20px 20px;
+            padding-top: max(80px, env(safe-area-inset-top));
+            padding-bottom: max(20px, env(safe-area-inset-bottom));
             align-items: flex-start;
             justify-content: center;
             overflow-y: auto;
+            overflow-x: hidden;
             -webkit-overflow-scrolling: touch;
         }
 
@@ -1837,6 +1843,54 @@
             display: block;
             width: 100%;
             margin-top: 15px;
+            min-height: 48px;
+            -webkit-appearance: none;
+            appearance: none;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+
+        /* Auth modal - mobile/touch: iOS, Android, Safari, Chrome, Edge */
+        @media (max-width: 768px) {
+            #authModal .modal-content {
+                width: 95%;
+                max-width: none;
+                max-height: 85vh;
+                padding: 24px 20px;
+                margin: 10px auto;
+                padding-top: max(24px, env(safe-area-inset-top));
+                padding-bottom: max(24px, env(safe-area-inset-bottom));
+            }
+            #authModal .auth-form input,
+            #authModal .auth-form .form-control {
+                font-size: 16px !important;
+                min-height: 48px;
+                padding: 14px 16px;
+            }
+            #authModal .auth-form button[type="submit"] {
+                min-height: 48px;
+                padding: 14px 20px;
+                font-size: 1rem;
+            }
+            #authModal .close {
+                min-width: 44px;
+                min-height: 44px;
+                padding: 10px;
+                right: 10px;
+                top: 10px;
+            }
+        }
+        @media (max-width: 480px) {
+            #authModal .modal-content {
+                width: 100%;
+                margin: 0;
+                border-radius: 16px 16px 0 0;
+                max-height: 90vh;
+            }
+            .modal {
+                padding: 40px 12px 12px;
+                padding-top: max(40px, env(safe-area-inset-top));
+            }
         }
 
         .close {
@@ -4573,11 +4627,11 @@
                 <form id="loginFormInner">
                     <div class="form-group">
                         <label for="loginEmail">Email</label>
-                        <input type="email" id="loginEmail" required>
+                        <input type="email" id="loginEmail" required inputmode="email" autocomplete="email">
                     </div>
                     <div class="form-group">
                         <label for="loginPassword">Password</label>
-                        <input type="password" id="loginPassword" required>
+                        <input type="password" id="loginPassword" required autocomplete="current-password">
                     </div>
                     <div class="form-group">
                         <a href="#" class="forgot-password" id="showForgotPassword">Forgot Password?</a>
@@ -5564,8 +5618,8 @@
 
         function showAuthModal() {
             if (authModal) {
-                authModal.style.display = 'block';
-                document.body.style.overflow = 'hidden'; // Prevent scrolling
+                authModal.style.display = 'flex';
+                document.body.style.overflow = 'hidden';
             }
         }
 
@@ -5743,48 +5797,32 @@
             setupAuthFormHandlers();
         }
         
-        // Mobile Optimizations
+        // Mobile Optimizations - iOS, Android, Safari, Chrome, Firefox, Edge
         (function() {
-            // Prevent double-tap zoom on buttons and links
+            // Prevent double-tap zoom ONLY on non-interactive elements - never block form submit/button taps
             let lastTouchEnd = 0;
             document.addEventListener('touchend', function(event) {
-                const now = Date.now();
+                var target = event.target;
+                if (target.closest('button') || target.closest('input') || target.closest('select') || 
+                    target.closest('textarea') || target.closest('a') || target.closest('[role="button"]')) {
+                    return; // Allow taps on buttons, inputs, links - critical for login/signup
+                }
+                var now = Date.now();
                 if (now - lastTouchEnd <= 300) {
                     event.preventDefault();
                 }
                 lastTouchEnd = now;
             }, false);
             
-            // Improve touch scrolling
             if ('ontouchstart' in window) {
                 document.body.style.cursor = 'pointer';
             }
             
-            // Handle orientation changes
             window.addEventListener('orientationchange', function() {
                 setTimeout(function() {
-                    // Force a repaint to fix layout issues
                     window.dispatchEvent(new Event('resize'));
                 }, 100);
             });
-            
-            // Prevent iOS bounce scrolling on modals
-            document.addEventListener('touchmove', function(e) {
-                const modal = e.target.closest('.modal-content');
-                if (modal) {
-                    const scrollTop = modal.scrollTop;
-                    const scrollHeight = modal.scrollHeight;
-                    const height = modal.clientHeight;
-                    const isScrolling = scrollHeight > height;
-                    const isAtTop = scrollTop === 0;
-                    const isAtBottom = scrollTop + height >= scrollHeight - 1;
-                    
-                    if (!isScrolling || (isAtTop && e.touches[0].clientY > e.touches[0].clientY) || 
-                        (isAtBottom && e.touches[0].clientY < e.touches[0].clientY)) {
-                        e.preventDefault();
-                    }
-                }
-            }, { passive: false });
             
             // Add mobile class to body for CSS targeting
             if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {

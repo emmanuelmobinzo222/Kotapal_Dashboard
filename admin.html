@@ -354,6 +354,19 @@
         @media (max-width: 768px) {
             .admin-sidebar { width: 100%; }
             .admin-dashboard.active { flex-direction: column; }
+            .login-card {
+                margin: 20px;
+                padding: 24px 20px;
+                padding-top: max(24px, env(safe-area-inset-top));
+            }
+            .form-control, .login-card input {
+                min-height: 48px;
+                font-size: 16px !important;
+            }
+            .btn-primary { min-height: 48px; padding: 14px; }
+        }
+        @media (max-width: 480px) {
+            .login-card { margin: 12px; padding: 20px 16px; }
         }
         @media (-webkit-min-device-pixel-ratio: 0) {
             input, select, textarea { font-size: 16px; }
@@ -704,6 +717,7 @@
     </div>
 
     <script>
+        /* Same Firebase/Firestore as main site (index.html) - admin dashboard reflects live database */
         const firebaseConfig = {
             apiKey: "AIzaSyCNU1QFZhmUuk2QWDeNi4ff3-le4KNnbrU",
             authDomain: "kotapal-1e8f6.firebaseapp.com",
