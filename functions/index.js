@@ -5,30 +5,36 @@ const { initializeApp } = require('firebase-admin/app');
 
 initializeApp();
 
-const ADMIN_EMAILS = ['admin@kotapal.com', 'wreck@gmail.com', 'earlhugue@gmail.com', 'emmanuelmobinzo222@gmail.com', 'emmanuelmobinzo21@gmail.com'];
+const ADMIN_EMAILS_FALLBACK = ['admin@kotapal.com', 'wreck@gmail.com', 'earlhugue@gmail.com', 'emmanuelmobinzo222@gmail.com', 'emmanuelmobinzo21@gmail.com'];
 
-function isAdmin(email) {
+async function isAdmin(email, db) {
   if (!email) return false;
   const e = email.toLowerCase();
-  return ADMIN_EMAILS.includes(e);
+  if (ADMIN_EMAILS_FALLBACK.includes(e)) return true;
+  try {
+    const snap = await db.collection('config').doc('admins').get();
+    const emails = snap.exists && snap.data().emails ? snap.data().emails : [];
+    return emails.some(x => (x || '').toLowerCase() === e);
+  } catch (_) {
+    return false;
+  }
 }
 
 /**
  * Callable function: listAllUsers
- * Returns all Firebase Auth users + Firestore user data merged.
- * Only callable by admins (admin@kotapal.com, wreck@gmail.com, earlhugue@gmail.com).
+ * Returns all Firebase Auth users. Uses config/admins from Firestore for admin check.
  */
 exports.listAllUsers = onCall({ region: 'us-central1' }, async (request) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'Must be signed in.');
   }
+  const db = getFirestore();
   const email = request.auth.token.email;
-  if (!isAdmin(email)) {
+  if (!(await isAdmin(email, db))) {
     throw new HttpsError('permission-denied', 'Admin access required.');
   }
 
   const auth = getAuth();
-  const db = getFirestore();
 
   // Fetch all Firestore user docs in one query
   const firestoreSnap = await db.collection('users').get();
