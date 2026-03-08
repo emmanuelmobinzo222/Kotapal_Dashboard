@@ -705,6 +705,12 @@
             db = firebase.firestore();
         } catch (e) { console.warn('Firebase init:', e); }
 
+        // Always show login form on load - require credentials every visit
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('adminLogin').style.display = 'flex';
+            document.getElementById('adminDashboard').classList.remove('active');
+        });
+
         function isAdminEmail(email) {
             return email && ADMIN_EMAILS.includes(email.trim().toLowerCase());
         }
@@ -760,13 +766,8 @@
 
         document.getElementById('adminLogoutBtn').addEventListener('click', clearAdminAuth);
 
-        auth && auth.onAuthStateChanged(function(user) {
-            if (user && isAdminEmail(user.email)) {
-                sessionStorage.setItem('kotapal_admin', 'true');
-                sessionStorage.setItem('kotapal_admin_email', user.email);
-                showAdminDashboard(user.email);
-            }
-        });
+        // Require credentials every time - no auto-login from persisted auth state
+        // Users must enter email and password on the login form to access the admin dashboard
 
         let lastFirestoreError = null;
 
