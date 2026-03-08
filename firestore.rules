@@ -10,9 +10,14 @@ service cloud.firestore {
          request.auth.token.email.toLowerCase() == 'emmanuelmobinzo222@gmail.com' ||
          request.auth.token.email.toLowerCase() == 'emmanuelmobinzo21@gmail.com');
     }
-    // Admin = super-admin only (bypass config/admins for reliability)
+    // Admin = super-admin OR email in config/admins
     function isAdmin() {
-      return isSuperAdmin();
+      return isSuperAdmin() || (
+        exists(/databases/$(database)/documents/config/admins) &&
+        request.auth.token.email != null &&
+        'emails' in get(/databases/$(database)/documents/config/admins).data &&
+        request.auth.token.email.toLowerCase() in get(/databases/$(database)/documents/config/admins).data.emails
+      );
     }
     
     match /config/admins {
