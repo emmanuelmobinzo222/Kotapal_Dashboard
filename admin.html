@@ -46,9 +46,6 @@
         }
         a, button { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
         input, select, textarea { font-size: 16px; }
-        .scroll-arrows { position: fixed; right: 12px; top: 50%; transform: translateY(-50%); z-index: 999; display: flex; flex-direction: column; gap: 4px; opacity: 0.8; }
-        .scroll-arrow-btn { width: 40px; height: 40px; border-radius: 50%; background: rgba(59,130,246,0.9); color: white; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; box-shadow: 0 2px 8px rgba(0,0,0,0.15); transition: transform 0.2s; }
-        .scroll-arrow-btn:hover { transform: scale(1.08); }
         .admin-login {
             min-height: 100vh;
             display: flex;
@@ -377,18 +374,6 @@
     </style>
 </head>
 <body>
-    <!-- Scroll arrows -->
-    <div class="scroll-arrows" id="scrollArrows" style="display:none;">
-        <button type="button" class="scroll-arrow-btn" id="scrollUpBtn"><i class="fas fa-chevron-up"></i></button>
-        <button type="button" class="scroll-arrow-btn" id="scrollDownBtn"><i class="fas fa-chevron-down"></i></button>
-    </div>
-    <script>
-        (function(){var u=document.getElementById('scrollUpBtn'),d=document.getElementById('scrollDownBtn'),s=document.getElementById('scrollArrows');
-        function scroll(dir){var el=document.scrollingElement||document.documentElement;el.scrollTo({top:dir==='up'?Math.max(0,el.scrollTop-300):Math.min(el.scrollHeight-el.clientHeight,el.scrollTop+300),behavior:'smooth'});}
-        if(u)u.onclick=function(){scroll('up');};if(d)d.onclick=function(){scroll('down');};
-        if(s){function show(){s.style.display=document.scrollingElement.scrollHeight>window.innerHeight?'flex':'none';}
-        show();window.addEventListener('resize',show);window.addEventListener('scroll',show);}})();
-    </script>
     <!-- Admin Login -->
     <div id="adminLogin" class="admin-login">
         <div class="login-card">
@@ -864,7 +849,7 @@
                         document.getElementById('adminDashboard').classList.remove('active');
                         document.getElementById('adminLogin').style.display = 'flex';
                         var err = document.getElementById('loginError');
-                        if (err) { err.textContent = 'Access denied. Your email is not in the admin list. Deploy Firestore rules (firebase deploy --only firestore) and ensure your admin email is in config/admins.'; err.classList.add('show'); }
+                        if (err) { err.textContent = 'Access denied. Run: firebase deploy --only firestore. Then add your email to Firestore → config/admins → emails array.'; err.classList.add('show'); }
                     }
                 });
             });
@@ -956,8 +941,8 @@
             const usersEmpty = document.getElementById('usersEmpty');
             if (usersEmpty) {
                 usersEmpty.innerHTML = isPerm
-                    ? '<i class="fas fa-lock"></i><p>Permission denied. Deploy Firestore rules and ensure your admin email is in config/admins.</p><p style="font-size:0.85rem;margin-top:8px;">Run: firebase deploy --only firestore</p>'
-                    : '<i class="fas fa-users"></i><p>No users found</p>';
+                    ? '<i class="fas fa-lock"></i><p><strong>Permission denied.</strong></p><p>1. Run: <code>firebase deploy --only firestore</code></p><p>2. In Firebase Console → Firestore → config/admins, add your email to the <code>emails</code> array.</p><p style="font-size:0.85rem;margin-top:12px;">See DEPLOY_ADMIN.md for details.</p>'
+                    : '<i class="fas fa-users"></i><p>No users found in database</p>';
             }
         }
 

@@ -98,70 +98,9 @@
         /* Touch-friendly: iOS, Android */
         a, button { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
         input, select, textarea { font-size: 16px; } /* Prevents iOS zoom on focus */
-        /* No scrollbar - section arrows for navigation only; use full width without scrollbar track/line */
-        html { overflow-x: hidden; overflow-y: scroll; scrollbar-width: none; -ms-overflow-style: none; }
-        html::-webkit-scrollbar { display: none !important; width: 0 !important; height: 0 !important; }
-        html::-webkit-scrollbar-track, html::-webkit-scrollbar-thumb, html::-webkit-scrollbar-corner { display: none !important; background: transparent !important; width: 0 !important; }
-        * { scrollbar-width: none; -ms-overflow-style: none; }
-        *::-webkit-scrollbar { display: none !important; width: 0 !important; }
+        /* One simple scrollbar for main page */
+        html { overflow-x: hidden; overflow-y: auto; }
         body { overflow-x: hidden; overflow-y: visible; }
-        /* Per-section scroll arrows - embedded in section, match section color */
-        .section-nav-arrows {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 12px;
-            padding: 24px 0 16px;
-            -webkit-tap-highlight-color: transparent;
-        }
-        .section-nav-arrows button {
-            width: 44px;
-            min-width: 44px;
-            height: 44px;
-            min-height: 44px;
-            border-radius: 50%;
-            border: none;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1rem;
-            transition: background 0.2s, transform 0.2s;
-            -webkit-appearance: none;
-            appearance: none;
-            -webkit-tap-highlight-color: transparent;
-            touch-action: manipulation;
-            -webkit-user-select: none;
-            user-select: none;
-        }
-        .section-nav-arrows button:hover { transform: scale(1.08); }
-        .section-nav-arrows button:active { transform: scale(0.98); }
-        .section-nav-arrows button.hidden { display: none !important; }
-        body.dashboard-active .section-nav-arrows { display: none !important; }
-        /* Hero - dark section: white/light arrows */
-        .hero .section-nav-arrows button { background: rgba(255,255,255,0.2); color: #fff; }
-        .hero .section-nav-arrows button:hover { background: rgba(255,255,255,0.35); }
-        /* Features - white section */
-        .features .section-nav-arrows button { background: rgba(59,130,246,0.12); color: var(--primary); }
-        .features .section-nav-arrows button:hover { background: rgba(59,130,246,0.25); }
-        /* Pricing - light gray section */
-        #pricing .section-nav-arrows button { background: rgba(59,130,246,0.15); color: var(--primary); }
-        #pricing .section-nav-arrows button:hover { background: rgba(59,130,246,0.28); }
-        /* Trending products - white */
-        #trending-products .section-nav-arrows button { background: rgba(59,130,246,0.12); color: var(--primary); }
-        #trending-products .section-nav-arrows button:hover { background: rgba(59,130,246,0.25); }
-        /* Dashboard preview - dark section */
-        #dashboard-preview .section-nav-arrows button { background: rgba(255,255,255,0.2); color: #fff; }
-        #dashboard-preview .section-nav-arrows button:hover { background: rgba(255,255,255,0.35); }
-        /* About - light section */
-        #about .section-nav-arrows button { background: rgba(59,130,246,0.12); color: var(--primary); }
-        #about .section-nav-arrows button:hover { background: rgba(59,130,246,0.25); }
-        /* Testimonials */
-        #testimonials .section-nav-arrows button { background: rgba(59,130,246,0.12); color: var(--primary); }
-        #testimonials .section-nav-arrows button:hover { background: rgba(59,130,246,0.25); }
-        @supports not (gap: 12px) {
-            .section-nav-arrows button + button { margin-left: 12px; }
-        }
         /* Dark/Light mode toggle - fixed top right */
         .theme-toggle-fixed {
             position: fixed;
@@ -382,36 +321,6 @@
             color: var(--primary);
             font-weight: 600;
         }
-
-        /* Nav scroll arrows - clean uniform look, embedded in navigation */
-        .nav-scroll-arrows {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            margin-left: 8px;
-        }
-        .nav-arrow {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            border: 1px solid rgba(0,0,0,0.1);
-            background: rgba(255,255,255,0.9);
-            color: var(--gray);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.75rem;
-            transition: all 0.2s;
-            -webkit-tap-highlight-color: transparent;
-            touch-action: manipulation;
-        }
-        .nav-arrow:hover {
-            background: #fff;
-            color: var(--primary);
-            border-color: var(--primary);
-        }
-        .nav-arrow.hidden { display: none !important; }
 
         .mobile-menu-btn {
             display: none;
@@ -2221,7 +2130,6 @@
             .nav-links.active {
                 display: flex;
             }
-            .nav-scroll-arrows { display: none; }
 
             .nav-links li {
                 margin: 10px 0;
@@ -2302,16 +2210,6 @@
 
             .apple-feature-scroll .feature-card-scroll {
                 padding: 30px 20px;
-            }
-
-            .section-nav-arrows {
-                padding: 20px 0 12px;
-            }
-            .section-nav-arrows button {
-                width: 40px;
-                min-width: 40px;
-                height: 40px;
-                min-height: 40px;
             }
 
             .apple-feature-scroll .feature-icon-scroll {
@@ -2656,16 +2554,6 @@
                 margin-right: 8px;
             }
 
-            .section-nav-arrows {
-                padding: 16px 0 10px;
-            }
-            .section-nav-arrows button {
-                width: 44px;
-                min-width: 44px;
-                height: 44px;
-                min-height: 44px;
-            }
-
             .scrollable-container {
                 padding: 0 35px;
             }
@@ -2980,10 +2868,6 @@
                 <li><a href="#dashboard-preview" class="nav-link" data-section="dashboard-preview" onclick="scrollToSection('dashboard-preview'); return false;">Dashboard</a></li>
                 <li><a href="#about" class="nav-link" data-section="about" onclick="scrollToSection('about'); return false;">About</a></li>
                 <li><a href="#" class="nav-link" data-section="contact" onclick="goToContactForm(); return false;">Contact</a></li>
-                <li class="nav-scroll-arrows">
-                    <button type="button" class="nav-arrow nav-arrow-up" id="navScrollUp" aria-label="Previous section"><i class="fas fa-chevron-up"></i></button>
-                    <button type="button" class="nav-arrow nav-arrow-down" id="navScrollDown" aria-label="Next section"><i class="fas fa-chevron-down"></i></button>
-                </li>
                 <li><a href="#" id="loginBtn">Login</a></li>
             </ul>
 
@@ -3002,10 +2886,6 @@
             <div class="hero-content">
                 <h1>No coding required</h1>
                 <p>KotaPal empowers creators, bloggers, and e-commerce sellers to merge products with retail affiliate offers into AI-powered product blocks. Seamlessly integrate them across your blog, online store, YouTube channel, and email campaigns.</p>
-            </div>
-            <div class="section-nav-arrows" data-section="home">
-                <button type="button" class="section-arrow-up hidden" aria-label="Previous section"><i class="fas fa-chevron-up"></i></button>
-                <button type="button" class="section-arrow-down" aria-label="Next section"><i class="fas fa-chevron-down"></i></button>
             </div>
         </section>
 
@@ -3084,10 +2964,6 @@
                 <button class="scroll-btn scroll-btn-right" id="featuresScrollRight" onclick="scrollFeatures('left')">
                     <i class="fas fa-chevron-right"></i>
                 </button>
-            </div>
-            <div class="section-nav-arrows" data-section="features">
-                <button type="button" class="section-arrow-up" aria-label="Previous section"><i class="fas fa-chevron-up"></i></button>
-                <button type="button" class="section-arrow-down" aria-label="Next section"><i class="fas fa-chevron-down"></i></button>
             </div>
         </section>
 
@@ -3216,10 +3092,6 @@
                     </button>
                 </div>
             </div>
-            <div class="section-nav-arrows" data-section="pricing">
-                <button type="button" class="section-arrow-up" aria-label="Previous section"><i class="fas fa-chevron-up"></i></button>
-                <button type="button" class="section-arrow-down" aria-label="Next section"><i class="fas fa-chevron-down"></i></button>
-            </div>
             <div class="section-container">
                 <p class="text-center" style="margin-top: 60px;">All plans include a 7-day free trial.</p>
             </div>
@@ -3335,10 +3207,6 @@
                     <i class="fas fa-chevron-right"></i>
                 </button>
             </div>
-            <div class="section-nav-arrows" data-section="trending-products">
-                <button type="button" class="section-arrow-up" aria-label="Previous section"><i class="fas fa-chevron-up"></i></button>
-                <button type="button" class="section-arrow-down" aria-label="Next section"><i class="fas fa-chevron-down"></i></button>
-            </div>
         </section>
 
         <!-- NEW: Dashboard Preview Section -->
@@ -3398,10 +3266,6 @@
                     </div>
                 </div>
             </div>
-            <div class="section-nav-arrows" data-section="dashboard-preview">
-                <button type="button" class="section-arrow-up" aria-label="Previous section"><i class="fas fa-chevron-up"></i></button>
-                <button type="button" class="section-arrow-down" aria-label="Next section"><i class="fas fa-chevron-down"></i></button>
-            </div>
         </section>
 
         <!-- About Section -->
@@ -3431,10 +3295,6 @@
                         <p>We're growing — want to help? Join us or give feedback!</p>
                     </div>
                 </div>
-            </div>
-            <div class="section-nav-arrows" data-section="about">
-                <button type="button" class="section-arrow-up" aria-label="Previous section"><i class="fas fa-chevron-up"></i></button>
-                <button type="button" class="section-arrow-down" aria-label="Next section"><i class="fas fa-chevron-down"></i></button>
             </div>
         </section>
 
@@ -3535,10 +3395,6 @@
                         </div>
                     </div>
                 </div>
-            </div>
-            <div class="section-nav-arrows" data-section="testimonials">
-                <button type="button" class="section-arrow-up" aria-label="Previous section"><i class="fas fa-chevron-up"></i></button>
-                <button type="button" class="section-arrow-down hidden" aria-label="Next section"><i class="fas fa-chevron-down"></i></button>
             </div>
         </section>
     </div>
@@ -5576,73 +5432,6 @@
             window.addEventListener('load', updateFromScroll);
             window.addEventListener('resize', updateFromScroll);
             window.updateNavActive = setNavActive;
-        })();
-
-        // Per-section scroll arrows + nav arrows - up/down navigation
-        (function() {
-            var sectionIds = ['home','features','pricing','trending-products','dashboard-preview','about','testimonials'];
-            var navUp = document.getElementById('navScrollUp');
-            var navDown = document.getElementById('navScrollDown');
-            function getCurrentSectionIndex() {
-                var contactPage = document.getElementById('contact-page');
-                if (contactPage && contactPage.style.display !== 'none') return -1;
-                var homePage = document.getElementById('home-page');
-                if (!homePage || homePage.style.display === 'none') return -1;
-                var scrollTop = (document.scrollingElement || document.documentElement).scrollTop;
-                var best = null, bestOffset = Infinity;
-                sectionIds.forEach(function(id) {
-                    var el = document.getElementById(id);
-                    if (!el) return;
-                    var rect = el.getBoundingClientRect();
-                    var top = rect.top;
-                    if (top <= window.innerHeight * 0.4 && top > -rect.height * 0.6) {
-                        var offset = Math.abs(top);
-                        if (offset < bestOffset) { bestOffset = offset; best = id; }
-                    }
-                });
-                if (!best && scrollTop < 50) best = 'home';
-                return best ? sectionIds.indexOf(best) : 0;
-            }
-            function updateSectionArrows() {
-                if (document.body.classList.contains('dashboard-active')) return;
-                var idx = getCurrentSectionIndex();
-                if (idx < 0) return;
-                if (navUp) navUp.classList.toggle('hidden', idx <= 0);
-                if (navDown) navDown.classList.toggle('hidden', idx >= sectionIds.length - 1);
-                document.querySelectorAll('.section-nav-arrows').forEach(function(wrap) {
-                    var sid = wrap.getAttribute('data-section');
-                    var sectionIdx = sectionIds.indexOf(sid);
-                    if (sectionIdx < 0) return;
-                    var upBtn = wrap.querySelector('.section-arrow-up');
-                    var downBtn = wrap.querySelector('.section-arrow-down');
-                    if (upBtn) upBtn.classList.toggle('hidden', sectionIdx <= 0);
-                    if (downBtn) downBtn.classList.toggle('hidden', sectionIdx >= sectionIds.length - 1);
-                });
-            }
-            document.querySelectorAll('.section-nav-arrows').forEach(function(wrap) {
-                var sid = wrap.getAttribute('data-section');
-                var sectionIdx = sectionIds.indexOf(sid);
-                if (sectionIdx < 0) return;
-                var upBtn = wrap.querySelector('.section-arrow-up');
-                var downBtn = wrap.querySelector('.section-arrow-down');
-                if (upBtn) upBtn.addEventListener('click', function() {
-                    if (sectionIdx > 0) scrollToSection(sectionIds[sectionIdx - 1]);
-                });
-                if (downBtn) downBtn.addEventListener('click', function() {
-                    if (sectionIdx < sectionIds.length - 1) scrollToSection(sectionIds[sectionIdx + 1]);
-                });
-            });
-            if (navUp) navUp.addEventListener('click', function() {
-                var idx = getCurrentSectionIndex();
-                if (idx > 0) scrollToSection(sectionIds[idx - 1]);
-            });
-            if (navDown) navDown.addEventListener('click', function() {
-                var idx = getCurrentSectionIndex();
-                if (idx >= 0 && idx < sectionIds.length - 1) scrollToSection(sectionIds[idx + 1]);
-            });
-            window.addEventListener('scroll', updateSectionArrows, { passive: true });
-            window.addEventListener('load', updateSectionArrows);
-            window.addEventListener('resize', updateSectionArrows);
         })();
 
         // Fixed theme toggle (top right)
