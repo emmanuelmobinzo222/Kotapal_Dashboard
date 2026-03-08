@@ -14,7 +14,8 @@
     "docker:stop": "docker-compose down",
     "docker:logs": "docker-compose logs -f backend",
     "migrate:db": "node scripts/migrate.js",
-    "seed:db": "node scripts/seed.js"
+    "seed:db": "node scripts/seed.js",
+    "sync:auth-firestore": "node scripts/sync-auth-to-firestore.js"
   },
   "keywords": [
     "affiliate-marketing",
@@ -53,7 +54,8 @@
     "sequelize": "^6.35.1",
     "joi": "^17.11.0",
     "lodash": "^4.17.21",
-    "firebase": "^10.7.1"
+    "firebase": "^10.7.1",
+    "firebase-admin": "^12.0.0"
   },
   "devDependencies": {
     "nodemon": "^3.0.2",

@@ -5237,6 +5237,17 @@
                     localStorage.setItem('kotaUser', JSON.stringify(userData));
                     currentUser = userData;
                     
+                    // Sync user to Firestore so admin dashboard can see registered users
+                    if (window.firestoreDb) {
+                        window.firestoreDb.collection('users').doc(user.uid).set({
+                            email: user.email,
+                            displayName: userData.displayName,
+                            plan: userData.plan,
+                            signupDate: userData.signupDate,
+                            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                        }, { merge: true }).catch(function(err) { console.warn('Firestore user sync:', err); });
+                    }
+                    
                     // Hide landing page, show dashboard
                     const landingView = document.getElementById('landing-page-view');
                     const nav = document.querySelector('nav');

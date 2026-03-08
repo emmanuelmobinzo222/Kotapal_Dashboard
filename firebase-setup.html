@@ -45,7 +45,12 @@
             <li>The <code>users</code> and <code>blocks</code> collections are created automatically when users sign up and create blocks</li>
         </ul>
 
-        <h2>4. Admin Login</h2>
+        <h2>4. Sync Existing Auth Users (Optional)</h2>
+        <p>If users were created in Firebase Console or before Firestore was connected, run the sync script to copy them to Firestore:</p>
+        <pre><code>npm run sync:auth-firestore</code></pre>
+        <p>Requires a service account key. See <code>scripts/sync-auth-to-firestore.js</code> for details.</p>
+
+        <h2>5. Admin Login</h2>
         <p>Open <a href="admin.html">admin.html</a>, sign in with <code>admin@kotapal.com</code> and your password. The dashboard will load live data from Firestore.</p>
 
         <a href="admin.html" class="btn">← Back to Admin</a>
