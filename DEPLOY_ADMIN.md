@@ -9,6 +9,8 @@ These emails have full admin access:
 - `admin@kotapal.com`
 - `wreck@gmail.com`
 - `earlhugue@gmail.com`
+- `emmanuelmobinzo222@gmail.com`
+- `emmanuelmobinzo21@gmail.com`
 
 Sign in with any of these to access the admin dashboard and see **all users** from Firebase Auth.
 

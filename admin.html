@@ -706,7 +706,7 @@
             measurementId: "G-8GQ7JGDZ7P"
         };
 
-        const ADMIN_EMAILS_FALLBACK = ['admin@kotapal.com', 'wreck@gmail.com', 'earlhugue@gmail.com'];
+        const ADMIN_EMAILS_FALLBACK = ['admin@kotapal.com', 'wreck@gmail.com', 'earlhugue@gmail.com', 'emmanuelmobinzo222@gmail.com', 'emmanuelmobinzo21@gmail.com'];
         let auth, db, functions;
         let adminUsers = [];
         let adminBlocks = [];
@@ -855,7 +855,7 @@
                         document.getElementById('adminDashboard').classList.remove('active');
                         document.getElementById('adminLogin').style.display = 'flex';
                         var err = document.getElementById('loginError');
-                        if (err) { err.textContent = 'Access denied. Run: firebase deploy --only firestore. Then add your email to Firestore → config/admins → emails array.'; err.classList.add('show'); }
+                        if (err) { err.textContent = 'Access denied. Your email is not in the admin list. Sign in with admin@kotapal.com, wreck@gmail.com, or earlhugue@gmail.com. See DEPLOY_ADMIN.md to add more admins.'; err.classList.add('show'); }
                     }
                 });
             });

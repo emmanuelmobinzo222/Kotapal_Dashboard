@@ -5,7 +5,7 @@ const { initializeApp } = require('firebase-admin/app');
 
 initializeApp();
 
-const ADMIN_EMAILS = ['admin@kotapal.com', 'wreck@gmail.com', 'earlhugue@gmail.com'];
+const ADMIN_EMAILS = ['admin@kotapal.com', 'wreck@gmail.com', 'earlhugue@gmail.com', 'emmanuelmobinzo222@gmail.com', 'emmanuelmobinzo21@gmail.com'];
 
 function isAdmin(email) {
   if (!email) return false;
