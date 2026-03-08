@@ -60,3 +60,23 @@ exports.listAllUsers = onCall({ region: 'us-central1' }, async (request) => {
 
   return { users };
 });
+
+/**
+ * Callable function: listAllBlocks
+ * Returns all blocks from Firestore (synced from main app).
+ * Only callable by admins.
+ */
+exports.listAllBlocks = onCall({ region: 'us-central1' }, async (request) => {
+  if (!request.auth) {
+    throw new HttpsError('unauthenticated', 'Must be signed in.');
+  }
+  const email = request.auth.token.email;
+  if (!isAdmin(email)) {
+    throw new HttpsError('permission-denied', 'Admin access required.');
+  }
+
+  const db = getFirestore();
+  const blocksSnap = await db.collection('blocks').get();
+  const blocks = blocksSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+  return { blocks };
+});

@@ -3,12 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="format-detection" content="telephone=no">
-    <meta name="theme-color" content="#3b82f6">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KotaPal – Monetize Content with Smart Product Blocks | USA Creators & E-Commerce</title>
     <meta name="description"
         content="KotaPal helps US creators, bloggers & e-commerce sellers monetize content with AI-powered Shopify + Amazon + Walmart product blocks. Trusted by 10,000+ US creators.">
@@ -51,7 +46,6 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-functions-compat.js"></script>
 
     <style>
         /* Reset and Base Styles */
@@ -74,15 +68,7 @@
             --warning: #f59e0b;
         }
 
-        /* Cross-platform: Chrome, Firefox, Safari, Edge, Windows, macOS, iOS */
-        html {
-            overflow-x: hidden;
-            overflow-y: auto;
-            -webkit-text-size-adjust: 100%;
-            -moz-text-size-adjust: 100%;
-            -ms-text-size-adjust: 100%;
-            text-size-adjust: 100%;
-        }
+        html { overflow-x: hidden; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
             color: #333;
@@ -90,38 +76,7 @@
             overflow-x: hidden;
             background-color: #fff;
             min-width: 280px;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-            padding-left: env(safe-area-inset-left);
-            padding-right: env(safe-area-inset-right);
-            padding-bottom: env(safe-area-inset-bottom);
         }
-        /* Touch-friendly: iOS, Android */
-        a, button { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
-        input, select, textarea { font-size: 16px; } /* Prevents iOS zoom on focus */
-        /* One simple scrollbar for main page */
-        html { overflow-x: hidden; overflow-y: auto; }
-        body { overflow-x: hidden; overflow-y: visible; }
-        /* Dark/Light mode toggle - fixed top right */
-        .theme-toggle-fixed {
-            position: fixed;
-            top: max(16px, env(safe-area-inset-top));
-            right: max(16px, env(safe-area-inset-right));
-            z-index: 1000;
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
-            background: rgba(255,255,255,0.95);
-            border: 1px solid rgba(0,0,0,0.08);
-            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: background 0.2s, transform 0.2s;
-        }
-        .theme-toggle-fixed:hover { background: #fff; transform: scale(1.05); }
-        .theme-toggle-fixed i { font-size: 1.2rem; color: var(--primary); }
 
         .container {
             width: 100%;
@@ -188,41 +143,30 @@
         .btn {
             cursor: pointer;
             border: none;
-            border-radius: 8px;
-            padding: 10px 20px;
+            border-radius: 50px;
+            padding: 12px 28px;
             font-weight: 600;
-            font-size: 0.95rem;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            min-height: 40px;
+            transition: all 0.3s ease;
         }
 
         .btn-primary {
-            background: var(--primary);
+            background: linear-gradient(to right, var(--primary), var(--secondary));
             color: white;
-            border: 1px solid var(--primary);
         }
 
         .btn-primary:hover {
-            background: var(--primary-dark);
-            border-color: var(--primary-dark);
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-            transform: translateY(-1px);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3);
         }
 
         .btn-secondary {
             background: transparent;
-            border: 1px solid var(--gray);
-            color: var(--dark);
+            border: 2px solid white;
+            color: white;
         }
 
         .btn-secondary:hover {
-            background: var(--light);
-            border-color: var(--primary);
-            color: var(--primary);
+            background: rgba(255, 255, 255, 0.1);
         }
 
         .text-center {
@@ -237,7 +181,6 @@
             z-index: 1000;
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
             border-bottom: 1px solid rgba(0, 0, 0, 0.1);
             min-height: 88px;
             height: auto;
@@ -245,7 +188,6 @@
             align-items: center;
             justify-content: center;
             padding: 14px 0;
-            padding-top: max(14px, env(safe-area-inset-top));
             overflow: hidden;
         }
 
@@ -337,18 +279,7 @@
         .mobile-menu-btn {
             display: none;
             flex-direction: column;
-            align-items: center;
-            justify-content: center;
             cursor: pointer;
-            min-width: 44px;
-            min-height: 44px;
-            padding: 12px;
-            border: none;
-            background: transparent;
-            -webkit-tap-highlight-color: transparent;
-            touch-action: manipulation;
-            -webkit-appearance: none;
-            appearance: none;
         }
 
         .mobile-menu-btn span {
@@ -357,7 +288,6 @@
             background: var(--dark);
             margin: 3px 0;
             transition: 0.3s;
-            display: block;
         }
 
         /* Hero Section */
@@ -540,10 +470,9 @@
         #dashboard-view.theme-dark .sidebar .user-plan { color: #e5e7eb !important; }
         #dashboard-view.theme-dark .sidebar .user-plan { color: #94a3b8 !important; }
         #dashboard-view.theme-dark .sidebar-toggle,
-        #dashboard-view.theme-dark .nav-toggle-inline { background: #1f2937 !important; color: #e5e7eb !important; border-color: #374151 !important; }
+        #dashboard-view.theme-dark .nav-toggle-float { background: #1f2937 !important; color: #e5e7eb !important; border-color: #374151 !important; }
         #dashboard-view.theme-dark .sidebar-toggle i,
-        #dashboard-view.theme-dark .nav-toggle-inline i { color: #e5e7eb !important; }
-        #dashboard-view.theme-dark .nav-toggle-inline.nav-collapsed { background: #1f2937 !important; }
+        #dashboard-view.theme-dark .nav-toggle-float i { color: #e5e7eb !important; }
         #logoutConfirmCancel { background: #f1f5f9 !important; color: #1e293b !important; border: 2px solid #94a3b8 !important; font-weight: 600 !important; }
         #dashboard-view.theme-dark ~ #logoutConfirmModal #logoutConfirmCancel,
         #dashboard-view.theme-dark ~ * #logoutConfirmCancel { background: #334155 !important; color: #f1f5f9 !important; border: 2px solid #64748b !important; }
@@ -614,9 +543,6 @@
             color: #b91c1c !important;
             border-color: #fecaca !important;
         }
-        #dashboard-view .btn-sm { padding: 6px 12px; font-size: 0.85rem; }
-        #dashboard-view .btn-danger { background: #ef4444; color: white; border: none; }
-        #dashboard-view .btn-danger:hover { background: #dc2626; }
         /* Back to Blocks & Cancel (Create Block) - visible in dark mode */
         #dashboard-view.theme-dark #backToBlocksBtn,
         #dashboard-view.theme-dark #cancelNewBlock {
@@ -1717,18 +1643,12 @@
             top: 0;
             width: 100%;
             height: 100%;
-            min-height: 100vh;
-            min-height: 100dvh;
             background-color: rgba(0, 0, 0, 0.5);
             backdrop-filter: blur(5px);
-            -webkit-backdrop-filter: blur(5px);
             padding: 120px 20px 20px;
-            padding-top: max(80px, env(safe-area-inset-top));
-            padding-bottom: max(20px, env(safe-area-inset-bottom));
             align-items: flex-start;
             justify-content: center;
             overflow-y: auto;
-            overflow-x: hidden;
             -webkit-overflow-scrolling: touch;
         }
 
@@ -1818,92 +1738,7 @@
             display: block;
             width: 100%;
             margin-top: 15px;
-            min-height: 48px;
-            -webkit-appearance: none;
-            appearance: none;
-            -webkit-tap-highlight-color: transparent;
-            touch-action: manipulation;
         }
-
-        /* Auth modal - mobile/touch: iOS, Android, Safari, Chrome, Edge */
-        @media (max-width: 768px) {
-            #authModal .modal-content {
-                width: 95%;
-                max-width: none;
-                max-height: 85vh;
-                padding: 24px 20px;
-                margin: 10px auto;
-                padding-top: max(24px, env(safe-area-inset-top));
-                padding-bottom: max(24px, env(safe-area-inset-bottom));
-            }
-            #authModal .auth-form input,
-            #authModal .auth-form .form-control {
-                font-size: 16px !important;
-                min-height: 48px;
-                padding: 14px 16px;
-            }
-            #authModal .auth-form button[type="submit"] {
-                min-height: 48px;
-                padding: 14px 20px;
-                font-size: 1rem;
-            }
-            #authModal .close {
-                min-width: 44px;
-                min-height: 44px;
-                padding: 10px;
-                right: 10px;
-                top: 10px;
-            }
-        }
-        @media (max-width: 480px) {
-            #authModal .modal-content {
-                width: 100%;
-                margin: 0;
-                border-radius: 16px 16px 0 0;
-                max-height: 90vh;
-            }
-            .modal {
-                padding: 40px 12px 12px;
-                padding-top: max(40px, env(safe-area-inset-top));
-            }
-        }
-
-        /* Admin view styles (merged from admin.html) */
-        #admin-view .admin-login { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, var(--dark) 0%, #374151 100%); }
-        #admin-view .login-card { background: white; padding: 40px; border-radius: 16px; box-shadow: 0 25px 50px rgba(0,0,0,0.25); width: 100%; max-width: 400px; }
-        #admin-view .login-card h1 { margin-bottom: 8px; font-size: 1.75rem; }
-        #admin-view .login-card .subtitle { color: var(--gray); margin-bottom: 24px; font-size: 0.9rem; }
-        #admin-view .form-group { margin-bottom: 20px; }
-        #admin-view .form-group label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 0.9rem; }
-        #admin-view .form-control { width: 100%; padding: 12px 16px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 1rem; }
-        #admin-view .login-error { background: #fee2e2; color: #b91c1c; padding: 10px; border-radius: 8px; margin-bottom: 16px; font-size: 0.9rem; display: none; }
-        #admin-view .login-error.show { display: block; }
-        #admin-view .btn-return { display: inline-flex; align-items: center; gap: 8px; margin-bottom: 20px; color: var(--gray); text-decoration: none; font-size: 0.9rem; font-weight: 500; }
-        #admin-view .btn-return:hover { color: var(--primary); }
-        #admin-view .admin-dashboard { display: none; }
-        #admin-view .admin-dashboard.active { display: flex; min-height: 100vh; }
-        #admin-view .admin-sidebar { width: 260px; background: var(--dark); color: white; padding: 24px 0; }
-        #admin-view .admin-sidebar .logo { padding: 0 24px 24px; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 24px; }
-        #admin-view .admin-sidebar .logo img { height: 48px; object-fit: contain; }
-        #admin-view .admin-nav { list-style: none; }
-        #admin-view .admin-nav li a { display: flex; align-items: center; gap: 12px; padding: 14px 24px; color: rgba(255,255,255,0.8); text-decoration: none; transition: all 0.2s; }
-        #admin-view .admin-nav li a:hover { background: rgba(255,255,255,0.08); color: white; }
-        #admin-view .admin-nav li a.active { background: rgba(59,130,246,0.3); color: white; border-left: 3px solid var(--primary); }
-        #admin-view .admin-main { flex: 1; overflow-y: auto; padding: 24px; }
-        #admin-view .admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 16px; }
-        #admin-view .admin-header h1 { font-size: 1.75rem; }
-        #admin-view .btn-logout { background: #fee2e2; color: #b91c1c; padding: 8px 16px; }
-        #admin-view .btn-logout:hover { background: #fecaca; }
-        #admin-view .stat-card .stat-icon.primary { background: rgba(59,130,246,0.1); color: var(--primary); }
-        #admin-view .stat-card .stat-icon.success { background: rgba(16,185,129,0.1); color: var(--success); }
-        #admin-view .stat-card .stat-icon.warning { background: rgba(245,158,11,0.1); color: var(--warning); }
-        #admin-view .stat-card .stat-icon.danger { background: rgba(239,68,68,0.1); color: var(--danger); }
-        #admin-view .page-content { display: none; }
-        #admin-view .page-content.active { display: block; }
-        #admin-view .btn-danger { background: #fee2e2; color: #b91c1c; }
-        #admin-view .btn-danger:hover { background: #fecaca; }
-        #admin-view .btn-success { background: #d1fae5; color: #065f46; }
-        #admin-view .btn-success:hover { background: #a7f3d0; }
 
         .close {
             position: absolute;
@@ -2886,12 +2721,6 @@
 </head>
 
 <body>
-    <!-- Single dynamic scroll control -->
-    <!-- Dark/Light mode toggle - top right -->
-    <button type="button" class="theme-toggle-fixed" id="themeToggleFixed" aria-label="Toggle dark mode" title="Dark mode">
-        <i class="fas fa-moon" id="themeToggleIcon"></i>
-    </button>
-
     <!-- Page Loader -->
     <div class="page-loader" id="pageLoader">
         <div class="loader-spinner"></div>
@@ -2917,15 +2746,14 @@
                 <li><a href="#dashboard-preview" class="nav-link" data-section="dashboard-preview" onclick="scrollToSection('dashboard-preview'); return false;">Dashboard</a></li>
                 <li><a href="#about" class="nav-link" data-section="about" onclick="scrollToSection('about'); return false;">About</a></li>
                 <li><a href="#" class="nav-link" data-section="contact" onclick="goToContactForm(); return false;">Contact</a></li>
-                <li><a href="#admin" id="adminNavLink" class="nav-link">Admin</a></li>
                 <li><a href="#" id="loginBtn">Login</a></li>
             </ul>
 
-            <button type="button" class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Open menu">
+            <div class="mobile-menu-btn" id="mobileMenuBtn">
                 <span></span>
                 <span></span>
                 <span></span>
-            </button>
+            </div>
         </div>
     </nav>
 
@@ -3142,6 +2970,7 @@
                     </button>
                 </div>
             </div>
+
             <div class="section-container">
                 <p class="text-center" style="margin-top: 60px;">All plans include a 7-day free trial.</p>
             </div>
@@ -3750,9 +3579,6 @@
             scrollbar-width: none; -ms-overflow-style: none;
         }
         #dashboard-view .sidebar .nav-menu::-webkit-scrollbar { display: none; }
-        /* Single scrollbar: hide scrollbars on modals and nested areas */
-        .modal, .modal-content, .modal-body, .plan-detail-modal .plan-modal-content { scrollbar-width: none; -ms-overflow-style: none; }
-        .modal::-webkit-scrollbar, .modal-content::-webkit-scrollbar, .plan-detail-modal .plan-modal-content::-webkit-scrollbar { display: none; }
         #dashboard-view .nav-item { margin-bottom: 2px; }
         #dashboard-view .nav-link {
             display: flex; align-items: center; padding: 10px 20px; color: #4b5563; border-radius: 8px;
@@ -3941,15 +3767,14 @@
         #dashboard-view .sidebar-overlay.active { display: block; }
         #dashboard-view .sidebar.nav-collapsed { transform: translateX(-100%); width: 0; min-width: 0; overflow: hidden; padding: 0; }
         #dashboard-view .main-content.nav-collapsed { margin-left: 0; }
-        #dashboard-view .nav-toggle-inline {
-            position: fixed; left: 250px; top: 50%; transform: translateY(-50%); z-index: 1003;
-            background: white; border: 1px solid #e5e7eb; border-radius: 0 8px 8px 0; padding: 12px 10px;
-            cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.08); display: flex; align-items: center; justify-content: center;
-            transition: left 0.3s ease, background 0.2s ease, border-radius 0.2s; font-weight: 500; color: var(--dark);
+        #dashboard-view .nav-toggle-float {
+            position: fixed; left: 10px; top: 50%; transform: translateY(-50%); z-index: 1003;
+            background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 10px 14px;
+            cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center;
+            transition: left 0.3s ease, background 0.2s ease;
         }
-        #dashboard-view .nav-toggle-inline.nav-collapsed { border-radius: 0 8px 8px 0; background: #f8fafc; border-left: none; left: 0 !important; }
-        #dashboard-view .nav-toggle-inline:hover { background: #f9fafb; border-color: #d1d5db; }
-        #dashboard-view .nav-toggle-inline i { font-size: 1.1rem; color: var(--dark); }
+        #dashboard-view .nav-toggle-float:hover { background: #f9fafb; border-color: #d1d5db; }
+        #dashboard-view .nav-toggle-float i { font-size: 1.2rem; color: var(--dark); }
         @media (max-width: 1024px) {
             #dashboard-view .sidebar { transform: translateX(-100%); width: min(320px, 85vw); z-index: 1002; }
             #dashboard-view .sidebar.active { transform: translateX(0); }
@@ -4007,9 +3832,7 @@
                     <li class="nav-item"><a href="#" class="nav-link" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
                 </ul>
             </div>
-            <button type="button" class="nav-toggle-inline" id="navToggleFloat" aria-label="Hide navigation" title="Hide navigation">
-                <i class="fas fa-angle-double-left"></i>
-            </button>
+            <button type="button" class="nav-toggle-float" id="navToggleFloat" aria-label="Toggle navigation" title="Hide Nav"><i class="fas fa-compress-arrows-alt"></i></button>
             <div class="main-content">
                 <div id="dashboard-page" class="page-content">
                     <div class="header">
@@ -4074,7 +3897,6 @@
                                         <th>Revenue</th>
                                         <th>Status</th>
                                         <th>Last Updated</th>
-                                        <th style="min-width:80px;">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody></tbody>
@@ -4287,12 +4109,13 @@
                                 <button class="btn btn-primary" onclick="generateReport('performance')">Performance Report</button>
                                 <button class="btn btn-secondary" onclick="generateReport('payout')">Payout Report</button>
                             </div>
-                            <p style="margin-bottom:12px; color:var(--gray); font-size:0.9rem;">Recent reports — download as PDF or Excel. Report titles shown in the table below.</p>
+                            <p style="margin-bottom:12px; color:var(--gray); font-size:0.9rem;">Recent reports — download as PDF or Excel.</p>
                             <div class="table-container" style="overflow-x: auto;">
                                 <table id="reportsTable" style="width:100%; border-collapse:collapse; min-width:500px;">
                                     <thead>
                                         <tr>
-                                            <th style="text-align:left; padding:10px; border-bottom:1px solid #e5e7eb;">Report Title</th>
+                                            <th style="text-align:left; padding:10px; border-bottom:1px solid #e5e7eb;">Name</th>
+                                            <th style="text-align:left; padding:10px; border-bottom:1px solid #e5e7eb;">Type</th>
                                             <th style="text-align:left; padding:10px; border-bottom:1px solid #e5e7eb;">Date</th>
                                             <th style="text-align:left; padding:10px; border-bottom:1px solid #e5e7eb;">Format</th>
                                             <th style="text-align:left; padding:10px; border-bottom:1px solid #e5e7eb; min-width:120px;">Action</th>
@@ -4469,8 +4292,7 @@
                             </div>
                             <div class="form-group">
                                 <label for="userEmail">Email</label>
-                                <input type="email" id="userEmail" class="form-control" readonly disabled style="background:#e5e7eb; color:#6b7280; cursor:not-allowed;" title="Email cannot be changed. Contact an administrator for email updates.">
-                                <small style="color:var(--gray); font-size:0.85rem; margin-top:4px;">Email cannot be changed. Contact an administrator for updates.</small>
+                                <input type="email" id="userEmail" class="form-control" required>
                             </div>
                             <div class="form-group">
                                 <label for="userWebsite">Website/Blog URL</label>
@@ -4569,128 +4391,6 @@
     </div>
 
     <!-- SmartBlock image gallery lightbox -->
-    <!-- Admin View (merged from admin.html) -->
-    <div id="admin-view" style="display:none; min-height:100vh;">
-        <div id="adminLogin" class="admin-login">
-            <div class="login-card">
-                <a href="#" class="btn-return" id="adminReturnHome"><i class="fas fa-arrow-left"></i> Return to Home</a>
-                <h1><i class="fas fa-shield-alt"></i> Admin Access</h1>
-                <p class="subtitle">KotaPal Admin Dashboard</p>
-                <div id="loginError" class="login-error"></div>
-                <form id="adminLoginForm">
-                    <div class="form-group">
-                        <label for="adminEmail">Email</label>
-                        <input type="email" id="adminEmail" class="form-control" placeholder="admin@kotapal.com" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="adminPassword">Password</label>
-                        <input type="password" id="adminPassword" class="form-control" placeholder="••••••••" required>
-                    </div>
-                    <button type="submit" class="btn btn-primary">Sign In</button>
-                </form>
-            </div>
-        </div>
-        <div id="adminDashboard" class="admin-dashboard">
-            <aside class="admin-sidebar">
-                <div class="logo">
-                    <img src="images/IMG_4258.png" alt="KotaPal" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
-                    <span style="display:none;">KotaPal Admin</span>
-                </div>
-                <ul class="admin-nav">
-                    <li><a href="#" class="active" data-page="overview"><i class="fas fa-tachometer-alt"></i> Overview</a></li>
-                    <li><a href="#" data-page="users"><i class="fas fa-users"></i> User Management</a></li>
-                    <li><a href="#" data-page="blocks"><i class="fas fa-cubes"></i> All Blocks</a></li>
-                    <li><a href="#" data-page="subscriptions"><i class="fas fa-credit-card"></i> Subscriptions</a></li>
-                    <li><a href="#" data-page="payments"><i class="fas fa-money-bill-wave"></i> Payments</a></li>
-                    <li><a href="#" data-page="activity-log"><i class="fas fa-history"></i> Activity Log</a></li>
-                    <li><a href="#" data-page="support"><i class="fas fa-headset"></i> Support</a></li>
-                    <li><a href="#" data-page="moderation"><i class="fas fa-flag"></i> Moderation</a></li>
-                    <li><a href="#" data-page="analytics"><i class="fas fa-chart-line"></i> Analytics</a></li>
-                    <li><a href="#" data-page="settings"><i class="fas fa-cog"></i> Settings</a></li>
-                    <li><a href="#" id="adminSidebarReturnHome" style="margin-top: 16px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.1);"><i class="fas fa-arrow-left"></i> Return to Home</a></li>
-                </ul>
-            </aside>
-            <main class="admin-main">
-                <div class="admin-header">
-                    <h1>Admin Dashboard</h1>
-                    <div class="admin-user" style="display:flex;align-items:center;gap:12px;">
-                        <button type="button" class="btn btn-secondary" id="refreshAdminDataBtn" style="padding:8px 14px;" title="Reload users and blocks from Firestore"><i class="fas fa-sync-alt"></i> Refresh</button>
-                        <span id="adminEmailDisplay">admin@kotapal.com</span>
-                        <button type="button" class="btn btn-logout" id="adminLogoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</button>
-                    </div>
-                </div>
-                <div id="page-overview" class="page-content active">
-                    <div class="stats-grid">
-                        <div class="stat-card"><div class="stat-icon primary"><i class="fas fa-users"></i></div><div class="stat-value" id="statTotalUsers">0</div><div class="stat-label">Total Users</div></div>
-                        <div class="stat-card"><div class="stat-icon success"><i class="fas fa-cubes"></i></div><div class="stat-value" id="statTotalBlocks">0</div><div class="stat-label">Total Blocks</div></div>
-                        <div class="stat-card"><div class="stat-icon warning"><i class="fas fa-mouse-pointer"></i></div><div class="stat-value" id="statTotalClicks">0</div><div class="stat-label">Total Clicks</div></div>
-                        <div class="stat-card"><div class="stat-icon danger"><i class="fas fa-dollar-sign"></i></div><div class="stat-value" id="statTotalRevenue">$0</div><div class="stat-label">Platform Revenue</div></div>
-                    </div>
-                    <div class="card">
-                        <div class="card-header"><h3>Recent Activity</h3></div>
-                        <div class="card-body">
-                            <div class="table-container">
-                                <table><thead><tr><th>Time</th><th>Action</th><th>User</th><th>Details</th><th style="min-width:80px;">Actions</th></tr></thead><tbody id="recentActivityBody"></tbody></table>
-                            </div>
-                            <div id="recentActivityEmpty" class="empty-state" style="display:none;"><i class="fas fa-history"></i><p>No recent activity</p></div>
-                        </div>
-                    </div>
-                </div>
-                <div id="page-users" class="page-content">
-                    <div class="card">
-                        <div class="card-header">
-                            <h3>User Management</h3>
-                            <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
-                                <span id="usersCountLabel" style="font-size:0.9rem;color:var(--gray);">All users from database</span>
-                                <input type="text" id="userSearch" class="search-box" placeholder="Search users by email or name...">
-                                <button type="button" class="btn btn-primary" id="refreshUsersBtn" style="padding:8px 16px;"><i class="fas fa-sync-alt"></i> Refresh</button>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <div class="table-container">
-                                <table><thead><tr><th>User</th><th>Email</th><th>Plan</th><th>Joined</th><th>Status</th><th>Actions</th></tr></thead><tbody id="usersTableBody"></tbody></table>
-                            </div>
-                            <div id="usersEmpty" class="empty-state" style="display:none;"><i class="fas fa-users"></i><p>No users found</p></div>
-                        </div>
-                    </div>
-                </div>
-                <div id="page-blocks" class="page-content">
-                    <div class="card">
-                        <div class="card-header"><h3>All SmartBlocks</h3><input type="text" id="blockSearch" class="search-box" placeholder="Search blocks..."></div>
-                        <div class="card-body">
-                            <div class="table-container">
-                                <table><thead><tr><th>Block</th><th>Owner</th><th>Retailer</th><th>Clicks</th><th>Revenue</th><th>Status</th><th>Actions</th></tr></thead><tbody id="blocksTableBody"></tbody></table>
-                            </div>
-                            <div id="blocksEmpty" class="empty-state" style="display:none;"><i class="fas fa-cubes"></i><p>No blocks found</p></div>
-                        </div>
-                    </div>
-                </div>
-                <div id="page-subscriptions" class="page-content">
-                    <div class="card"><div class="card-header"><h3>Subscription Management</h3></div><div class="card-body"><div class="table-container"><table><thead><tr><th>User</th><th>Email</th><th>Plan</th><th>Status</th><th>Start Date</th><th>Actions</th></tr></thead><tbody id="subscriptionsTableBody"></tbody></table></div><div id="subscriptionsEmpty" class="empty-state">Subscription data from Firestore</div></div></div>
-                </div>
-                <div id="page-payments" class="page-content">
-                    <div class="card"><div class="card-header"><h3>Payment History</h3></div><div class="card-body"><div class="table-container"><table><thead><tr><th>Date</th><th>User</th><th>Amount</th><th>Status</th><th>Invoice</th></tr></thead><tbody id="paymentsTableBody"></tbody></table></div><div id="paymentsEmpty" class="empty-state">Payment history will appear here</div></div></div>
-                </div>
-                <div id="page-activity-log" class="page-content">
-                    <div class="card"><div class="card-header"><h3>System Activity Log</h3></div><div class="card-body"><div class="table-container"><table><thead><tr><th>Timestamp</th><th>Action</th><th>User</th><th>Details</th></tr></thead><tbody id="activityLogTableBody"></tbody></table></div><div id="activityLogEmpty" class="empty-state">Activity logs will appear here</div></div></div>
-                </div>
-                <div id="page-support" class="page-content">
-                    <div class="card"><div class="card-header"><h3>Support Tickets</h3></div><div class="card-body"><div style="display:flex; gap:12px; margin-bottom:16px;"><button type="button" class="btn btn-primary" id="newAnnouncementBtn"><i class="fas fa-bullhorn"></i> New Announcement</button></div><div class="table-container"><table><thead><tr><th>ID</th><th>Subject</th><th>User</th><th>Status</th><th>Created</th><th>Actions</th></tr></thead><tbody id="supportTableBody"></tbody></table></div><div id="supportEmpty" class="empty-state">Support tickets will appear here</div></div></div>
-                </div>
-                <div id="page-moderation" class="page-content">
-                    <div class="card"><div class="card-header"><h3>Flagged Content</h3></div><div class="card-body"><div id="moderationEmpty" class="empty-state"><i class="fas fa-flag"></i><p>No flagged content. All blocks are compliant.</p></div></div></div>
-                </div>
-                <div id="page-analytics" class="page-content">
-                    <div class="stats-grid"><div class="stat-card"><div class="stat-icon primary"><i class="fas fa-chart-line"></i></div><div class="stat-value" id="analyticsClicks">0</div><div class="stat-label">Clicks (30 days)</div></div><div class="stat-card"><div class="stat-icon success"><i class="fas fa-percentage"></i></div><div class="stat-value" id="analyticsCTR">0%</div><div class="stat-label">Avg CTR</div></div></div><div class="card"><div class="card-header"><h3>Top Performing Blocks</h3></div><div class="card-body"><div id="analyticsEmpty" class="empty-state"><i class="fas fa-chart-bar"></i><p>Analytics data will appear here</p></div></div></div>
-                </div>
-                <div id="page-settings" class="page-content">
-                    <div class="card"><div class="card-header"><h3>System Settings</h3></div><div class="card-body"><div class="form-group" style="margin-bottom:20px;"><label>Maintenance Mode</label><p style="color:var(--gray);font-size:0.9rem;margin-top:4px;">When enabled, only admins can access the platform.</p><label style="display:flex;align-items:center;gap:10px;margin-top:10px;cursor:pointer;"><input type="checkbox" id="maintenanceMode"><span>Enable maintenance mode</span></label></div><div class="form-group" style="margin-bottom:20px;"><label>New User Registration</label><p style="color:var(--gray);font-size:0.9rem;margin-top:4px;">Allow new users to sign up.</p><label style="display:flex;align-items:center;gap:10px;margin-top:10px;cursor:pointer;"><input type="checkbox" id="allowRegistration" checked><span>Allow registration</span></label></div><button type="button" class="btn btn-primary" id="saveSettingsBtn">Save Settings</button></div></div>
-                    <div class="card" style="margin-top:24px;"><div class="card-header"><h3>Admin Users</h3></div><div class="card-body"><p style="color:var(--gray);font-size:0.9rem;margin-bottom:16px;">Add a new admin. The user must already have an account.</p><div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;"><div class="form-group" style="margin-bottom:0;flex:1;min-width:200px;"><label for="newAdminEmail">New Admin Email</label><input type="email" id="newAdminEmail" class="form-control" placeholder="admin2@kotapal.com"></div><button type="button" class="btn btn-primary" id="addAdminBtn"><i class="fas fa-user-plus"></i> Add Admin</button></div><div id="addAdminError" style="color:var(--danger);font-size:0.9rem;margin-top:8px;display:none;"></div><div id="adminEmailsList" style="margin-top:16px;font-size:0.9rem;color:var(--gray);"></div></div></div>
-                </div>
-            </main>
-        </div>
-    </div>
-
     <div id="blockImageLightbox" aria-hidden="true">
         <div class="lightbox-content">
             <button type="button" class="lightbox-close" id="blockLightboxClose" aria-label="Close">&times;</button>
@@ -4714,11 +4414,11 @@
                 <form id="loginFormInner">
                     <div class="form-group">
                         <label for="loginEmail">Email</label>
-                        <input type="email" id="loginEmail" required inputmode="email" autocomplete="email">
+                        <input type="email" id="loginEmail" required>
                     </div>
                     <div class="form-group">
                         <label for="loginPassword">Password</label>
-                        <input type="password" id="loginPassword" required autocomplete="current-password">
+                        <input type="password" id="loginPassword" required>
                     </div>
                     <div class="form-group">
                         <a href="#" class="forgot-password" id="showForgotPassword">Forgot Password?</a>
@@ -4726,7 +4426,7 @@
                     <button type="submit" class="btn btn-primary">Login</button>
                     <div id="authMessage" class="form-status" style="display: none;"></div>
                     <div style="text-align: center; margin-top: 16px; padding-top: 16px; border-top: 1px solid #e5e7eb;">
-                        <a href="#admin" class="btn auth-login-admin-btn"><i class="fas fa-shield-alt"></i> Admin login</a>
+                        <a href="admin.html" class="btn auth-login-admin-btn"><i class="fas fa-shield-alt"></i> Admin login</a>
                     </div>
                 </form>
             </div>
@@ -4902,7 +4602,7 @@
             } else {
                 firebase.initializeApp(firebaseConfig);
                 auth = firebase.auth();
-                window.firestoreDb = firebase.firestore();
+                if (typeof firebase.firestore === 'function') window._kotaDb = firebase.firestore();
                 
                 // Set persistence to LOCAL so users stay logged in across browser sessions
                 // This ensures the session persists even after closing the browser
@@ -4993,7 +4693,7 @@
                 const savedUserData = JSON.parse(localStorage.getItem('kotaUser') || '{}');
                 const displayName = user.displayName || savedUserData.displayName || user.email.split('@')[0];
                 
-                // Store user data in localStorage and sync to Firestore
+                // Store user data in localStorage
                 const userData = {
                     uid: user.uid,
                     email: user.email,
@@ -5002,15 +4702,6 @@
                     plan: savedUserData.plan || 'starter',
                     signupDate: savedUserData.signupDate || new Date().toISOString()
                 };
-                if (window.firestoreDb) {
-                    window.firestoreDb.collection('users').doc(user.uid).set({
-                        email: user.email,
-                        displayName: displayName,
-                        plan: userData.plan,
-                        signupDate: userData.signupDate,
-                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                    }, { merge: true }).catch(function(err) { console.warn('Firestore user sync:', err); });
-                }
                 // Set explicit login flag in BOTH sessionStorage AND localStorage for maximum persistence
                 // Set these IMMEDIATELY before any async operations to prevent race conditions
                 sessionStorage.setItem('kotapal_explicit_login', 'true');
@@ -5049,7 +4740,6 @@
                     if (dashboardView) {
                         dashboardView.style.display = 'block';
                         dashboardView.classList.add('active');
-                        document.body.classList.add('dashboard-active');
                     }
                     
                     if (typeof initDashboard === 'function') {
@@ -5153,7 +4843,7 @@
                     // Continue even if profile update fails
                 }
                 
-                // Store user data in localStorage and Firestore
+                // Store user data in localStorage
                 const userData = {
                     uid: user.uid,
                     email: user.email,
@@ -5162,15 +4852,7 @@
                     plan: plan || 'starter',
                     signupDate: new Date().toISOString()
                 };
-                if (window.firestoreDb) {
-                    window.firestoreDb.collection('users').doc(user.uid).set({
-                        email: user.email,
-                        displayName: name.trim(),
-                        plan: plan || 'starter',
-                        signupDate: new Date().toISOString(),
-                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                    }, { merge: true }).catch(function(err) { console.warn('Firestore user save:', err); });
-                }
+                // Set explicit login flag FIRST, before any state changes
                 sessionStorage.setItem('kotapal_explicit_login', 'true');
                 localStorage.setItem('kotaUser', JSON.stringify(userData));
                 currentUser = userData;
@@ -5196,7 +4878,6 @@
                     if (dashboardView) {
                         dashboardView.style.display = 'block';
                         dashboardView.classList.add('active');
-                        document.body.classList.add('dashboard-active');
                     }
                     
                     updateSidebarUserInfo();
@@ -5374,7 +5055,6 @@
             if (dashboardView) {
                 dashboardView.style.display = 'none';
                 dashboardView.classList.remove('active');
-                document.body.classList.remove('dashboard-active');
             }
             if (landingView) { landingView.style.display = 'block'; landingView.classList.remove('theme-dark'); }
             if (nav) nav.style.display = 'flex';
@@ -5496,7 +5176,6 @@
                     if (dashboardView) {
                         dashboardView.style.display = 'block';
                         dashboardView.classList.add('active');
-                        document.body.classList.add('dashboard-active');
                     }
                     
                     // Initialize dashboard
@@ -5544,7 +5223,6 @@
                         landingView.style.display = 'block';
                         landingView.classList.remove('theme-dark'); /* Landing never uses dark mode */
                     }
-                    document.body.classList.remove('dashboard-active');
                     if (nav) nav.style.display = 'flex';
                     if (footer) footer.style.display = 'block';
                     
@@ -5572,86 +5250,11 @@
         // Set current year in footer
         document.getElementById('currentYear').textContent = new Date().getFullYear();
 
-        // Nav link active state (scroll spy) - highlight current section
-        (function() {
-            var sectionIds = ['home','features','pricing','trending-products','dashboard-preview','about','testimonials'];
-            function setNavActive(sectionId) {
-                document.querySelectorAll('nav .nav-link[data-section]').forEach(function(a) {
-                    a.classList.toggle('active', a.getAttribute('data-section') === sectionId);
-                });
-            }
-            function updateFromScroll() {
-                var contactPage = document.getElementById('contact-page');
-                if (contactPage && contactPage.style.display !== 'none') return;
-                var homePage = document.getElementById('home-page');
-                if (!homePage || homePage.style.display === 'none') return;
-                var scrollTop = (document.scrollingElement || document.documentElement).scrollTop;
-                var best = null, bestOffset = Infinity;
-                sectionIds.forEach(function(id) {
-                    var el = document.getElementById(id);
-                    if (!el) return;
-                    var rect = el.getBoundingClientRect();
-                    var top = rect.top;
-                    if (top <= window.innerHeight * 0.4 && top > -rect.height * 0.6) {
-                        var offset = Math.abs(top);
-                        if (offset < bestOffset) { bestOffset = offset; best = id; }
-                    }
-                });
-                if (best) setNavActive(best);
-                else if (scrollTop < 50) setNavActive('home');
-            }
-            window.addEventListener('scroll', updateFromScroll, { passive: true });
-            window.addEventListener('load', updateFromScroll);
-            window.addEventListener('resize', updateFromScroll);
-            window.updateNavActive = setNavActive;
-        })();
-
-        // Fixed theme toggle (top right)
-        (function() {
-            var btn = document.getElementById('themeToggleFixed');
-            if (!btn) return;
-            btn.addEventListener('click', function() {
-                var darkOn = localStorage.getItem('kota_dark_mode') === '1';
-                var on = !darkOn;
-                localStorage.setItem('kota_dark_mode', on ? '1' : '0');
-                document.body.classList.remove('theme-dark');
-                var dash = document.getElementById('dashboard-view');
-                if (dash) { if (on) dash.classList.add('theme-dark'); else dash.classList.remove('theme-dark'); }
-                var cb = document.getElementById('darkModeToggle');
-                var textEl = document.querySelector('#darkModeToggle + .toggle-label .toggle-text');
-                if (cb) cb.checked = on;
-                if (textEl) textEl.textContent = on ? 'ON' : 'OFF';
-                var icon = document.getElementById('themeToggleIcon');
-                if (icon) icon.className = on ? 'fas fa-sun' : 'fas fa-moon';
-                btn.title = on ? 'Light mode' : 'Dark mode';
-                if (typeof showNotification === 'function') showNotification(on ? 'Dark mode on.' : 'Dark mode off.', 'success', 'Theme');
-            });
-            function syncFixedThemeIcon() {
-                var darkOn = localStorage.getItem('kota_dark_mode') === '1';
-                var icon = document.getElementById('themeToggleIcon');
-                if (icon) icon.className = darkOn ? 'fas fa-sun' : 'fas fa-moon';
-                btn.title = darkOn ? 'Light mode' : 'Dark mode';
-            }
-            window.addEventListener('load', syncFixedThemeIcon);
-            setTimeout(syncFixedThemeIcon, 100);
-        })();
-
-        // Mobile menu toggle - iOS, Android, Safari, Chrome, Edge (44px touch target)
-        (function() {
-            var btn = document.getElementById('mobileMenuBtn');
-            var navLinks = document.querySelector('.nav-links');
-            if (!btn || !navLinks) return;
-            var lastToggle = 0;
-            function toggleMenu(e) {
-                if (e) e.preventDefault();
-                if (Date.now() - lastToggle < 400) return;
-                lastToggle = Date.now();
-                btn.classList.toggle('active');
-                navLinks.classList.toggle('active');
-            }
-            btn.addEventListener('click', toggleMenu);
-            btn.addEventListener('touchend', toggleMenu, { passive: false });
-        })();
+        // Mobile menu toggle
+        document.getElementById('mobileMenuBtn').addEventListener('click', function() {
+            this.classList.toggle('active');
+            document.querySelector('.nav-links').classList.toggle('active');
+        });
 
         // Auth Modal Functions
         const authModal = document.getElementById('authModal');
@@ -5661,8 +5264,8 @@
 
         function showAuthModal() {
             if (authModal) {
-                authModal.style.display = 'flex';
-                document.body.style.overflow = 'hidden';
+                authModal.style.display = 'block';
+                document.body.style.overflow = 'hidden'; // Prevent scrolling
             }
         }
 
@@ -5840,20 +5443,48 @@
             setupAuthFormHandlers();
         }
         
-        // Mobile Optimizations - iOS, Android, Safari, Chrome, Firefox, Edge
+        // Mobile Optimizations
         (function() {
-            // DISABLED: touchend preventDefault was blocking mobile menu, login, and other taps on iOS
-            // Rely on touch-action: manipulation and 16px inputs to reduce zoom issues instead
+            // Prevent double-tap zoom on buttons and links
+            let lastTouchEnd = 0;
+            document.addEventListener('touchend', function(event) {
+                const now = Date.now();
+                if (now - lastTouchEnd <= 300) {
+                    event.preventDefault();
+                }
+                lastTouchEnd = now;
+            }, false);
             
+            // Improve touch scrolling
             if ('ontouchstart' in window) {
                 document.body.style.cursor = 'pointer';
             }
             
+            // Handle orientation changes
             window.addEventListener('orientationchange', function() {
                 setTimeout(function() {
+                    // Force a repaint to fix layout issues
                     window.dispatchEvent(new Event('resize'));
                 }, 100);
             });
+            
+            // Prevent iOS bounce scrolling on modals
+            document.addEventListener('touchmove', function(e) {
+                const modal = e.target.closest('.modal-content');
+                if (modal) {
+                    const scrollTop = modal.scrollTop;
+                    const scrollHeight = modal.scrollHeight;
+                    const height = modal.clientHeight;
+                    const isScrolling = scrollHeight > height;
+                    const isAtTop = scrollTop === 0;
+                    const isAtBottom = scrollTop + height >= scrollHeight - 1;
+                    
+                    if (!isScrolling || (isAtTop && e.touches[0].clientY > e.touches[0].clientY) || 
+                        (isAtBottom && e.touches[0].clientY < e.touches[0].clientY)) {
+                        e.preventDefault();
+                    }
+                }
+            }, { passive: false });
             
             // Add mobile class to body for CSS targeting
             if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
@@ -6141,9 +5772,6 @@
             window.scrollTo(0, 0);
             var nl = document.querySelector('.nav-links');
             if (nl) nl.classList.remove('active');
-            if (typeof window.updateNavActive === 'function') {
-                window.updateNavActive(pageId === 'home-page' ? 'home' : pageId === 'contact-page' ? 'contact' : 'home');
-            }
             var mbtn = document.getElementById('mobileMenuBtn');
             if (mbtn) mbtn.classList.remove('active');
         }
@@ -6154,7 +5782,6 @@
             var section = document.getElementById(sectionId);
             if (section) {
                 setTimeout(function() { section.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 50);
-                setTimeout(function() { if (typeof window.updateNavActive === 'function') window.updateNavActive(sectionId); }, 400);
             }
         }
         function goToContactForm() {
@@ -6167,7 +5794,6 @@
             var contact = document.getElementById('contact-page');
             if (dashboard) dashboard.style.display = 'none';
             if (landing) landing.style.display = 'block';
-            document.body.classList.remove('dashboard-active');
             if (nav) nav.style.display = 'flex';
             if (footer) footer.style.display = 'block';
             if (home) home.style.display = 'none';
@@ -6177,7 +5803,6 @@
                 var heading = document.querySelector('#contact-page h1');
                 if (heading) heading.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }, 80);
-            if (typeof window.updateNavActive === 'function') window.updateNavActive('contact');
         }
 
         // Content Modals
@@ -6346,75 +5971,60 @@
                 if (sidebar) sidebar.classList.add('nav-collapsed');
                 if (main) main.classList.add('nav-collapsed');
                 if (navToggleFloat) {
-                    navToggleFloat.classList.add('nav-collapsed');
-                    navToggleFloat.innerHTML = '<i class="fas fa-angle-double-right"></i>';
-                    navToggleFloat.style.left = '0';
-                    navToggleFloat.title = 'Show navigation';
-                    navToggleFloat.setAttribute('aria-label', 'Show navigation');
+                    navToggleFloat.innerHTML = '<i class="fas fa-expand-arrows-alt"></i>';
+                    navToggleFloat.style.left = '10px';
+                    navToggleFloat.title = 'Show Nav';
                 }
             } else {
                 const navToggleFloat = document.getElementById('navToggleFloat');
-                if (navToggleFloat) {
-                    navToggleFloat.classList.remove('nav-collapsed');
-                    navToggleFloat.innerHTML = '<i class="fas fa-angle-double-left"></i>';
-                    navToggleFloat.style.left = '250px';
-                    navToggleFloat.title = 'Hide navigation';
-                    navToggleFloat.setAttribute('aria-label', 'Hide navigation');
-                }
+                if (navToggleFloat) { navToggleFloat.style.left = '270px'; navToggleFloat.title = 'Hide Nav'; }
             }
         }
 
-        // Persist user blocks to localStorage and Firestore (keyed by user)
+        // Persist user blocks to localStorage and Firestore (for admin dashboard)
         function saveUserBlocks() {
             const uid = currentUser?.uid;
             if (uid) {
                 localStorage.setItem('kotaBlocks_' + uid, JSON.stringify(currentBlocks));
-                if (window.firestoreDb) {
-                    const batch = window.firestoreDb.batch();
-                    currentBlocks.forEach(function(blk) {
-                        const ref = window.firestoreDb.collection('blocks').doc(blk.id);
-                        batch.set(ref, { ...blk, userId: uid, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+                const db = window._kotaDb;
+                if (db) {
+                    currentBlocks.forEach(function(block) {
+                        db.collection('blocks').doc(block.id).set({
+                            userId: uid,
+                            title: block.title,
+                            layout: block.layout,
+                            ctaText: block.ctaText,
+                            retailer: block.retailer,
+                            clicks: block.clicks || 0,
+                            revenue: block.revenue || 0,
+                            ctr: block.ctr || 0,
+                            status: block.status || 'active',
+                            lastUpdated: block.lastUpdated || new Date().toISOString().split('T')[0],
+                            products: block.products || (block.productsList && block.productsList.length) || 0
+                        }, { merge: true }).catch(function(e) { console.warn('Firestore blocks sync:', e); });
                     });
-                    batch.commit().catch(function(err) { console.warn('Firestore blocks sync:', err); });
                 }
             }
         }
 
-        // Load user data: blocks from Firestore first, then localStorage, then mock only if empty
-        function loadMockData() {
-            const uid = currentUser?.uid;
-            if (uid && window.firestoreDb) {
-                window.firestoreDb.collection('blocks').where('userId', '==', uid).get()
-                    .then(function(snap) {
-                        if (!snap.empty) {
-                            currentBlocks = snap.docs.map(function(d) {
-                                var dta = d.data();
-                                dta.id = d.id;
-                                return dta;
-                            });
-                            localStorage.setItem('kotaBlocks_' + uid, JSON.stringify(currentBlocks));
-                            updateDashboardStats();
-                            renderBlocks();
-                            renderIntegrations();
-                            renderActivityTable();
-                            renderAnalytics();
-                            renderAlerts();
-                            return;
-                        }
-                        tryLoadFromLocalStorage();
-                    })
-                    .catch(function() { tryLoadFromLocalStorage(); });
-                return;
-            }
-            tryLoadFromLocalStorage();
-        }
-        function tryLoadFromLocalStorage() {
+        // Load user data: blocks from localStorage or Firestore, then mock only if empty
+        async function loadMockData() {
             const uid = currentUser?.uid;
             if (uid) {
                 try {
-                    const saved = localStorage.getItem('kotaBlocks_' + uid);
+                    let saved = localStorage.getItem('kotaBlocks_' + uid);
+                    if (!saved && window._kotaDb) {
+                        const snap = await window._kotaDb.collection('blocks').where('userId', '==', uid).get();
+                        const blocks = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                        if (blocks.length) {
+                            currentBlocks = blocks;
+                            localStorage.setItem('kotaBlocks_' + uid, JSON.stringify(currentBlocks));
+                            saved = 'loaded';
+                        }
+                    }
                     if (saved) {
-                        currentBlocks = JSON.parse(saved);
+                        if (saved !== 'loaded') currentBlocks = JSON.parse(saved);
+                        saveUserBlocks();
                         updateDashboardStats();
                         renderBlocks();
                         renderIntegrations();
@@ -6511,7 +6121,6 @@
                 const nav = document.querySelector('nav');
                 const footer = document.querySelector('footer');
                 if (dashboardView) { dashboardView.style.display = 'none'; }
-                document.body.classList.remove('dashboard-active');
                 if (landingView) { landingView.style.display = 'block'; landingView.classList.remove('theme-dark'); }
                 if (nav) nav.style.display = 'flex';
                 if (footer) footer.style.display = 'block';
@@ -6617,9 +6226,6 @@
             if (deleteBlockConfirm) deleteBlockConfirm.addEventListener('click', function() {
                 const blockId = window._deleteBlockId;
                 if (blockId) {
-                    if (window.firestoreDb && currentUser?.uid) {
-                        window.firestoreDb.collection('blocks').doc(blockId).delete().catch(function(err) { console.warn('Firestore delete:', err); });
-                    }
                     currentBlocks = currentBlocks.filter(function(b) { return b.id !== blockId; });
                     saveUserBlocks();
                     renderBlocks();
@@ -6649,7 +6255,7 @@
             if (profileForm) {
                 profileForm.addEventListener('submit', handleProfileUpdate);
                 var autoSaveProfile = debounce(handleProfileUpdate, 600);
-                ['userName', 'userWebsite'].forEach(function(id) {
+                ['userName', 'userEmail', 'userWebsite'].forEach(function(id) {
                     var el = document.getElementById(id);
                     if (el) { el.addEventListener('input', autoSaveProfile); el.addEventListener('change', autoSaveProfile); el.addEventListener('blur', autoSaveProfile); }
                 });
@@ -6877,10 +6483,6 @@
             const textEl = document.querySelector('#darkModeToggle + .toggle-label .toggle-text');
             if (cb) cb.checked = darkOn;
             if (textEl) textEl.textContent = darkOn ? 'ON' : 'OFF';
-            var fixedBtn = document.getElementById('themeToggleFixed');
-            var fixedIcon = document.getElementById('themeToggleIcon');
-            if (fixedBtn) fixedBtn.title = darkOn ? 'Light mode' : 'Dark mode';
-            if (fixedIcon) fixedIcon.className = darkOn ? 'fas fa-sun' : 'fas fa-moon';
         }
         function applyGeoRedirectFromStorage() {
             const on = localStorage.getItem('kota_geo_redirect') !== '0';
@@ -6948,10 +6550,6 @@
                     if (dash) { if (on) dash.classList.add('theme-dark'); else dash.classList.remove('theme-dark'); }
                     var t = document.querySelector('#darkModeToggle + .toggle-label .toggle-text');
                     if (t) t.textContent = on ? 'ON' : 'OFF';
-                    var fixedBtn = document.getElementById('themeToggleFixed');
-                    var fixedIcon = document.getElementById('themeToggleIcon');
-                    if (fixedBtn) fixedBtn.title = on ? 'Light mode' : 'Dark mode';
-                    if (fixedIcon) fixedIcon.className = on ? 'fas fa-sun' : 'fas fa-moon';
                     showNotification(on ? 'Dark mode on.' : 'Dark mode off.', 'success', 'Settings');
                 });
             }
@@ -7024,11 +6622,10 @@
             if (!sidebar || !btn) return;
             const isHidden = sidebar.classList.toggle('nav-collapsed');
             if (main) main.classList.toggle('nav-collapsed', isHidden);
-            btn.classList.toggle('nav-collapsed', isHidden);
-            btn.style.left = isHidden ? '0' : '250px';
-            btn.innerHTML = isHidden ? '<i class="fas fa-angle-double-right"></i>' : '<i class="fas fa-angle-double-left"></i>';
-            btn.title = isHidden ? 'Show navigation' : 'Hide navigation';
-            btn.setAttribute('aria-label', isHidden ? 'Show navigation' : 'Hide navigation');
+            btn.style.left = isHidden ? '10px' : '270px';
+            btn.innerHTML = isHidden ? '<i class="fas fa-expand-arrows-alt"></i>' : '<i class="fas fa-compress-arrows-alt"></i>';
+            btn.title = isHidden ? 'Show Nav' : 'Hide Nav';
+            btn.setAttribute('aria-label', isHidden ? 'Show Nav' : 'Hide Nav');
             localStorage.setItem('kota_nav_collapsed', isHidden ? '1' : '0');
         }
 
@@ -7447,42 +7044,14 @@
             
             tbody.innerHTML = '';
             
-            var uid = currentUser && currentUser.uid;
-            var deletedIds = [];
-            if (uid) {
-                try {
-                    deletedIds = JSON.parse(localStorage.getItem('user_deleted_activity_' + uid) || '[]');
-                } catch (e) {}
-            }
-            
             var thumb = function(b) {
                 var img = (b.productsList && b.productsList[0] && b.productsList[0].image) ? b.productsList[0].image : 'https://via.placeholder.com/48?text=Block';
                 return '<img src="' + img.replace(/"/g, '&quot;') + '" alt="" style="width:40px;height:40px;object-fit:cover;border-radius:8px;" onerror="this.src=\'https://via.placeholder.com/48?text=Block\'">';
             };
-            var visibleBlocks = currentBlocks.filter(function(b) { return !deletedIds.includes(b.id); }).slice(0, 5);
-            visibleBlocks.forEach(function(block) {
+            currentBlocks.slice(0, 5).forEach(function(block) {
                 var row = document.createElement('tr');
-                row.setAttribute('data-activity-id', block.id);
-                row.innerHTML = '<td style="vertical-align:middle;">' + thumb(block) + '</td><td>' + (block.title || '') + '</td><td>' + (block.clicks || 0) + '</td><td>$' + (block.revenue != null ? block.revenue.toFixed(2) : '0.00') + '</td><td><span class="block-status ' + (block.status === 'active' ? 'status-active' : 'status-draft') + '">' + (block.status || 'draft') + '</span></td><td>' + (block.lastUpdated || '') + '</td><td><button type="button" class="btn btn-sm btn-danger activity-delete-btn" data-id="' + (block.id || '') + '" title="Remove from activity list"><i class="fas fa-trash-alt"></i></button></td>';
+                row.innerHTML = '<td style="vertical-align:middle;">' + thumb(block) + '</td><td>' + (block.title || '') + '</td><td>' + (block.clicks || 0) + '</td><td>$' + (block.revenue != null ? block.revenue.toFixed(2) : '0.00') + '</td><td><span class="block-status ' + (block.status === 'active' ? 'status-active' : 'status-draft') + '">' + (block.status || 'draft') + '</span></td><td>' + (block.lastUpdated || '') + '</td>';
                 tbody.appendChild(row);
-            });
-            tbody.querySelectorAll('.activity-delete-btn').forEach(function(btn) {
-                btn.addEventListener('click', function() {
-                    var id = this.getAttribute('data-id');
-                    if (!id) return;
-                    if (confirm('Remove this activity from the list?')) {
-                        var uid = currentUser && currentUser.uid;
-                        var deleted = [];
-                        if (uid) {
-                            try {
-                                deleted = JSON.parse(localStorage.getItem('user_deleted_activity_' + uid) || '[]');
-                            } catch (e) {}
-                            if (!deleted.includes(id)) deleted.push(id);
-                            localStorage.setItem('user_deleted_activity_' + uid, JSON.stringify(deleted));
-                        }
-                        renderActivityTable();
-                    }
-                });
             });
         }
 
@@ -7683,10 +7252,11 @@
             });
         }
 
-        // Handle profile update (also used for auto-save) - email is read-only, managed by admins only
+        // Handle profile update (also used for auto-save)
         function handleProfileUpdate(e) {
             if (e) e.preventDefault();
             const name = document.getElementById('userName')?.value || '';
+            const email = document.getElementById('userEmail')?.value || '';
             const website = document.getElementById('userWebsite')?.value || '';
             const preview = document.getElementById('profilePicturePreview');
             if (preview && preview.src) {
@@ -7695,6 +7265,7 @@
             }
             if (currentUser) {
                 currentUser.displayName = name;
+                currentUser.email = email;
                 currentUser.website = website;
                 localStorage.setItem('kota_userName', name);
                 localStorage.setItem('kotaUser', JSON.stringify(currentUser));
@@ -9429,16 +9000,16 @@
             if (!tbody) return;
             const reports = JSON.parse(localStorage.getItem('kotaReports') || '[]');
             if (reports.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:40px;color:var(--gray);">No reports yet. Click a report type above to generate.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--gray);">No reports yet. Click a report type above to generate.</td></tr>';
                 return;
             }
             tbody.innerHTML = reports.map(function(report) {
-                var reportTitle = report.name || report.title || 'Untitled Report';
-                return '<tr><td style="padding:10px; border-bottom:1px solid #e5e7eb; font-weight:500;">' + reportTitle + '</td><td style="padding:10px; border-bottom:1px solid #e5e7eb;">' + (report.date ? new Date(report.date).toLocaleString() : '') + '</td><td style="padding:10px; border-bottom:1px solid #e5e7eb;">' + (report.format || '') + '</td><td style="padding:10px; border-bottom:1px solid #e5e7eb; min-width:140px;"><button type="button" class="btn btn-primary report-download-btn" style="padding:8px 16px; font-size:0.875rem; display:inline-flex; align-items:center; gap:6px; cursor:pointer; background:#3b82f6; color:white; border:1px solid #3b82f6; border-radius:8px; font-weight:500;"><i class="fas fa-download"></i> Download</button></td></tr>';
+                var name = (report.name || '').replace(/"/g, '&quot;');
+                return '<tr><td style="padding:10px; border-bottom:1px solid #e5e7eb;">' + (report.name || '') + '</td><td style="padding:10px; border-bottom:1px solid #e5e7eb;">' + (report.type ? report.type.charAt(0).toUpperCase() + report.type.slice(1) : '') + '</td><td style="padding:10px; border-bottom:1px solid #e5e7eb;">' + (report.date ? new Date(report.date).toLocaleString() : '') + '</td><td style="padding:10px; border-bottom:1px solid #e5e7eb;">' + (report.format || '') + '</td><td style="padding:10px; border-bottom:1px solid #e5e7eb; min-width:140px;"><button type="button" class="btn btn-primary report-download-btn" style="padding:8px 16px; font-size:0.875rem; display:inline-flex; align-items:center; gap:6px; cursor:pointer; background:#3b82f6; color:white; border:1px solid #3b82f6; border-radius:8px; font-weight:500;"><i class="fas fa-download"></i> Download</button></td></tr>';
             }).join('');
             tbody.querySelectorAll('.report-download-btn').forEach(function(btn, i) {
                 var report = reports[i];
-                var reportName = report && (report.name || report.title) ? (report.name || report.title) : 'Untitled Report';
+                var reportName = report && report.name ? report.name : '';
                 btn.addEventListener('click', function() {
                     window._downloadReportName = reportName;
                     var modal = document.getElementById('downloadReportFormatModal');
@@ -10046,12 +9617,14 @@
                 e.preventDefault();
                 try {
                     const userName = document.getElementById('userName').value;
+                    const userEmail = document.getElementById('userEmail').value;
                     const userWebsite = document.getElementById('userWebsite').value;
                     const profilePicture = document.getElementById('profilePicturePreview')?.src;
                     
-                    // Update user data (email is read-only, managed by admins only)
+                    // Update user data
                     const userData = JSON.parse(localStorage.getItem('kotaUser') || '{}');
                     userData.displayName = userName;
+                    userData.email = userEmail;
                     userData.website = userWebsite;
                     if (profilePicture) {
                         userData.profilePicture = profilePicture;
@@ -10065,6 +9638,9 @@
                             await auth.currentUser.updateProfile({
                                 displayName: userName
                             });
+                            if (userEmail !== auth.currentUser.email) {
+                                await auth.currentUser.updateEmail(userEmail);
+                            }
                         } catch (error) {
                             console.error('Error updating Firebase profile:', error);
                         }
@@ -10211,237 +9787,6 @@
             aiChatContainer.appendChild(messageDiv);
             aiChatContainer.scrollTop = aiChatContainer.scrollHeight;
         }
-    </script>
-
-    <!-- Admin view routing and init (merged from admin.html) -->
-    <script>
-    (function() {
-        const adminView = document.getElementById('admin-view');
-        const landingView = document.getElementById('landing-page-view');
-        const dashboardView = document.getElementById('dashboard-view');
-        const themeToggle = document.getElementById('themeToggleFixed');
-        const pageLoader = document.getElementById('pageLoader');
-
-        function showAdminView() {
-            if (adminView) adminView.style.display = 'block';
-            if (landingView) landingView.style.display = 'none';
-            if (dashboardView) dashboardView.style.display = 'none';
-            if (themeToggle) themeToggle.style.display = 'none';
-            if (pageLoader) pageLoader.style.display = 'none';
-            if (!window._adminInitDone) initAdminInPage();
-        }
-        function hideAdminView() {
-            if (adminView) adminView.style.display = 'none';
-            if (landingView) landingView.style.display = '';
-            if (dashboardView) dashboardView.style.display = '';
-            if (themeToggle) themeToggle.style.display = '';
-        }
-
-        function checkHash() {
-            if (window.location.hash === '#admin') showAdminView();
-            else { hideAdminView(); }
-        }
-
-        window.addEventListener('hashchange', checkHash);
-        window.addEventListener('load', checkHash);
-        if (window.location.hash === '#admin') showAdminView();
-
-        document.getElementById('adminNavLink')?.addEventListener('click', function(e) { e.preventDefault(); location.hash = 'admin'; });
-        document.getElementById('adminReturnHome')?.addEventListener('click', function(e) { e.preventDefault(); location.hash = ''; history.replaceState(null, '', location.pathname + location.search); });
-        document.getElementById('adminSidebarReturnHome')?.addEventListener('click', function(e) { e.preventDefault(); location.hash = ''; history.replaceState(null, '', location.pathname + location.search); });
-
-        function initAdminInPage() {
-            window._adminInitDone = true;
-            const ADMIN_EMAILS_FALLBACK = ['admin@kotapal.com', 'wreck@gmail.com', 'earlhugue@gmail.com', 'emmanuelmobinzo222@gmail.com', 'emmanuelmobinzo21@gmail.com'];
-            let auth = firebase.auth(), db = firebase.firestore(), functions = firebase.functions && firebase.functions();
-            let adminUsers = [], adminBlocks = [], userMap = {}, adminEmailsList = [];
-            let adminSignOutComplete = false;
-
-            async function loadAdminEmails() {
-                if (!db) return;
-                try {
-                    const snap = await db.collection('config').doc('admins').get();
-                    if (snap.exists && snap.data().emails?.length) adminEmailsList = snap.data().emails;
-                    else adminEmailsList = ADMIN_EMAILS_FALLBACK.slice();
-                } catch (e) { adminEmailsList = ADMIN_EMAILS_FALLBACK.slice(); }
-            }
-            function isAdminEmail(email) {
-                const e = (email || '').trim().toLowerCase();
-                return e && (ADMIN_EMAILS_FALLBACK.includes(e) || adminEmailsList.some(x => (x||'').toLowerCase() === e));
-            }
-            async function showAdminDashboard(email) {
-                document.getElementById('adminLogin').style.display = 'none';
-                document.getElementById('adminDashboard').classList.add('active');
-                document.getElementById('adminEmailDisplay').textContent = email;
-                await loadAdminEmails();
-                if (db && auth?.currentUser) {
-                    try {
-                        await db.collection('users').doc(auth.currentUser.uid).set({
-                            email: auth.currentUser.email, displayName: auth.currentUser.displayName || auth.currentUser.email.split('@')[0],
-                            plan: 'admin', signupDate: auth.currentUser.metadata.creationTime || new Date().toISOString(),
-                            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                        }, { merge: true });
-                    } catch (e) {}
-                }
-                loadAdminDataFromFirestore();
-            }
-            function clearAdminAuth() {
-                if (auth) auth.signOut();
-                sessionStorage.removeItem('kotapal_admin');
-                sessionStorage.removeItem('kotapal_admin_email');
-                document.getElementById('adminDashboard').classList.remove('active');
-                document.getElementById('adminLogin').style.display = 'flex';
-                document.getElementById('adminEmail').value = '';
-                document.getElementById('adminPassword').value = '';
-            }
-
-            document.getElementById('adminLoginForm')?.addEventListener('submit', async function(e) {
-                e.preventDefault();
-                const email = document.getElementById('adminEmail').value.trim();
-                const password = document.getElementById('adminPassword').value;
-                const errorEl = document.getElementById('loginError');
-                if (!auth) { errorEl.textContent = 'Firebase not configured.'; errorEl.classList.add('show'); return; }
-                await loadAdminEmails();
-                try {
-                    const cred = await auth.signInWithEmailAndPassword(email, password);
-                    if (isAdminEmail(cred.user.email)) {
-                        errorEl.classList.remove('show');
-                        sessionStorage.setItem('kotapal_admin', 'true');
-                        showAdminDashboard(email);
-                    } else {
-                        await auth.signOut();
-                        errorEl.textContent = 'Access denied. Admin email required.';
-                        errorEl.classList.add('show');
-                    }
-                } catch (err) {
-                    errorEl.textContent = err.message || 'Invalid credentials.';
-                    errorEl.classList.add('show');
-                }
-            });
-            document.getElementById('adminLogoutBtn')?.addEventListener('click', clearAdminAuth);
-
-            auth.signOut().then(() => { adminSignOutComplete = true; }).catch(() => { adminSignOutComplete = true; }).then(() => {
-                auth.onAuthStateChanged(async function(user) {
-                    if (!adminSignOutComplete) return;
-                    await loadAdminEmails();
-                    if (!user) {
-                        document.getElementById('adminDashboard').classList.remove('active');
-                        document.getElementById('adminLogin').style.display = 'flex';
-                        return;
-                    }
-                    if (isAdminEmail(user.email)) {
-                        sessionStorage.setItem('kotapal_admin', 'true');
-                        showAdminDashboard(user.email);
-                    } else {
-                        await auth.signOut();
-                        document.getElementById('adminDashboard').classList.remove('active');
-                        document.getElementById('adminLogin').style.display = 'flex';
-                        const err = document.getElementById('loginError');
-                        if (err) { err.textContent = 'Access denied. Your email is not in the admin list.'; err.classList.add('show'); }
-                    }
-                });
-            });
-
-            async function loadAdminDataFromFirestore() {
-                if (!db) return;
-                try {
-                    if (functions && auth?.currentUser) {
-                        try {
-                            const res = await functions.httpsCallable('listAllUsers')();
-                            if (res?.data?.users?.length) {
-                                adminUsers = res.data.users.map(u => ({
-                                    id: u.id, name: u.name || u.email || '—', email: u.email || '', plan: u.plan || 'free',
-                                    joined: (u.joined && u.joined.toDate ? u.joined.toDate() : u.joined)?.toLocaleDateString?.() || u.joined || '—',
-                                    status: u.status || 'active'
-                                }));
-                                userMap = {}; adminUsers.forEach(u => { userMap[u.id] = u.name; });
-                                const blocksSnap = await db.collection('blocks').get();
-                                adminBlocks = blocksSnap.docs.map(d => {
-                                    const dta = d.data();
-                                    return { id: d.id, title: dta.title || '—', owner: userMap[dta.userId] || dta.userId || '—', retailer: dta.retailer || '—', clicks: dta.clicks || 0, revenue: dta.revenue || 0, status: dta.status || 'active' };
-                                });
-                                renderAdminTables(); return;
-                            }
-                        } catch (fnErr) {}
-                    }
-                    const usersSnap = await db.collection('users').get();
-                    adminUsers = usersSnap.docs.map(d => {
-                        const dta = d.data();
-                        let j = dta.signupDate || dta.createdAt || '—';
-                        if (j?.toDate) j = j.toDate().toLocaleDateString();
-                        else if (typeof j === 'string' && j !== '—') j = new Date(j).toLocaleDateString();
-                        return { id: d.id, name: dta.displayName || dta.email || '—', email: dta.email || '', plan: dta.plan || 'free', joined: j, status: dta.status || 'active' };
-                    });
-                    userMap = {}; adminUsers.forEach(u => { userMap[u.id] = u.name; });
-                    const blocksSnap = await db.collection('blocks').get();
-                    adminBlocks = blocksSnap.docs.map(d => {
-                        const dta = d.data();
-                        return { id: d.id, title: dta.title || '—', owner: userMap[dta.userId] || dta.userId || '—', retailer: dta.retailer || '—', clicks: dta.clicks || 0, revenue: dta.revenue || 0, status: dta.status || 'active' };
-                    });
-                    renderAdminTables();
-                } catch (err) {
-                    document.getElementById('statTotalUsers').textContent = '0';
-                    document.getElementById('statTotalBlocks').textContent = '0';
-                    document.getElementById('usersTableBody').innerHTML = '<tr><td colspan="6">Permission denied. Deploy Firestore rules and add your email to config/admins.</td></tr>';
-                }
-            }
-            function renderAdminTables(usersToShow) {
-                const uList = usersToShow || adminUsers;
-                const tc = adminBlocks.reduce((s,b) => s + (b.clicks||0), 0);
-                const tr = adminBlocks.reduce((s,b) => s + (b.revenue||0), 0);
-                document.getElementById('statTotalUsers').textContent = adminUsers.length;
-                document.getElementById('statTotalBlocks').textContent = adminBlocks.length;
-                document.getElementById('statTotalClicks').textContent = tc.toLocaleString();
-                document.getElementById('statTotalRevenue').textContent = '$' + tr.toFixed(2);
-                document.getElementById('analyticsClicks').textContent = tc.toLocaleString();
-                document.getElementById('analyticsCTR').textContent = adminBlocks.length ? (adminBlocks.reduce((s,b) => s + (b.ctr||0), 0) / adminBlocks.length).toFixed(1) + '%' : '0%';
-                const tbody = document.getElementById('usersTableBody');
-                if (tbody) {
-                    tbody.innerHTML = uList.map(u => `<tr><td>${u.name}</td><td>${u.email}</td><td><span class="badge badge-info">${u.plan}</span></td><td>${u.joined}</td><td><span class="badge ${u.status === 'suspended' ? 'badge-danger' : 'badge-success'}">${u.status}</span></td><td><button class="btn btn-sm btn-secondary" onclick="viewUser('${u.id}')">View</button><button class="btn btn-sm btn-primary change-plan-btn" data-user-id="${u.id}" data-email="${(u.email||'').replace(/"/g,'&quot;')}" data-plan="${u.plan||'free'}">Plan</button>${u.status === 'suspended' ? `<button class="btn btn-sm btn-success" onclick="unsuspendUser('${u.id}')">Unsuspend</button>` : `<button class="btn btn-sm btn-danger" onclick="suspendUser('${u.id}')">Suspend</button>`}<button class="btn btn-sm btn-danger delete-user-btn" data-user-id="${u.id}" data-email="${(u.email||'').replace(/"/g,'&quot;')}">Delete</button></td></tr>`).join('');
-                    tbody.querySelectorAll('.change-plan-btn').forEach(btn => {
-                        btn.addEventListener('click', function() {
-                            const plan = prompt('New plan:', this.dataset.plan);
-                            if (plan && ['free','starter','pro','creatorplus','agency','admin'].includes(plan.toLowerCase())) {
-                                db.collection('users').doc(this.dataset.userId).update({ plan: plan.toLowerCase() }).then(() => { loadAdminDataFromFirestore(); });
-                            }
-                        });
-                    });
-                    tbody.querySelectorAll('.delete-user-btn').forEach(btn => {
-                        btn.addEventListener('click', function() {
-                            if (confirm('Delete user ' + this.dataset.email + '?')) {
-                                db.collection('users').doc(this.dataset.userId).delete().then(() => loadAdminDataFromFirestore());
-                            }
-                        });
-                    });
-                }
-                const bbody = document.getElementById('blocksTableBody');
-                if (bbody) bbody.innerHTML = adminBlocks.map(b => `<tr><td>${b.title}</td><td>${b.owner}</td><td>${b.retailer}</td><td>${b.clicks?.toLocaleString() || 0}</td><td>$${b.revenue?.toFixed(2) || '0.00'}</td><td><span class="badge badge-success">${b.status}</span></td><td><button class="btn btn-sm btn-secondary">View</button></td></tr>`).join('');
-            }
-            window.viewUser = function(id) { const u = adminUsers.find(x => x.id === id); if (u) alert('User: ' + u.name + '\\nEmail: ' + u.email + '\\nPlan: ' + u.plan); };
-            window.suspendUser = function(id) { if (confirm('Suspend?')) db.collection('users').doc(id).update({ status: 'suspended', suspendedAt: firebase.firestore.FieldValue.serverTimestamp() }).then(() => loadAdminDataFromFirestore()); };
-            window.unsuspendUser = function(id) { if (confirm('Reactivate?')) db.collection('users').doc(id).update({ status: 'active', suspendedAt: firebase.firestore.FieldValue.delete() }).then(() => loadAdminDataFromFirestore()); };
-
-            document.getElementById('refreshAdminDataBtn')?.addEventListener('click', () => loadAdminDataFromFirestore());
-            document.getElementById('refreshUsersBtn')?.addEventListener('click', () => loadAdminDataFromFirestore());
-            document.getElementById('userSearch')?.addEventListener('input', function() {
-                const q = this.value.toLowerCase();
-                const filtered = adminUsers.filter(u => (u.email||'').toLowerCase().includes(q) || (u.name||'').toLowerCase().includes(q));
-                renderAdminTables(filtered);
-            });
-            document.querySelectorAll('#admin-view .admin-nav a[data-page]').forEach(link => {
-                link.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    const page = this.getAttribute('data-page');
-                    if (!page) return;
-                    document.querySelectorAll('#admin-view .admin-nav a').forEach(a => a.classList.remove('active'));
-                    this.classList.add('active');
-                    document.querySelectorAll('#admin-view .page-content').forEach(p => p.classList.remove('active'));
-                    const pEl = document.getElementById('page-' + page);
-                    if (pEl) pEl.classList.add('active');
-                });
-            });
-        }
-    })();
     </script>
 </body>
 
