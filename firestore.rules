@@ -23,10 +23,11 @@ service cloud.firestore {
         !exists(/databases/$(database)/documents/config/admins) && 
         request.auth.token.email != null &&
         request.auth.token.email.toLowerCase() == 'admin@kotapal.com';
-      allow update: if request.auth != null && 
-        exists(/databases/$(database)/documents/config/admins) &&
-        request.auth.token.email != null &&
-        request.auth.token.email.toLowerCase() in resource.data.emails;
+      allow update: if request.auth != null && request.auth.token.email != null && (
+        request.auth.token.email.toLowerCase() == 'admin@kotapal.com' ||
+        (exists(/databases/$(database)/documents/config/admins) &&
+         request.auth.token.email.toLowerCase() in resource.data.emails)
+      );
       allow delete: if false;
     }
     
