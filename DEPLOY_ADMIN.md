@@ -39,7 +39,7 @@ firebase deploy --only firestore
 firebase deploy --only functions
 ```
 
-**Note:** The Cloud Functions `listAllUsers` and `listAllBlocks` provide real-time data. The main app syncs blocks to Firestore when users create or edit blocks, so the admin dashboard shows all users and blocks from the database.
+**Note:** The Cloud Function `listAllUsers` lists every user from Firebase Authentication, so the admin dashboard shows all users (new and old) even if they don't have a Firestore document yet.
 
 ## Step 2 (optional): Add more admins via config/admins
 

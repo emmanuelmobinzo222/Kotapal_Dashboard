@@ -5,10 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KotaPal Admin Dashboard</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-functions-compat.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         :root {
@@ -542,135 +538,74 @@
     </div>
 
     <script>
-        // Firebase config (same as main app)
-        const firebaseConfig = {
-            apiKey: "AIzaSyCNU1QFZhmUuk2QWDeNi4ff3-le4KNnbrU",
-            authDomain: "kotapal-1e8f6.firebaseapp.com",
-            projectId: "kotapal-1e8f6",
-            storageBucket: "kotapal-1e8f6.firebasestorage.app",
-            messagingSenderId: "487227333489",
-            appId: "1:487227333489:web:a370f5e07b9e4c3d79f4d0",
-            measurementId: "G-8GQ7JGDZ7P"
-        };
+        const ADMIN_EMAIL = 'admin@kotapal.com';
+        const ADMIN_PASSWORD = 'Admin123!';
 
-        let auth, functions, db;
-        try {
-            firebase.initializeApp(firebaseConfig);
-            auth = firebase.auth();
-            functions = firebase.functions('us-central1');
-            db = firebase.firestore();
-        } catch (e) {
-            console.error('Firebase init error:', e);
-        }
+        let adminUsers = [
+            { id: '1', name: 'John Doe', email: 'john.doe@example.com', plan: 'pro', joined: '2024-01-15', status: 'active' },
+            { id: '2', name: 'Jane Smith', email: 'jane@example.com', plan: 'starter', joined: '2024-02-20', status: 'active' },
+            { id: '3', name: 'Mike Wilson', email: 'mike@example.com', plan: 'free', joined: '2024-03-10', status: 'active' }
+        ];
+        let adminBlocks = [
+            { id: 'blk_1', title: 'Best Headphones 2024', owner: 'John Doe', retailer: 'Amazon', clicks: 1247, revenue: 89.42, status: 'active' },
+            { id: 'blk_2', title: 'Top Smart TVs', owner: 'John Doe', retailer: 'Walmart', clicks: 892, revenue: 67.85, status: 'active' }
+        ];
+        let adminActivity = [
+            { time: '2 min ago', action: 'New block created', user: 'John Doe', details: 'Best Headphones 2024' },
+            { time: '15 min ago', action: 'User signed up', user: 'Mike Wilson', details: 'Free plan' },
+            { time: '1 hour ago', action: 'Integration connected', user: 'Jane Smith', details: 'Amazon Associates' }
+        ];
 
-        let adminUsers = [];
-        let adminBlocks = [];
-        let adminActivity = [];
-
-        document.getElementById('adminLoginForm').addEventListener('submit', async function(e) {
+        document.getElementById('adminLoginForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const email = document.getElementById('adminEmail').value.trim();
             const password = document.getElementById('adminPassword').value;
             const errorEl = document.getElementById('loginError');
-            const btn = this.querySelector('button[type="submit"]');
-            if (btn) { btn.disabled = true; btn.textContent = 'Signing in...'; }
 
-            try {
-                if (!auth) throw new Error('Firebase not initialized');
-                const cred = await auth.signInWithEmailAndPassword(email, password);
+            if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
                 errorEl.classList.remove('show');
+                sessionStorage.setItem('kotapal_admin', 'true');
+                sessionStorage.setItem('kotapal_admin_email', email);
                 document.getElementById('adminLogin').style.display = 'none';
                 document.getElementById('adminDashboard').classList.add('active');
                 document.getElementById('adminEmailDisplay').textContent = email;
-                await loadAdminData();
-            } catch (err) {
-                errorEl.textContent = err.message || 'Invalid credentials. Use an admin email (see DEPLOY_ADMIN.md).';
+                loadAdminData();
+            } else {
+                errorEl.textContent = 'Invalid admin credentials.';
                 errorEl.classList.add('show');
             }
-            if (btn) { btn.disabled = false; btn.textContent = 'Sign In'; }
         });
 
         document.getElementById('adminLogoutBtn').addEventListener('click', function() {
-            if (auth) auth.signOut();
+            sessionStorage.removeItem('kotapal_admin');
+            sessionStorage.removeItem('kotapal_admin_email');
             document.getElementById('adminDashboard').classList.remove('active');
             document.getElementById('adminLogin').style.display = 'flex';
             document.getElementById('adminEmail').value = '';
             document.getElementById('adminPassword').value = '';
         });
 
-        auth?.onAuthStateChanged(async function(user) {
-            if (user) {
-                document.getElementById('adminLogin').style.display = 'none';
-                document.getElementById('adminDashboard').classList.add('active');
-                document.getElementById('adminEmailDisplay').textContent = user.email;
-                await loadAdminData();
-            } else {
-                document.getElementById('adminDashboard').classList.remove('active');
-                document.getElementById('adminLogin').style.display = 'flex';
-            }
-        });
+        if (sessionStorage.getItem('kotapal_admin') === 'true') {
+            document.getElementById('adminLogin').style.display = 'none';
+            document.getElementById('adminDashboard').classList.add('active');
+            document.getElementById('adminEmailDisplay').textContent = sessionStorage.getItem('kotapal_admin_email') || ADMIN_EMAIL;
+            loadAdminData();
+        } else {
+            document.getElementById('adminLogin').style.display = 'flex';
+        }
 
-        async function loadAdminData() {
-            try {
-                // Fetch users from Cloud Function (Firebase Auth + Firestore)
-                const listAllUsers = functions?.httpsCallable('listAllUsers');
-                if (listAllUsers) {
-                    const res = await listAllUsers();
-                    adminUsers = (res.data && res.data.users) || [];
-                }
-            } catch (err) {
-                console.error('listAllUsers error:', err);
-                adminUsers = [];
-            }
-
-            try {
-                // Fetch blocks via Cloud Function (bypasses Firestore rules for admin)
-                const listAllBlocks = functions?.httpsCallable('listAllBlocks');
-                if (listAllBlocks) {
-                    const res = await listAllBlocks();
-                    const blocksData = (res.data && res.data.blocks) || [];
-                    adminBlocks = blocksData.map(b => ({
-                        id: b.id,
-                        title: b.title || '—',
-                        owner: adminUsers.find(u => u.id === b.userId)?.name || b.userId || '—',
-                        retailer: b.retailer || '—',
-                        clicks: b.clicks || 0,
-                        revenue: b.revenue || 0,
-                        ctr: b.ctr || 0,
-                        status: b.status || 'active'
-                    }));
-                }
-            } catch (err) {
-                console.error('Blocks fetch error:', err);
-                adminBlocks = [];
-            }
-
-            // Build activity from recent users/blocks
-            adminActivity = [];
-            adminUsers.slice(0, 5).forEach(u => {
-                adminActivity.push({
-                    time: u.lastSignIn ? 'Last: ' + new Date(u.lastSignIn).toLocaleDateString() : '—',
-                    action: 'User',
-                    user: u.name || u.email,
-                    details: u.plan || '—'
-                });
-            });
-
+        function loadAdminData() {
             document.getElementById('statTotalUsers').textContent = adminUsers.length;
             document.getElementById('statTotalBlocks').textContent = adminBlocks.length;
             const totalClicks = adminBlocks.reduce((s, b) => s + (b.clicks || 0), 0);
             const totalRevenue = adminBlocks.reduce((s, b) => s + (b.revenue || 0), 0);
             document.getElementById('statTotalClicks').textContent = totalClicks.toLocaleString();
             document.getElementById('statTotalRevenue').textContent = '$' + totalRevenue.toFixed(2);
-            document.getElementById('analyticsClicks').textContent = totalClicks.toLocaleString();
-            document.getElementById('analyticsCTR').textContent = adminBlocks.length > 0
-                ? (adminBlocks.reduce((s, b) => s + (b.ctr || 0), 0) / adminBlocks.length).toFixed(1) + '%'
-                : '0%';
 
             const activityBody = document.getElementById('recentActivityBody');
-            activityBody.innerHTML = adminActivity.length
-                ? adminActivity.map(a => `<tr><td>${a.time}</td><td>${a.action}</td><td>${a.user}</td><td>${a.details}</td></tr>`).join('')
-                : '<tr><td colspan="4" style="text-align:center;color:var(--gray);">No activity yet</td></tr>';
+            activityBody.innerHTML = adminActivity.map(a =>
+                `<tr><td>${a.time}</td><td>${a.action}</td><td>${a.user}</td><td>${a.details}</td></tr>`
+            ).join('');
 
             renderUsersTable(adminUsers);
             renderBlocksTable(adminBlocks);

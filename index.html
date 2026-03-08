@@ -4602,7 +4602,6 @@
             } else {
                 firebase.initializeApp(firebaseConfig);
                 auth = firebase.auth();
-                if (typeof firebase.firestore === 'function') window._kotaDb = firebase.firestore();
                 
                 // Set persistence to LOCAL so users stay logged in across browser sessions
                 // This ensures the session persists even after closing the browser
@@ -5981,50 +5980,20 @@
             }
         }
 
-        // Persist user blocks to localStorage and Firestore (for admin dashboard)
+        // Persist user blocks to localStorage (keyed by user)
         function saveUserBlocks() {
             const uid = currentUser?.uid;
-            if (uid) {
-                localStorage.setItem('kotaBlocks_' + uid, JSON.stringify(currentBlocks));
-                const db = window._kotaDb;
-                if (db) {
-                    currentBlocks.forEach(function(block) {
-                        db.collection('blocks').doc(block.id).set({
-                            userId: uid,
-                            title: block.title,
-                            layout: block.layout,
-                            ctaText: block.ctaText,
-                            retailer: block.retailer,
-                            clicks: block.clicks || 0,
-                            revenue: block.revenue || 0,
-                            ctr: block.ctr || 0,
-                            status: block.status || 'active',
-                            lastUpdated: block.lastUpdated || new Date().toISOString().split('T')[0],
-                            products: block.products || (block.productsList && block.productsList.length) || 0
-                        }, { merge: true }).catch(function(e) { console.warn('Firestore blocks sync:', e); });
-                    });
-                }
-            }
+            if (uid) localStorage.setItem('kotaBlocks_' + uid, JSON.stringify(currentBlocks));
         }
 
-        // Load user data: blocks from localStorage or Firestore, then mock only if empty
-        async function loadMockData() {
+        // Load user data: blocks from localStorage, then mock only if empty
+        function loadMockData() {
             const uid = currentUser?.uid;
             if (uid) {
                 try {
-                    let saved = localStorage.getItem('kotaBlocks_' + uid);
-                    if (!saved && window._kotaDb) {
-                        const snap = await window._kotaDb.collection('blocks').where('userId', '==', uid).get();
-                        const blocks = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                        if (blocks.length) {
-                            currentBlocks = blocks;
-                            localStorage.setItem('kotaBlocks_' + uid, JSON.stringify(currentBlocks));
-                            saved = 'loaded';
-                        }
-                    }
+                    const saved = localStorage.getItem('kotaBlocks_' + uid);
                     if (saved) {
-                        if (saved !== 'loaded') currentBlocks = JSON.parse(saved);
-                        saveUserBlocks();
+                        currentBlocks = JSON.parse(saved);
                         updateDashboardStats();
                         renderBlocks();
                         renderIntegrations();
