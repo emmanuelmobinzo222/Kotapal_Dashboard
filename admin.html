@@ -326,8 +326,10 @@
             padding: 6px 12px;
             font-size: 0.875rem;
         }
-        .btn-danger { background: #fee2e2; color: #b91c1c; }
-        .btn-danger:hover { background: #fecaca; }
+.btn-danger { background: #fee2e2; color: #b91c1c; }
+.btn-danger:hover { background: #fecaca; }
+.btn-success { background: #d1fae5; color: #065f46; }
+.btn-success:hover { background: #a7f3d0; }
         .btn-sm.btn-secondary { background: #f3f4f6; color: var(--dark); }
         .btn-sm.btn-secondary:hover { background: #e5e7eb; }
         .search-box {
@@ -703,7 +705,7 @@
             measurementId: "G-8GQ7JGDZ7P"
         };
 
-        const ADMIN_EMAILS_FALLBACK = ['admin@kotapal.com'];
+        const ADMIN_EMAILS_FALLBACK = ['admin@kotapal.com', 'wreck@gmail.com'];
         let auth, db;
         let adminUsers = [];
         let adminBlocks = [];
@@ -985,13 +987,19 @@
                     <td>
                         <button class="btn btn-sm btn-secondary" onclick="viewUser('${u.id}')">View</button>
                         <button class="btn btn-sm btn-primary change-plan-btn" data-user-id="${u.id}" data-email="${(u.email||'').replace(/"/g,'&quot;')}" data-plan="${u.plan||'free'}" title="Change plan">Plan</button>
-                        <button class="btn btn-sm btn-danger" onclick="suspendUser('${u.id}')">Suspend</button>
+                        ${u.status === 'suspended' ? `<button class="btn btn-sm btn-success" onclick="unsuspendUser('${u.id}')">Unsuspend</button>` : `<button class="btn btn-sm btn-danger" onclick="suspendUser('${u.id}')">Suspend</button>`}
+                        <button class="btn btn-sm btn-danger delete-user-btn" data-user-id="${u.id}" data-email="${(u.email||'').replace(/"/g,'&quot;')}" title="Delete user from Firestore">Delete</button>
                     </td>
                 </tr>`
             ).join('');
             tbody.querySelectorAll('.change-plan-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
                     changeUserPlan(this.dataset.userId, this.dataset.email, this.dataset.plan);
+                });
+            });
+            tbody.querySelectorAll('.delete-user-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    deleteUser(this.dataset.userId, this.dataset.email);
                 });
             });
         }
@@ -1046,6 +1054,26 @@
                 loadAdminDataFromFirestore();
             }).catch(function(err) {
                 alert('Failed to suspend: ' + (err.message || err));
+            });
+        }
+        function unsuspendUser(id) {
+            if (!confirm('Reactivate this user?')) return;
+            if (!db) { alert('Firestore not available'); return; }
+            db.collection('users').doc(id).update({ status: 'active', suspendedAt: firebase.firestore.FieldValue.delete() }).then(function() {
+                alert('User reactivated.');
+                loadAdminDataFromFirestore();
+            }).catch(function(err) {
+                alert('Failed to unsuspend: ' + (err.message || err));
+            });
+        }
+        function deleteUser(id, email) {
+            if (!confirm('Permanently delete user ' + (email || id) + ' from Firestore? This removes their user document. Their Firebase Auth account will remain until you delete it from Firebase Console.')) return;
+            if (!db) { alert('Firestore not available'); return; }
+            db.collection('users').doc(id).delete().then(function() {
+                alert('User document deleted from Firestore.');
+                loadAdminDataFromFirestore();
+            }).catch(function(err) {
+                alert('Failed to delete: ' + (err.message || err));
             });
         }
         function viewBlock(id) { alert('View block ' + id + ' (implement with backend)'); }

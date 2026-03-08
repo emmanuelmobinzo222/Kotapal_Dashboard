@@ -1,58 +1,39 @@
 rules_version = '2';
 service cloud.firestore {
-  match /databases/{database}/documents {
-    // Helper: true if current user is admin (admin@kotapal.com or in config/admins)
+  match /databases/$(database)/documents {
+    // Super-admins: full access without config/admins (admin@kotapal.com, wreck@gmail.com)
+    function isSuperAdmin() {
+      return request.auth != null && request.auth.token.email != null && 
+        (request.auth.token.email.toLowerCase() == 'admin@kotapal.com' || 
+         request.auth.token.email.toLowerCase() == 'wreck@gmail.com');
+    }
+    // Any admin: super-admin OR in config/admins
     function isAdmin() {
-      return request.auth != null && (
-        (request.auth.token.email != null && request.auth.token.email.toLowerCase() == 'admin@kotapal.com') ||
-        (exists(/databases/$(database)/documents/config/admins) && 
-         request.auth.token.email != null &&
-         request.auth.token.email.toLowerCase() in get(/databases/$(database)/documents/config/admins).data.emails)
-      );
-    }
-    
-    // Config - admins list
-    match /config/admins {
-      allow read: if request.auth != null && (
-        (request.auth.token.email != null && request.auth.token.email.toLowerCase() == 'admin@kotapal.com') ||
-        (exists(/databases/$(database)/documents/config/admins) && 
-         request.auth.token.email != null &&
-         request.auth.token.email.toLowerCase() in get(/databases/$(database)/documents/config/admins).data.emails)
-      );
-      allow create: if request.auth != null && 
-        !exists(/databases/$(database)/documents/config/admins) && 
+      return isSuperAdmin() || (
+        exists(/databases/$(database)/documents/config/admins) && 
         request.auth.token.email != null &&
-        request.auth.token.email.toLowerCase() == 'admin@kotapal.com';
-      allow update: if request.auth != null && request.auth.token.email != null && (
-        request.auth.token.email.toLowerCase() == 'admin@kotapal.com' ||
-        (exists(/databases/$(database)/documents/config/admins) &&
-         request.auth.token.email.toLowerCase() in resource.data.emails)
+        request.auth.token.email.toLowerCase() in get(/databases/$(database)/documents/config/admins).data.emails
       );
+    }
+    
+    match /config/admins {
+      allow read: if request.auth != null && isAdmin();
+      allow create: if request.auth != null && !exists(/databases/$(database)/documents/config/admins) && isSuperAdmin();
+      allow update: if request.auth != null && (isSuperAdmin() || (exists(/databases/$(database)/documents/config/admins) && request.auth.token.email != null && request.auth.token.email.toLowerCase() in resource.data.emails));
       allow delete: if false;
     }
     
-    // Users - each user can read/write own doc; admins can read and update ALL
     match /users/{userId} {
-      allow read: if request.auth != null && (
-        request.auth.uid == userId ||
-        isAdmin()
-      );
+      allow read: if request.auth != null && (request.auth.uid == userId || isAdmin());
       allow create: if request.auth != null && request.auth.uid == userId;
-      allow update: if request.auth != null && (
-        request.auth.uid == userId ||
-        isAdmin()
-      );
-      allow delete: if false;
+      allow update: if request.auth != null && (request.auth.uid == userId || isAdmin());
+      allow delete: if request.auth != null && isAdmin();
     }
     
-    // Blocks - users can read/write own blocks; admins can read all
     match /blocks/{blockId} {
-      allow read: if request.auth != null && (
-        resource.data.userId == request.auth.uid ||
-        isAdmin()
-      );
+      allow read: if request.auth != null && (resource.data.userId == request.auth.uid || isAdmin());
       allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
-      allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow update, delete: if request.auth != null && (resource.data.userId == request.auth.uid || isAdmin());
     }
   }
 }
