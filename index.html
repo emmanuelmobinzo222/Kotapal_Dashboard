@@ -3,12 +3,8 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="format-detection" content="telephone=no">
-    <meta name="theme-color" content="#3b82f6">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <title>KotaPal – Monetize Content with Smart Product Blocks | USA Creators & E-Commerce</title>
     <meta name="description"
         content="KotaPal helps US creators, bloggers & e-commerce sellers monetize content with AI-powered Shopify + Amazon + Walmart product blocks. Trusted by 10,000+ US creators.">
@@ -73,15 +69,9 @@
             --warning: #f59e0b;
         }
 
-        /* Cross-platform: Chrome, Firefox, Safari, Edge, Windows, macOS, iOS */
-        html {
-            overflow-x: hidden;
-            overflow-y: auto;
-            -webkit-text-size-adjust: 100%;
-            -moz-text-size-adjust: 100%;
-            -ms-text-size-adjust: 100%;
-            text-size-adjust: 100%;
-        }
+        /* Cross-platform: Chrome, Firefox, Safari, Edge, Windows, macOS */
+        html { overflow-x: hidden; -webkit-text-size-adjust: 100%; }
+        /* Single scrollbar: hide nested scrollbars, use body only */
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
             color: #333;
@@ -89,38 +79,7 @@
             overflow-x: hidden;
             background-color: #fff;
             min-width: 280px;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-            padding-left: env(safe-area-inset-left);
-            padding-right: env(safe-area-inset-right);
-            padding-bottom: env(safe-area-inset-bottom);
         }
-        /* Touch-friendly: iOS, Android */
-        a, button { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
-        input, select, textarea { font-size: 16px; } /* Prevents iOS zoom on focus */
-        /* One simple scrollbar for main page */
-        html { overflow-x: hidden; overflow-y: auto; }
-        body { overflow-x: hidden; overflow-y: visible; }
-        /* Dark/Light mode toggle - fixed top right */
-        .theme-toggle-fixed {
-            position: fixed;
-            top: max(16px, env(safe-area-inset-top));
-            right: max(16px, env(safe-area-inset-right));
-            z-index: 1000;
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
-            background: rgba(255,255,255,0.95);
-            border: 1px solid rgba(0,0,0,0.08);
-            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: background 0.2s, transform 0.2s;
-        }
-        .theme-toggle-fixed:hover { background: #fff; transform: scale(1.05); }
-        .theme-toggle-fixed i { font-size: 1.2rem; color: var(--primary); }
 
         .container {
             width: 100%;
@@ -225,7 +184,6 @@
             z-index: 1000;
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
             border-bottom: 1px solid rgba(0, 0, 0, 0.1);
             min-height: 88px;
             height: auto;
@@ -233,7 +191,6 @@
             align-items: center;
             justify-content: center;
             padding: 14px 0;
-            padding-top: max(14px, env(safe-area-inset-top));
             overflow: hidden;
         }
 
@@ -325,18 +282,7 @@
         .mobile-menu-btn {
             display: none;
             flex-direction: column;
-            align-items: center;
-            justify-content: center;
             cursor: pointer;
-            min-width: 44px;
-            min-height: 44px;
-            padding: 12px;
-            border: none;
-            background: transparent;
-            -webkit-tap-highlight-color: transparent;
-            touch-action: manipulation;
-            -webkit-appearance: none;
-            appearance: none;
         }
 
         .mobile-menu-btn span {
@@ -345,7 +291,6 @@
             background: var(--dark);
             margin: 3px 0;
             transition: 0.3s;
-            display: block;
         }
 
         /* Hero Section */
@@ -528,10 +473,9 @@
         #dashboard-view.theme-dark .sidebar .user-plan { color: #e5e7eb !important; }
         #dashboard-view.theme-dark .sidebar .user-plan { color: #94a3b8 !important; }
         #dashboard-view.theme-dark .sidebar-toggle,
-        #dashboard-view.theme-dark .nav-toggle-inline { background: #1f2937 !important; color: #e5e7eb !important; border-color: #374151 !important; }
+        #dashboard-view.theme-dark .nav-toggle-float { background: #1f2937 !important; color: #e5e7eb !important; border-color: #374151 !important; }
         #dashboard-view.theme-dark .sidebar-toggle i,
-        #dashboard-view.theme-dark .nav-toggle-inline i { color: #e5e7eb !important; }
-        #dashboard-view.theme-dark .nav-toggle-inline.nav-collapsed { background: #1f2937 !important; }
+        #dashboard-view.theme-dark .nav-toggle-float i { color: #e5e7eb !important; }
         #logoutConfirmCancel { background: #f1f5f9 !important; color: #1e293b !important; border: 2px solid #94a3b8 !important; font-weight: 600 !important; }
         #dashboard-view.theme-dark ~ #logoutConfirmModal #logoutConfirmCancel,
         #dashboard-view.theme-dark ~ * #logoutConfirmCancel { background: #334155 !important; color: #f1f5f9 !important; border: 2px solid #64748b !important; }
@@ -602,9 +546,6 @@
             color: #b91c1c !important;
             border-color: #fecaca !important;
         }
-        #dashboard-view .btn-sm { padding: 6px 12px; font-size: 0.85rem; }
-        #dashboard-view .btn-danger { background: #ef4444; color: white; border: none; }
-        #dashboard-view .btn-danger:hover { background: #dc2626; }
         /* Back to Blocks & Cancel (Create Block) - visible in dark mode */
         #dashboard-view.theme-dark #backToBlocksBtn,
         #dashboard-view.theme-dark #cancelNewBlock {
@@ -730,6 +671,54 @@
         }
         @keyframes spin {
             to { transform: rotate(360deg); }
+        }
+
+        /* Single scrollbar: hide scrollbars on nested overflow containers */
+        .modal, .modal-content, .table-container, .plan-detail-modal .plan-modal-content,
+        #dashboard-view .sidebar .nav-menu {
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        .modal::-webkit-scrollbar, .modal-content::-webkit-scrollbar,
+        .table-container::-webkit-scrollbar, .plan-detail-modal .plan-modal-content::-webkit-scrollbar,
+        #dashboard-view .sidebar .nav-menu::-webkit-scrollbar { display: none; }
+
+        /* Scroll arrows - single scroll control */
+        .scroll-arrows {
+            position: fixed;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 999;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .scroll-arrow-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.95);
+            border: 1px solid #e5e7eb;
+            color: var(--primary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: all 0.2s ease;
+        }
+        .scroll-arrow-btn:hover {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 4px 12px rgba(59,130,246,0.3);
+        }
+        .scroll-arrow-btn:active { transform: scale(0.95); }
+        #dashboard-view ~ .scroll-arrows .scroll-arrow-btn { background: rgba(248,250,252,0.95); }
+        @media (max-width: 768px) {
+            .scroll-arrows { right: 12px; }
+            .scroll-arrow-btn { width: 38px; height: 38px; font-size: 1rem; }
         }
 
         /* Hide native scrollbars */
@@ -1705,18 +1694,12 @@
             top: 0;
             width: 100%;
             height: 100%;
-            min-height: 100vh;
-            min-height: 100dvh;
             background-color: rgba(0, 0, 0, 0.5);
             backdrop-filter: blur(5px);
-            -webkit-backdrop-filter: blur(5px);
             padding: 120px 20px 20px;
-            padding-top: max(80px, env(safe-area-inset-top));
-            padding-bottom: max(20px, env(safe-area-inset-bottom));
             align-items: flex-start;
             justify-content: center;
             overflow-y: auto;
-            overflow-x: hidden;
             -webkit-overflow-scrolling: touch;
         }
 
@@ -1806,54 +1789,6 @@
             display: block;
             width: 100%;
             margin-top: 15px;
-            min-height: 48px;
-            -webkit-appearance: none;
-            appearance: none;
-            -webkit-tap-highlight-color: transparent;
-            touch-action: manipulation;
-        }
-
-        /* Auth modal - mobile/touch: iOS, Android, Safari, Chrome, Edge */
-        @media (max-width: 768px) {
-            #authModal .modal-content {
-                width: 95%;
-                max-width: none;
-                max-height: 85vh;
-                padding: 24px 20px;
-                margin: 10px auto;
-                padding-top: max(24px, env(safe-area-inset-top));
-                padding-bottom: max(24px, env(safe-area-inset-bottom));
-            }
-            #authModal .auth-form input,
-            #authModal .auth-form .form-control {
-                font-size: 16px !important;
-                min-height: 48px;
-                padding: 14px 16px;
-            }
-            #authModal .auth-form button[type="submit"] {
-                min-height: 48px;
-                padding: 14px 20px;
-                font-size: 1rem;
-            }
-            #authModal .close {
-                min-width: 44px;
-                min-height: 44px;
-                padding: 10px;
-                right: 10px;
-                top: 10px;
-            }
-        }
-        @media (max-width: 480px) {
-            #authModal .modal-content {
-                width: 100%;
-                margin: 0;
-                border-radius: 16px 16px 0 0;
-                max-height: 90vh;
-            }
-            .modal {
-                padding: 40px 12px 12px;
-                padding-top: max(40px, env(safe-area-inset-top));
-            }
         }
 
         .close {
@@ -2837,12 +2772,11 @@
 </head>
 
 <body>
-    <!-- Single dynamic scroll control -->
-    <!-- Dark/Light mode toggle - top right -->
-    <button type="button" class="theme-toggle-fixed" id="themeToggleFixed" aria-label="Toggle dark mode" title="Dark mode">
-        <i class="fas fa-moon" id="themeToggleIcon"></i>
-    </button>
-
+    <!-- Scroll arrows (single scroll control) -->
+    <div id="scrollArrows" class="scroll-arrows" aria-label="Scroll page">
+        <button type="button" id="scrollUpBtn" class="scroll-arrow-btn" title="Scroll up" aria-label="Scroll up"><i class="fas fa-chevron-up"></i></button>
+        <button type="button" id="scrollDownBtn" class="scroll-arrow-btn" title="Scroll down" aria-label="Scroll down"><i class="fas fa-chevron-down"></i></button>
+    </div>
     <!-- Page Loader -->
     <div class="page-loader" id="pageLoader">
         <div class="loader-spinner"></div>
@@ -2871,11 +2805,11 @@
                 <li><a href="#" id="loginBtn">Login</a></li>
             </ul>
 
-            <button type="button" class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Open menu">
+            <div class="mobile-menu-btn" id="mobileMenuBtn">
                 <span></span>
                 <span></span>
                 <span></span>
-            </button>
+            </div>
         </div>
     </nav>
 
@@ -3092,6 +3026,7 @@
                     </button>
                 </div>
             </div>
+
             <div class="section-container">
                 <p class="text-center" style="margin-top: 60px;">All plans include a 7-day free trial.</p>
             </div>
@@ -3700,9 +3635,6 @@
             scrollbar-width: none; -ms-overflow-style: none;
         }
         #dashboard-view .sidebar .nav-menu::-webkit-scrollbar { display: none; }
-        /* Single scrollbar: hide scrollbars on modals and nested areas */
-        .modal, .modal-content, .modal-body, .plan-detail-modal .plan-modal-content { scrollbar-width: none; -ms-overflow-style: none; }
-        .modal::-webkit-scrollbar, .modal-content::-webkit-scrollbar, .plan-detail-modal .plan-modal-content::-webkit-scrollbar { display: none; }
         #dashboard-view .nav-item { margin-bottom: 2px; }
         #dashboard-view .nav-link {
             display: flex; align-items: center; padding: 10px 20px; color: #4b5563; border-radius: 8px;
@@ -3891,15 +3823,14 @@
         #dashboard-view .sidebar-overlay.active { display: block; }
         #dashboard-view .sidebar.nav-collapsed { transform: translateX(-100%); width: 0; min-width: 0; overflow: hidden; padding: 0; }
         #dashboard-view .main-content.nav-collapsed { margin-left: 0; }
-        #dashboard-view .nav-toggle-inline {
-            position: fixed; left: 250px; top: 50%; transform: translateY(-50%); z-index: 1003;
-            background: white; border: 1px solid #e5e7eb; border-radius: 0 8px 8px 0; padding: 12px 10px;
-            cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.08); display: flex; align-items: center; justify-content: center;
-            transition: left 0.3s ease, background 0.2s ease, border-radius 0.2s; font-weight: 500; color: var(--dark);
+        #dashboard-view .nav-toggle-float {
+            position: fixed; left: 10px; top: 50%; transform: translateY(-50%); z-index: 1003;
+            background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 10px 14px;
+            cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center;
+            transition: left 0.3s ease, background 0.2s ease;
         }
-        #dashboard-view .nav-toggle-inline.nav-collapsed { border-radius: 0 8px 8px 0; background: #f8fafc; border-left: none; left: 0 !important; }
-        #dashboard-view .nav-toggle-inline:hover { background: #f9fafb; border-color: #d1d5db; }
-        #dashboard-view .nav-toggle-inline i { font-size: 1.1rem; color: var(--dark); }
+        #dashboard-view .nav-toggle-float:hover { background: #f9fafb; border-color: #d1d5db; }
+        #dashboard-view .nav-toggle-float i { font-size: 1.2rem; color: var(--dark); }
         @media (max-width: 1024px) {
             #dashboard-view .sidebar { transform: translateX(-100%); width: min(320px, 85vw); z-index: 1002; }
             #dashboard-view .sidebar.active { transform: translateX(0); }
@@ -3957,9 +3888,7 @@
                     <li class="nav-item"><a href="#" class="nav-link" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
                 </ul>
             </div>
-            <button type="button" class="nav-toggle-inline" id="navToggleFloat" aria-label="Hide navigation" title="Hide navigation">
-                <i class="fas fa-angle-double-left"></i>
-            </button>
+            <button type="button" class="nav-toggle-float" id="navToggleFloat" aria-label="Toggle navigation" title="Hide Nav"><i class="fas fa-compress-arrows-alt"></i></button>
             <div class="main-content">
                 <div id="dashboard-page" class="page-content">
                     <div class="header">
@@ -4024,7 +3953,6 @@
                                         <th>Revenue</th>
                                         <th>Status</th>
                                         <th>Last Updated</th>
-                                        <th style="min-width:80px;">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody></tbody>
@@ -4542,11 +4470,11 @@
                 <form id="loginFormInner">
                     <div class="form-group">
                         <label for="loginEmail">Email</label>
-                        <input type="email" id="loginEmail" required inputmode="email" autocomplete="email">
+                        <input type="email" id="loginEmail" required>
                     </div>
                     <div class="form-group">
                         <label for="loginPassword">Password</label>
-                        <input type="password" id="loginPassword" required autocomplete="current-password">
+                        <input type="password" id="loginPassword" required>
                     </div>
                     <div class="form-group">
                         <a href="#" class="forgot-password" id="showForgotPassword">Forgot Password?</a>
@@ -4877,7 +4805,6 @@
                     if (dashboardView) {
                         dashboardView.style.display = 'block';
                         dashboardView.classList.add('active');
-                        document.body.classList.add('dashboard-active');
                     }
                     
                     if (typeof initDashboard === 'function') {
@@ -5024,7 +4951,6 @@
                     if (dashboardView) {
                         dashboardView.style.display = 'block';
                         dashboardView.classList.add('active');
-                        document.body.classList.add('dashboard-active');
                     }
                     
                     updateSidebarUserInfo();
@@ -5202,7 +5128,6 @@
             if (dashboardView) {
                 dashboardView.style.display = 'none';
                 dashboardView.classList.remove('active');
-                document.body.classList.remove('dashboard-active');
             }
             if (landingView) { landingView.style.display = 'block'; landingView.classList.remove('theme-dark'); }
             if (nav) nav.style.display = 'flex';
@@ -5324,7 +5249,6 @@
                     if (dashboardView) {
                         dashboardView.style.display = 'block';
                         dashboardView.classList.add('active');
-                        document.body.classList.add('dashboard-active');
                     }
                     
                     // Initialize dashboard
@@ -5372,7 +5296,6 @@
                         landingView.style.display = 'block';
                         landingView.classList.remove('theme-dark'); /* Landing never uses dark mode */
                     }
-                    document.body.classList.remove('dashboard-active');
                     if (nav) nav.style.display = 'flex';
                     if (footer) footer.style.display = 'block';
                     
@@ -5400,86 +5323,23 @@
         // Set current year in footer
         document.getElementById('currentYear').textContent = new Date().getFullYear();
 
-        // Nav link active state (scroll spy) - highlight current section
+        // Scroll arrows - single scroll control (scroll page up/down)
         (function() {
-            var sectionIds = ['home','features','pricing','trending-products','dashboard-preview','about','testimonials'];
-            function setNavActive(sectionId) {
-                document.querySelectorAll('nav .nav-link[data-section]').forEach(function(a) {
-                    a.classList.toggle('active', a.getAttribute('data-section') === sectionId);
-                });
+            var scrollStep = 300;
+            var upBtn = document.getElementById('scrollUpBtn');
+            var downBtn = document.getElementById('scrollDownBtn');
+            function scrollPage(dir) {
+                window.scrollBy({ top: dir === 'up' ? -scrollStep : scrollStep, behavior: 'smooth' });
             }
-            function updateFromScroll() {
-                var contactPage = document.getElementById('contact-page');
-                if (contactPage && contactPage.style.display !== 'none') return;
-                var homePage = document.getElementById('home-page');
-                if (!homePage || homePage.style.display === 'none') return;
-                var scrollTop = (document.scrollingElement || document.documentElement).scrollTop;
-                var best = null, bestOffset = Infinity;
-                sectionIds.forEach(function(id) {
-                    var el = document.getElementById(id);
-                    if (!el) return;
-                    var rect = el.getBoundingClientRect();
-                    var top = rect.top;
-                    if (top <= window.innerHeight * 0.4 && top > -rect.height * 0.6) {
-                        var offset = Math.abs(top);
-                        if (offset < bestOffset) { bestOffset = offset; best = id; }
-                    }
-                });
-                if (best) setNavActive(best);
-                else if (scrollTop < 50) setNavActive('home');
-            }
-            window.addEventListener('scroll', updateFromScroll, { passive: true });
-            window.addEventListener('load', updateFromScroll);
-            window.addEventListener('resize', updateFromScroll);
-            window.updateNavActive = setNavActive;
+            if (upBtn) upBtn.addEventListener('click', function() { scrollPage('up'); });
+            if (downBtn) downBtn.addEventListener('click', function() { scrollPage('down'); });
         })();
 
-        // Fixed theme toggle (top right)
-        (function() {
-            var btn = document.getElementById('themeToggleFixed');
-            if (!btn) return;
-            btn.addEventListener('click', function() {
-                var darkOn = localStorage.getItem('kota_dark_mode') === '1';
-                var on = !darkOn;
-                localStorage.setItem('kota_dark_mode', on ? '1' : '0');
-                document.body.classList.remove('theme-dark');
-                var dash = document.getElementById('dashboard-view');
-                if (dash) { if (on) dash.classList.add('theme-dark'); else dash.classList.remove('theme-dark'); }
-                var cb = document.getElementById('darkModeToggle');
-                var textEl = document.querySelector('#darkModeToggle + .toggle-label .toggle-text');
-                if (cb) cb.checked = on;
-                if (textEl) textEl.textContent = on ? 'ON' : 'OFF';
-                var icon = document.getElementById('themeToggleIcon');
-                if (icon) icon.className = on ? 'fas fa-sun' : 'fas fa-moon';
-                btn.title = on ? 'Light mode' : 'Dark mode';
-                if (typeof showNotification === 'function') showNotification(on ? 'Dark mode on.' : 'Dark mode off.', 'success', 'Theme');
-            });
-            function syncFixedThemeIcon() {
-                var darkOn = localStorage.getItem('kota_dark_mode') === '1';
-                var icon = document.getElementById('themeToggleIcon');
-                if (icon) icon.className = darkOn ? 'fas fa-sun' : 'fas fa-moon';
-                btn.title = darkOn ? 'Light mode' : 'Dark mode';
-            }
-            window.addEventListener('load', syncFixedThemeIcon);
-            setTimeout(syncFixedThemeIcon, 100);
-        })();
-
-        // Mobile menu toggle - iOS, Android, Safari, Chrome, Edge (44px touch target)
-        (function() {
-            var btn = document.getElementById('mobileMenuBtn');
-            var navLinks = document.querySelector('.nav-links');
-            if (!btn || !navLinks) return;
-            var lastToggle = 0;
-            function toggleMenu(e) {
-                if (e) e.preventDefault();
-                if (Date.now() - lastToggle < 400) return;
-                lastToggle = Date.now();
-                btn.classList.toggle('active');
-                navLinks.classList.toggle('active');
-            }
-            btn.addEventListener('click', toggleMenu);
-            btn.addEventListener('touchend', toggleMenu, { passive: false });
-        })();
+        // Mobile menu toggle
+        document.getElementById('mobileMenuBtn').addEventListener('click', function() {
+            this.classList.toggle('active');
+            document.querySelector('.nav-links').classList.toggle('active');
+        });
 
         // Auth Modal Functions
         const authModal = document.getElementById('authModal');
@@ -5489,8 +5349,8 @@
 
         function showAuthModal() {
             if (authModal) {
-                authModal.style.display = 'flex';
-                document.body.style.overflow = 'hidden';
+                authModal.style.display = 'block';
+                document.body.style.overflow = 'hidden'; // Prevent scrolling
             }
         }
 
@@ -5668,20 +5528,48 @@
             setupAuthFormHandlers();
         }
         
-        // Mobile Optimizations - iOS, Android, Safari, Chrome, Firefox, Edge
+        // Mobile Optimizations
         (function() {
-            // DISABLED: touchend preventDefault was blocking mobile menu, login, and other taps on iOS
-            // Rely on touch-action: manipulation and 16px inputs to reduce zoom issues instead
+            // Prevent double-tap zoom on buttons and links
+            let lastTouchEnd = 0;
+            document.addEventListener('touchend', function(event) {
+                const now = Date.now();
+                if (now - lastTouchEnd <= 300) {
+                    event.preventDefault();
+                }
+                lastTouchEnd = now;
+            }, false);
             
+            // Improve touch scrolling
             if ('ontouchstart' in window) {
                 document.body.style.cursor = 'pointer';
             }
             
+            // Handle orientation changes
             window.addEventListener('orientationchange', function() {
                 setTimeout(function() {
+                    // Force a repaint to fix layout issues
                     window.dispatchEvent(new Event('resize'));
                 }, 100);
             });
+            
+            // Prevent iOS bounce scrolling on modals
+            document.addEventListener('touchmove', function(e) {
+                const modal = e.target.closest('.modal-content');
+                if (modal) {
+                    const scrollTop = modal.scrollTop;
+                    const scrollHeight = modal.scrollHeight;
+                    const height = modal.clientHeight;
+                    const isScrolling = scrollHeight > height;
+                    const isAtTop = scrollTop === 0;
+                    const isAtBottom = scrollTop + height >= scrollHeight - 1;
+                    
+                    if (!isScrolling || (isAtTop && e.touches[0].clientY > e.touches[0].clientY) || 
+                        (isAtBottom && e.touches[0].clientY < e.touches[0].clientY)) {
+                        e.preventDefault();
+                    }
+                }
+            }, { passive: false });
             
             // Add mobile class to body for CSS targeting
             if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
@@ -5969,9 +5857,6 @@
             window.scrollTo(0, 0);
             var nl = document.querySelector('.nav-links');
             if (nl) nl.classList.remove('active');
-            if (typeof window.updateNavActive === 'function') {
-                window.updateNavActive(pageId === 'home-page' ? 'home' : pageId === 'contact-page' ? 'contact' : 'home');
-            }
             var mbtn = document.getElementById('mobileMenuBtn');
             if (mbtn) mbtn.classList.remove('active');
         }
@@ -5982,7 +5867,6 @@
             var section = document.getElementById(sectionId);
             if (section) {
                 setTimeout(function() { section.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 50);
-                setTimeout(function() { if (typeof window.updateNavActive === 'function') window.updateNavActive(sectionId); }, 400);
             }
         }
         function goToContactForm() {
@@ -5995,7 +5879,6 @@
             var contact = document.getElementById('contact-page');
             if (dashboard) dashboard.style.display = 'none';
             if (landing) landing.style.display = 'block';
-            document.body.classList.remove('dashboard-active');
             if (nav) nav.style.display = 'flex';
             if (footer) footer.style.display = 'block';
             if (home) home.style.display = 'none';
@@ -6005,7 +5888,6 @@
                 var heading = document.querySelector('#contact-page h1');
                 if (heading) heading.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }, 80);
-            if (typeof window.updateNavActive === 'function') window.updateNavActive('contact');
         }
 
         // Content Modals
@@ -6174,21 +6056,13 @@
                 if (sidebar) sidebar.classList.add('nav-collapsed');
                 if (main) main.classList.add('nav-collapsed');
                 if (navToggleFloat) {
-                    navToggleFloat.classList.add('nav-collapsed');
-                    navToggleFloat.innerHTML = '<i class="fas fa-angle-double-right"></i>';
-                    navToggleFloat.style.left = '0';
-                    navToggleFloat.title = 'Show navigation';
-                    navToggleFloat.setAttribute('aria-label', 'Show navigation');
+                    navToggleFloat.innerHTML = '<i class="fas fa-expand-arrows-alt"></i>';
+                    navToggleFloat.style.left = '10px';
+                    navToggleFloat.title = 'Show Nav';
                 }
             } else {
                 const navToggleFloat = document.getElementById('navToggleFloat');
-                if (navToggleFloat) {
-                    navToggleFloat.classList.remove('nav-collapsed');
-                    navToggleFloat.innerHTML = '<i class="fas fa-angle-double-left"></i>';
-                    navToggleFloat.style.left = '250px';
-                    navToggleFloat.title = 'Hide navigation';
-                    navToggleFloat.setAttribute('aria-label', 'Hide navigation');
-                }
+                if (navToggleFloat) { navToggleFloat.style.left = '270px'; navToggleFloat.title = 'Hide Nav'; }
             }
         }
 
@@ -6339,7 +6213,6 @@
                 const nav = document.querySelector('nav');
                 const footer = document.querySelector('footer');
                 if (dashboardView) { dashboardView.style.display = 'none'; }
-                document.body.classList.remove('dashboard-active');
                 if (landingView) { landingView.style.display = 'block'; landingView.classList.remove('theme-dark'); }
                 if (nav) nav.style.display = 'flex';
                 if (footer) footer.style.display = 'block';
@@ -6705,10 +6578,6 @@
             const textEl = document.querySelector('#darkModeToggle + .toggle-label .toggle-text');
             if (cb) cb.checked = darkOn;
             if (textEl) textEl.textContent = darkOn ? 'ON' : 'OFF';
-            var fixedBtn = document.getElementById('themeToggleFixed');
-            var fixedIcon = document.getElementById('themeToggleIcon');
-            if (fixedBtn) fixedBtn.title = darkOn ? 'Light mode' : 'Dark mode';
-            if (fixedIcon) fixedIcon.className = darkOn ? 'fas fa-sun' : 'fas fa-moon';
         }
         function applyGeoRedirectFromStorage() {
             const on = localStorage.getItem('kota_geo_redirect') !== '0';
@@ -6776,10 +6645,6 @@
                     if (dash) { if (on) dash.classList.add('theme-dark'); else dash.classList.remove('theme-dark'); }
                     var t = document.querySelector('#darkModeToggle + .toggle-label .toggle-text');
                     if (t) t.textContent = on ? 'ON' : 'OFF';
-                    var fixedBtn = document.getElementById('themeToggleFixed');
-                    var fixedIcon = document.getElementById('themeToggleIcon');
-                    if (fixedBtn) fixedBtn.title = on ? 'Light mode' : 'Dark mode';
-                    if (fixedIcon) fixedIcon.className = on ? 'fas fa-sun' : 'fas fa-moon';
                     showNotification(on ? 'Dark mode on.' : 'Dark mode off.', 'success', 'Settings');
                 });
             }
@@ -6852,11 +6717,10 @@
             if (!sidebar || !btn) return;
             const isHidden = sidebar.classList.toggle('nav-collapsed');
             if (main) main.classList.toggle('nav-collapsed', isHidden);
-            btn.classList.toggle('nav-collapsed', isHidden);
-            btn.style.left = isHidden ? '0' : '250px';
-            btn.innerHTML = isHidden ? '<i class="fas fa-angle-double-right"></i>' : '<i class="fas fa-angle-double-left"></i>';
-            btn.title = isHidden ? 'Show navigation' : 'Hide navigation';
-            btn.setAttribute('aria-label', isHidden ? 'Show navigation' : 'Hide navigation');
+            btn.style.left = isHidden ? '10px' : '270px';
+            btn.innerHTML = isHidden ? '<i class="fas fa-expand-arrows-alt"></i>' : '<i class="fas fa-compress-arrows-alt"></i>';
+            btn.title = isHidden ? 'Show Nav' : 'Hide Nav';
+            btn.setAttribute('aria-label', isHidden ? 'Show Nav' : 'Hide Nav');
             localStorage.setItem('kota_nav_collapsed', isHidden ? '1' : '0');
         }
 
@@ -7275,42 +7139,14 @@
             
             tbody.innerHTML = '';
             
-            var uid = currentUser && currentUser.uid;
-            var deletedIds = [];
-            if (uid) {
-                try {
-                    deletedIds = JSON.parse(localStorage.getItem('user_deleted_activity_' + uid) || '[]');
-                } catch (e) {}
-            }
-            
             var thumb = function(b) {
                 var img = (b.productsList && b.productsList[0] && b.productsList[0].image) ? b.productsList[0].image : 'https://via.placeholder.com/48?text=Block';
                 return '<img src="' + img.replace(/"/g, '&quot;') + '" alt="" style="width:40px;height:40px;object-fit:cover;border-radius:8px;" onerror="this.src=\'https://via.placeholder.com/48?text=Block\'">';
             };
-            var visibleBlocks = currentBlocks.filter(function(b) { return !deletedIds.includes(b.id); }).slice(0, 5);
-            visibleBlocks.forEach(function(block) {
+            currentBlocks.slice(0, 5).forEach(function(block) {
                 var row = document.createElement('tr');
-                row.setAttribute('data-activity-id', block.id);
-                row.innerHTML = '<td style="vertical-align:middle;">' + thumb(block) + '</td><td>' + (block.title || '') + '</td><td>' + (block.clicks || 0) + '</td><td>$' + (block.revenue != null ? block.revenue.toFixed(2) : '0.00') + '</td><td><span class="block-status ' + (block.status === 'active' ? 'status-active' : 'status-draft') + '">' + (block.status || 'draft') + '</span></td><td>' + (block.lastUpdated || '') + '</td><td><button type="button" class="btn btn-sm btn-danger activity-delete-btn" data-id="' + (block.id || '') + '" title="Remove from activity list"><i class="fas fa-trash-alt"></i></button></td>';
+                row.innerHTML = '<td style="vertical-align:middle;">' + thumb(block) + '</td><td>' + (block.title || '') + '</td><td>' + (block.clicks || 0) + '</td><td>$' + (block.revenue != null ? block.revenue.toFixed(2) : '0.00') + '</td><td><span class="block-status ' + (block.status === 'active' ? 'status-active' : 'status-draft') + '">' + (block.status || 'draft') + '</span></td><td>' + (block.lastUpdated || '') + '</td>';
                 tbody.appendChild(row);
-            });
-            tbody.querySelectorAll('.activity-delete-btn').forEach(function(btn) {
-                btn.addEventListener('click', function() {
-                    var id = this.getAttribute('data-id');
-                    if (!id) return;
-                    if (confirm('Remove this activity from the list?')) {
-                        var uid = currentUser && currentUser.uid;
-                        var deleted = [];
-                        if (uid) {
-                            try {
-                                deleted = JSON.parse(localStorage.getItem('user_deleted_activity_' + uid) || '[]');
-                            } catch (e) {}
-                            if (!deleted.includes(id)) deleted.push(id);
-                            localStorage.setItem('user_deleted_activity_' + uid, JSON.stringify(deleted));
-                        }
-                        renderActivityTable();
-                    }
-                });
             });
         }
 
