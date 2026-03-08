@@ -2,7 +2,12 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="theme-color" content="#1f2937">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>KotaPal Admin Dashboard</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -21,12 +26,26 @@
             --light: #f9fafb;
             --gray: #6b7280;
         }
+        html {
+            -webkit-text-size-adjust: 100%;
+            -moz-text-size-adjust: 100%;
+            -ms-text-size-adjust: 100%;
+        }
+        html { scrollbar-width: none; -ms-overflow-style: none; }
+        html::-webkit-scrollbar { display: none; width: 0; }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
             background: #f3f4f6;
             color: var(--dark);
             min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            padding-left: env(safe-area-inset-left);
+            padding-right: env(safe-area-inset-right);
+            padding-bottom: env(safe-area-inset-bottom);
         }
+        a, button { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+        input, select, textarea { font-size: 16px; }
         .admin-login {
             min-height: 100vh;
             display: flex;
@@ -101,6 +120,25 @@
             display: none;
         }
         .login-error.show { display: block; }
+        .create-admin-box {
+            margin-top: 20px;
+            padding: 16px;
+            background: #f0fdf4;
+            border: 1px solid #86efac;
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+        .create-admin-box p { margin-bottom: 12px; color: #166534; }
+        .create-admin-box .btn-create-admin {
+            background: #16a34a;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .create-admin-box .btn-create-admin:hover { background: #15803d; }
         .btn-return {
             display: inline-flex;
             align-items: center;
@@ -313,69 +351,25 @@
         @media (max-width: 768px) {
             .admin-sidebar { width: 100%; }
             .admin-dashboard.active { flex-direction: column; }
+            .login-card {
+                margin: 20px;
+                padding: 24px 20px;
+                padding-top: max(24px, env(safe-area-inset-top));
+            }
+            .form-control, .login-card input {
+                min-height: 48px;
+                font-size: 16px !important;
+            }
+            .btn-primary { min-height: 48px; padding: 14px; }
+        }
+        @media (max-width: 480px) {
+            .login-card { margin: 12px; padding: 20px 16px; }
         }
         @media (-webkit-min-device-pixel-ratio: 0) {
             input, select, textarea { font-size: 16px; }
         }
         @supports (-webkit-touch-callout: none) {
             input, select, textarea { font-size: 16px !important; }
-        }
-        /* Single scrollbar: hide nested scrollbars */
-        .admin-main, .table-container {
-            scrollbar-width: none;
-            -ms-overflow-style: none;
-        }
-        .admin-main::-webkit-scrollbar, .table-container::-webkit-scrollbar { display: none; }
-        /* Scroll arrows - alternative scroll control */
-        .scroll-arrows {
-            position: fixed;
-            right: 20px;
-            top: 50%;
-            transform: translateY(-50%);
-            z-index: 999;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-        .scroll-arrows .scroll-arrow-btn {
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
-            background: rgba(255,255,255,0.95);
-            border: 1px solid #e5e7eb;
-            color: var(--primary);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.1rem;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            transition: all 0.2s ease;
-        }
-        .scroll-arrows .scroll-arrow-btn:hover {
-            background: var(--primary);
-            color: white;
-            box-shadow: 0 4px 12px rgba(59,130,246,0.3);
-        }
-        .scroll-arrows .scroll-arrow-btn:active { transform: scale(0.95); }
-        #adminLogin .scroll-arrows { display: none; }
-        .firebase-status {
-            padding: 8px 16px;
-            border-radius: 8px;
-            font-size: 0.875rem;
-            margin-bottom: 16px;
-        }
-        .firebase-status.connected {
-            background: #d1fae5;
-            color: #065f46;
-        }
-        .firebase-status.disconnected {
-            background: #fef3c7;
-            color: #92400e;
-        }
-        .firebase-status.loading {
-            background: #dbeafe;
-            color: #1e40af;
         }
     </style>
 </head>
@@ -386,6 +380,7 @@
             <a href="index.html" class="btn-return"><i class="fas fa-arrow-left"></i> Return to Home</a>
             <h1><i class="fas fa-shield-alt"></i> Admin Access</h1>
             <p class="subtitle">KotaPal Admin Dashboard</p>
+            <p style="font-size:0.85rem;margin-bottom:12px;"><a href="admin-setup.html">First time? Create admin account (admin@kotapal.com)</a></p>
             <div id="loginError" class="login-error"></div>
             <form id="adminLoginForm">
                 <div class="form-group">
@@ -422,15 +417,11 @@
                 <li><a href="index.html" style="margin-top: 16px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.1);"><i class="fas fa-arrow-left"></i> Return to Home</a></li>
             </ul>
         </aside>
-        <div id="scrollArrows" class="scroll-arrows" aria-label="Scroll page" style="display:none;">
-            <button type="button" id="scrollUpBtn" class="scroll-arrow-btn" title="Scroll up" aria-label="Scroll up"><i class="fas fa-chevron-up"></i></button>
-            <button type="button" id="scrollDownBtn" class="scroll-arrow-btn" title="Scroll down" aria-label="Scroll down"><i class="fas fa-chevron-down"></i></button>
-        </div>
-        <main class="admin-main" id="adminMain">
-            <div id="firebaseStatusBanner" class="firebase-status" style="display:none;"></div>
+        <main class="admin-main">
             <div class="admin-header">
                 <h1>Admin Dashboard</h1>
-                <div class="admin-user">
+                <div class="admin-user" style="display:flex;align-items:center;gap:12px;">
+                    <button type="button" class="btn btn-secondary" id="refreshAdminDataBtn" style="padding:8px 14px;" title="Reload users and blocks from Firestore"><i class="fas fa-sync-alt"></i> Refresh</button>
                     <span id="adminEmailDisplay">admin@kotapal.com</span>
                     <button type="button" class="btn btn-logout" id="adminLogoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</button>
                 </div>
@@ -490,7 +481,11 @@
                 <div class="card">
                     <div class="card-header">
                         <h3>User Management</h3>
-                        <input type="text" id="userSearch" class="search-box" placeholder="Search users by email or name...">
+                        <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+                            <span id="usersCountLabel" style="font-size:0.9rem;color:var(--gray);">All users from database</span>
+                            <input type="text" id="userSearch" class="search-box" placeholder="Search users by email or name...">
+                            <button type="button" class="btn btn-primary" id="refreshUsersBtn" style="padding:8px 16px;"><i class="fas fa-sync-alt"></i> Refresh</button>
+                        </div>
                     </div>
                     <div class="card-body">
                         <div class="table-container">
@@ -510,8 +505,7 @@
                         </div>
                         <div id="usersEmpty" class="empty-state" style="display:none;">
                             <i class="fas fa-users"></i>
-                            <p>No users found in Firestore</p>
-                            <p style="font-size:0.85rem;margin-top:8px;color:#6b7280;">Users appear when they sign up or log in via the main app. To sync existing Firebase Auth users, run <code>npm run sync:auth-firestore</code>.</p>
+                            <p>No users found</p>
                         </div>
                     </div>
                 </div>
@@ -556,7 +550,7 @@
                     <div class="card-body">
                         <div class="table-container">
                             <table>
-                                <thead><tr><th>User</th><th>Plan</th><th>Status</th><th>Start Date</th><th>Actions</th></tr></thead>
+                                <thead><tr><th>User</th><th>Email</th><th>Plan</th><th>Status</th><th>Start Date</th><th>Actions</th></tr></thead>
                                 <tbody id="subscriptionsTableBody"></tbody>
                             </table>
                         </div>
@@ -678,11 +672,27 @@
                         <button type="button" class="btn btn-primary" id="saveSettingsBtn">Save Settings</button>
                     </div>
                 </div>
+                <div class="card" style="margin-top:24px;">
+                    <div class="card-header"><h3>Admin Users</h3></div>
+                    <div class="card-body">
+                        <p style="color:var(--gray);font-size:0.9rem;margin-bottom:16px;">Add a new admin. The user must already have an account (sign up from the main app first) or use the login page to create the first admin.</p>
+                        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;">
+                            <div class="form-group" style="margin-bottom:0;flex:1;min-width:200px;">
+                                <label for="newAdminEmail">New Admin Email</label>
+                                <input type="email" id="newAdminEmail" class="form-control" placeholder="admin2@kotapal.com">
+                            </div>
+                            <button type="button" class="btn btn-primary" id="addAdminBtn"><i class="fas fa-user-plus"></i> Add Admin</button>
+                        </div>
+                        <div id="addAdminError" style="color:var(--danger);font-size:0.9rem;margin-top:8px;display:none;"></div>
+                        <div id="adminEmailsList" style="margin-top:16px;font-size:0.9rem;color:var(--gray);"></div>
+                    </div>
+                </div>
             </div>
         </main>
     </div>
 
     <script>
+        /* Same Firebase/Firestore as main site (index.html) - admin dashboard reflects live database */
         const firebaseConfig = {
             apiKey: "AIzaSyCNU1QFZhmUuk2QWDeNi4ff3-le4KNnbrU",
             authDomain: "kotapal-1e8f6.firebaseapp.com",
@@ -693,11 +703,12 @@
             measurementId: "G-8GQ7JGDZ7P"
         };
 
-        const ADMIN_EMAILS = ['admin@kotapal.com'];
+        const ADMIN_EMAILS_FALLBACK = ['admin@kotapal.com'];
         let auth, db;
         let adminUsers = [];
         let adminBlocks = [];
         let userMap = {};
+        let adminEmailsList = [];
 
         try {
             firebase.initializeApp(firebaseConfig);
@@ -705,22 +716,60 @@
             db = firebase.firestore();
         } catch (e) { console.warn('Firebase init:', e); }
 
-        // Always show login form on load - require credentials every visit
-        document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('adminLogin').style.display = 'flex';
-            document.getElementById('adminDashboard').classList.remove('active');
-        });
+        /* SECURITY: Clear any existing session on admin page load. Require explicit admin login. */
+        let adminLoginInProgress = false;
+        let adminSignOutComplete = false;
 
-        function isAdminEmail(email) {
-            return email && ADMIN_EMAILS.includes(email.trim().toLowerCase());
+        async function loadAdminEmails() {
+            if (!db) return;
+            try {
+                const adminsRef = db.collection('config').doc('admins');
+                const snap = await adminsRef.get();
+                if (snap.exists && snap.data().emails && snap.data().emails.length) {
+                    adminEmailsList = snap.data().emails;
+                } else {
+                    adminEmailsList = ADMIN_EMAILS_FALLBACK.slice();
+                    if (!snap.exists && auth && auth.currentUser && ADMIN_EMAILS_FALLBACK.includes(auth.currentUser.email.toLowerCase())) {
+                        try {
+                            const em = auth.currentUser.email;
+                            await adminsRef.set({ emails: [em, em.toLowerCase()] });
+                            adminEmailsList = [em, em.toLowerCase()];
+                        } catch (e) { console.warn('Could not bootstrap config/admins:', e); }
+                    }
+                }
+            } catch (e) {
+                adminEmailsList = ADMIN_EMAILS_FALLBACK.slice();
+            }
         }
 
-        function showAdminDashboard(email) {
+        function isAdminEmail(email) {
+            const e = (email && email.trim()) || '';
+            if (!e) return false;
+            const eLower = e.toLowerCase();
+            return ADMIN_EMAILS_FALLBACK.includes(eLower) || adminEmailsList.includes(e) || adminEmailsList.includes(eLower);
+        }
+
+        async function showAdminDashboard(email) {
             document.getElementById('adminLogin').style.display = 'none';
             document.getElementById('adminDashboard').classList.add('active');
             document.getElementById('adminEmailDisplay').textContent = email;
-            document.getElementById('scrollArrows').style.display = 'flex';
-            loadAdminDataFromFirestore();
+            await loadAdminEmails();
+            await ensureAdminUserInFirestore();
+            await loadAdminDataFromFirestore();
+        }
+
+        async function ensureAdminUserInFirestore() {
+            if (!db || !auth || !auth.currentUser) return;
+            const user = auth.currentUser;
+            try {
+                await db.collection('users').doc(user.uid).set({
+                    email: user.email,
+                    displayName: user.displayName || user.email.split('@')[0],
+                    plan: 'admin',
+                    signupDate: user.metadata.creationTime || new Date().toISOString(),
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true });
+            } catch (e) { console.warn('Admin user sync:', e); }
         }
 
         function clearAdminAuth() {
@@ -728,7 +777,6 @@
             sessionStorage.removeItem('kotapal_admin');
             sessionStorage.removeItem('kotapal_admin_email');
             document.getElementById('adminDashboard').classList.remove('active');
-            document.getElementById('scrollArrows').style.display = 'none';
             document.getElementById('adminLogin').style.display = 'flex';
             document.getElementById('adminEmail').value = '';
             document.getElementById('adminPassword').value = '';
@@ -741,10 +789,12 @@
             const errorEl = document.getElementById('loginError');
 
             if (!auth) {
-                errorEl.textContent = 'Firebase not configured. Please check your setup.';
+                errorEl.textContent = 'Firebase not configured. Please contact support.';
                 errorEl.classList.add('show');
                 return;
             }
+
+            await loadAdminEmails();
 
             try {
                 const cred = await auth.signInWithEmailAndPassword(email, password);
@@ -766,25 +816,75 @@
 
         document.getElementById('adminLogoutBtn').addEventListener('click', clearAdminAuth);
 
-        // Require credentials every time - no auto-login from persisted auth state
-        // Users must enter email and password on the login form to access the admin dashboard
-
-        let lastFirestoreError = null;
-
-        async function loadAdminDataFromFirestore() {
-            lastFirestoreError = null;
-            if (!db) {
-                loadFallbackData('Firebase not initialized. Check that Firebase SDK scripts load and firebaseConfig is valid.');
+        /* SECURITY: Await signOut before processing auth state - prevents race where logged-in normal user gets admin access */
+        (function initAdminAuth() {
+            if (!auth) {
+                document.getElementById('adminLogin').style.display = 'flex';
+                document.getElementById('adminDashboard').classList.remove('active');
                 return;
             }
-            const banner = document.getElementById('firebaseStatusBanner');
-            if (banner) { banner.className = 'firebase-status loading'; banner.textContent = 'Loading from Firestore...'; banner.style.display = 'block'; }
+            auth.signOut().then(function() {
+                adminSignOutComplete = true;
+                sessionStorage.removeItem('kotapal_admin');
+                sessionStorage.removeItem('kotapal_admin_email');
+            }).catch(function() {
+                adminSignOutComplete = true;
+            }).then(function() {
+                auth.onAuthStateChanged(async function(user) {
+                    if (!adminSignOutComplete) return;
+                    await loadAdminEmails();
+                    if (!user) {
+                        document.getElementById('adminDashboard').classList.remove('active');
+                        document.getElementById('adminLogin').style.display = 'flex';
+                        sessionStorage.removeItem('kotapal_admin');
+                        sessionStorage.removeItem('kotapal_admin_email');
+                        return;
+                    }
+                    if (isAdminEmail(user.email)) {
+                        sessionStorage.setItem('kotapal_admin', 'true');
+                        sessionStorage.setItem('kotapal_admin_email', user.email);
+                        showAdminDashboard(user.email);
+                    } else {
+                        await auth.signOut();
+                        sessionStorage.removeItem('kotapal_admin');
+                        sessionStorage.removeItem('kotapal_admin_email');
+                        document.getElementById('adminDashboard').classList.remove('active');
+                        document.getElementById('adminLogin').style.display = 'flex';
+                        var err = document.getElementById('loginError');
+                        if (err) { err.textContent = 'Access denied. Run: firebase deploy --only firestore. Then add your email to Firestore → config/admins → emails array.'; err.classList.add('show'); }
+                    }
+                });
+            });
+        })();
+
+        document.getElementById('refreshAdminDataBtn').addEventListener('click', function() {
+            const btn = this;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+            loadAdminDataFromFirestore().finally(function() {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-sync-alt"></i> Refresh';
+            });
+        });
+        document.getElementById('refreshUsersBtn').addEventListener('click', function() {
+            loadAdminDataFromFirestore();
+        });
+
+        /* Auth state listener is registered inside initAdminAuth() after signOut completes */
+
+        async function loadAdminDataFromFirestore() {
+            if (!db) {
+                loadFallbackData(true);
+                return;
+            }
             try {
                 const usersSnap = await db.collection('users').get();
                 adminUsers = usersSnap.docs.map(d => {
                     const dta = d.data();
-                    const joined = dta.createdAt?.toDate ? dta.createdAt.toDate().toLocaleDateString() : (dta.signupDate || dta.updatedAt?.toDate?.()?.toLocaleDateString?.() || '—');
-                    return { id: d.id, name: dta.displayName || dta.email || '—', email: dta.email || '', plan: dta.plan || 'free', joined, status: 'active' };
+                    let joined = dta.signupDate || dta.createdAt || '—';
+                    if (joined && joined.toDate) joined = joined.toDate().toLocaleDateString();
+                    else if (typeof joined === 'string' && joined !== '—') joined = new Date(joined).toLocaleDateString();
+                    return { id: d.id, name: dta.displayName || dta.email || '—', email: dta.email || '', plan: dta.plan || 'free', joined: joined, status: dta.status || 'active' };
                 });
                 userMap = {};
                 adminUsers.forEach(u => { userMap[u.id] = u.name; });
@@ -792,9 +892,7 @@
                 const blocksSnap = await db.collection('blocks').get();
                 adminBlocks = blocksSnap.docs.map(d => {
                     const dta = d.data();
-                    const ts = dta.updatedAt || dta.lastUpdated;
-                    const timeStr = ts && ts.toDate ? ts.toDate().toLocaleString() : (typeof ts === 'string' ? ts : '—');
-                    return { id: d.id, title: dta.title || '—', owner: userMap[dta.userId] || dta.userId || '—', retailer: dta.retailer || '—', clicks: dta.clicks || 0, revenue: dta.revenue || 0, status: dta.status || 'active', lastUpdated: timeStr };
+                    return { id: d.id, title: dta.title || '—', owner: userMap[dta.userId] || dta.userId || '—', retailer: dta.retailer || '—', clicks: dta.clicks || 0, revenue: dta.revenue || 0, status: dta.status || 'active' };
                 });
 
                 const deletedIds = JSON.parse(localStorage.getItem('admin_deleted_activity') || '[]');
@@ -823,34 +921,31 @@
                 updateAdminStats();
                 renderUsersTable(adminUsers);
                 renderBlocksTable(adminBlocks);
-                showFirebaseStatus(true);
             } catch (err) {
-                lastFirestoreError = err;
                 console.warn('Firestore load:', err);
-                loadFallbackData(err.message || String(err));
+                const isPerm = (err.code === 'permission-denied') || (err.message && err.message.toLowerCase().includes('permission'));
+                loadFallbackData(false, isPerm ? 'Permission denied' : err.message);
             }
         }
 
-        function showFirebaseStatus(connected) {
-            const banner = document.getElementById('firebaseStatusBanner');
-            if (!banner) return;
-            banner.className = 'firebase-status ' + (connected ? 'connected' : 'disconnected');
-            banner.textContent = connected ? 'Live data from Firestore' : 'Firebase not connected';
-            banner.style.display = 'block';
-        }
-
-        function loadFallbackData(errorMsg) {
+        function loadFallbackData(firebaseNotConfigured, errMsg) {
             if (!adminUsers.length) adminUsers = [];
             if (!adminBlocks.length) adminBlocks = [];
             updateAdminStats();
             renderUsersTable(adminUsers);
             renderBlocksTable(adminBlocks);
-            showFirebaseStatus(false);
-            const msg = errorMsg || 'Connect Firebase to see live data';
-            const retryBtn = '<button type="button" class="btn btn-sm btn-primary" id="retryFirebaseBtn" style="margin-left:8px;">Retry</button>';
-            const setupLink = '<a href="firebase-setup.html" target="_blank" style="margin-left:8px;font-size:0.85rem;">Setup guide</a>';
-            document.getElementById('recentActivityBody').innerHTML = '<tr><td colspan="5"><span>' + msg + '</span>' + retryBtn + setupLink + '</td></tr>';
-            document.getElementById('retryFirebaseBtn')?.addEventListener('click', loadAdminDataFromFirestore);
+            const isPerm = errMsg && errMsg.toLowerCase().includes('permission');
+            const activityMsg = firebaseNotConfigured
+                ? 'Connect Firebase to see live data'
+                : (isPerm ? 'Permission denied. Deploy Firestore rules (firebase deploy --only firestore) and ensure your admin email is in config/admins.' : 'No recent activity');
+            const activityBody = document.getElementById('recentActivityBody');
+            if (activityBody) activityBody.innerHTML = '<tr><td colspan="5">' + activityMsg + '</td></tr>';
+            const usersEmpty = document.getElementById('usersEmpty');
+            if (usersEmpty) {
+                usersEmpty.innerHTML = isPerm
+                    ? '<i class="fas fa-lock"></i><p><strong>Permission denied.</strong></p><p>1. Run: <code>firebase deploy --only firestore</code></p><p>2. In Firebase Console → Firestore → config/admins, add your email to the <code>emails</code> array.</p><p style="font-size:0.85rem;margin-top:12px;">See DEPLOY_ADMIN.md for details.</p>'
+                    : '<i class="fas fa-users"></i><p>No users found in database</p>';
+            }
         }
 
         function updateAdminStats() {
@@ -872,6 +967,8 @@
         function renderUsersTable(users) {
             const tbody = document.getElementById('usersTableBody');
             const empty = document.getElementById('usersEmpty');
+            const countLabel = document.getElementById('usersCountLabel');
+            if (countLabel) countLabel.textContent = users.length + ' user' + (users.length !== 1 ? 's' : '') + ' in database';
             if (!users.length) {
                 tbody.innerHTML = '';
                 empty.style.display = 'block';
@@ -884,13 +981,19 @@
                     <td>${u.email}</td>
                     <td><span class="badge badge-info">${u.plan}</span></td>
                     <td>${u.joined}</td>
-                    <td><span class="badge badge-success">${u.status}</span></td>
+                    <td><span class="badge ${u.status === 'suspended' ? 'badge-danger' : 'badge-success'}">${u.status}</span></td>
                     <td>
                         <button class="btn btn-sm btn-secondary" onclick="viewUser('${u.id}')">View</button>
+                        <button class="btn btn-sm btn-primary change-plan-btn" data-user-id="${u.id}" data-email="${(u.email||'').replace(/"/g,'&quot;')}" data-plan="${u.plan||'free'}" title="Change plan">Plan</button>
                         <button class="btn btn-sm btn-danger" onclick="suspendUser('${u.id}')">Suspend</button>
                     </td>
                 </tr>`
             ).join('');
+            tbody.querySelectorAll('.change-plan-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    changeUserPlan(this.dataset.userId, this.dataset.email, this.dataset.plan);
+                });
+            });
         }
 
         function renderBlocksTable(blocks) {
@@ -918,15 +1021,40 @@
             ).join('');
         }
 
-        function viewUser(id) { alert('View user ' + id + ' (implement with backend)'); }
-        function suspendUser(id) { if (confirm('Suspend this user?')) alert('User suspended (implement with backend)'); }
+        function viewUser(id) {
+            const u = adminUsers.find(x => x.id === id);
+            if (u) alert('User: ' + (u.name || '—') + '\nEmail: ' + (u.email || '—') + '\nPlan: ' + (u.plan || 'free') + '\nJoined: ' + (u.joined || '—'));
+        }
+        function changeUserPlan(userId, userEmail, currentPlan) {
+            const plans = ['free','starter','pro','creatorplus','agency','admin'];
+            const newPlan = prompt('Change plan for ' + userEmail + '\nCurrent: ' + currentPlan + '\nEnter new plan: free, starter, pro, creatorplus, agency, admin', currentPlan);
+            if (!newPlan || !plans.includes(newPlan.trim().toLowerCase())) return;
+            const plan = newPlan.trim().toLowerCase();
+            if (!db) { alert('Firestore not available'); return; }
+            db.collection('users').doc(userId).update({ plan: plan }).then(function() {
+                alert('Plan updated to ' + plan);
+                loadAdminDataFromFirestore();
+            }).catch(function(err) {
+                alert('Failed to update: ' + (err.message || err));
+            });
+        }
+        function suspendUser(id) {
+            if (!confirm('Suspend this user? They will not be able to access the dashboard.')) return;
+            if (!db) { alert('Firestore not available'); return; }
+            db.collection('users').doc(id).update({ status: 'suspended', suspendedAt: firebase.firestore.FieldValue.serverTimestamp() }).then(function() {
+                alert('User suspended.');
+                loadAdminDataFromFirestore();
+            }).catch(function(err) {
+                alert('Failed to suspend: ' + (err.message || err));
+            });
+        }
         function viewBlock(id) { alert('View block ' + id + ' (implement with backend)'); }
         function flagBlock(id) { if (confirm('Flag this block for review?')) alert('Block flagged (implement with backend)'); }
 
         document.getElementById('userSearch').addEventListener('input', function() {
             const q = this.value.toLowerCase();
             const filtered = adminUsers.filter(u =>
-                u.email.toLowerCase().includes(q) || u.name.toLowerCase().includes(q)
+                (u.email && u.email.toLowerCase().includes(q)) || (u.name && u.name.toLowerCase().includes(q))
             );
             renderUsersTable(filtered);
         });
@@ -943,6 +1071,48 @@
             alert('Settings saved (implement with backend)');
         });
 
+        document.getElementById('addAdminBtn').addEventListener('click', async function() {
+            const emailInput = document.getElementById('newAdminEmail');
+            const errorEl = document.getElementById('addAdminError');
+            const email = emailInput && emailInput.value.trim();
+            if (!email) {
+                if (errorEl) { errorEl.textContent = 'Please enter an email.'; errorEl.style.display = 'block'; }
+                return;
+            }
+            if (!db) {
+                if (errorEl) { errorEl.textContent = 'Firestore not available.'; errorEl.style.display = 'block'; }
+                return;
+            }
+            if (errorEl) errorEl.style.display = 'none';
+            try {
+                const adminsRef = db.collection('config').doc('admins');
+                const snap = await adminsRef.get();
+                const emails = snap.exists && snap.data().emails ? snap.data().emails : [];
+                const emailLower = email.toLowerCase();
+                if (emails.includes(email) || emails.includes(emailLower)) {
+                    if (errorEl) { errorEl.textContent = 'This email is already an admin.'; errorEl.style.display = 'block'; }
+                    return;
+                }
+                emails.push(email);
+                if (email !== emailLower) emails.push(emailLower);
+                await adminsRef.set({ emails }, { merge: true });
+                adminEmailsList = emails;
+                if (emailInput) emailInput.value = '';
+                if (errorEl) errorEl.style.display = 'none';
+                renderAdminEmailsList();
+                alert('Admin added. The user must sign up from the main app first if they do not have an account.');
+            } catch (err) {
+                if (errorEl) { errorEl.textContent = err.message || 'Could not add admin.'; errorEl.style.display = 'block'; }
+            }
+        });
+
+        function renderAdminEmailsList() {
+            const el = document.getElementById('adminEmailsList');
+            if (!el) return;
+            const list = [...new Set([...ADMIN_EMAILS_FALLBACK, ...adminEmailsList])];
+            el.innerHTML = list.length ? '<strong>Current admins:</strong> ' + list.join(', ') : 'No admins in database.';
+        }
+
         document.querySelectorAll('.admin-nav a').forEach(link => {
             link.addEventListener('click', function(e) {
                 e.preventDefault();
@@ -956,14 +1126,20 @@
                 if (page === 'payments') loadPaymentsPage();
                 if (page === 'activity-log') loadActivityLogPage();
                 if (page === 'support') loadSupportPage();
+                if (page === 'settings') { loadAdminEmails(); renderAdminEmailsList(); }
             });
         });
 
         function loadSubscriptionsPage() {
             const tbody = document.getElementById('subscriptionsTableBody');
+            const empty = document.getElementById('subscriptionsEmpty');
             if (!tbody) return;
-            const rows = adminUsers.map(u => `<tr><td>${u.name}</td><td><span class="badge badge-info">${u.plan}</span></td><td><span class="badge badge-success">${u.status}</span></td><td>${u.joined}</td><td>—</td></tr>`).join('');
-            tbody.innerHTML = rows || '<tr><td colspan="5">No subscription data</td></tr>';
+            const rows = adminUsers.map(u => `<tr><td>${u.name}</td><td>${u.email}</td><td><span class="badge badge-info">${u.plan}</span></td><td><span class="badge badge-success">${u.status}</span></td><td>${u.joined}</td><td><button class="btn btn-sm btn-primary subs-plan-btn" data-user-id="${u.id}" data-email="${(u.email||'').replace(/"/g,'&quot;')}" data-plan="${u.plan||'free'}">Change Plan</button></td></tr>`).join('');
+            tbody.querySelectorAll('.subs-plan-btn').forEach(btn => {
+                btn.addEventListener('click', function() { changeUserPlan(this.dataset.userId, this.dataset.email, this.dataset.plan); });
+            });
+            tbody.innerHTML = rows || '<tr><td colspan="6">No subscriptions</td></tr>';
+            if (empty) empty.style.display = adminUsers.length ? 'none' : 'block';
         }
         function loadPaymentsPage() {
             const tbody = document.getElementById('paymentsTableBody');
@@ -983,19 +1159,6 @@
             tbody.innerHTML = '<tr><td colspan="6">Support tickets will appear here when customers submit inquiries</td></tr>';
         }
         document.getElementById('newAnnouncementBtn')?.addEventListener('click', () => alert('New Announcement: Create an announcement to send to all users. (Integrate with your notification system)'));
-
-        (function() {
-            var scrollStep = 300;
-            var mainEl = document.getElementById('adminMain');
-            var upBtn = document.getElementById('scrollUpBtn');
-            var downBtn = document.getElementById('scrollDownBtn');
-            function scrollAdminMain(dir) {
-                if (!mainEl) return;
-                mainEl.scrollBy({ top: dir === 'up' ? -scrollStep : scrollStep, behavior: 'smooth' });
-            }
-            if (upBtn) upBtn.addEventListener('click', function() { scrollAdminMain('up'); });
-            if (downBtn) downBtn.addEventListener('click', function() { scrollAdminMain('down'); });
-        })();
     </script>
 </body>
 </html>
