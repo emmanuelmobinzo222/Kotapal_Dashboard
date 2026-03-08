@@ -1,24 +1,42 @@
 rules_version = '2';
 service cloud.firestore {
-  match /databases/{database}/documents {
-    // Users - each user can read/write own doc; admin@kotapal.com can read all
-    match /users/{userId} {
-      allow read: if request.auth != null && (
-        request.auth.uid == userId ||
-        request.auth.token.email == 'admin@kotapal.com'
+  match /databases/$(database)/documents {
+    // Super-admins: full access - NO config/admins required
+    function isSuperAdmin() {
+      return request.auth != null && request.auth.token.email != null && 
+        (request.auth.token.email.toLowerCase() == 'admin@kotapal.com' || 
+         request.auth.token.email.toLowerCase() == 'wreck@gmail.com' ||
+         request.auth.token.email.toLowerCase() == 'earlhugue@gmail.com' ||
+         request.auth.token.email.toLowerCase() == 'emmanuelmobinzo222@gmail.com' ||
+         request.auth.token.email.toLowerCase() == 'emmanuelmobinzo21@gmail.com');
+    }
+    // Admin = super-admin OR email in config/admins
+    function isAdmin() {
+      return isSuperAdmin() || (
+        exists(/databases/$(database)/documents/config/admins) &&
+        request.auth.token.email != null &&
+        'emails' in get(/databases/$(database)/documents/config/admins).data &&
+        request.auth.token.email.toLowerCase() in get(/databases/$(database)/documents/config/admins).data.emails
       );
-      allow create, update: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    match /config/admins {
+      allow read: if request.auth != null;
+      allow create, update: if request.auth != null && isAdmin();
       allow delete: if false;
     }
     
-    // Blocks - users can read/write own blocks; admin@kotapal.com can read all
+    match /users/{userId} {
+      allow read: if request.auth != null && (request.auth.uid == userId || isAdmin());
+      allow create: if request.auth != null && request.auth.uid == userId;
+      allow update: if request.auth != null && (request.auth.uid == userId || isAdmin());
+      allow delete: if request.auth != null && isAdmin();
+    }
+    
     match /blocks/{blockId} {
-      allow read: if request.auth != null && (
-        resource.data.userId == request.auth.uid ||
-        request.auth.token.email == 'admin@kotapal.com'
-      );
+      allow read: if request.auth != null && (resource.data.userId == request.auth.uid || isAdmin());
       allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
-      allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow update, delete: if request.auth != null && (resource.data.userId == request.auth.uid || isAdmin());
     }
   }
 }
