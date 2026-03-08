@@ -1,25 +1,20 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/$(database)/documents {
-    // Super-admins: full access without config/admins (admin@kotapal.com, wreck@gmail.com)
+    // Super-admins: full access - NO config/admins required (admin@kotapal.com, wreck@gmail.com, earlhugue@gmail.com)
     function isSuperAdmin() {
       return request.auth != null && request.auth.token.email != null && 
         (request.auth.token.email.toLowerCase() == 'admin@kotapal.com' || 
-         request.auth.token.email.toLowerCase() == 'wreck@gmail.com');
+         request.auth.token.email.toLowerCase() == 'wreck@gmail.com' ||
+         request.auth.token.email.toLowerCase() == 'earlhugue@gmail.com');
     }
-    // Any admin: super-admin OR in config/admins
+    // Admin = super-admin only (bypass config/admins for reliability)
     function isAdmin() {
-      return isSuperAdmin() || (
-        exists(/databases/$(database)/documents/config/admins) && 
-        request.auth.token.email != null &&
-        request.auth.token.email.toLowerCase() in get(/databases/$(database)/documents/config/admins).data.emails
-      );
+      return isSuperAdmin();
     }
     
     match /config/admins {
-      allow read: if request.auth != null && isAdmin();
-      allow create: if request.auth != null && !exists(/databases/$(database)/documents/config/admins) && isSuperAdmin();
-      allow update: if request.auth != null && (isSuperAdmin() || (exists(/databases/$(database)/documents/config/admins) && request.auth.token.email != null && request.auth.token.email.toLowerCase() in resource.data.emails));
+      allow read, create, update: if request.auth != null && isAdmin();
       allow delete: if false;
     }
     
