@@ -359,6 +359,24 @@
         }
         .scroll-arrows .scroll-arrow-btn:active { transform: scale(0.95); }
         #adminLogin .scroll-arrows { display: none; }
+        .firebase-status {
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            margin-bottom: 16px;
+        }
+        .firebase-status.connected {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .firebase-status.disconnected {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        .firebase-status.loading {
+            background: #dbeafe;
+            color: #1e40af;
+        }
     </style>
 </head>
 <body>
@@ -409,6 +427,7 @@
             <button type="button" id="scrollDownBtn" class="scroll-arrow-btn" title="Scroll down" aria-label="Scroll down"><i class="fas fa-chevron-down"></i></button>
         </div>
         <main class="admin-main" id="adminMain">
+            <div id="firebaseStatusBanner" class="firebase-status" style="display:none;"></div>
             <div class="admin-header">
                 <h1>Admin Dashboard</h1>
                 <div class="admin-user">
@@ -748,16 +767,22 @@
             }
         });
 
+        let lastFirestoreError = null;
+
         async function loadAdminDataFromFirestore() {
+            lastFirestoreError = null;
             if (!db) {
-                loadFallbackData();
+                loadFallbackData('Firebase not initialized. Check that Firebase SDK scripts load and firebaseConfig is valid.');
                 return;
             }
+            const banner = document.getElementById('firebaseStatusBanner');
+            if (banner) { banner.className = 'firebase-status loading'; banner.textContent = 'Loading from Firestore...'; banner.style.display = 'block'; }
             try {
                 const usersSnap = await db.collection('users').get();
                 adminUsers = usersSnap.docs.map(d => {
                     const dta = d.data();
-                    return { id: d.id, name: dta.displayName || dta.email || '—', email: dta.email || '', plan: dta.plan || 'free', joined: dta.signupDate || '—', status: 'active' };
+                    const joined = dta.createdAt?.toDate ? dta.createdAt.toDate().toLocaleDateString() : (dta.signupDate || dta.updatedAt?.toDate?.()?.toLocaleDateString?.() || '—');
+                    return { id: d.id, name: dta.displayName || dta.email || '—', email: dta.email || '', plan: dta.plan || 'free', joined, status: 'active' };
                 });
                 userMap = {};
                 adminUsers.forEach(u => { userMap[u.id] = u.name; });
@@ -765,7 +790,9 @@
                 const blocksSnap = await db.collection('blocks').get();
                 adminBlocks = blocksSnap.docs.map(d => {
                     const dta = d.data();
-                    return { id: d.id, title: dta.title || '—', owner: userMap[dta.userId] || dta.userId || '—', retailer: dta.retailer || '—', clicks: dta.clicks || 0, revenue: dta.revenue || 0, status: dta.status || 'active' };
+                    const ts = dta.updatedAt || dta.lastUpdated;
+                    const timeStr = ts && ts.toDate ? ts.toDate().toLocaleString() : (typeof ts === 'string' ? ts : '—');
+                    return { id: d.id, title: dta.title || '—', owner: userMap[dta.userId] || dta.userId || '—', retailer: dta.retailer || '—', clicks: dta.clicks || 0, revenue: dta.revenue || 0, status: dta.status || 'active', lastUpdated: timeStr };
                 });
 
                 const deletedIds = JSON.parse(localStorage.getItem('admin_deleted_activity') || '[]');
@@ -794,19 +821,34 @@
                 updateAdminStats();
                 renderUsersTable(adminUsers);
                 renderBlocksTable(adminBlocks);
+                showFirebaseStatus(true);
             } catch (err) {
+                lastFirestoreError = err;
                 console.warn('Firestore load:', err);
-                loadFallbackData();
+                loadFallbackData(err.message || String(err));
             }
         }
 
-        function loadFallbackData() {
+        function showFirebaseStatus(connected) {
+            const banner = document.getElementById('firebaseStatusBanner');
+            if (!banner) return;
+            banner.className = 'firebase-status ' + (connected ? 'connected' : 'disconnected');
+            banner.textContent = connected ? 'Live data from Firestore' : 'Firebase not connected';
+            banner.style.display = 'block';
+        }
+
+        function loadFallbackData(errorMsg) {
             if (!adminUsers.length) adminUsers = [];
             if (!adminBlocks.length) adminBlocks = [];
             updateAdminStats();
             renderUsersTable(adminUsers);
             renderBlocksTable(adminBlocks);
-            document.getElementById('recentActivityBody').innerHTML = '<tr><td colspan="4">Connect Firebase to see live data</td></tr>';
+            showFirebaseStatus(false);
+            const msg = errorMsg || 'Connect Firebase to see live data';
+            const retryBtn = '<button type="button" class="btn btn-sm btn-primary" id="retryFirebaseBtn" style="margin-left:8px;">Retry</button>';
+            const setupLink = '<a href="firebase-setup.html" target="_blank" style="margin-left:8px;font-size:0.85rem;">Setup guide</a>';
+            document.getElementById('recentActivityBody').innerHTML = '<tr><td colspan="5"><span>' + msg + '</span>' + retryBtn + setupLink + '</td></tr>';
+            document.getElementById('retryFirebaseBtn')?.addEventListener('click', loadAdminDataFromFirestore);
         }
 
         function updateAdminStats() {
