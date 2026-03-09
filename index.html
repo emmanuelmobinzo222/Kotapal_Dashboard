@@ -69,15 +69,15 @@
             --warning: #f59e0b;
         }
 
-        html, body {
-            overflow-x: hidden !important;
-            max-width: 100vw;
-        }
+        /* Single scrollbar: only body scrolls to prevent double scrollbar */
+        html { overflow-x: hidden; overflow-y: hidden; height: 100%; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
             color: #333;
             line-height: 1.6;
             overflow-x: hidden;
+            overflow-y: auto;
+            min-height: 100%;
             background-color: #fff;
             min-width: 280px;
         }
@@ -98,14 +98,13 @@
         }
 
         #landing-page-view {
-            max-width: 100%;
+            max-width: 100vw;
             overflow-x: hidden;
         }
         /* Landing page, nav, footer: never receive theme-dark; dark mode applies only to #dashboard-view */
 
         section {
             padding: 80px 0;
-            overflow-x: hidden;
         }
 
         h1,
@@ -614,7 +613,7 @@
             opacity: 0;
         }
 
-        /* Scrollable Container - no horizontal page scroll */
+        /* Scrollable Container - single scroll area, no double scrollbars */
         .scrollable-container {
             position: relative;
             margin-top: 40px;
@@ -622,9 +621,6 @@
             margin-right: 20px;
             padding: 0 20px;
             overflow: hidden;
-            width: 100%;
-            max-width: 100%;
-            box-sizing: border-box;
         }
 
         .scrollable-container[style*="width: 100%"] {
@@ -635,13 +631,11 @@
 
         .scrollable-wrapper {
             position: relative;
-            overflow-x: scroll;
+            overflow-x: auto;
             overflow-y: hidden;
             padding: 30px 0;
             scroll-behavior: smooth;
             -webkit-overflow-scrolling: touch;
-            width: 100%;
-            max-width: 100%;
         }
 
         .scrollable-content {
@@ -698,15 +692,14 @@
             to { transform: rotate(360deg); }
         }
 
-        /* Hide carousel scrollbars - use scroll buttons only, no double scrollbars */
+        /* Hide native scrollbars */
         .scrollable-wrapper::-webkit-scrollbar {
-            display: none !important;
-            width: 0;
-            height: 0;
+            display: none;
         }
+
         .scrollable-wrapper {
-            -ms-overflow-style: none !important;
-            scrollbar-width: none !important;
+            -ms-overflow-style: none;
+            scrollbar-width: none;
         }
 
         /* Core Features Section - Horizontal Scrollable Cards */
@@ -3855,7 +3848,7 @@
     </style>
 
     <!-- Admin View (live Firebase user data) -->
-    <div id="admin-view" style="display: none;">
+    <div id="admin-view" style="display: none; padding: 40px 20px; max-width: 1200px; margin: 0 auto; min-height: 100vh; background: #f8fafc;">
         <div class="admin-header">
             <h1><i class="fas fa-shield-alt"></i> Admin Dashboard</h1>
             <div style="display: flex; align-items: center; gap: 12px;">
@@ -4814,6 +4807,8 @@
                     if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Login'; }
                     return;
                 }
+                if (goingToAdmin) sessionStorage.setItem('kotapal_admin_session', '1');
+                else sessionStorage.removeItem('kotapal_admin_session');
                 showAuthMessage('authMessage', goingToAdmin ? 'Login successful! Opening admin...' : 'Login successful! Redirecting to dashboard...', 'success');
                 
                 // Close modal after a brief delay
@@ -5169,11 +5164,14 @@
         }
 
         function hideAdminView() {
+            sessionStorage.removeItem('kotapal_admin_session');
             const adminView = document.getElementById('admin-view');
             const landingView = document.getElementById('landing-page-view');
             const nav = document.querySelector('nav');
             const footer = document.querySelector('footer');
+            const dashboardView = document.getElementById('dashboard-view');
             if (adminView) adminView.style.display = 'none';
+            if (dashboardView) { dashboardView.style.display = 'none'; dashboardView.classList.remove('active'); }
             if (landingView) landingView.style.display = 'block';
             if (nav) nav.style.display = 'flex';
             if (footer) footer.style.display = 'block';
@@ -5189,7 +5187,13 @@
                 const users = result.data?.users || [];
                 tbody.innerHTML = users.length === 0
                     ? '<tr><td colspan="5" class="text-center">No users found.</td></tr>'
-                    : users.map((u) => `<tr><td>${u.email || '-'}</td><td>${u.name || '-'}</td><td>${u.plan || '-'}</td><td>${u.joined || '-'}</td><td>${u.lastSignIn || '-'}</td></tr>`).join('');
+                    : users.map(function(u) {
+                        var joined = u.joined ? new Date(u.joined).toLocaleDateString() : '-';
+                        var lastSignIn = u.lastSignIn ? new Date(u.lastSignIn).toLocaleDateString() : '-';
+                        return '<tr><td>' + (u.email || '-') + '</td><td>' + (u.name || '-') + '</td><td>' + (u.plan || '-') + '</td><td>' + joined + '</td><td>' + lastSignIn + '</td></tr>';
+                    }).join('');
+                var statEl = document.getElementById('admin-stat-users');
+                if (statEl) statEl.textContent = users.length;
             } catch (err) {
                 console.error('loadAdminUsers error:', err);
                 tbody.innerHTML = '<tr><td colspan="5" class="text-center" style="color: var(--danger);">Failed to load users. Ensure Firebase Functions are deployed.</td></tr>';
@@ -5204,11 +5208,13 @@
             const nav = document.querySelector('nav');
             const footer = document.querySelector('footer');
             const dashboardView = document.getElementById('dashboard-view');
+            const adminView = document.getElementById('admin-view');
             
             if (dashboardView) {
                 dashboardView.style.display = 'none';
                 dashboardView.classList.remove('active');
             }
+            if (adminView) adminView.style.display = 'none';
             if (landingView) { landingView.style.display = 'block'; landingView.classList.remove('theme-dark'); }
             if (nav) nav.style.display = 'flex';
             if (footer) footer.style.display = 'block';
@@ -5263,12 +5269,15 @@
                 sections.forEach(function(section) { observer.observe(section); });
             }
             initSectionReveal();
+            
             isInitialLoad = false;
         });
         
         // Check authentication state and show appropriate view
         if (auth) {
+            // Track if we're currently processing an auth state change to prevent race conditions
             let isProcessingAuthState = false;
+            
             auth.onAuthStateChanged((user) => {
                 // #region agent log
                 fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:4595',message:'auth.onAuthStateChanged triggered',data:{hasUser:!!user,userId:user?.uid,email:user?.email,isInitialLoad,isProcessingAuthState,explicitLoginFlag:sessionStorage.getItem('kotapal_explicit_login')},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
@@ -5293,9 +5302,15 @@
                     return;
                 }
                 
+                // Require login this session: show Login/Sign Up forms when user visits (no auto-login to another user's dashboard)
                 let explicitLogin = sessionStorage.getItem('kotapal_explicit_login') === 'true';
                 
+                // Only show dashboard if user signed in this session (entered credentials)
                 if (user && explicitLogin) {
+                    // #region agent log
+                    fetch('http://127.0.0.1:7242/ingest/5c467a59-1817-4118-a923-04ca9b1aa0ae',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:5133',message:'User authenticated and explicitly logged in - showing dashboard',data:{userId:user.uid,email:user.email},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+                    // #endregion
+                    // User is signed in and explicitly logged in
                     const savedUserData = JSON.parse(localStorage.getItem('kotaUser') || '{}');
                     const userData = {
                         uid: user.uid,
@@ -5307,27 +5322,42 @@
                     };
                     localStorage.setItem('kotaUser', JSON.stringify(userData));
                     currentUser = userData;
+                    
                     const landingView = document.getElementById('landing-page-view');
                     const nav = document.querySelector('nav');
                     const footer = document.querySelector('footer');
                     const dashboardView = document.getElementById('dashboard-view');
                     const adminView = document.getElementById('admin-view');
-                    if (landingView) landingView.style.display = 'none';
-                    if (nav) nav.style.display = 'none';
-                    if (footer) footer.style.display = 'none';
-                    if (typeof isAdminUser === 'function' && isAdminUser(user.email)) {
-                        if (adminView) { adminView.style.display = 'block'; if (typeof loadAdminUsers === 'function') loadAdminUsers(); }
+                    
+                    // Admin session: show admin view (not dashboard)
+                    if (typeof isAdminUser === 'function' && isAdminUser(user.email) && sessionStorage.getItem('kotapal_admin_session') === '1') {
+                        if (landingView) landingView.style.display = 'none';
+                        if (nav) nav.style.display = 'none';
+                        if (footer) footer.style.display = 'none';
                         if (dashboardView) { dashboardView.style.display = 'none'; dashboardView.classList.remove('active'); }
+                        if (adminView) {
+                            adminView.style.display = 'block';
+                            if (typeof loadAdminUsers === 'function') loadAdminUsers();
+                            var adminEmailEl = document.getElementById('adminEmailDisplay');
+                            if (adminEmailEl) adminEmailEl.textContent = user.email;
+                        }
                     } else {
+                        // Regular user: show dashboard (with profile, sidebar, etc.)
+                        sessionStorage.removeItem('kotapal_admin_session');
+                        if (landingView) landingView.style.display = 'none';
+                        if (nav) nav.style.display = 'none';
+                        if (footer) footer.style.display = 'none';
                         if (adminView) adminView.style.display = 'none';
                         if (dashboardView) {
                             dashboardView.style.display = 'block';
                             dashboardView.classList.add('active');
-                            updateSidebarUserInfo();
-                            showPage('dashboard');
-                            if (typeof initDashboard === 'function') initDashboard();
                         }
+                        updateSidebarUserInfo();
+                        showPage('dashboard');
+                        if (typeof initDashboard === 'function') initDashboard();
                     }
+                    
+                    // Mark processing complete
                     isProcessingAuthState = false;
                 } else {
                     // #region agent log
@@ -5352,6 +5382,7 @@
                     }
                     
                     // Show landing page if not explicitly logged in
+                    sessionStorage.removeItem('kotapal_admin_session');
                     const landingView = document.getElementById('landing-page-view');
                     const nav = document.querySelector('nav');
                     const footer = document.querySelector('footer');
@@ -5408,7 +5439,7 @@
 
         function showAuthModal() {
             if (authModal) {
-                authModal.style.display = 'block';
+                authModal.style.display = 'flex';
                 document.body.style.overflow = 'hidden'; // Prevent scrolling
             }
         }
