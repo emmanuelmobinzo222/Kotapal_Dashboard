@@ -687,10 +687,10 @@
         .animate-reveal { opacity: 0; transform: translateY(18px); }
         .animate-reveal.is-visible { opacity: 1; transform: translateY(0); }
 
-        /* Section Reveal Animation */
+        /* Section Reveal Animation - visible by default so content shows immediately */
         .section-reveal {
-            opacity: 0;
-            transform: translateY(30px);
+            opacity: 1;
+            transform: translateY(0);
             transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1), transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
         }
         .section-reveal.revealed {
@@ -2787,8 +2787,8 @@
 </head>
 
 <body>
-    <!-- Page Loader -->
-    <div class="page-loader" id="pageLoader">
+    <!-- Page Loader (hidden by default - content shows immediately) -->
+    <div class="page-loader hidden" id="pageLoader">
         <div class="loader-spinner"></div>
     </div>
 
