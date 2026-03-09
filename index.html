@@ -698,36 +698,6 @@
             transform: translateY(0);
         }
 
-        /* Page Loader */
-        .page-loader {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: #fff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 10000;
-            transition: opacity 0.5s ease, visibility 0.5s ease;
-        }
-        .page-loader.hidden {
-            opacity: 0;
-            visibility: hidden;
-        }
-        .loader-spinner {
-            width: 50px;
-            height: 50px;
-            border: 3px solid #e5e7eb;
-            border-top-color: var(--primary);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
         /* Hide carousel scrollbars - use scroll buttons only, no double scrollbars */
         .scrollable-wrapper::-webkit-scrollbar {
             display: none !important;
@@ -2786,11 +2756,6 @@
 </head>
 
 <body>
-    <!-- Page Loader -->
-    <div class="page-loader" id="pageLoader">
-        <div class="loader-spinner"></div>
-    </div>
-
     <div id="landing-page-view">
     <!-- Navigation -->
     <nav>
@@ -5254,15 +5219,6 @@
             if (!sessionStorage.getItem('kotapal_explicit_login')) {
                 // This is a fresh page load, ensure landing page is shown
             }
-            
-            // Page loader - hide after load
-            window.addEventListener('load', function() {
-                setTimeout(function() {
-                    var loader = document.getElementById('pageLoader');
-                    if (loader) loader.classList.add('hidden');
-                    document.body.classList.add('loaded');
-                }, 500);
-            });
             
             // Nav scroll highlight (updateActiveMenu)
             function updateActiveMenu() {
