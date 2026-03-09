@@ -69,13 +69,15 @@
             --warning: #f59e0b;
         }
 
-        html { overflow-x: hidden; overflow-y: scroll; }
+        html, body {
+            overflow-x: hidden !important;
+            max-width: 100vw;
+        }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
             color: #333;
             line-height: 1.6;
-            overflow-x: hidden !important;
-            overflow-y: auto;
+            overflow-x: hidden;
             background-color: #fff;
             min-width: 280px;
         }
@@ -96,9 +98,8 @@
         }
 
         #landing-page-view {
-            max-width: 100vw;
-            overflow-x: hidden !important;
-            overflow-y: visible;
+            max-width: 100%;
+            overflow-x: hidden;
         }
         /* Landing page, nav, footer: never receive theme-dark; dark mode applies only to #dashboard-view */
 
@@ -613,7 +614,7 @@
             opacity: 0;
         }
 
-        /* Scrollable Container - single scroll area, no double scrollbars */
+        /* Scrollable Container - no horizontal page scroll */
         .scrollable-container {
             position: relative;
             margin-top: 40px;
@@ -621,6 +622,9 @@
             margin-right: 20px;
             padding: 0 20px;
             overflow: hidden;
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
         }
 
         .scrollable-container[style*="width: 100%"] {
@@ -636,6 +640,7 @@
             padding: 30px 0;
             scroll-behavior: smooth;
             -webkit-overflow-scrolling: touch;
+            width: 100%;
             max-width: 100%;
         }
 
@@ -693,14 +698,15 @@
             to { transform: rotate(360deg); }
         }
 
-        /* Hide native scrollbars */
+        /* Hide carousel scrollbars - use scroll buttons only, no double scrollbars */
         .scrollable-wrapper::-webkit-scrollbar {
-            display: none;
+            display: none !important;
+            width: 0;
+            height: 0;
         }
-
         .scrollable-wrapper {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
+            -ms-overflow-style: none !important;
+            scrollbar-width: none !important;
         }
 
         /* Core Features Section - Horizontal Scrollable Cards */
@@ -2776,7 +2782,6 @@
                 <li><a href="#about" class="nav-link" data-section="about" onclick="scrollToSection('about'); return false;">About</a></li>
                 <li><a href="#" class="nav-link" data-section="contact" onclick="goToContactForm(); return false;">Contact</a></li>
                 <li><a href="#" id="loginBtn">Login</a></li>
-                <li><a href="#" id="adminNavLink" style="opacity:0.8; font-size:0.9rem;">Admin</a></li>
             </ul>
 
             <div class="mobile-menu-btn" id="mobileMenuBtn">
@@ -5258,50 +5263,9 @@
                 sections.forEach(function(section) { observer.observe(section); });
             }
             initSectionReveal();
-            
             isInitialLoad = false;
-            // If user was already logged in (e.g. page refresh), apply correct view now
-            if (auth && auth.currentUser && (sessionStorage.getItem('kotapal_explicit_login') === 'true' || localStorage.getItem('kotapal_explicit_login') === 'true')) {
-                if (typeof applyAuthView === 'function') applyAuthView(auth.currentUser);
-            }
         });
         
-        // Apply correct view (dashboard or admin) for authenticated user
-        function applyAuthView(user) {
-            const savedUserData = JSON.parse(localStorage.getItem('kotaUser') || '{}');
-            const userData = {
-                uid: user.uid,
-                email: user.email,
-                displayName: user.displayName || savedUserData.displayName || user.email.split('@')[0],
-                emailVerified: user.emailVerified,
-                plan: savedUserData.plan || 'starter',
-                signupDate: savedUserData.signupDate || new Date().toISOString()
-            };
-            localStorage.setItem('kotaUser', JSON.stringify(userData));
-            currentUser = userData;
-            const landingView = document.getElementById('landing-page-view');
-            const nav = document.querySelector('nav');
-            const footer = document.querySelector('footer');
-            const dashboardView = document.getElementById('dashboard-view');
-            const adminView = document.getElementById('admin-view');
-            if (landingView) landingView.style.display = 'none';
-            if (nav) nav.style.display = 'none';
-            if (footer) footer.style.display = 'none';
-            if (typeof isAdminUser === 'function' && isAdminUser(user.email)) {
-                if (adminView) { adminView.style.display = 'block'; if (typeof loadAdminUsers === 'function') loadAdminUsers(); }
-                if (dashboardView) { dashboardView.style.display = 'none'; dashboardView.classList.remove('active'); }
-            } else {
-                if (adminView) adminView.style.display = 'none';
-                if (dashboardView) {
-                    dashboardView.style.display = 'block';
-                    dashboardView.classList.add('active');
-                    if (typeof updateSidebarUserInfo === 'function') updateSidebarUserInfo();
-                    if (typeof showPage === 'function') showPage('dashboard');
-                    if (typeof initDashboard === 'function') initDashboard();
-                }
-            }
-        }
-
         // Check authentication state and show appropriate view
         if (auth) {
             let isProcessingAuthState = false;
@@ -5329,12 +5293,41 @@
                     return;
                 }
                 
-                // Check explicit login: sessionStorage (this tab) or localStorage (persisted across refresh)
-                let explicitLogin = sessionStorage.getItem('kotapal_explicit_login') === 'true' || localStorage.getItem('kotapal_explicit_login') === 'true';
+                let explicitLogin = sessionStorage.getItem('kotapal_explicit_login') === 'true';
                 
-                // Only show dashboard (or admin) if user signed in (entered credentials)
                 if (user && explicitLogin) {
-                    if (typeof applyAuthView === 'function') applyAuthView(user);
+                    const savedUserData = JSON.parse(localStorage.getItem('kotaUser') || '{}');
+                    const userData = {
+                        uid: user.uid,
+                        email: user.email,
+                        displayName: user.displayName || savedUserData.displayName || user.email.split('@')[0],
+                        emailVerified: user.emailVerified,
+                        plan: savedUserData.plan || 'starter',
+                        signupDate: savedUserData.signupDate || new Date().toISOString()
+                    };
+                    localStorage.setItem('kotaUser', JSON.stringify(userData));
+                    currentUser = userData;
+                    const landingView = document.getElementById('landing-page-view');
+                    const nav = document.querySelector('nav');
+                    const footer = document.querySelector('footer');
+                    const dashboardView = document.getElementById('dashboard-view');
+                    const adminView = document.getElementById('admin-view');
+                    if (landingView) landingView.style.display = 'none';
+                    if (nav) nav.style.display = 'none';
+                    if (footer) footer.style.display = 'none';
+                    if (typeof isAdminUser === 'function' && isAdminUser(user.email)) {
+                        if (adminView) { adminView.style.display = 'block'; if (typeof loadAdminUsers === 'function') loadAdminUsers(); }
+                        if (dashboardView) { dashboardView.style.display = 'none'; dashboardView.classList.remove('active'); }
+                    } else {
+                        if (adminView) adminView.style.display = 'none';
+                        if (dashboardView) {
+                            dashboardView.style.display = 'block';
+                            dashboardView.classList.add('active');
+                            updateSidebarUserInfo();
+                            showPage('dashboard');
+                            if (typeof initDashboard === 'function') initDashboard();
+                        }
+                    }
                     isProcessingAuthState = false;
                 } else {
                     // #region agent log
@@ -5495,13 +5488,6 @@
         const adminLink = document.getElementById('adminLink');
         if (adminLink) {
             adminLink.addEventListener('click', function(e) {
-                e.preventDefault();
-                openAdminOrAuthModal();
-            });
-        }
-        const adminNavLink = document.getElementById('adminNavLink');
-        if (adminNavLink) {
-            adminNavLink.addEventListener('click', function(e) {
                 e.preventDefault();
                 openAdminOrAuthModal();
             });
