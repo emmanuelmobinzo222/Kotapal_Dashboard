@@ -69,18 +69,25 @@
             --warning: #f59e0b;
         }
 
-        /* Single scrollbar: only body scrolls to prevent double scrollbar */
+        /* Single scrollbar: body scrolls; visible scrollbar on landing page */
         html { overflow-x: hidden; overflow-y: hidden; height: 100%; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
             color: #333;
             line-height: 1.6;
             overflow-x: hidden;
-            overflow-y: auto;
+            overflow-y: scroll;
             min-height: 100%;
             background-color: #fff;
             min-width: 280px;
+            scrollbar-width: thin;
+            scrollbar-color: #cbd5e1 #f1f5f9;
         }
+        /* Visible scrollbar for landing page (body) */
+        body::-webkit-scrollbar { width: 10px; }
+        body::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 5px; }
+        body::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 5px; }
+        body::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
         .container {
             width: 100%;
@@ -5506,12 +5513,27 @@
             }
             isAdminLoginMode = true;
             showAuthModal();
+            var loginForm = document.getElementById('loginForm');
+            var signupForm = document.getElementById('signupForm');
+            if (loginForm) loginForm.classList.add('active');
+            if (signupForm) signupForm.classList.remove('active');
+            document.querySelectorAll('.auth-tab').forEach(function(t) {
+                t.classList.toggle('active', t.dataset.tab === 'login');
+            });
+            var msgEl = document.getElementById('authMessage');
+            if (msgEl) {
+                msgEl.textContent = 'Enter your admin credentials below.';
+                msgEl.className = 'form-status';
+                msgEl.style.display = 'block';
+                msgEl.style.color = 'var(--primary)';
+            }
         }
 
         const adminLoginBtn = document.getElementById('adminLoginBtn');
         if (adminLoginBtn) {
             adminLoginBtn.addEventListener('click', function(e) {
                 e.preventDefault();
+                e.stopPropagation();
                 openAdminOrAuthModal();
             });
         }
