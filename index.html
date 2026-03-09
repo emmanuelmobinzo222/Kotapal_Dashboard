@@ -610,14 +610,14 @@
             opacity: 0;
         }
 
-        /* Scrollable Container - round scroll buttons visible */
+        /* Scrollable Container - single scroll area, no double scrollbars */
         .scrollable-container {
             position: relative;
             margin-top: 40px;
             margin-left: 20px;
             margin-right: 20px;
             padding: 0 20px;
-            overflow: visible;
+            overflow: hidden;
         }
 
         .scrollable-container[style*="width: 100%"] {
@@ -628,11 +628,10 @@
 
         .scrollable-wrapper {
             position: relative;
-            overflow: hidden;
-            overflow-x: scroll;
+            overflow-x: auto;
             overflow-y: hidden;
             padding: 30px 0;
-            scroll-behavior: auto;
+            scroll-behavior: smooth;
             -webkit-overflow-scrolling: touch;
         }
 
@@ -3317,6 +3316,17 @@
         </div>
     </div>
 
+    <!-- Carousel Item Lightbox (enlarge on click) -->
+    <div id="carouselItemLightbox" class="plan-detail-modal" style="display: none;">
+        <div class="plan-modal-content" id="carouselItemLightboxContent" style="max-width: 500px;">
+            <div class="plan-modal-header">
+                <h2 id="carouselItemLightboxTitle">Item Details</h2>
+                <button class="plan-modal-close" id="carouselItemLightboxClose">&times;</button>
+            </div>
+            <div id="carouselItemLightboxBody"></div>
+        </div>
+    </div>
+
     <!-- Rest of the HTML remains the same (Blog, Contact, Footer, Modals) -->
     <!-- Blog Page Content (Hidden by default) -->
     <div id="blog-page" style="display: none;">
@@ -5814,115 +5824,128 @@
             el.scrollTo({ left: Math.max(0, Math.min(newScrollLeft, el.scrollWidth - el.clientWidth)), behavior: 'smooth' });
         }
 
-        // Homepage carousels auto-scroll at all times
-        var carouselRAF = {};
-        var carouselSpeed = 0.6;
-        // Positive scrollLeft motion makes cards move right-to-left visually.
-        var carouselDirection = { featuresWrapper: 1, pricingWrapper: 1, productsWrapper: 1, trendingProductsWrapper: 1 };
-        function ensureCarouselScrollable(id) {
-            var el = document.getElementById(id);
-            if (!el) return;
-            var content = el.querySelector('.scrollable-content');
-            if (!content) return;
-            if (content.dataset.loopReady === '1') return;
-            // Always duplicate so carousel repeats seamlessly and runs 24/7.
-            content.innerHTML = content.innerHTML + content.innerHTML;
-            content.dataset.loopReady = '1';
+        // Plan Detail Modal
+        const planDetails = {
+            free: { title: 'Free Plan', price: '$0', description: 'Perfect for getting started with KotaPal. Includes basic features to test the platform.', features: ['1 Shopify store', 'Amazon or Walmart only', 'Limited blocks', 'Watermarked embed', 'Basic analytics'] },
+            starter: { title: 'Starter Plan', price: '$19/month', description: 'Ideal for individual creators and small blogs. Start monetizing your content effectively.', features: ['Unlimited blocks', 'Shopify + 1 Affiliate Network', 'Basic analytics', 'Email support', '10,000 monthly views'] },
+            pro: { title: 'Pro Plan', price: '$49/month', description: 'For professional creators who need advanced features and multi-platform integration.', features: ['Shopify + Amazon + Walmart', 'AI Writer & Optimizer', 'Smart Geo Redirect', 'Email-friendly exports', '50,000 monthly views'] },
+            creatorplus: { title: 'Creator+ Plan', price: '$99/month', description: 'Everything for serious creators including YouTube integration and advanced analytics.', features: ['YouTube Overlay Blocks', 'Conversion tracking', 'Newsletter block formats', 'Heatmaps & CTR insights', '200,000 monthly views'] },
+            agency: { title: 'Agency Plan', price: '$199/month', description: 'For agencies and businesses managing multiple clients with white-label solutions.', features: ['Whitelabel embeds', 'Multiple client management', 'Custom domains & branding', 'Priority support', 'Unlimited monthly views'] }
+        };
+        function showPlanDetails(planId) {
+            const plan = planDetails[planId];
+            if (!plan) return;
+            const modal = document.getElementById('planDetailModal');
+            const titleEl = document.getElementById('planModalTitle');
+            const contentEl = document.getElementById('planModalContent');
+            if (!modal || !titleEl || !contentEl) return;
+            titleEl.textContent = plan.title;
+            contentEl.innerHTML = '<div class="plan-modal-price">' + plan.price + '</div><p class="plan-modal-description">' + plan.description + '</p><h3>Features:</h3><ul class="plan-modal-features">' + plan.features.map(function(f) { return '<li>' + f + '</li>'; }).join('') + '</ul><button class="btn btn-primary" style="width: 100%;" onclick="closePlanModal(); showAuthModal();">Get Started</button>';
+            modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
         }
-        function carouselTick(id) {
-            var el = document.getElementById(id);
-            if (!el || !carouselRAF[id]) return;
-            var dir = carouselDirection[id] !== undefined ? carouselDirection[id] : 1;
-            var maxScroll = el.scrollWidth - el.clientWidth - 5;
-            if (maxScroll <= 0) {
-                carouselRAF[id] = requestAnimationFrame(function() { carouselTick(id); });
-                return;
+        function closePlanModal() {
+            const modal = document.getElementById('planDetailModal');
+            if (modal) {
+                modal.style.display = 'none';
+                document.body.style.overflow = '';
             }
-            el.scrollLeft = el.scrollLeft + carouselSpeed * dir;
-            if (dir > 0 && el.scrollLeft >= maxScroll) el.scrollLeft = 0;
-            if (dir < 0 && el.scrollLeft <= 0) el.scrollLeft = maxScroll;
-            carouselRAF[id] = requestAnimationFrame(function() { carouselTick(id); });
         }
+        document.querySelector('#planDetailModal .plan-modal-close') && document.querySelector('#planDetailModal .plan-modal-close').addEventListener('click', closePlanModal);
+        document.getElementById('planDetailModal') && document.getElementById('planDetailModal').addEventListener('click', function(e) {
+            if (e.target === this) closePlanModal();
+        });
+
+        // Carousel item lightbox (click to enlarge)
+        function openCarouselItemLightbox(title, bodyHtml) {
+            var lb = document.getElementById('carouselItemLightbox');
+            var titleEl = document.getElementById('carouselItemLightboxTitle');
+            var bodyEl = document.getElementById('carouselItemLightboxBody');
+            if (!lb || !titleEl || !bodyEl) return;
+            titleEl.textContent = title;
+            bodyEl.innerHTML = bodyHtml;
+            lb.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+        function closeCarouselItemLightbox() {
+            var lb = document.getElementById('carouselItemLightbox');
+            if (lb) { lb.style.display = 'none'; document.body.style.overflow = ''; }
+        }
+        document.getElementById('carouselItemLightboxClose') && document.getElementById('carouselItemLightboxClose').addEventListener('click', closeCarouselItemLightbox);
+        document.getElementById('carouselItemLightbox') && document.getElementById('carouselItemLightbox').addEventListener('click', function(e) {
+            if (e.target === this) closeCarouselItemLightbox();
+        });
+        function setupCarouselClickEnlarge() {
+            document.querySelectorAll('.feature-card-scroll').forEach(function(card) {
+                card.style.cursor = 'pointer';
+                card.addEventListener('click', function(e) {
+                    if (e.target.closest('button') || e.target.closest('a')) return;
+                    var icon = card.querySelector('.feature-icon-scroll');
+                    var h3 = card.querySelector('h3');
+                    var p = card.querySelector('p');
+                    var iconHtml = icon ? '<div class="feature-icon-scroll" style="width:80px;height:80px;font-size:2.5rem;margin:0 auto 20px;">' + icon.innerHTML + '</div>' : '';
+                    openCarouselItemLightbox(h3 ? h3.textContent : 'Feature', iconHtml + '<h3 style="margin-bottom:15px;">' + (h3 ? h3.textContent : '') + '</h3><p style="font-size:1.1rem;line-height:1.7;color:var(--gray);">' + (p ? p.textContent : '') + '</p>');
+                });
+            });
+            document.querySelectorAll('.product-card').forEach(function(card) {
+                card.style.cursor = 'pointer';
+                card.addEventListener('click', function(e) {
+                    if (e.target.closest('a') || e.target.closest('button')) return;
+                    var img = card.querySelector('.product-image img');
+                    var title = card.querySelector('.product-title');
+                    var price = card.querySelector('.product-price');
+                    var source = card.querySelector('.product-source');
+                    var imgHtml = img ? '<div style="margin-bottom:20px;"><img src="' + (img.src || '') + '" alt="" style="max-width:100%;max-height:280px;object-fit:contain;border-radius:12px;"></div>' : '';
+                    var body = imgHtml + '<h3 style="margin-bottom:10px;">' + (title ? title.textContent : '') + '</h3>' + (price ? '<div style="font-size:1.5rem;font-weight:700;color:var(--primary);margin-bottom:15px;">' + price.innerHTML + '</div>' : '') + (source ? '<div style="color:var(--gray);">' + source.innerHTML + '</div>' : '');
+                    openCarouselItemLightbox(title ? title.textContent : 'Product', body);
+                });
+            });
+        }
+
+        // Homepage carousels: manual scroll via buttons only (single scroll mechanism, no double scrollbars)
+        // Hover on container pauses; click on item enlarges
+        var carouselRAF = {};
+        var carouselSpeed = 0.5;
+        var carouselDirection = { featuresWrapper: 1, pricingWrapper: 1, trendingProductsWrapper: 1 };
         function startCarousel(id) {
-            if (carouselRAF[id]) cancelAnimationFrame(carouselRAF[id]);
+            if (carouselRAF[id]) return;
             var el = document.getElementById(id);
             if (!el) return;
-            ensureCarouselScrollable(id);
-            carouselRAF[id] = requestAnimationFrame(function() { carouselTick(id); });
+            carouselRAF[id] = requestAnimationFrame(function tick() {
+                if (!carouselRAF[id]) return;
+                var maxScroll = el.scrollWidth - el.clientWidth - 5;
+                if (maxScroll <= 0) { carouselRAF[id] = requestAnimationFrame(tick); return; }
+                el.scrollLeft += carouselSpeed * (carouselDirection[id] || 1);
+                if (el.scrollLeft >= maxScroll) el.scrollLeft = 0;
+                carouselRAF[id] = requestAnimationFrame(tick);
+            });
         }
         function stopCarousel(id) {
-            if (carouselRAF[id]) {
-                cancelAnimationFrame(carouselRAF[id]);
-                carouselRAF[id] = null;
-            }
+            if (carouselRAF[id]) { cancelAnimationFrame(carouselRAF[id]); carouselRAF[id] = null; }
+        }
+        function setupCarouselHoverPause() {
+            ['featuresWrapper', 'pricingWrapper', 'trendingProductsWrapper'].forEach(function(id) {
+                var wrapper = document.getElementById(id);
+                if (!wrapper) return;
+                var container = wrapper.closest('.scrollable-container');
+                if (!container) return;
+                container.addEventListener('mouseenter', function() { stopCarousel(id); });
+                container.addEventListener('mouseleave', function() { startCarousel(id); });
+            });
         }
         function initLandingCarousels() {
-            ['featuresWrapper', 'pricingWrapper', 'productsWrapper', 'trendingProductsWrapper'].forEach(function(id) {
+            ['featuresWrapper', 'pricingWrapper', 'trendingProductsWrapper'].forEach(function(id) {
                 var el = document.getElementById(id);
-                if (el) {
-                    startCarousel(id);
-                }
+                if (el) startCarousel(id);
             });
-        }
-        function runWhenLandingReady() {
-            initLandingCarousels();
-            requestAnimationFrame(function() { initLandingCarousels(); });
-            setTimeout(initLandingCarousels, 100);
-            setTimeout(initLandingCarousels, 400);
-            setTimeout(initLandingCarousels, 1200);
-            setTimeout(initLandingCarousels, 2500);
+            setupCarouselHoverPause();
+            setupCarouselClickEnlarge();
         }
         if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', runWhenLandingReady);
+            document.addEventListener('DOMContentLoaded', initLandingCarousels);
         } else {
-            runWhenLandingReady();
+            initLandingCarousels();
         }
-        document.addEventListener('visibilitychange', function() {
-            if (document.visibilityState === 'visible') {
-                var landing = document.getElementById('landing-page-view');
-                if (landing && landing.style.display !== 'none') runWhenLandingReady();
-            }
-        });
-        setInterval(function() {
-            var landing = document.getElementById('landing-page-view');
-            if (landing && landing.style.display !== 'none' && document.getElementById('pricingWrapper')) {
-                if (!carouselRAF.pricingWrapper) startCarousel('pricingWrapper');
-                if (!carouselRAF.featuresWrapper) startCarousel('featuresWrapper');
-                if (document.getElementById('productsWrapper') && !carouselRAF.productsWrapper) startCarousel('productsWrapper');
-            }
-        }, 3000);
-        // Extra watchdog: keep pricing carousel moving whenever it's present and visible.
-        setInterval(function() {
-            var el = document.getElementById('pricingWrapper');
-            if (!el) return;
-            var style = window.getComputedStyle(el);
-            if (style.display === 'none' || style.visibility === 'hidden') return;
-            if (!carouselRAF.pricingWrapper) startCarousel('pricingWrapper');
-        }, 1000);
-        // Carousels: move RIGHT TO LEFT at all times. Run whenever wrappers exist and are visible.
-        function tickAllCarousels() {
-            var ids = ['featuresWrapper', 'pricingWrapper', 'productsWrapper', 'trendingProductsWrapper'];
-            ids.forEach(function(id) {
-                var el = document.getElementById(id);
-                if (!el || !el.offsetParent) return;
-                var content = el.querySelector('.scrollable-content');
-                if (content && !content.dataset.loopReady) {
-                    content.innerHTML = content.innerHTML + content.innerHTML;
-                    content.dataset.loopReady = '1';
-                }
-                var maxScroll = el.scrollWidth - el.clientWidth - 5;
-                if (maxScroll <= 0) return;
-                var speed = (id === 'pricingWrapper') ? 0.3 : 0.35;
-                el.scrollLeft += speed;
-                if (el.scrollLeft >= maxScroll) el.scrollLeft = 0;
-            });
-        }
-        function carouselAnimationLoop() {
-            tickAllCarousels();
-            requestAnimationFrame(carouselAnimationLoop);
-        }
-        requestAnimationFrame(carouselAnimationLoop);
-        setInterval(tickAllCarousels, 16);
 
         // Landing page navigation (unique name so dashboard showPage does not overwrite)
         function showLandingPage(pageId) {
