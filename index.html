@@ -610,8 +610,7 @@
             opacity: 0;
         }
 
-        /* NEW: Scrollable Container Styling - arrows hidden, carousels auto-run 24/7 */
-        .scrollable-container .scroll-btn { display: none !important; }
+        /* Scrollable Container - round scroll buttons visible */
         .scrollable-container {
             position: relative;
             margin-top: 40px;
@@ -709,11 +708,11 @@
         .feature-card-scroll {
             min-width: 500px;
             background: white;
-            border-radius: 15px;
+            border-radius: 12px;
             padding: 40px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            border: 1px solid rgba(0, 0, 0, 0.05);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid #e5e7eb;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -722,8 +721,8 @@
         }
 
         .feature-card-scroll:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.12);
+            transform: translateY(-4px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
         }
 
         .feature-icon-scroll {
@@ -757,11 +756,11 @@
             width: 380px;
             height: auto;
             background: white;
-            border-radius: 15px;
+            border-radius: 12px;
             padding: 30px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            border: 1px solid rgba(0, 0, 0, 0.05);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid #e5e7eb;
             display: flex;
             flex-direction: column;
             position: relative;
@@ -771,8 +770,8 @@
         }
 
         .pricing-card-scroll:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.12);
+            transform: translateY(-4px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
         }
 
         .pricing-card-scroll.popular {
@@ -1047,33 +1046,39 @@
             top: 50%;
             transform: translateY(-50%);
             z-index: 50;
-            width: 50px;
-            height: 60px;
+            width: 48px;
+            height: 48px;
             border-radius: 50%;
-            background: rgba(152, 148, 148, 0.511);
-            border: 1px solid #ebedf1;
+            background: white;
+            border: 1px solid #e5e7eb;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 1.2rem;
             color: var(--primary);
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
         }
 
         .scroll-btn:hover {
-            background: var(--primary);
-            color: white;
-            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+            background: var(--light);
+            border-color: var(--primary);
+            color: var(--primary-dark);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .scroll-btn:active {
+            transform: translateY(-50%) scale(0.95);
         }
 
         .scroll-btn-left {
-            left: 20px;
+            left: 0;
         }
 
         .scroll-btn-right {
-            right: 20px;
+            right: 0;
         }
 
         /* Apple Feature Scroll Card - Fixed Dimensions */
@@ -3109,96 +3114,7 @@
             </div>
         </section>
 
-        <!-- NEW: Dashboard Preview Section -->
-        <section class="dashboard-preview section-reveal" id="dashboard-preview">
-            <div class="dashboard-container">
-                <h2 class="text-center">Powerful Dashboard Insights</h2>
-                <p class="text-center" style="color: rgba(255, 255, 255, 0.8); max-width: 800px; margin: 0 auto 30px;">
-                    Get real-time analytics and performance insights to optimize your monetization strategy
-                </p>
-                <div class="dashboard-image">
-                    <img src="images/KOTAPAL - Monetize Your Content.jpg" alt="Dashboard Preview"
-                        style="width: 100%; border-radius: 15px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);" />
-
-                <!-- <div class="dashboard-card">
-                    <div class="dashboard-stats">
-                        <div class="stat-card">
-                            <div class="stat-value">$12,847</div>
-                            <div class="stat-label">Monthly Revenue</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-value">24.7%</div>
-                            <div class="stat-label">Conversion Rate</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-value">48,923</div>
-                            <div class="stat-label">Monthly Clicks</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-value">3.2x</div>
-                            <div class="stat-label">ROI Increase</div>
-                        </div>
-                    </div>
-
-                    <div class="dashboard-features">
-                        <div class="dashboard-feature">
-                            <h4><i class="fas fa-chart-line"></i> Real-time Analytics</h4>
-                            <p>Track clicks, conversions, and revenue across all your content channels in real-time.</p>
-                        </div>
-                        <div class="dashboard-feature">
-                            <h4><i class="fas fa-robot"></i> AI Optimization Tips</h4>
-                            <p>Get personalized recommendations to improve your product block performance.</p>
-                        </div>
-                        <div class="dashboard-feature">
-                            <h4><i class="fas fa-bell"></i> Smart Alerts</h4>
-                            <p>Receive notifications for price changes, stock updates, and performance milestones.</p>
-                        </div>
-                        <div class="dashboard-feature">
-                            <h4><i class="fasfa-download"></i> Export Reports</h4>
-                            <p>Generate detailed reports for tax purposes, client updates, or performance reviews.</p>
-                        </div>
-                    </div> -->
-
-                    <div style="text-align: center; margin-top: 40px;">
-                        <button class="btn btn-primary" onclick="showAuthModal()" style="padding: 15px 40px; font-size: 1.1rem;">
-                            <i class="fas fa-rocket" style="margin-right: 10px;"></i> Launch Your Dashboard
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- About Section -->
-        <section class="about section-reveal" id="about" style="background-color: var(--light);">
-            <div class="section-container text-center">
-                <h2>We Believe Creators Deserve Smarter Tools</h2>
-                <p class="text-center" style="max-width: 800px; margin: 0 auto; font-size: 1.2rem;">
-                    Kota is built for modern creators who want to blend affiliate and owned product sales. Our team
-                    comes from e‑commerce, content marketing, and AI — and we're building the tools we always wished
-                    existed.
-                </p>
-
-                <div class="features-grid"
-                    style="margin-top:30px; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px;">
-                    <div class="feature-card"
-                        style="background: white; padding: 30px; border-radius: 15px; text-align: center; transition: transform 0.3s ease;">
-                        <h3>Our Values</h3>
-                        <ul style="text-align:left; list-style: none;">
-                            <li>• Transparency over hype</li>
-                            <li>• Performance over clutter</li>
-                            <li>• Empowerment over complexity</li>
-                        </ul>
-                    </div>
-                    <div class="feature-card"
-                        style="background: white; padding: 30px; border-radius: 15px; text-align: center; transition: transform 0.3s ease;">
-                        <h3>Call to Action</h3>
-                        <p>We're growing — want to help? Join us or give feedback!</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- NEW: Testimonials Section (Replaced Social Proof) -->
+        <!-- Testimonials Section -->
         <section class="testimonials section-reveal" id="testimonials">
             <div class="section-container">
                 <h2 class="text-center">What Our Creators Say</h2>
@@ -3297,6 +3213,95 @@
                 </div>
             </div>
         </section>
+
+        <!-- Dashboard Preview Section -->
+        <section class="dashboard-preview section-reveal" id="dashboard-preview">
+            <div class="dashboard-container">
+                <h2 class="text-center">Powerful Dashboard Insights</h2>
+                <p class="text-center" style="color: rgba(255, 255, 255, 0.8); max-width: 800px; margin: 0 auto 30px;">
+                    Get real-time analytics and performance insights to optimize your monetization strategy
+                </p>
+                <div class="dashboard-image">
+                    <img src="images/KOTAPAL - Monetize Your Content.jpg" alt="Dashboard Preview"
+                        style="width: 100%; border-radius: 15px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);" />
+
+                <!-- <div class="dashboard-card">
+                    <div class="dashboard-stats">
+                        <div class="stat-card">
+                            <div class="stat-value">$12,847</div>
+                            <div class="stat-label">Monthly Revenue</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">24.7%</div>
+                            <div class="stat-label">Conversion Rate</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">48,923</div>
+                            <div class="stat-label">Monthly Clicks</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">3.2x</div>
+                            <div class="stat-label">ROI Increase</div>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-features">
+                        <div class="dashboard-feature">
+                            <h4><i class="fas fa-chart-line"></i> Real-time Analytics</h4>
+                            <p>Track clicks, conversions, and revenue across all your content channels in real-time.</p>
+                        </div>
+                        <div class="dashboard-feature">
+                            <h4><i class="fas fa-robot"></i> AI Optimization Tips</h4>
+                            <p>Get personalized recommendations to improve your product block performance.</p>
+                        </div>
+                        <div class="dashboard-feature">
+                            <h4><i class="fas fa-bell"></i> Smart Alerts</h4>
+                            <p>Receive notifications for price changes, stock updates, and performance milestones.</p>
+                        </div>
+                        <div class="dashboard-feature">
+                            <h4><i class="fasfa-download"></i> Export Reports</h4>
+                            <p>Generate detailed reports for tax purposes, client updates, or performance reviews.</p>
+                        </div>
+                    </div> -->
+
+                    <div style="text-align: center; margin-top: 40px;">
+                        <button class="btn btn-primary" onclick="showAuthModal()" style="padding: 15px 40px; font-size: 1.1rem;">
+                            <i class="fas fa-rocket" style="margin-right: 10px;"></i> Launch Your Dashboard
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- About Section -->
+        <section class="about section-reveal" id="about" style="background-color: var(--light);">
+            <div class="section-container text-center">
+                <h2>We Believe Creators Deserve Smarter Tools</h2>
+                <p class="text-center" style="max-width: 800px; margin: 0 auto; font-size: 1.2rem;">
+                    Kota is built for modern creators who want to blend affiliate and owned product sales. Our team
+                    comes from e‑commerce, content marketing, and AI — and we're building the tools we always wished
+                    existed.
+                </p>
+
+                <div class="features-grid"
+                    style="margin-top:30px; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px;">
+                    <div class="feature-card"
+                        style="background: white; padding: 30px; border-radius: 15px; text-align: center; transition: transform 0.3s ease;">
+                        <h3>Our Values</h3>
+                        <ul style="text-align:left; list-style: none;">
+                            <li>• Transparency over hype</li>
+                            <li>• Performance over clutter</li>
+                            <li>• Empowerment over complexity</li>
+                        </ul>
+                    </div>
+                    <div class="feature-card"
+                        style="background: white; padding: 30px; border-radius: 15px; text-align: center; transition: transform 0.3s ease;">
+                        <h3>Call to Action</h3>
+                        <p>We're growing — want to help? Join us or give feedback!</p>
+                    </div>
+                </div>
+            </div>
+        </section>
     </div>
 
     <!-- Plan Detail Modal -->
@@ -3376,11 +3381,10 @@
         <section class="page-content contact">
             <div class="container">
                 <h1 class="text-center">Contact Us</h1>
-                <p class="text-center">Have questions? We'd love to hear from you.</p>
+                <p class="text-center" style="margin-bottom: 40px;">Have questions? We'd love to hear from you.</p>
 
                 <div class="contact-grid">
                     <div class="contact-form">
-                        <h3>Send us a message</h3>
                         <form id="contactForm" onsubmit="return handleContactSubmit(event)">
                             <div class="form-group">
                                 <label for="name">Name</label>
@@ -3401,8 +3405,6 @@
                     </div>
 
                     <div class="contact-info">
-                        <h3>Or reach us directly:</h3>
-
                         <div class="contact-item">
                             <div class="contact-icon">
                                 <i class="fas fa-envelope"></i>
@@ -3461,7 +3463,7 @@
                     <ul class="footer-links">
                         <li><a href="#features" onclick="scrollToSection('features')">Features</a></li>
                         <li><a href="#pricing" onclick="scrollToSection('pricing')">Pricing</a></li>
-                        <li><a href="#dashboard-preview" onclick="scrollToSection('dashboard-preview')">Dashboard</a></li>
+                        <li><a href="#trending-products" onclick="scrollToSection('trending-products')">Trending</a></li>
                         <li><a href="#testimonials" onclick="scrollToSection('testimonials')">Testimonials</a></li>
                     </ul>
                 </div>
@@ -3470,7 +3472,6 @@
                     <h3>Company</h3>
                     <ul class="footer-links">
                         <li><a href="#about" onclick="scrollToSection('about'); return false;">About Us</a></li>
-                        <li><a href="#" onclick="showLandingPage('blog-page'); return false;">Blog</a></li>
                         <li><a href="#" onclick="goToContactForm(); return false;">Contact</a></li>
                         <li><a href="#" id="privacyLink">Privacy Policy</a></li>
                         <li><a href="#" id="tosLink">Terms of Service</a></li>
