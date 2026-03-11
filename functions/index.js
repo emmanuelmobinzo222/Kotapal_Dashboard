@@ -60,3 +60,46 @@ exports.listAllUsers = onCall({ region: 'us-central1' }, async (request) => {
 
   return { users };
 });
+
+/**
+ * Callable function: adminSuspendUser
+ * Suspends a user in Firebase Auth (disables login) and updates Firestore status.
+ * Real-time: user cannot log in immediately after suspension.
+ */
+exports.adminSuspendUser = onCall({ region: 'us-central1' }, async (request) => {
+  if (!request.auth) throw new HttpsError('unauthenticated', 'Must be signed in.');
+  const email = request.auth.token.email;
+  if (!isAdmin(email)) throw new HttpsError('permission-denied', 'Admin access required.');
+
+  const { uid } = request.data || {};
+  if (!uid) throw new HttpsError('invalid-argument', 'uid is required.');
+
+  const auth = getAuth();
+  const db = getFirestore();
+
+  await auth.updateUser(uid, { disabled: true });
+  await db.collection('users').doc(uid).set({ status: 'suspended' }, { merge: true });
+
+  return { success: true, message: 'User suspended. They cannot log in.' };
+});
+
+/**
+ * Callable function: adminUnsuspendUser
+ * Re-enables a user in Firebase Auth and updates Firestore status.
+ */
+exports.adminUnsuspendUser = onCall({ region: 'us-central1' }, async (request) => {
+  if (!request.auth) throw new HttpsError('unauthenticated', 'Must be signed in.');
+  const email = request.auth.token.email;
+  if (!isAdmin(email)) throw new HttpsError('permission-denied', 'Admin access required.');
+
+  const { uid } = request.data || {};
+  if (!uid) throw new HttpsError('invalid-argument', 'uid is required.');
+
+  const auth = getAuth();
+  const db = getFirestore();
+
+  await auth.updateUser(uid, { disabled: false });
+  await db.collection('users').doc(uid).set({ status: 'active' }, { merge: true });
+
+  return { success: true, message: 'User unsuspended. They can log in again.' };
+});
