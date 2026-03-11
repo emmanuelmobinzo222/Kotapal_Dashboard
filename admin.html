@@ -348,38 +348,57 @@
             document.getElementById('admin-stat-suspended').textContent = suspended;
         }
 
+        function mapFirestoreDocToUser(d) {
+            var data = d.data();
+            return {
+                id: d.id,
+                email: data.email || '-',
+                name: data.displayName || data.name || '-',
+                plan: data.plan || 'starter',
+                status: data.status || 'active',
+                joined: data.signupDate || data.createdAt || '-',
+                lastSignIn: data.lastSignIn || '-'
+            };
+        }
+
         async function loadAdminUsers() {
             const tbody = document.getElementById('adminUsersTableBody');
             if (!tbody) return;
             tbody.innerHTML = '<tr><td colspan="7" class="text-center">Loading users...</td></tr>';
             let users = [];
+            var firestoreError = null;
+            var functionError = null;
+
+            // 1. Try Firestore first (works without deploying Cloud Functions)
             try {
-                const listAllUsers = firebase.functions().region('us-central1').httpsCallable('listAllUsers');
-                const result = await listAllUsers();
-                users = result.data?.users || [];
+                const snap = await db.collection('users').get();
+                users = snap.docs.map(mapFirestoreDocToUser);
             } catch (err) {
-                console.warn('listAllUsers failed, falling back to Firestore:', err);
+                firestoreError = err;
+                console.warn('Firestore users read failed:', err);
+            }
+
+            // 2. If Firestore empty, try Cloud Function (includes Auth users without Firestore docs)
+            if (users.length === 0) {
                 try {
-                    const snap = await db.collection('users').get();
-                    users = snap.docs.map(function(d) {
-                        var data = d.data();
-                        return {
-                            id: d.id,
-                            email: data.email || '-',
-                            name: data.displayName || data.name || '-',
-                            plan: data.plan || 'starter',
-                            status: data.status || 'active',
-                            joined: data.signupDate || data.createdAt || '-',
-                            lastSignIn: data.lastSignIn || '-'
-                        };
-                    });
-                } catch (fsErr) {
-                    console.error('Firestore fallback error:', fsErr);
+                    const listAllUsers = firebase.functions().region('us-central1').httpsCallable('listAllUsers');
+                    const result = await listAllUsers();
+                    users = result.data?.users || [];
+                } catch (err) {
+                    functionError = err;
+                    console.warn('listAllUsers failed:', err);
                 }
             }
+
             adminUsers = users;
             if (users.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" class="text-center">No users found. Deploy: firebase deploy --only functions</td></tr>';
+                var msg = 'No users found. Users appear here after they sign up or log in on the main site.';
+                if (functionError && !firestoreError) {
+                    msg += ' (Cloud Functions not deployed? Run: firebase deploy --only functions for full Auth sync)';
+                } else if (firestoreError) {
+                    msg += ' (Firestore read failed: ' + (firestoreError.message || 'check console') + ')';
+                }
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center">' + msg + '</td></tr>';
             } else {
                 tbody.innerHTML = users.map(function(u) {
                     var joined = (u.joined && u.joined !== '-') ? new Date(u.joined).toLocaleDateString() : (u.joined || '-');
@@ -394,6 +413,35 @@
             }
             document.getElementById('admin-stat-users').textContent = users.length;
             updateDashboardPage();
+            setupUsersRealtimeListener();
+        }
+
+        var usersUnsubscribe = null;
+        function setupUsersRealtimeListener() {
+            if (usersUnsubscribe) return;
+            try {
+                usersUnsubscribe = db.collection('users').onSnapshot(function(snap) {
+                    var users = snap.docs.map(mapFirestoreDocToUser);
+                    if (users.length > 0 && users.length !== adminUsers.length) {
+                        adminUsers = users;
+                        const tbody = document.getElementById('adminUsersTableBody');
+                        if (tbody && adminUsers.length > 0) {
+                            tbody.innerHTML = adminUsers.map(function(u) {
+                                var joined = (u.joined && u.joined !== '-') ? new Date(u.joined).toLocaleDateString() : (u.joined || '-');
+                                var lastSignIn = (u.lastSignIn && u.lastSignIn !== '-') ? new Date(u.lastSignIn).toLocaleDateString() : (u.lastSignIn || '-');
+                                var status = (u.status || 'active').toLowerCase();
+                                var statusBadge = '<span class="badge ' + (status === 'suspended' ? 'badge-suspended' : 'badge-active') + '">' + (status === 'suspended' ? 'Suspended' : 'Active') + '</span>';
+                                var actions = '<button class="btn btn-sm btn-secondary" onclick="openChangePlan(\'' + (u.id || u.email) + '\',\'' + (u.plan || 'starter') + '\')"><i class="fas fa-edit"></i> Plan</button>';
+                                actions += '<button class="btn btn-sm ' + (status === 'suspended' ? 'btn-success' : 'btn-secondary') + '" onclick="toggleSuspend(\'' + (u.id || u.email) + '\',\'' + status + '\')"><i class="fas fa-' + (status === 'suspended' ? 'user-check' : 'user-slash') + '\"></i> ' + (status === 'suspended' ? 'Unsuspend' : 'Suspend') + '</button>';
+                                actions += '<button class="btn btn-sm btn-danger" onclick="deleteUserDoc(\'' + (u.id || u.email) + '\')"><i class="fas fa-trash"></i> Delete</button>';
+                                return '<tr><td>' + (u.email || '-') + '</td><td>' + (u.name || '-') + '</td><td>' + (u.plan || '-') + '</td><td>' + statusBadge + '</td><td>' + joined + '</td><td>' + lastSignIn + '</td><td>' + actions + '</td></tr>';
+                            }).join('');
+                            document.getElementById('admin-stat-users').textContent = adminUsers.length;
+                            updateDashboardPage();
+                        }
+                    }
+                });
+            } catch (e) { console.warn('Realtime listener setup failed:', e); }
         }
 
         function openChangePlan(uid, currentPlan) {
