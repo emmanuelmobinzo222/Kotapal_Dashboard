@@ -4649,6 +4649,7 @@
             } else {
                 firebase.initializeApp(firebaseConfig);
                 auth = firebase.auth();
+                window.firebaseDb = firebase.firestore();
                 
                 // Set persistence to LOCAL so users stay logged in across browser sessions
                 // This ensures the session persists even after closing the browser
@@ -4725,6 +4726,21 @@
                     plan: savedUserData.plan || 'starter',
                     signupDate: savedUserData.signupDate || new Date().toISOString()
                 };
+                // Ensure user exists in Firestore for admin dashboard (merge for existing users)
+                if (window.firebaseDb) {
+                    try {
+                        await window.firebaseDb.collection('users').doc(user.uid).set({
+                            email: user.email,
+                            displayName: displayName,
+                            plan: userData.plan || 'starter',
+                            signupDate: userData.signupDate || new Date().toISOString(),
+                            status: 'active',
+                            lastSignIn: new Date().toISOString()
+                        }, { merge: true });
+                    } catch (fsErr) {
+                        console.warn('Firestore user update failed:', fsErr);
+                    }
+                }
                 // Set explicit login flag in BOTH sessionStorage AND localStorage for maximum persistence
                 sessionStorage.setItem('kotapal_explicit_login', 'true');
                 localStorage.setItem('kotapal_explicit_login', 'true'); // Backup in localStorage
@@ -4860,6 +4876,21 @@
                     plan: plan || 'starter',
                     signupDate: new Date().toISOString()
                 };
+                // Write user to Firestore for admin dashboard
+                if (window.firebaseDb) {
+                    try {
+                        await window.firebaseDb.collection('users').doc(user.uid).set({
+                            email: user.email,
+                            displayName: name.trim(),
+                            plan: plan || 'starter',
+                            signupDate: new Date().toISOString(),
+                            status: 'active',
+                            createdAt: new Date().toISOString()
+                        }, { merge: true });
+                    } catch (fsErr) {
+                        console.warn('Firestore user write failed:', fsErr);
+                    }
+                }
                 // Set explicit login flag FIRST, before any state changes
                 sessionStorage.setItem('kotapal_explicit_login', 'true');
                 localStorage.setItem('kotaUser', JSON.stringify(userData));

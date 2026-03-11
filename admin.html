@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-functions-compat.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -150,6 +151,7 @@
 
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
+        const db = firebase.firestore();
 
         auth.onAuthStateChanged((user) => {
             const loginScreen = document.getElementById('login-screen');
@@ -171,23 +173,43 @@
             const tbody = document.getElementById('adminUsersTableBody');
             if (!tbody) return;
             tbody.innerHTML = '<tr><td colspan="5" class="text-center">Loading users...</td></tr>';
+            let users = [];
             try {
+                // Try Cloud Function first (merges Firebase Auth + Firestore)
                 const listAllUsers = firebase.functions().region('us-central1').httpsCallable('listAllUsers');
                 const result = await listAllUsers();
-                const users = result.data?.users || [];
-                tbody.innerHTML = users.length === 0
-                    ? '<tr><td colspan="5" class="text-center">No users found.</td></tr>'
-                    : users.map(function(u) {
-                        var joined = u.joined ? new Date(u.joined).toLocaleDateString() : '-';
-                        var lastSignIn = u.lastSignIn ? new Date(u.lastSignIn).toLocaleDateString() : '-';
-                        return '<tr><td>' + (u.email || '-') + '</td><td>' + (u.name || '-') + '</td><td>' + (u.plan || '-') + '</td><td>' + joined + '</td><td>' + lastSignIn + '</td></tr>';
-                    }).join('');
-                var statEl = document.getElementById('admin-stat-users');
-                if (statEl) statEl.textContent = users.length;
+                users = result.data?.users || [];
             } catch (err) {
-                console.error('loadAdminUsers error:', err);
-                tbody.innerHTML = '<tr><td colspan="5" class="text-center" style="color: var(--danger);">Failed to load users. Ensure Firebase Functions are deployed.</td></tr>';
+                console.warn('listAllUsers failed, falling back to Firestore:', err);
+                try {
+                    // Fallback: read directly from Firestore users collection
+                    const snap = await db.collection('users').get();
+                    users = snap.docs.map(function(d) {
+                        var data = d.data();
+                        return {
+                            id: d.id,
+                            email: data.email || '-',
+                            name: data.displayName || data.name || '-',
+                            plan: data.plan || 'starter',
+                            joined: data.signupDate || data.createdAt || '-',
+                            lastSignIn: data.lastSignIn || '-'
+                        };
+                    });
+                } catch (fsErr) {
+                    console.error('Firestore fallback error:', fsErr);
+                }
             }
+            if (users.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center">No users found. Deploy Cloud Function: firebase deploy --only functions</td></tr>';
+            } else {
+                tbody.innerHTML = users.map(function(u) {
+                    var joined = (u.joined && u.joined !== '-') ? new Date(u.joined).toLocaleDateString() : (u.joined || '-');
+                    var lastSignIn = (u.lastSignIn && u.lastSignIn !== '-') ? new Date(u.lastSignIn).toLocaleDateString() : (u.lastSignIn || '-');
+                    return '<tr><td>' + (u.email || '-') + '</td><td>' + (u.name || '-') + '</td><td>' + (u.plan || '-') + '</td><td>' + joined + '</td><td>' + lastSignIn + '</td></tr>';
+                }).join('');
+            }
+            var statEl = document.getElementById('admin-stat-users');
+            if (statEl) statEl.textContent = users.length;
         }
 
         document.getElementById('adminLoginForm').addEventListener('submit', async (e) => {
