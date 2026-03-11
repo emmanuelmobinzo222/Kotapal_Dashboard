@@ -465,11 +465,12 @@
                 return;
             }
             try {
-                await auth.signInWithEmailAndPassword(email, password);
                 sessionStorage.setItem('admin_logged_in', '1');
+                await auth.signInWithEmailAndPassword(email, password);
                 statusEl.textContent = 'Login successful!';
                 statusEl.className = 'status show success';
             } catch (err) {
+                sessionStorage.removeItem('admin_logged_in');
                 statusEl.textContent = err.message || 'Login failed.';
                 statusEl.className = 'status show error';
             }
