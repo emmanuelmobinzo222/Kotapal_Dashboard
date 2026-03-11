@@ -43,6 +43,7 @@
     <link rel="preload" as="image" href="https://images.pexels.com/photos/1649771/pexels-photo-1649771.jpeg">
 
     <!-- Firebase Client SDK (for global cloud auth & Firestore) -->
+    <script src="firebase-config.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
@@ -4618,15 +4619,10 @@
         //
         // See START_HERE_FIREBASE.md for detailed step-by-step instructions
         
-        const firebaseConfig = {
-            apiKey: "AIzaSyCNU1QFZhmUuk2QWDeNi4ff3-le4KNnbrU",
-            authDomain: "kotapal-1e8f6.firebaseapp.com",
-            projectId: "kotapal-1e8f6",
-            storageBucket: "kotapal-1e8f6.firebasestorage.app",
-            messagingSenderId: "487227333489",
-            appId: "1:487227333489:web:a370f5e07b9e4c3d79f4d0",
-            measurementId: "G-8GQ7JGDZ7P"
-        };
+        var firebaseConfig = window.FIREBASE_CONFIG || {};
+        if (!firebaseConfig.projectId || firebaseConfig.projectId === 'YOUR_PROJECT_ID') {
+            firebaseConfig = { apiKey: 'YOUR_API_KEY', authDomain: 'YOUR_AUTH_DOMAIN', projectId: 'YOUR_PROJECT_ID' };
+        }
 
         // Initialize Firebase
         let auth;
@@ -4634,15 +4630,15 @@
             // Check if Firebase config is set up
             if (firebaseConfig.apiKey === "YOUR_API_KEY" || 
                 firebaseConfig.authDomain === "YOUR_AUTH_DOMAIN") {
-                console.error('Firebase not configured! Please update firebaseConfig with your Firebase project values.');
+                console.error('Firebase not configured! Please update firebase-config.js with your Firebase project values.');
                 // Show a helpful error message
                 window.addEventListener('DOMContentLoaded', () => {
                     const loginBtn = document.getElementById('loginBtn');
                     if (loginBtn) {
                         loginBtn.addEventListener('click', (e) => {
                             e.preventDefault();
-                            if (typeof showNotification === 'function') showNotification('Firebase is not configured yet. Please update the firebaseConfig object in index.html with your Firebase project credentials. See FIREBASE_SETUP.md for instructions.', 'error', 'Setup');
-                            else console.error('Firebase is not configured yet. Please update the firebaseConfig object in index.html with your Firebase project credentials. See FIREBASE_SETUP.md for instructions.');
+                            if (typeof showNotification === 'function') showNotification('Firebase is not configured yet. Please update firebase-config.js with your Firebase project credentials. See FIREBASE_SETUP.md for instructions.', 'error', 'Setup');
+                            else console.error('Firebase is not configured yet. Please update firebase-config.js with your Firebase project credentials. See FIREBASE_SETUP.md for instructions.');
                         });
                     }
                 });

@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard - KotaPal</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="firebase-config.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
@@ -80,6 +81,9 @@
         .badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
         .badge-active { background: #dcfce7; color: #16a34a; }
         .badge-suspended { background: #fee2e2; color: #b91c1c; }
+        .firebase-status { font-size: 0.7rem; padding: 4px 8px; border-radius: 6px; margin-top: 8px; }
+        .firebase-status.ok { background: #dcfce7; color: #16a34a; }
+        .firebase-status.error { background: #fee2e2; color: #b91c1c; }
     </style>
 </head>
 <body>
@@ -99,6 +103,7 @@
                 <button type="submit" class="btn">Sign In</button>
                 <a href="index.html" class="btn btn-secondary">Return to Home</a>
                 <div id="adminLoginStatus" class="status"></div>
+                <div id="loginFirebaseStatus" class="status" style="margin-top:12px;font-size:0.8rem;color:var(--gray);"></div>
             </form>
         </div>
     </div>
@@ -111,6 +116,7 @@
             <div class="admin-info">
                 <div class="label">Signed in as</div>
                 <div class="email" id="adminEmailDisplay"></div>
+                <div id="firebase-connection-status" class="firebase-status ok">Firebase connected</div>
             </div>
             <ul class="nav-menu">
                 <li class="nav-item"><a href="#" class="nav-link active" data-page="dashboard"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
@@ -260,15 +266,10 @@
     </div>
 
     <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyCNU1QFZhmUuk2QWDeNi4ff3-le4KNnbrU",
-            authDomain: "kotapal-1e8f6.firebaseapp.com",
-            projectId: "kotapal-1e8f6",
-            storageBucket: "kotapal-1e8f6.firebasestorage.app",
-            messagingSenderId: "487227333489",
-            appId: "1:487227333489:web:a370f5e07b9e4c3d79f4d0",
-            measurementId: "G-8GQ7JGDZ7P"
-        };
+        var firebaseConfig = window.FIREBASE_CONFIG || {};
+        if (!firebaseConfig.projectId || firebaseConfig.projectId === 'YOUR_PROJECT_ID') {
+            console.error('Firebase not configured. Create firebase-config.js or set window.FIREBASE_CONFIG.');
+        }
 
         const ADMIN_EMAILS = ['admin@kotapal.com', 'wreck@gmail.com', 'earlhugue@gmail.com', 'emmanuelmobinzo222@gmail.com', 'emmanuelmobinzo21@gmail.com'];
         let adminUsers = [];
@@ -282,8 +283,28 @@
         const auth = firebase.auth();
         const db = firebase.firestore();
 
+        function setConnectionStatus(ok, msg) {
+            var el = document.getElementById('firebase-connection-status');
+            if (el) {
+                el.textContent = ok ? 'Firebase connected' : (msg || 'Firebase disconnected');
+                el.className = 'firebase-status ' + (ok ? 'ok' : 'error');
+            }
+        }
+
         // Admin: require credentials every time - use SESSION so no cross-tab persistence
         auth.setPersistence(firebase.auth.Auth.Persistence.SESSION).catch(function() {});
+
+        (function checkFirebaseConnection() {
+            var el = document.getElementById('loginFirebaseStatus');
+            if (!el) return;
+            if (firebaseConfig.projectId && firebaseConfig.projectId !== 'YOUR_PROJECT_ID') {
+                el.textContent = 'Firebase configured (project: ' + firebaseConfig.projectId + ')';
+                el.className = 'status show success';
+            } else {
+                el.textContent = 'Firebase not configured. Add firebase-config.js with your project credentials.';
+                el.className = 'status show error';
+            }
+        })();
 
         auth.onAuthStateChanged((user) => {
             const loginScreen = document.getElementById('login-screen');
@@ -294,6 +315,7 @@
                 adminView.style.display = 'flex';
                 adminView.classList.add('active');
                 document.getElementById('adminEmailDisplay').textContent = user.email;
+                setConnectionStatus(true, 'Firebase connected');
                 loadAdminUsers().then(function() {
                     setupAdminNav();
                     updateDashboardPage();
@@ -375,6 +397,7 @@
                 users = snap.docs.map(mapFirestoreDocToUser);
             } catch (err) {
                 firestoreError = err;
+                setConnectionStatus(false, 'Firestore: ' + (err.message || 'read failed'));
                 console.warn('Firestore users read failed:', err);
             }
 
@@ -391,6 +414,7 @@
             }
 
             adminUsers = users;
+            setConnectionStatus(true, 'Firebase connected');
             if (users.length === 0) {
                 var msg = 'No users found. Users appear here after they sign up or log in on the main site.';
                 if (functionError && !firestoreError) {

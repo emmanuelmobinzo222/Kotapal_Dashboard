@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Create Admin Account - KotaPal</title>
+    <script src="firebase-config.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
@@ -62,15 +63,7 @@
         <div id="status" class="status"></div>
     </div>
     <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyCNU1QFZhmUuk2QWDeNi4ff3-le4KNnbrU",
-            authDomain: "kotapal-1e8f6.firebaseapp.com",
-            projectId: "kotapal-1e8f6",
-            storageBucket: "kotapal-1e8f6.firebasestorage.app",
-            messagingSenderId: "487227333489",
-            appId: "1:487227333489:web:a370f5e07b9e4c3d79f4d0",
-            measurementId: "G-8GQ7JGDZ7P"
-        };
+        const firebaseConfig = window.FIREBASE_CONFIG || {};
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.firestore();

@@ -1,29 +1,15 @@
-// Firebase Configuration
-// Replace these values with your Firebase project configuration
-// Get these from: Firebase Console > Project Settings > General > Your apps
-
-const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_AUTH_DOMAIN",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_STORAGE_BUCKET",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID"
+/**
+ * Shared Firebase configuration for KotaPal (main app + admin dashboard).
+ * Single source of truth - update here to change both index.html and admin.html.
+ *
+ * To get your config: Firebase Console > Project Settings > Your apps > Web app
+ */
+window.FIREBASE_CONFIG = {
+    apiKey: "AIzaSyCNU1QFZhmUuk2QWDeNi4ff3-le4KNnbrU",
+    authDomain: "kotapal-1e8f6.firebaseapp.com",
+    projectId: "kotapal-1e8f6",
+    storageBucket: "kotapal-1e8f6.firebasestorage.app",
+    messagingSenderId: "487227333489",
+    appId: "1:487227333489:web:a370f5e07b9e4c3d79f4d0",
+    measurementId: "G-8GQ7JGDZ7P"
 };
-
-// Initialize Firebase
-// Note: This will be initialized in the HTML files using the CDN version
-// This file is for reference - actual initialization happens in HTML
-
-// To get your Firebase config:
-// 1. Go to https://console.firebase.google.com/
-// 2. Create a new project or select an existing one
-// 3. Go to Project Settings (gear icon)
-// 4. Scroll down to "Your apps" section
-// 5. Click on the web app icon (</>) or add a web app
-// 6. Copy the config object values
-
-// Enable Email/Password authentication in Firebase Console:
-// 1. Go to Authentication > Sign-in method
-// 2. Enable "Email/Password" provider
-// 3. Optionally enable "Email link (passwordless sign-in)" if desired
