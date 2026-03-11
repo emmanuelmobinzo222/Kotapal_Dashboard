@@ -98,6 +98,7 @@
                     <input type="password" id="adminPassword" required>
                 </div>
                 <button type="submit" class="btn">Sign In</button>
+                <a href="index.html" class="btn btn-secondary" style="margin-top:12px;text-align:center;text-decoration:none;">Back to Homepage</a>
                 <div id="adminLoginStatus" class="status"></div>
             </form>
         </div>
@@ -386,11 +387,7 @@
 
             adminUsers = users;
             if (users.length === 0) {
-                var msg = 'No users found. Users appear here after they sign up or log in on the main site.';
-                if (functionError && firestoreError) {
-                    msg += ' Deploy Cloud Functions: firebase deploy --only functions';
-                }
-                tbody.innerHTML = '<tr><td colspan="7" class="text-center">' + msg + '</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center">No users found. Users appear here after they sign up or log in on the main site.</td></tr>';
             } else {
                 tbody.innerHTML = users.map(function(u) {
                     var joined = (u.joined && u.joined !== '-') ? new Date(u.joined).toLocaleDateString() : (u.joined || '-');

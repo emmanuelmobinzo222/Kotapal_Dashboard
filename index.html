@@ -4475,6 +4475,7 @@
                     <div id="authMessage" class="form-status" style="display: none;"></div>
                     <div style="text-align: center; margin-top: 16px; padding-top: 16px; border-top: 1px solid #e5e7eb;">
                         <a href="admin.html" class="btn auth-login-admin-btn" style="display: inline-flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none;"><i class="fas fa-shield-alt"></i> Admin login</a>
+                        <a href="#" class="btn btn-secondary" id="backToHomepageFromLogin" style="display: block; margin-top: 10px; text-align: center; text-decoration: none;">Back to Homepage</a>
                     </div>
                 </form>
             </div>
@@ -4589,6 +4590,7 @@
                         and <a href="#" style="color: var(--primary);">Privacy Policy</a>.
                     </div>
                     <button type="submit" class="btn btn-primary">Sign Up</button>
+                    <a href="#" class="btn btn-secondary" id="backToHomepageFromSignup" style="display: block; margin-top: 10px; text-align: center; text-decoration: none;">Back to Homepage</a>
                     <div id="signupMessage" class="form-status" style="display: none;"></div>
                     <div id="lpSignupStatus" style="margin-top:10px;font-size:0.9rem;color:#6b7280;"></div>
                 </form>
@@ -5311,6 +5313,17 @@
         if (closeBtn) {
             closeBtn.onclick = closeAuthModal;
         }
+
+        // Back to Homepage buttons (close modal)
+        ['backToHomepageFromLogin', 'backToHomepageFromSignup'].forEach(function(id) {
+            var el = document.getElementById(id);
+            if (el) {
+                el.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    closeAuthModal();
+                });
+            }
+        });
 
         // Tab switching
         authTabs.forEach(tab => {
