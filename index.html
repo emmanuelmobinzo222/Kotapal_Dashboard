@@ -5315,15 +5315,15 @@
         }
 
         // Back to Homepage buttons (close modal)
-        ['backToHomepageFromLogin', 'backToHomepageFromSignup'].forEach(function(id) {
-            var el = document.getElementById(id);
-            if (el) {
-                el.addEventListener('click', function(e) {
+        if (authModal) {
+            authModal.addEventListener('click', function(e) {
+                var t = e.target.closest ? e.target.closest('#backToHomepageFromLogin, #backToHomepageFromSignup') : null;
+                if (t) {
                     e.preventDefault();
                     closeAuthModal();
-                });
-            }
-        });
+                }
+            });
+        }
 
         // Tab switching
         authTabs.forEach(tab => {

@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
     <title>Admin Dashboard - KotaPal</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="firebase-config.js"></script>
@@ -361,27 +363,23 @@
             if (!tbody) return;
             tbody.innerHTML = '<tr><td colspan="7" class="text-center">Loading users...</td></tr>';
             let users = [];
-            var firestoreError = null;
-            var functionError = null;
 
-            // 1. Try Cloud Function first (returns ALL Firebase Auth users + Firestore merge)
+            // 1. Try Firestore first (no deploy needed - users written on signup/login)
             try {
-                const listAllUsers = firebase.functions().region('us-central1').httpsCallable('listAllUsers');
-                const result = await listAllUsers();
-                users = result.data?.users || [];
+                const snap = await db.collection('users').get();
+                users = snap.docs.map(mapFirestoreDocToUser);
             } catch (err) {
-                functionError = err;
-                console.warn('listAllUsers failed, falling back to Firestore:', err);
+                console.warn('Firestore users read failed:', err);
             }
 
-            // 2. Fallback: Firestore users collection (when Cloud Functions not deployed)
+            // 2. If empty, try Cloud Function (returns ALL Auth users when deployed)
             if (users.length === 0) {
                 try {
-                    const snap = await db.collection('users').get();
-                    users = snap.docs.map(mapFirestoreDocToUser);
+                    const listAllUsers = firebase.functions().region('us-central1').httpsCallable('listAllUsers');
+                    const result = await listAllUsers();
+                    users = result.data?.users || [];
                 } catch (err) {
-                    firestoreError = err;
-                    console.warn('Firestore users read failed:', err);
+                    console.warn('listAllUsers failed:', err);
                 }
             }
 
