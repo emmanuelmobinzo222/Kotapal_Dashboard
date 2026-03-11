@@ -39,12 +39,12 @@
         a.btn-secondary { text-decoration: none; text-align: center; margin-top: 12px; }
 
         /* Admin layout: sidebar + main */
-        #admin-view { display: none; min-height: 100vh; }
-        #admin-view.active { display: flex; }
+        #admin-view { display: none; min-height: 100vh; width: 100%; }
+        #admin-view.active { display: flex !important; flex-direction: row; }
         .admin-sidebar {
-            width: 260px; background: white; box-shadow: 2px 0 8px rgba(0,0,0,0.04);
-            padding: 0 0 16px 0; position: fixed; left: 0; top: 0; height: 100vh; overflow-x: hidden; z-index: 1000;
-            border-right: 1px solid #e5e7eb; display: flex; flex-direction: column;
+            width: 260px; min-width: 260px; background: white; box-shadow: 2px 0 8px rgba(0,0,0,0.08);
+            padding: 0 0 16px 0; position: fixed; left: 0; top: 0; height: 100vh; overflow-y: auto; overflow-x: hidden; z-index: 1000;
+            border-right: 1px solid #e5e7eb; display: flex; flex-direction: column; flex-shrink: 0;
         }
         .admin-sidebar .logo { padding: 20px; border-bottom: 1px solid #e5e7eb; }
         .admin-sidebar .logo img { max-width: 100%; height: 48px; object-fit: contain; }
@@ -60,7 +60,7 @@
         .admin-sidebar .nav-link:hover { background: #f3f4f6; color: var(--primary); }
         .admin-sidebar .nav-link.active { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; }
         .admin-sidebar .nav-link i { margin-right: 10px; width: 20px; text-align: center; }
-        .admin-main { flex: 1; margin-left: 260px; padding: 32px 40px; min-height: 100vh; background: #f8fafc; }
+        .admin-main { flex: 1; margin-left: 260px; padding: 32px 40px; min-height: 100vh; background: #f8fafc; min-width: 0; }
         .admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 16px; }
         .admin-header h1 { font-size: 1.75rem; font-weight: 700; color: var(--dark); }
         .admin-card { background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); border: 1px solid #e5e7eb; overflow: hidden; margin-bottom: 24px; }
@@ -167,7 +167,7 @@
                     </div>
                 </div>
                 <div class="admin-card">
-                    <div class="admin-card-header">All Users (Live from Firebase Auth + Firestore) — Suspend takes effect immediately</div>
+                    <div class="admin-card-header">All Users — Firebase Auth + Firestore (project: kotapal-1e8f6)</div>
                     <div style="overflow-x: auto;">
                         <table class="admin-table">
                             <thead>
@@ -238,7 +238,7 @@
     </div>
 
     <!-- Change Plan Modal -->
-    <div id="changePlanModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:2000;align-items:center;justify-content:center;padding:20px;">
+    <div id="changePlanModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:2000;align-items:center;justify-content:center;padding:20px;flex-direction:column;">
         <div style="background:white;padding:24px;border-radius:12px;max-width:400px;width:100%;">
             <h3 style="margin-bottom:16px;">Change Plan</h3>
             <input type="hidden" id="changePlanUserId">
@@ -282,10 +282,14 @@
         const auth = firebase.auth();
         const db = firebase.firestore();
 
+        // Admin: require credentials every time - use SESSION so no cross-tab persistence
+        auth.setPersistence(firebase.auth.Auth.Persistence.SESSION).catch(function() {});
+
         auth.onAuthStateChanged((user) => {
             const loginScreen = document.getElementById('login-screen');
             const adminView = document.getElementById('admin-view');
-            if (user && isAdminUser(user.email)) {
+            const adminLoggedIn = sessionStorage.getItem('admin_logged_in') === '1';
+            if (user && isAdminUser(user.email) && adminLoggedIn) {
                 loginScreen.style.display = 'none';
                 adminView.style.display = 'flex';
                 adminView.classList.add('active');
@@ -297,6 +301,7 @@
             } else {
                 loginScreen.style.display = 'flex';
                 adminView.style.display = 'none';
+                sessionStorage.removeItem('admin_logged_in');
                 if (user) auth.signOut();
             }
         });
@@ -394,7 +399,10 @@
         function openChangePlan(uid, currentPlan) {
             document.getElementById('changePlanUserId').value = uid;
             document.getElementById('changePlanSelect').value = currentPlan || 'starter';
-            document.getElementById('changePlanModal').style.display = 'flex';
+            var modal = document.getElementById('changePlanModal');
+            modal.style.display = 'flex';
+            modal.style.alignItems = 'center';
+            modal.style.justifyContent = 'center';
         }
 
         function closeChangePlanModal() {
@@ -458,6 +466,7 @@
             }
             try {
                 await auth.signInWithEmailAndPassword(email, password);
+                sessionStorage.setItem('admin_logged_in', '1');
                 statusEl.textContent = 'Login successful!';
                 statusEl.className = 'status show success';
             } catch (err) {
@@ -468,6 +477,7 @@
 
         document.getElementById('adminLogoutBtn').addEventListener('click', function(e) {
             e.preventDefault();
+            sessionStorage.removeItem('admin_logged_in');
             auth.signOut();
             window.location.href = 'index.html';
         });
