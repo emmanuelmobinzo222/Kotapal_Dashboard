@@ -81,9 +81,6 @@
         .badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
         .badge-active { background: #dcfce7; color: #16a34a; }
         .badge-suspended { background: #fee2e2; color: #b91c1c; }
-        .firebase-status { font-size: 0.7rem; padding: 4px 8px; border-radius: 6px; margin-top: 8px; }
-        .firebase-status.ok { background: #dcfce7; color: #16a34a; }
-        .firebase-status.error { background: #fee2e2; color: #b91c1c; }
     </style>
 </head>
 <body>
@@ -101,9 +98,7 @@
                     <input type="password" id="adminPassword" required>
                 </div>
                 <button type="submit" class="btn">Sign In</button>
-                <a href="index.html" class="btn btn-secondary">Return to Home</a>
                 <div id="adminLoginStatus" class="status"></div>
-                <div id="loginFirebaseStatus" class="status" style="margin-top:12px;font-size:0.8rem;color:var(--gray);"></div>
             </form>
         </div>
     </div>
@@ -116,7 +111,6 @@
             <div class="admin-info">
                 <div class="label">Signed in as</div>
                 <div class="email" id="adminEmailDisplay"></div>
-                <div id="firebase-connection-status" class="firebase-status ok">Firebase connected</div>
             </div>
             <ul class="nav-menu">
                 <li class="nav-item"><a href="#" class="nav-link active" data-page="dashboard"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
@@ -126,7 +120,6 @@
                 <li class="nav-item"><a href="#" class="nav-link" data-page="reports"><i class="fas fa-file-alt"></i> Reports</a></li>
                 <li class="nav-item"><a href="#" class="nav-link" data-page="billing"><i class="fas fa-credit-card"></i> Billing</a></li>
                 <li class="nav-item"><a href="#" class="nav-link" data-page="settings"><i class="fas fa-cog"></i> Settings</a></li>
-                <li class="nav-item"><a href="index.html" class="nav-link"><i class="fas fa-home"></i> Return to Site</a></li>
                 <li class="nav-item"><a href="#" class="nav-link" id="adminLogoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
             </ul>
         </aside>
@@ -283,28 +276,8 @@
         const auth = firebase.auth();
         const db = firebase.firestore();
 
-        function setConnectionStatus(ok, msg) {
-            var el = document.getElementById('firebase-connection-status');
-            if (el) {
-                el.textContent = ok ? 'Firebase connected' : (msg || 'Firebase disconnected');
-                el.className = 'firebase-status ' + (ok ? 'ok' : 'error');
-            }
-        }
-
         // Admin: require credentials every time - use SESSION so no cross-tab persistence
         auth.setPersistence(firebase.auth.Auth.Persistence.SESSION).catch(function() {});
-
-        (function checkFirebaseConnection() {
-            var el = document.getElementById('loginFirebaseStatus');
-            if (!el) return;
-            if (firebaseConfig.projectId && firebaseConfig.projectId !== 'YOUR_PROJECT_ID') {
-                el.textContent = 'Firebase configured (project: ' + firebaseConfig.projectId + ')';
-                el.className = 'status show success';
-            } else {
-                el.textContent = 'Firebase not configured. Add firebase-config.js with your project credentials.';
-                el.className = 'status show error';
-            }
-        })();
 
         auth.onAuthStateChanged((user) => {
             const loginScreen = document.getElementById('login-screen');
@@ -315,7 +288,6 @@
                 adminView.style.display = 'flex';
                 adminView.classList.add('active');
                 document.getElementById('adminEmailDisplay').textContent = user.email;
-                setConnectionStatus(true, 'Firebase connected');
                 loadAdminUsers().then(function() {
                     setupAdminNav();
                     updateDashboardPage();
@@ -391,36 +363,32 @@
             var firestoreError = null;
             var functionError = null;
 
-            // 1. Try Firestore first (works without deploying Cloud Functions)
+            // 1. Try Cloud Function first (returns ALL Firebase Auth users + Firestore merge)
             try {
-                const snap = await db.collection('users').get();
-                users = snap.docs.map(mapFirestoreDocToUser);
+                const listAllUsers = firebase.functions().region('us-central1').httpsCallable('listAllUsers');
+                const result = await listAllUsers();
+                users = result.data?.users || [];
             } catch (err) {
-                firestoreError = err;
-                setConnectionStatus(false, 'Firestore: ' + (err.message || 'read failed'));
-                console.warn('Firestore users read failed:', err);
+                functionError = err;
+                console.warn('listAllUsers failed, falling back to Firestore:', err);
             }
 
-            // 2. If Firestore empty, try Cloud Function (includes Auth users without Firestore docs)
+            // 2. Fallback: Firestore users collection (when Cloud Functions not deployed)
             if (users.length === 0) {
                 try {
-                    const listAllUsers = firebase.functions().region('us-central1').httpsCallable('listAllUsers');
-                    const result = await listAllUsers();
-                    users = result.data?.users || [];
+                    const snap = await db.collection('users').get();
+                    users = snap.docs.map(mapFirestoreDocToUser);
                 } catch (err) {
-                    functionError = err;
-                    console.warn('listAllUsers failed:', err);
+                    firestoreError = err;
+                    console.warn('Firestore users read failed:', err);
                 }
             }
 
             adminUsers = users;
-            setConnectionStatus(true, 'Firebase connected');
             if (users.length === 0) {
                 var msg = 'No users found. Users appear here after they sign up or log in on the main site.';
-                if (functionError && !firestoreError) {
-                    msg += ' (Cloud Functions not deployed? Run: firebase deploy --only functions for full Auth sync)';
-                } else if (firestoreError) {
-                    msg += ' (Firestore read failed: ' + (firestoreError.message || 'check console') + ')';
+                if (functionError && firestoreError) {
+                    msg += ' Deploy Cloud Functions: firebase deploy --only functions';
                 }
                 tbody.innerHTML = '<tr><td colspan="7" class="text-center">' + msg + '</td></tr>';
             } else {
