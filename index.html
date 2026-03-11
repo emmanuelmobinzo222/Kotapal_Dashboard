@@ -285,7 +285,7 @@
             white-space: nowrap;
         }
 
-        /* NEW: Ease-in effect for nav links */
+        /* Nav link underline - instant for active (no lag), smooth for hover */
         .nav-links a::after {
             content: '';
             position: absolute;
@@ -294,13 +294,18 @@
             width: 0;
             height: 2px;
             background: linear-gradient(to right, var(--primary), var(--secondary));
-            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            transition: width 0.2s ease;
             transform: translateX(-50%);
         }
 
-        .nav-links a:hover::after,
-        .nav-links a.active::after {
+        .nav-links a:hover::after {
             width: 100%;
+            transition: width 0.2s ease;
+        }
+
+        .nav-links a.active::after {
+            width: 100% !important;
+            transition: none !important;
         }
 
         .nav-links a:hover {
@@ -2779,14 +2784,14 @@
             </div>
 
             <ul class="nav-links">
-                <li><a href="#home" class="nav-link" data-section="home" onclick="scrollToSection('home'); return false;">Home</a></li>
-                <li><a href="#features" class="nav-link" data-section="features" onclick="scrollToSection('features'); return false;">Features</a></li>
-                <li><a href="#pricing" class="nav-link" data-section="pricing" onclick="scrollToSection('pricing'); return false;">Pricing</a></li>
-                <li><a href="#trending-products" class="nav-link" data-section="trending-products" onclick="scrollToSection('trending-products'); return false;">Trending</a></li>
-                <li><a href="#testimonials" class="nav-link" data-section="testimonials" onclick="scrollToSection('testimonials'); return false;">Testimonials</a></li>
-                <li><a href="#dashboard-preview" class="nav-link" data-section="dashboard-preview" onclick="scrollToSection('dashboard-preview'); return false;">Dashboard</a></li>
-                <li><a href="#about" class="nav-link" data-section="about" onclick="scrollToSection('about'); return false;">About</a></li>
-                <li><a href="#" class="nav-link" data-section="contact" onclick="goToContactForm(); return false;">Contact</a></li>
+                <li><a href="#home" class="nav-link" data-section="home" onclick="scrollToSection('home', this); return false;">Home</a></li>
+                <li><a href="#features" class="nav-link" data-section="features" onclick="scrollToSection('features', this); return false;">Features</a></li>
+                <li><a href="#pricing" class="nav-link" data-section="pricing" onclick="scrollToSection('pricing', this); return false;">Pricing</a></li>
+                <li><a href="#trending-products" class="nav-link" data-section="trending-products" onclick="scrollToSection('trending-products', this); return false;">Trending</a></li>
+                <li><a href="#testimonials" class="nav-link" data-section="testimonials" onclick="scrollToSection('testimonials', this); return false;">Testimonials</a></li>
+                <li><a href="#dashboard-preview" class="nav-link" data-section="dashboard-preview" onclick="scrollToSection('dashboard-preview', this); return false;">Dashboard</a></li>
+                <li><a href="#about" class="nav-link" data-section="about" onclick="scrollToSection('about', this); return false;">About</a></li>
+                <li><a href="#" class="nav-link" data-section="contact" onclick="goToContactForm(this); return false;">Contact</a></li>
                 <li><a href="#" id="loginBtn">Login</a></li>
             </ul>
 
@@ -4725,9 +4730,10 @@
                     signupDate: savedUserData.signupDate || new Date().toISOString()
                 };
                 // Ensure user exists in Firestore for admin dashboard (merge for existing users)
-                if (window.firebaseDb) {
+                var fs = window.firebaseDb || (typeof firebase !== 'undefined' && firebase.firestore ? firebase.firestore() : null);
+                if (fs) {
                     try {
-                        await window.firebaseDb.collection('users').doc(user.uid).set({
+                        await fs.collection('users').doc(user.uid).set({
                             email: user.email,
                             displayName: displayName,
                             plan: userData.plan || 'starter',
@@ -4736,7 +4742,7 @@
                             lastSignIn: new Date().toISOString()
                         }, { merge: true });
                     } catch (fsErr) {
-                        console.warn('Firestore user update failed:', fsErr);
+                        console.error('Firestore user update failed:', fsErr);
                     }
                 }
                 // Set explicit login flag in BOTH sessionStorage AND localStorage for maximum persistence
@@ -4874,10 +4880,11 @@
                     plan: plan || 'starter',
                     signupDate: new Date().toISOString()
                 };
-                // Write user to Firestore for admin dashboard
-                if (window.firebaseDb) {
+                // Write user to Firestore for admin dashboard (required for admin to see new users)
+                var fs = window.firebaseDb || (typeof firebase !== 'undefined' && firebase.firestore ? firebase.firestore() : null);
+                if (fs) {
                     try {
-                        await window.firebaseDb.collection('users').doc(user.uid).set({
+                        await fs.collection('users').doc(user.uid).set({
                             email: user.email,
                             displayName: name.trim(),
                             plan: plan || 'starter',
@@ -4886,7 +4893,7 @@
                             createdAt: new Date().toISOString()
                         }, { merge: true });
                     } catch (fsErr) {
-                        console.warn('Firestore user write failed:', fsErr);
+                        console.error('Firestore user write failed:', fsErr);
                     }
                 }
                 // Set explicit login flag FIRST, before any state changes
@@ -5290,14 +5297,7 @@
             document.body.style.overflow = '';
         }
 
-        // Close modal when clicking outside
-        if (authModal) {
-            authModal.addEventListener('click', function(event) {
-                if (event.target == authModal) {
-                    closeAuthModal();
-                }
-            });
-        }
+        // Do NOT close auth modal on overlay click - keeps form open, user closes via X or Back to Homepage
         
         // Close reset password modal on overlay click
         const resetPasswordModal = document.getElementById('resetPasswordModal');
@@ -5814,15 +5814,23 @@
             if (mbtn) mbtn.classList.remove('active');
         }
 
-        // Smooth scroll to section (landing home only)
-        function scrollToSection(sectionId) {
+        // Smooth scroll to section (landing home only) - set active immediately for instant underline
+        function scrollToSection(sectionId, clickedEl) {
+            if (clickedEl) {
+                document.querySelectorAll('.nav-links a[data-section]').forEach(function(a) { a.classList.remove('active'); });
+                clickedEl.classList.add('active');
+            }
             showLandingPage('home-page');
             var section = document.getElementById(sectionId);
             if (section) {
                 setTimeout(function() { section.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 50);
             }
         }
-        function goToContactForm() {
+        function goToContactForm(clickedEl) {
+            if (clickedEl) {
+                document.querySelectorAll('.nav-links a[data-section]').forEach(function(a) { a.classList.remove('active'); });
+                clickedEl.classList.add('active');
+            }
             var landing = document.getElementById('landing-page-view');
             var dashboard = document.getElementById('dashboard-view');
             var nav = document.querySelector('nav');

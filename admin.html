@@ -363,26 +363,19 @@
             if (!tbody) return;
             tbody.innerHTML = '<tr><td colspan="7" class="text-center">Loading users...</td></tr>';
             let users = [];
+            var byId = {};
 
-            // 1. Try Firestore first (no deploy needed - users written on signup/login)
-            try {
-                const snap = await db.collection('users').get();
-                users = snap.docs.map(mapFirestoreDocToUser);
-            } catch (err) {
-                console.warn('Firestore users read failed:', err);
-            }
+            // Fetch from BOTH sources in parallel (Cloud Function = ALL Auth users, Firestore = signup/login writes)
+            var fnPromise = firebase.functions().region('us-central1').httpsCallable('listAllUsers')().then(function(r) { return r.data?.users || []; }).catch(function() { return []; });
+            var fsPromise = db.collection('users').get().then(function(snap) { return snap.docs.map(mapFirestoreDocToUser); }).catch(function() { return []; });
 
-            // 2. If empty, try Cloud Function (returns ALL Auth users when deployed)
-            if (users.length === 0) {
-                try {
-                    const listAllUsers = firebase.functions().region('us-central1').httpsCallable('listAllUsers');
-                    const result = await listAllUsers();
-                    users = result.data?.users || [];
-                } catch (err) {
-                    console.warn('listAllUsers failed:', err);
-                }
-            }
+            var fnUsers = await fnPromise;
+            var fsUsers = await fsPromise;
 
+            fnUsers.forEach(function(u) { byId[u.id || u.email] = u; });
+            fsUsers.forEach(function(u) { if (!byId[u.id]) byId[u.id] = u; });
+
+            users = Object.values(byId);
             adminUsers = users;
             if (users.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="7" class="text-center">No users found. Users appear here after they sign up or log in on the main site.</td></tr>';
@@ -409,7 +402,9 @@
             try {
                 usersUnsubscribe = db.collection('users').onSnapshot(function(snap) {
                     var users = snap.docs.map(mapFirestoreDocToUser);
-                    if (users.length > 0 && users.length !== adminUsers.length) {
+                    var ids = users.map(function(u) { return u.id; }).sort().join(',');
+                    var oldIds = (adminUsers || []).map(function(u) { return u.id; }).sort().join(',');
+                    if (users.length > 0 && ids !== oldIds) {
                         adminUsers = users;
                         const tbody = document.getElementById('adminUsersTableBody');
                         if (tbody && adminUsers.length > 0) {
