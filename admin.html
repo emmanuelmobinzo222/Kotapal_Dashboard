@@ -116,14 +116,14 @@
                 <div class="email" id="adminEmailDisplay"></div>
             </div>
             <ul class="nav-menu">
-                <li class="nav-item"><a href="#" class="nav-link active" data-page="dashboard"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
-                <li class="nav-item"><a href="#" class="nav-link" data-page="users"><i class="fas fa-users"></i> Users</a></li>
-                <li class="nav-item"><a href="#" class="nav-link" data-page="blocks"><i class="fas fa-cubes"></i> SmartBlocks</a></li>
-                <li class="nav-item"><a href="#" class="nav-link" data-page="stats"><i class="fas fa-chart-bar"></i> Analytics</a></li>
-                <li class="nav-item"><a href="#" class="nav-link" data-page="reports"><i class="fas fa-file-alt"></i> Reports</a></li>
-                <li class="nav-item"><a href="#" class="nav-link" data-page="billing"><i class="fas fa-credit-card"></i> Billing</a></li>
-                <li class="nav-item"><a href="#" class="nav-link" data-page="settings"><i class="fas fa-cog"></i> Settings</a></li>
-                <li class="nav-item"><a href="#" class="nav-link" id="adminLogoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+                <li class="nav-item"><a href="javascript:void(0)" class="nav-link active" data-page="dashboard" onclick="showAdminPage('dashboard'); return false;"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+                <li class="nav-item"><a href="javascript:void(0)" class="nav-link" data-page="users" onclick="showAdminPage('users'); return false;"><i class="fas fa-users"></i> Users</a></li>
+                <li class="nav-item"><a href="javascript:void(0)" class="nav-link" data-page="blocks" onclick="showAdminPage('blocks'); return false;"><i class="fas fa-cubes"></i> SmartBlocks</a></li>
+                <li class="nav-item"><a href="javascript:void(0)" class="nav-link" data-page="stats" onclick="showAdminPage('stats'); return false;"><i class="fas fa-chart-bar"></i> Analytics</a></li>
+                <li class="nav-item"><a href="javascript:void(0)" class="nav-link" data-page="reports" onclick="showAdminPage('reports'); return false;"><i class="fas fa-file-alt"></i> Reports</a></li>
+                <li class="nav-item"><a href="javascript:void(0)" class="nav-link" data-page="billing" onclick="showAdminPage('billing'); return false;"><i class="fas fa-credit-card"></i> Billing</a></li>
+                <li class="nav-item"><a href="javascript:void(0)" class="nav-link" data-page="settings" onclick="showAdminPage('settings'); return false;"><i class="fas fa-cog"></i> Settings</a></li>
+                <li class="nav-item"><a href="javascript:void(0)" class="nav-link" id="adminLogoutBtn" onclick="handleAdminLogout(); return false;"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
             </ul>
         </aside>
         <main class="admin-main">
@@ -262,36 +262,43 @@
     </div>
 
     <script>
-        var firebaseConfig = window.FIREBASE_CONFIG || {};
-        if (!firebaseConfig.projectId || firebaseConfig.projectId === 'YOUR_PROJECT_ID') {
-            console.error('Firebase not configured. Create firebase-config.js or set window.FIREBASE_CONFIG.');
-        }
+        var firebaseConfig = window.FIREBASE_CONFIG || {
+            apiKey: "AIzaSyCNU1QFZhmUuk2QWDeNi4ff3-le4KNnbrU",
+            authDomain: "kotapal-1e8f6.firebaseapp.com",
+            projectId: "kotapal-1e8f6",
+            storageBucket: "kotapal-1e8f6.firebasestorage.app",
+            messagingSenderId: "487227333489",
+            appId: "1:487227333489:web:a370f5e07b9e4c3d79f4d0"
+        };
 
-        const ADMIN_EMAILS = ['admin@kotapal.com', 'wreck@gmail.com', 'earlhugue@gmail.com', 'emmanuelmobinzo222@gmail.com', 'emmanuelmobinzo21@gmail.com'];
-        let adminUsers = [];
+        var ADMIN_EMAILS = ['admin@kotapal.com', 'wreck@gmail.com', 'earlhugue@gmail.com', 'emmanuelmobinzo222@gmail.com', 'emmanuelmobinzo21@gmail.com'];
+        var adminUsers = [];
 
         function isAdminUser(email) {
             if (!email) return false;
-            return ADMIN_EMAILS.includes(email.toLowerCase());
+            return ADMIN_EMAILS.indexOf(email.toLowerCase()) >= 0;
         }
 
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const db = firebase.firestore();
+        try {
+            firebase.initializeApp(firebaseConfig);
+        } catch (e) {
+            if (!e.code || e.code !== 'app/duplicate-app') throw e;
+        }
+        var auth = firebase.auth();
+        var db = firebase.firestore();
 
-        // Admin: require credentials every time - use SESSION so no cross-tab persistence
         auth.setPersistence(firebase.auth.Auth.Persistence.SESSION).catch(function() {});
 
-        auth.onAuthStateChanged((user) => {
-            const loginScreen = document.getElementById('login-screen');
-            const adminView = document.getElementById('admin-view');
-            const adminLoggedIn = sessionStorage.getItem('admin_logged_in') === '1';
+        auth.onAuthStateChanged(function(user) {
+            var loginScreen = document.getElementById('login-screen');
+            var adminView = document.getElementById('admin-view');
+            var adminLoggedIn = sessionStorage.getItem('admin_logged_in') === '1';
             if (user && isAdminUser(user.email) && adminLoggedIn) {
                 loginScreen.style.display = 'none';
                 adminView.style.display = 'flex';
                 adminView.classList.add('active');
-                document.getElementById('adminEmailDisplay').textContent = user.email;
-                setupAdminNav();
+                var emailEl = document.getElementById('adminEmailDisplay');
+                if (emailEl) emailEl.textContent = user.email;
                 loadAdminUsers().then(function() {
                     updateDashboardPage();
                 });
@@ -303,23 +310,11 @@
             }
         });
 
-        function setupAdminNav() {
-            var menu = document.querySelector('.admin-sidebar .nav-menu');
-            if (menu) {
-                menu.addEventListener('click', function(e) {
-                    var link = e.target.closest('.nav-link[data-page]');
-                    if (link) {
-                        e.preventDefault();
-                        var page = link.getAttribute('data-page');
-                        if (page) showAdminPage(page);
-                    }
-                });
-            }
-        }
-
         function showAdminPage(pageName) {
-            document.querySelectorAll('.admin-page').forEach(function(p) { p.classList.remove('active'); });
-            document.querySelectorAll('.admin-sidebar .nav-link[data-page]').forEach(function(l) { l.classList.remove('active'); });
+            var pages = document.querySelectorAll('.admin-page');
+            for (var i = 0; i < pages.length; i++) pages[i].classList.remove('active');
+            var links = document.querySelectorAll('.admin-sidebar .nav-link[data-page]');
+            for (var j = 0; j < links.length; j++) links[j].classList.remove('active');
             var pageEl = document.getElementById('admin-page-' + pageName);
             var linkEl = document.querySelector('.admin-sidebar .nav-link[data-page="' + pageName + '"]');
             if (pageEl) pageEl.classList.add('active');
@@ -327,7 +322,20 @@
             if (pageName === 'stats') updateStatsPage();
             if (pageName === 'dashboard') updateDashboardPage();
         }
+
+        function handleAdminLogout() {
+            sessionStorage.removeItem('admin_logged_in');
+            auth.signOut();
+            window.location.href = 'index.html';
+        }
+
         window.showAdminPage = showAdminPage;
+        window.loadAdminUsers = loadAdminUsers;
+        window.openChangePlan = openChangePlan;
+        window.closeChangePlanModal = closeChangePlanModal;
+        window.savePlanChange = savePlanChange;
+        window.toggleSuspend = toggleSuspend;
+        window.deleteUserDoc = deleteUserDoc;
 
         function updateDashboardPage() {
             var total = adminUsers.length;
@@ -342,12 +350,15 @@
         }
 
         function updateStatsPage() {
-            const total = adminUsers.length;
-            const active = adminUsers.filter(function(u) { return (u.status || 'active') !== 'suspended'; }).length;
-            const suspended = total - active;
-            document.getElementById('admin-stat-total').textContent = total;
-            document.getElementById('admin-stat-active').textContent = active;
-            document.getElementById('admin-stat-suspended').textContent = suspended;
+            var total = adminUsers.length;
+            var active = adminUsers.filter(function(u) { return (u.status || 'active') !== 'suspended'; }).length;
+            var suspended = total - active;
+            var t = document.getElementById('admin-stat-total');
+            var a = document.getElementById('admin-stat-active');
+            var s = document.getElementById('admin-stat-suspended');
+            if (t) t.textContent = total;
+            if (a) a.textContent = active;
+            if (s) s.textContent = suspended;
         }
 
         function mapFirestoreDocToUser(d) {
@@ -364,7 +375,7 @@
         }
 
         async function loadAdminUsers() {
-            const tbody = document.getElementById('adminUsersTableBody');
+            var tbody = document.getElementById('adminUsersTableBody');
             if (!tbody) return;
             tbody.innerHTML = '<tr><td colspan="7" class="text-center">Loading users...</td></tr>';
             var users = [];
@@ -381,14 +392,15 @@
             }
 
             try {
-                var fnResult = await firebase.functions().region('us-central1').httpsCallable('listAllUsers')();
-                var fnUsers = fnResult.data?.users || [];
+                var listFn = firebase.functions().region('us-central1').httpsCallable('listAllUsers');
+                var fnResult = await listFn();
+                var fnUsers = (fnResult && fnResult.data && fnResult.data.users) ? fnResult.data.users : [];
                 fnUsers.forEach(function(u) { byId[u.id || u.email] = u; });
             } catch (err) {
-                console.warn('listAllUsers failed, using Firestore:', err);
+                console.warn('listAllUsers failed, using Firestore only:', err);
             }
 
-            users = Object.values(byId);
+            users = Object.keys(byId).map(function(k) { return byId[k]; });
             adminUsers = users;
             if (users.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="7" class="text-center">No users found. Users appear here after they sign up or log in on the main site.</td></tr>';
@@ -404,7 +416,8 @@
                     return '<tr><td>' + (u.email || '-') + '</td><td>' + (u.name || '-') + '</td><td>' + (u.plan || '-') + '</td><td>' + statusBadge + '</td><td>' + joined + '</td><td>' + lastSignIn + '</td><td>' + actions + '</td></tr>';
                 }).join('');
             }
-            document.getElementById('admin-stat-users').textContent = users.length;
+            var statEl = document.getElementById('admin-stat-users');
+            if (statEl) statEl.textContent = users.length;
             updateDashboardPage();
             setupUsersRealtimeListener();
         }
@@ -519,12 +532,6 @@
             }
         });
 
-        document.getElementById('adminLogoutBtn').addEventListener('click', function(e) {
-            e.preventDefault();
-            sessionStorage.removeItem('admin_logged_in');
-            auth.signOut();
-            window.location.href = 'index.html';
-        });
     </script>
 </body>
 </html>
