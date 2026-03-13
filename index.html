@@ -4730,7 +4730,8 @@
                     signupDate: savedUserData.signupDate || new Date().toISOString()
                 };
                 // Ensure user exists in Firestore for admin dashboard (merge for existing users)
-                var fs = window.firebaseDb || (typeof firebase !== 'undefined' && firebase.firestore ? firebase.firestore() : null);
+                var fs = window.firebaseDb;
+                if (!fs && typeof firebase !== 'undefined') { try { var app = firebase.app(); if (app) fs = app.firestore(); } catch(e) {} }
                 if (fs) {
                     try {
                         await fs.collection('users').doc(user.uid).set({
@@ -4881,7 +4882,8 @@
                     signupDate: new Date().toISOString()
                 };
                 // Write user to Firestore for admin dashboard (required for admin to see new users)
-                var fs = window.firebaseDb || (typeof firebase !== 'undefined' && firebase.firestore ? firebase.firestore() : null);
+                var fs = window.firebaseDb;
+                if (!fs && typeof firebase !== 'undefined') { try { var app = firebase.app(); if (app) fs = app.firestore(); } catch(e) {} }
                 if (fs) {
                     try {
                         await fs.collection('users').doc(user.uid).set({

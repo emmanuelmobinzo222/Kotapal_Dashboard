@@ -37,6 +37,39 @@ async function fetchAllUsers() {
   return users;
 }
 
+/**
+ * Callable: syncUsersToFirestore
+ * Backfills Firestore users collection from Firebase Auth. Call once to sync existing Auth users.
+ */
+exports.syncUsersToFirestore = onCall({ region: 'us-central1' }, async (request) => {
+  if (!request.auth) throw new HttpsError('unauthenticated', 'Must be signed in.');
+  const email = request.auth.token.email;
+  if (!isAdmin(email)) throw new HttpsError('permission-denied', 'Admin access required.');
+
+  const auth = getAuth();
+  const db = getFirestore();
+  let count = 0;
+  let pageToken;
+
+  do {
+    const listResult = await auth.listUsers(1000, pageToken);
+    pageToken = listResult.pageToken;
+    for (const u of listResult.users) {
+      await db.collection('users').doc(u.uid).set({
+        email: u.email || '',
+        displayName: u.displayName || u.email?.split('@')[0] || '—',
+        plan: 'starter',
+        status: 'active',
+        signupDate: u.metadata.creationTime || new Date().toISOString(),
+        lastSignIn: u.metadata.lastSignInTime || ''
+      }, { merge: true });
+      count++;
+    }
+  } while (pageToken);
+
+  return { success: true, synced: count };
+});
+
 const ADMIN_EMAILS = ['admin@kotapal.com', 'wreck@gmail.com', 'earlhugue@gmail.com', 'emmanuelmobinzo222@gmail.com', 'emmanuelmobinzo21@gmail.com'];
 
 function isAdmin(email) {

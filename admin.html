@@ -159,7 +159,10 @@
             <div id="admin-page-users" class="admin-page">
                 <div class="admin-header">
                     <h1><i class="fas fa-users"></i> Users</h1>
-                    <button type="button" class="btn btn-secondary" style="width:auto;padding:10px 20px;" onclick="loadAdminUsers()"><i class="fas fa-sync-alt"></i> Refresh</button>
+                    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                        <button type="button" class="btn btn-secondary" style="width:auto;padding:10px 20px;" onclick="syncUsersToFirestore()"><i class="fas fa-database"></i> Sync Auth to Firestore</button>
+                        <button type="button" class="btn btn-secondary" style="width:auto;padding:10px 20px;" onclick="loadAdminUsers()"><i class="fas fa-sync-alt"></i> Refresh</button>
+                    </div>
                 </div>
                 <div class="stats-grid">
                     <div class="stat-card">
@@ -330,8 +333,20 @@
             window.location.href = 'index.html';
         }
 
+        async function syncUsersToFirestore() {
+            try {
+                var fn = firebase.functions().region('us-central1').httpsCallable('syncUsersToFirestore');
+                var r = await fn();
+                alert('Synced ' + (r.data && r.data.synced) + ' users to Firestore. Refreshing...');
+                loadAdminUsers();
+            } catch (err) {
+                alert('Sync failed. Deploy functions first: firebase deploy --only functions\n\n' + (err.message || err));
+            }
+        }
+
         window.showAdminPage = showAdminPage;
         window.loadAdminUsers = loadAdminUsers;
+        window.syncUsersToFirestore = syncUsersToFirestore;
         window.openChangePlan = openChangePlan;
         window.closeChangePlanModal = closeChangePlanModal;
         window.savePlanChange = savePlanChange;
@@ -381,6 +396,34 @@
             tbody.innerHTML = '<tr><td colspan="7" class="text-center">Loading users...</td></tr>';
             var users = [];
             var byId = {};
+            var projectId = firebaseConfig.projectId || 'kotapal-1e8f6';
+
+            function addUsers(arr) {
+                (arr || []).forEach(function(u) {
+                    var id = u.id || u.uid || u.email;
+                    if (id) byId[id] = { id: u.id || u.uid, email: u.email || '-', name: u.name || u.displayName || '-', plan: u.plan || 'starter', status: u.status || 'active', joined: u.joined || u.signupDate || '-', lastSignIn: u.lastSignIn || '-' };
+                });
+            }
+
+            try {
+                var listFn = firebase.functions().region('us-central1').httpsCallable('listAllUsers');
+                var fnResult = await listFn();
+                var fnUsers = (fnResult && fnResult.data && fnResult.data.users) ? fnResult.data.users : [];
+                addUsers(fnUsers);
+            } catch (fnErr) {
+                try {
+                    var token = await auth.currentUser.getIdToken();
+                    var r = await fetch('https://us-central1-' + projectId + '.cloudfunctions.net/apiUsers', {
+                        headers: { 'Authorization': 'Bearer ' + token }
+                    });
+                    if (r.ok) {
+                        var data = await r.json();
+                        addUsers(data.users || []);
+                    }
+                } catch (apiErr) {
+                    console.warn('API fallback failed:', apiErr);
+                }
+            }
 
             try {
                 var snap = await db.collection('users').get();
@@ -392,19 +435,10 @@
                 console.error('Firestore load failed:', err);
             }
 
-            try {
-                var listFn = firebase.functions().region('us-central1').httpsCallable('listAllUsers');
-                var fnResult = await listFn();
-                var fnUsers = (fnResult && fnResult.data && fnResult.data.users) ? fnResult.data.users : [];
-                fnUsers.forEach(function(u) { byId[u.id || u.email] = u; });
-            } catch (err) {
-                console.warn('listAllUsers failed, using Firestore only:', err);
-            }
-
             users = Object.keys(byId).map(function(k) { return byId[k]; });
             adminUsers = users;
             if (users.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" class="text-center">No users found. Users appear here after they sign up or log in on the main site.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center">No users found. <button type="button" class="btn btn-secondary" onclick="syncUsersToFirestore()" style="margin:8px;">Sync Auth Users to Firestore</button> Or deploy: <code>firebase deploy --only functions</code></td></tr>';
             } else {
                 tbody.innerHTML = users.map(function(u) {
                     var joined = (u.joined && u.joined !== '-') ? new Date(u.joined).toLocaleDateString() : (u.joined || '-');
