@@ -4520,6 +4520,7 @@
                 </div>
                 <button type="submit" class="admin-btn">Sign In</button>
                 <a href="#" class="admin-btn admin-btn-secondary" id="adminBackToHome" style="margin-top:12px;text-align:center;text-decoration:none;">Back to Homepage</a>
+                <a href="#admin-setup" class="admin-btn admin-btn-secondary" style="margin-top:8px;text-align:center;text-decoration:none;">Create Admin Account</a>
                 <div id="adminLoginStatus" class="admin-status"></div>
             </form>
         </div>
@@ -4569,6 +4570,18 @@
             <h3 style="margin-bottom:16px;">Change Plan</h3><input type="hidden" id="changePlanUserId">
             <div class="admin-form-group"><label>Plan</label><select id="changePlanSelect" style="width:100%;padding:12px;border:1px solid #e5e7eb;border-radius:8px;"><option value="free">Free</option><option value="starter">Starter</option><option value="pro">Pro</option><option value="creatorplus">Creator+</option><option value="agency">Agency</option></select></div>
             <div style="display:flex;gap:12px;margin-top:20px;"><button type="button" class="admin-btn" onclick="savePlanChange()">Save</button><button type="button" class="admin-btn admin-btn-secondary" onclick="closeChangePlanModal()">Cancel</button></div>
+        </div>
+    </div>
+
+    <!-- Admin Setup (create admin account) -->
+    <div id="admin-setup-screen" style="display:none;min-height:100vh;align-items:center;justify-content:center;padding:20px;background:linear-gradient(135deg,#1f2937 0%,#374151 100%);position:fixed;inset:0;z-index:3000;">
+        <div style="background:white;padding:40px;border-radius:16px;box-shadow:0 25px 50px rgba(0,0,0,0.25);max-width:420px;width:100%;">
+            <h1 style="margin-bottom:8px;font-size:1.5rem;">Create Admin Account</h1>
+            <p style="color:#6b7280;margin-bottom:24px;font-size:0.9rem;">Creates admin@kotapal.com in Firebase Auth. Run once, then use <a href="#admin">Admin login</a> to sign in.</p>
+            <p style="color:#6b7280;margin-bottom:24px;font-size:0.9rem;"><strong>Prerequisite:</strong> Deploy Firestore rules: <code>firebase deploy --only firestore</code></p>
+            <button type="button" class="admin-btn" id="adminSetupCreateBtn">Create admin@kotapal.com (Admin123!)</button>
+            <a href="#admin" class="admin-btn admin-btn-secondary" style="margin-top:12px;text-align:center;text-decoration:none;">Back to Admin Login</a>
+            <div id="adminSetupStatus" style="margin-top:16px;padding:12px;border-radius:8px;font-size:0.9rem;display:none;"></div>
         </div>
     </div>
 
@@ -5318,7 +5331,23 @@
                 if (adminView) adminView.classList.add('active');
             }
             function applyAdminView() {
-                if (window.location.hash !== '#admin') { showAdminUI(false); return; }
+                var hash = window.location.hash;
+                var setupScreen = document.getElementById('admin-setup-screen');
+                var landing = document.getElementById('landing-page-view');
+                var nav = document.querySelector('nav');
+                var footer = document.querySelector('footer');
+                if (hash === '#admin-setup') {
+                    if (landing) landing.style.display = 'none';
+                    if (nav) nav.style.display = 'none';
+                    if (footer) footer.style.display = 'none';
+                    if (document.getElementById('dashboard-view')) document.getElementById('dashboard-view').style.display = 'none';
+                    if (document.getElementById('admin-login-screen')) document.getElementById('admin-login-screen').classList.remove('active');
+                    if (document.getElementById('admin-view')) document.getElementById('admin-view').classList.remove('active');
+                    if (setupScreen) { setupScreen.style.display = 'flex'; setupScreen.style.position = 'fixed'; }
+                    return;
+                }
+                if (setupScreen) setupScreen.style.display = 'none';
+                if (hash !== '#admin') { showAdminUI(false); return; }
                 showAdminUI(true);
                 var adminLoggedIn = sessionStorage.getItem('admin_logged_in') === '1';
                 if (auth && auth.currentUser && isAdminUser(auth.currentUser.email) && adminLoggedIn) {
@@ -5346,6 +5375,55 @@
                 });
             }
             document.getElementById('adminBackToHome') && document.getElementById('adminBackToHome').addEventListener('click', function(e) { e.preventDefault(); window.location.hash = ''; window.location.reload(); });
+            document.getElementById('adminSetupCreateBtn') && document.getElementById('adminSetupCreateBtn').addEventListener('click', async function() {
+                var btn = this;
+                var statusEl = document.getElementById('adminSetupStatus');
+                function showSetupStatus(msg, type) { if (statusEl) { statusEl.textContent = msg; statusEl.className = 'admin-status show ' + type; statusEl.style.display = 'block'; } }
+                btn.disabled = true;
+                btn.textContent = 'Creating...';
+                showSetupStatus('', '');
+                try {
+                    await auth.createUserWithEmailAndPassword('admin@kotapal.com', 'Admin123!');
+                    var adminsRef = db.collection('config').doc('admins');
+                    var snap = await adminsRef.get();
+                    if (snap.exists && snap.data().emails && snap.data().emails.length) {
+                        var emails = snap.data().emails;
+                        if (!emails.includes('admin@kotapal.com')) { emails.push('admin@kotapal.com', 'admin@kotapal.com'.toLowerCase()); await adminsRef.update({ emails: emails }); }
+                    } else {
+                        await adminsRef.set({ emails: ['admin@kotapal.com', 'admin@kotapal.com'.toLowerCase()] });
+                    }
+                    showSetupStatus('Admin account created! Redirecting...', 'success');
+                    setTimeout(function() { window.location.hash = 'admin'; window.location.reload(); }, 1500);
+                } catch (err) {
+                    if (err.code === 'auth/email-already-in-use') {
+                        try {
+                            await auth.signInWithEmailAndPassword('admin@kotapal.com', 'Admin123!');
+                            var adminsRef = db.collection('config').doc('admins');
+                            var snap = await adminsRef.get();
+                            if (!snap.exists || !snap.data().emails || !snap.data().emails.length) {
+                                await adminsRef.set({ emails: ['admin@kotapal.com', 'admin@kotapal.com'.toLowerCase()] });
+                            } else {
+                                var emails = snap.data().emails;
+                                if (!emails.includes('admin@kotapal.com')) { emails.push('admin@kotapal.com', 'admin@kotapal.com'.toLowerCase()); await adminsRef.update({ emails: emails }); }
+                            }
+                            showSetupStatus('Admin already existed. Added to config. Redirecting...', 'success');
+                            setTimeout(function() { window.location.hash = 'admin'; window.location.reload(); }, 1500);
+                        } catch (e) {
+                            if (e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential') {
+                                showSetupStatus('admin@kotapal.com exists with a different password. Reset in Firebase Console.', 'error');
+                            } else {
+                                showSetupStatus('Error: ' + (e.message || e), 'error');
+                            }
+                            btn.disabled = false;
+                            btn.textContent = 'Create admin@kotapal.com (Admin123!)';
+                        }
+                    } else {
+                        showSetupStatus('Error: ' + (err.message || err) + '. Deploy Firestore rules first.', 'error');
+                        btn.disabled = false;
+                        btn.textContent = 'Create admin@kotapal.com (Admin123!)';
+                    }
+                }
+            });
             document.getElementById('adminLoginForm') && document.getElementById('adminLoginForm').addEventListener('submit', async function(e) {
                 e.preventDefault();
                 var email = document.getElementById('adminEmail').value.trim();
