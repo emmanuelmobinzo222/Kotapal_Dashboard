@@ -340,7 +340,7 @@
 
         function updateDashboardPage() {
             var total = adminUsers.length;
-            var active = adminUsers.filter(function(u) { return (u.status || 'active') !== 'suspended'; }).length;
+            var active = adminUsers.filter(function(u) { return String(u.status || 'active').toLowerCase() !== 'suspended'; }).length;
             var suspended = total - active;
             var el = document.getElementById('admin-dash-users');
             if (el) el.textContent = total;
@@ -352,7 +352,7 @@
 
         function updateStatsPage() {
             var total = adminUsers.length;
-            var active = adminUsers.filter(function(u) { return (u.status || 'active') !== 'suspended'; }).length;
+            var active = adminUsers.filter(function(u) { return String(u.status || 'active').toLowerCase() !== 'suspended'; }).length;
             var suspended = total - active;
             var t = document.getElementById('admin-stat-total');
             var a = document.getElementById('admin-stat-active');
@@ -362,16 +362,37 @@
             if (s) s.textContent = suspended;
         }
 
+        function toDateStr(val) {
+            if (!val || val === '-') return '-';
+            if (val && typeof val.toDate === 'function') return val.toDate().toISOString();
+            if (typeof val === 'string' || typeof val === 'number') return String(val);
+            return '-';
+        }
+
         function mapFirestoreDocToUser(d) {
             var data = d.data();
             return {
                 id: d.id,
                 email: data.email || '-',
-                name: data.displayName || data.name || '-',
+                name: data.displayName || data.name || data.display_name || '-',
                 plan: data.plan || 'starter',
                 status: data.status || 'active',
-                joined: data.signupDate || data.createdAt || '-',
-                lastSignIn: data.lastSignIn || '-'
+                joined: toDateStr(data.signupDate || data.createdAt || data.joined),
+                lastSignIn: toDateStr(data.lastSignIn || data.lastSignInTime)
+            };
+        }
+
+        function normUser(u) {
+            var id = u.id || u.uid || u.email;
+            if (!id) return null;
+            return {
+                id: id,
+                email: u.email || '-',
+                name: u.name || u.displayName || u.display_name || (u.email ? u.email.split('@')[0] : '-'),
+                plan: u.plan || 'starter',
+                status: (u.status || 'active').toLowerCase(),
+                joined: u.joined || u.signupDate || u.createdAt || '-',
+                lastSignIn: u.lastSignIn || u.lastSignInTime || '-'
             };
         }
 
@@ -387,8 +408,8 @@
                 var fnResult = await listFn();
                 var fnUsers = (fnResult && fnResult.data && fnResult.data.users) ? fnResult.data.users : [];
                 fnUsers.forEach(function(u) {
-                    var id = u.id || u.uid || u.email;
-                    if (id) byId[id] = { id: u.id || u.uid, email: u.email || '-', name: u.name || u.displayName || '-', plan: u.plan || 'starter', status: u.status || 'active', joined: u.joined || u.signupDate || '-', lastSignIn: u.lastSignIn || '-' };
+                    var n = normUser(u);
+                    if (n) byId[n.id] = n;
                 });
             } catch (e) {}
             try {
@@ -402,26 +423,62 @@
                 var snap2 = await db.collection('user').get();
                 snap2.docs.forEach(function(d) {
                     var data = d.data();
-                    var u = { id: d.id, email: data.email || '-', name: data.displayName || data.name || '-', plan: data.plan || 'starter', status: data.status || 'active', joined: data.signupDate || data.createdAt || '-', lastSignIn: data.lastSignIn || '-' };
+                    var u = { id: d.id, email: data.email || '-', name: data.displayName || data.name || '-', plan: data.plan || 'starter', status: data.status || 'active', joined: toDateStr(data.signupDate || data.createdAt), lastSignIn: toDateStr(data.lastSignIn) };
                     byId[u.id] = u;
                 });
             } catch (e) {}
+            try {
+                var cu = auth.currentUser;
+                if (cu) {
+                    var token = await cu.getIdToken();
+                    var apiUrl = 'https://us-central1-kotapal-1e8f6.cloudfunctions.net/apiUsers';
+                    var resp = await fetch(apiUrl, { headers: { 'Authorization': 'Bearer ' + token } });
+                    if (resp.ok) {
+                        var json = await resp.json();
+                        var apiUsers = (json && json.users) ? json.users : [];
+                        apiUsers.forEach(function(u) {
+                            var n = normUser(u);
+                            if (n) byId[n.id] = n;
+                        });
+                    }
+                }
+            } catch (e) {}
 
             users = Object.keys(byId).map(function(k) { return byId[k]; });
+
+            if (users.length === 0) {
+                try {
+                    var syncFn = firebase.functions().region('us-central1').httpsCallable('syncUsersToFirestore');
+                    var syncResult = await syncFn();
+                    if (syncResult && syncResult.data && syncResult.data.synced > 0) {
+                        var snap = await db.collection('users').get();
+                        snap.docs.forEach(function(d) {
+                            var u = mapFirestoreDocToUser(d);
+                            byId[u.id] = u;
+                        });
+                        users = Object.keys(byId).map(function(k) { return byId[k]; });
+                    }
+                } catch (syncErr) {}
+            }
+
             adminUsers = users;
 
             if (users.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" class="text-center"></td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center" style="padding:32px;color:var(--gray);">No users found. Users appear here when they sign up via the main app or after syncing from Firebase Auth. Deploy Cloud Functions and run Refresh to sync.</td></tr>';
             } else {
+                function esc(s) { return String(s || '').replace(/'/g, "\\'"); }
+                function html(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
                 tbody.innerHTML = users.map(function(u) {
                     var joined = (u.joined && u.joined !== '-') ? new Date(u.joined).toLocaleDateString() : (u.joined || '-');
                     var lastSignIn = (u.lastSignIn && u.lastSignIn !== '-') ? new Date(u.lastSignIn).toLocaleDateString() : (u.lastSignIn || '-');
                     var status = (u.status || 'active').toLowerCase();
                     var statusBadge = '<span class="badge ' + (status === 'suspended' ? 'badge-suspended' : 'badge-active') + '">' + (status === 'suspended' ? 'Suspended' : 'Active') + '</span>';
-                    var actions = '<button class="btn btn-sm btn-secondary" onclick="openChangePlan(\'' + (u.id || u.email) + '\',\'' + (u.plan || 'starter') + '\')"><i class="fas fa-edit"></i> Plan</button>';
-                    actions += '<button class="btn btn-sm ' + (status === 'suspended' ? 'btn-success' : 'btn-secondary') + '" onclick="toggleSuspend(\'' + (u.id || u.email) + '\',\'' + status + '\')"><i class="fas fa-' + (status === 'suspended' ? 'user-check' : 'user-slash') + '"></i> ' + (status === 'suspended' ? 'Unsuspend' : 'Suspend') + '</button>';
-                    actions += '<button class="btn btn-sm btn-danger" onclick="deleteUserDoc(\'' + (u.id || u.email) + '\')"><i class="fas fa-trash"></i> Delete</button>';
-                    return '<tr><td>' + (u.email || '-') + '</td><td>' + (u.name || '-') + '</td><td>' + (u.plan || '-') + '</td><td>' + statusBadge + '</td><td>' + joined + '</td><td>' + lastSignIn + '</td><td>' + actions + '</td></tr>';
+                    var uid = esc(u.id || u.email);
+                    var plan = esc(u.plan || 'starter');
+                    var actions = '<button class="btn btn-sm btn-secondary" onclick="openChangePlan(\'' + uid + '\',\'' + plan + '\')"><i class="fas fa-edit"></i> Plan</button>';
+                    actions += '<button class="btn btn-sm ' + (status === 'suspended' ? 'btn-success' : 'btn-secondary') + '" onclick="toggleSuspend(\'' + uid + '\',\'' + status + '\')"><i class="fas fa-' + (status === 'suspended' ? 'user-check' : 'user-slash') + '"></i> ' + (status === 'suspended' ? 'Unsuspend' : 'Suspend') + '</button>';
+                    actions += '<button class="btn btn-sm btn-danger" onclick="deleteUserDoc(\'' + uid + '\')"><i class="fas fa-trash"></i> Delete</button>';
+                    return '<tr><td>' + html(u.email || '-') + '</td><td>' + html(u.name || '-') + '</td><td>' + html(u.plan || '-') + '</td><td>' + statusBadge + '</td><td>' + html(joined) + '</td><td>' + html(lastSignIn) + '</td><td>' + actions + '</td></tr>';
                 }).join('');
             }
             var statEl = document.getElementById('admin-stat-users');
@@ -442,15 +499,19 @@
                         adminUsers = users;
                         const tbody = document.getElementById('adminUsersTableBody');
                         if (tbody && adminUsers.length > 0) {
+                            function escR(s) { return String(s || '').replace(/'/g, "\\'"); }
+                            function htmlR(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
                             tbody.innerHTML = adminUsers.map(function(u) {
                                 var joined = (u.joined && u.joined !== '-') ? new Date(u.joined).toLocaleDateString() : (u.joined || '-');
                                 var lastSignIn = (u.lastSignIn && u.lastSignIn !== '-') ? new Date(u.lastSignIn).toLocaleDateString() : (u.lastSignIn || '-');
                                 var status = (u.status || 'active').toLowerCase();
                                 var statusBadge = '<span class="badge ' + (status === 'suspended' ? 'badge-suspended' : 'badge-active') + '">' + (status === 'suspended' ? 'Suspended' : 'Active') + '</span>';
-                                var actions = '<button class="btn btn-sm btn-secondary" onclick="openChangePlan(\'' + (u.id || u.email) + '\',\'' + (u.plan || 'starter') + '\')"><i class="fas fa-edit"></i> Plan</button>';
-                                actions += '<button class="btn btn-sm ' + (status === 'suspended' ? 'btn-success' : 'btn-secondary') + '" onclick="toggleSuspend(\'' + (u.id || u.email) + '\',\'' + status + '\')"><i class="fas fa-' + (status === 'suspended' ? 'user-check' : 'user-slash') + '\"></i> ' + (status === 'suspended' ? 'Unsuspend' : 'Suspend') + '</button>';
-                                actions += '<button class="btn btn-sm btn-danger" onclick="deleteUserDoc(\'' + (u.id || u.email) + '\')"><i class="fas fa-trash"></i> Delete</button>';
-                                return '<tr><td>' + (u.email || '-') + '</td><td>' + (u.name || '-') + '</td><td>' + (u.plan || '-') + '</td><td>' + statusBadge + '</td><td>' + joined + '</td><td>' + lastSignIn + '</td><td>' + actions + '</td></tr>';
+                                var uid = escR(u.id || u.email);
+                                var plan = escR(u.plan || 'starter');
+                                var actions = '<button class="btn btn-sm btn-secondary" onclick="openChangePlan(\'' + uid + '\',\'' + plan + '\')"><i class="fas fa-edit"></i> Plan</button>';
+                                actions += '<button class="btn btn-sm ' + (status === 'suspended' ? 'btn-success' : 'btn-secondary') + '" onclick="toggleSuspend(\'' + uid + '\',\'' + status + '\')"><i class="fas fa-' + (status === 'suspended' ? 'user-check' : 'user-slash') + '"></i> ' + (status === 'suspended' ? 'Unsuspend' : 'Suspend') + '</button>';
+                                actions += '<button class="btn btn-sm btn-danger" onclick="deleteUserDoc(\'' + uid + '\')"><i class="fas fa-trash"></i> Delete</button>';
+                                return '<tr><td>' + htmlR(u.email || '-') + '</td><td>' + htmlR(u.name || '-') + '</td><td>' + htmlR(u.plan || '-') + '</td><td>' + statusBadge + '</td><td>' + htmlR(joined) + '</td><td>' + htmlR(lastSignIn) + '</td><td>' + actions + '</td></tr>';
                             }).join('');
                             document.getElementById('admin-stat-users').textContent = adminUsers.length;
                             updateDashboardPage();
