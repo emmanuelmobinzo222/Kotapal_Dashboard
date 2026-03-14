@@ -2791,7 +2791,7 @@
                 <li><a href="#dashboard-preview" class="nav-link" data-section="dashboard-preview" onclick="scrollToSection('dashboard-preview', this); return false;">Dashboard</a></li>
                 <li><a href="#about" class="nav-link" data-section="about" onclick="scrollToSection('about', this); return false;">About</a></li>
                 <li><a href="#" class="nav-link" data-section="contact" onclick="goToContactForm(this); return false;">Contact</a></li>
-                <li><a href="#admin" id="adminNavLink">Admin</a></li>
+                <li><a href="#admin" id="adminNavLink" onclick="if(typeof goToAdmin==='function'){goToAdmin();return false;}">Admin</a></li>
                 <li><a href="#" id="loginBtn">Login</a></li>
             </ul>
 
@@ -3506,7 +3506,7 @@
                         <li><a href="#" onclick="goToContactForm(); return false;">Contact</a></li>
                         <li><a href="#" id="privacyLink">Privacy Policy</a></li>
                         <li><a href="#" id="tosLink">Terms of Service</a></li>
-                        <li><a href="#admin" style="opacity:0.7;">Admin</a></li>
+                        <li><a href="#admin" style="opacity:0.7;" onclick="if(typeof goToAdmin==='function'){goToAdmin();return false;}">Admin</a></li>
                     </ul>
                 </div>
 
@@ -3852,8 +3852,8 @@
         }
         /* Admin Dashboard (merged) */
         #admin-login-screen, #admin-view { display: none !important; min-height: 100vh; }
-        #admin-login-screen.active, #admin-view.active { display: flex !important; }
-        .admin-login-screen { min-height: 100vh; align-items: center; justify-content: center; padding: 20px; background: #f8fafc; }
+        #admin-login-screen.active, #admin-view.active { display: flex !important; position: fixed !important; inset: 0 !important; z-index: 9999 !important; }
+        .admin-login-screen { min-height: 100vh; align-items: center; justify-content: center; padding: 20px; background: #f8fafc; overflow-y: auto; }
         .admin-login-card { background: white; padding: 40px; border-radius: 16px; box-shadow: 0 4px 24px rgba(0,0,0,0.08); max-width: 400px; width: 100%; }
         .admin-login-card h1 { margin-bottom: 8px; font-size: 1.5rem; }
         .admin-login-card p { color: #6b7280; margin-bottom: 24px; font-size: 0.9rem; }
@@ -4610,7 +4610,7 @@
                     <button type="submit" class="btn btn-primary">Login</button>
                     <div id="authMessage" class="form-status" style="display: none;"></div>
                     <div style="text-align: center; margin-top: 16px; padding-top: 16px; border-top: 1px solid #e5e7eb;">
-                        <a href="#admin" class="btn auth-login-admin-btn" style="display: inline-flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none;"><i class="fas fa-shield-alt"></i> Admin login</a>
+                        <a href="#admin" class="btn auth-login-admin-btn" style="display: inline-flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none;" onclick="if(typeof goToAdmin==='function'){goToAdmin();return false;}"><i class="fas fa-shield-alt"></i> Admin login</a>
                         <a href="#" class="btn btn-secondary" id="backToHomepageFromLogin" style="display: block; margin-top: 10px; text-align: center; text-decoration: none;">Back to Homepage</a>
                     </div>
                 </form>
@@ -5358,7 +5358,9 @@
                 }
             }
             window.addEventListener('hashchange', applyAdminView);
-            if (window.location.hash === '#admin') applyAdminView();
+            window.goToAdmin = function() { window.location.hash = '#admin'; applyAdminView(); };
+            window.applyAdminView = applyAdminView;
+            if (window.location.hash === '#admin' || window.location.hash === '#admin-setup') applyAdminView();
             if (auth) {
                 auth.onAuthStateChanged(function(user) {
                     if (window.location.hash !== '#admin') return;
