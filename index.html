@@ -42,6 +42,59 @@
         onload="this.onload=null;this.rel='stylesheet'">
     <link rel="preload" as="image" href="https://images.pexels.com/photos/1649771/pexels-photo-1649771.jpeg">
 
+    <!-- Admin routing - runs early, no Firebase dependency -->
+    <script>
+    (function() {
+        function showAdminPage() {
+            var landing = document.getElementById('landing-page-view');
+            var nav = document.querySelector('nav');
+            var footer = document.querySelector('footer');
+            var dash = document.getElementById('dashboard-view');
+            var adminLogin = document.getElementById('admin-login-screen');
+            var adminView = document.getElementById('admin-view');
+            var setupScreen = document.getElementById('admin-setup-screen');
+            var authModal = document.getElementById('authModal');
+            if (landing) landing.style.display = 'none';
+            if (nav) nav.style.display = 'none';
+            if (footer) footer.style.display = 'none';
+            if (dash) dash.style.display = 'none';
+            if (setupScreen) setupScreen.style.display = 'none';
+            if (authModal) authModal.style.display = 'none';
+            if (adminView) adminView.classList.remove('active');
+            if (adminLogin) adminLogin.classList.add('active');
+        }
+        window.goToAdmin = showAdminPage;
+        function initAdminLinks() {
+            document.querySelectorAll('a[href="#admin"]').forEach(function(a) {
+                a.removeEventListener('click', adminClickHandler);
+                a.addEventListener('click', adminClickHandler);
+            });
+        }
+        function adminClickHandler(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            window.location.hash = 'admin';
+            showAdminPage();
+            return false;
+        }
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initAdminLinks);
+        } else {
+            initAdminLinks();
+        }
+        window.addEventListener('hashchange', function() {
+            if (window.location.hash === '#admin') showAdminPage();
+        });
+        if (window.location.hash === '#admin') {
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', showAdminPage);
+            } else {
+                showAdminPage();
+            }
+        }
+    })();
+    </script>
+
     <!-- Firebase Client SDK (for global cloud auth & Firestore) -->
     <script src="firebase-config.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -2791,7 +2844,7 @@
                 <li><a href="#dashboard-preview" class="nav-link" data-section="dashboard-preview" onclick="scrollToSection('dashboard-preview', this); return false;">Dashboard</a></li>
                 <li><a href="#about" class="nav-link" data-section="about" onclick="scrollToSection('about', this); return false;">About</a></li>
                 <li><a href="#" class="nav-link" data-section="contact" onclick="goToContactForm(this); return false;">Contact</a></li>
-                <li><a href="#admin" id="adminNavLink" onclick="if(typeof goToAdmin==='function'){goToAdmin();return false;}">Admin</a></li>
+                <li><a href="#admin" id="adminNavLink">Admin</a></li>
                 <li><a href="#" id="loginBtn">Login</a></li>
             </ul>
 
@@ -3506,7 +3559,7 @@
                         <li><a href="#" onclick="goToContactForm(); return false;">Contact</a></li>
                         <li><a href="#" id="privacyLink">Privacy Policy</a></li>
                         <li><a href="#" id="tosLink">Terms of Service</a></li>
-                        <li><a href="#admin" style="opacity:0.7;" onclick="if(typeof goToAdmin==='function'){goToAdmin();return false;}">Admin</a></li>
+                        <li><a href="#admin" style="opacity:0.7;">Admin</a></li>
                     </ul>
                 </div>
 
@@ -4610,7 +4663,7 @@
                     <button type="submit" class="btn btn-primary">Login</button>
                     <div id="authMessage" class="form-status" style="display: none;"></div>
                     <div style="text-align: center; margin-top: 16px; padding-top: 16px; border-top: 1px solid #e5e7eb;">
-                        <a href="#admin" class="btn auth-login-admin-btn" style="display: inline-flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none;" onclick="if(typeof goToAdmin==='function'){goToAdmin();return false;}"><i class="fas fa-shield-alt"></i> Admin login</a>
+                        <a href="#admin" class="btn auth-login-admin-btn" style="display: inline-flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none;"><i class="fas fa-shield-alt"></i> Admin login</a>
                         <a href="#" class="btn btn-secondary" id="backToHomepageFromLogin" style="display: block; margin-top: 10px; text-align: center; text-decoration: none;">Back to Homepage</a>
                     </div>
                 </form>
