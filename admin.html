@@ -159,7 +159,10 @@
             <div id="admin-page-users" class="admin-page">
                 <div class="admin-header">
                     <h1><i class="fas fa-users"></i> Users</h1>
-                    <button type="button" class="btn btn-secondary" style="width:auto;padding:10px 20px;" onclick="loadAdminUsers()"><i class="fas fa-sync-alt"></i> Refresh</button>
+                    <div style="display:flex;gap:10px;">
+                        <button type="button" class="btn btn-secondary" style="width:auto;padding:10px 20px;" onclick="syncUsersFromAuth()"><i class="fas fa-cloud-download-alt"></i> Sync from Auth</button>
+                        <button type="button" class="btn btn-secondary" style="width:auto;padding:10px 20px;" onclick="loadAdminUsers()"><i class="fas fa-sync-alt"></i> Refresh</button>
+                    </div>
                 </div>
                 <div class="stats-grid">
                     <div class="stat-card">
@@ -332,6 +335,19 @@
 
         window.showAdminPage = showAdminPage;
         window.loadAdminUsers = loadAdminUsers;
+        window.syncUsersFromAuth = syncUsersFromAuth;
+
+        async function syncUsersFromAuth() {
+            var tbody = document.getElementById('adminUsersTableBody');
+            if (tbody) tbody.innerHTML = '<tr><td colspan="7" class="text-center">Syncing from Firebase Auth...</td></tr>';
+            try {
+                var syncFn = firebase.functions().region('us-central1').httpsCallable('syncUsersToFirestore');
+                await syncFn();
+                await loadAdminUsers();
+            } catch (e) {
+                if (tbody) tbody.innerHTML = '<tr><td colspan="7" class="text-center" style="padding:24px;color:var(--danger);">Sync failed. Deploy Cloud Functions first: <code>firebase deploy --only functions</code></td></tr>';
+            }
+        }
         window.openChangePlan = openChangePlan;
         window.closeChangePlanModal = closeChangePlanModal;
         window.savePlanChange = savePlanChange;
