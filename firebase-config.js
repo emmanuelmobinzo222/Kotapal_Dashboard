@@ -1,6 +1,6 @@
 /**
  * Shared Firebase configuration for KotaPal (main app + admin dashboard).
- * Single source of truth - update here to change both index.html and admin.html.
+ * Single source of truth - update here for index.html (main app + admin).
  *
  * To get your config: Firebase Console > Project Settings > Your apps > Web app
  */

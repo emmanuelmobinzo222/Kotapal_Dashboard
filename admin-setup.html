@@ -56,10 +56,10 @@
 <body>
     <div class="card">
         <h1>Create Admin Account</h1>
-        <p>This will create admin@kotapal.com in Firebase Auth and add it to config/admins. Run once, then use <a href="admin.html">admin.html</a> to sign in.</p>
+        <p>This will create admin@kotapal.com in Firebase Auth and add it to config/admins. Run once, then use <a href="index.html#admin">Admin login</a> to sign in.</p>
         <p><strong>Prerequisite:</strong> Deploy Firestore rules first: <code>firebase deploy --only firestore</code></p>
         <button type="button" class="btn" id="createBtn">Create admin@kotapal.com (Admin123!)</button>
-        <a href="admin.html" class="btn btn-secondary" style="text-align:center;text-decoration:none;">Back to Admin Login</a>
+        <a href="index.html#admin" class="btn btn-secondary" style="text-align:center;text-decoration:none;">Back to Admin Login</a>
         <div id="status" class="status"></div>
     </div>
     <script>
@@ -99,7 +99,7 @@
                 }
                 showStatus('Admin account created! Redirecting to admin login...', 'success');
                 setTimeout(function() {
-                    window.location.href = 'admin.html';
+                    window.location.href = 'index.html#admin';
                 }, 2000);
             } catch (err) {
                 if (err.code === 'auth/email-already-in-use') {
@@ -118,7 +118,7 @@
                             }
                         }
                         showStatus('Admin already existed. Added to config/admins. Redirecting...', 'success');
-                        setTimeout(function() { window.location.href = 'admin.html'; }, 2000);
+                        setTimeout(function() { window.location.href = 'index.html#admin'; }, 2000);
                     } catch (e) {
                         if (e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential') {
                             showStatus('admin@kotapal.com already exists with a different password. Add it manually in Firebase Console → Authentication → Users, or reset the password there.', 'error');
