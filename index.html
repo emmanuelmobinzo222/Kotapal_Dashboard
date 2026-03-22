@@ -40,6 +40,9 @@
     <!-- Favicon -->
     <link rel="icon" href=".../images/kotapal favicon.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     <link rel="alternate" hreflang="en-US" href="https://www.kotapal.com" />
     <link rel="alternate" hreflang="x-default" href="https://www.kotapal.com" />
@@ -106,6 +109,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
         /* Reset and Base Styles */
@@ -3936,56 +3940,89 @@
             #dashboard-view .header { flex-direction: column; align-items: flex-start; gap: 12px; }
             #dashboard-view .btn { padding: 12px 20px; min-height: 44px; }
         }
-        /* Admin Dashboard (merged) */
-        #admin-login-screen, #admin-view { display: none !important; min-height: 100vh; }
+        /* Admin Dashboard (Kotapal design - Inter, indigo/cyan theme) */
+        :root { --admin-primary: #4f46e5; --admin-primary-dark: #4338ca; --admin-secondary: #06b6d4; --admin-success: #10b981; --admin-warning: #f59e0b; --admin-danger: #ef4444; --admin-gray-50: #f9fafb; --admin-gray-100: #f3f4f6; --admin-gray-200: #e5e7eb; --admin-gray-400: #9ca3af; --admin-gray-500: #6b7280; --admin-gray-600: #4b5563; --admin-gray-700: #374151; --admin-gray-800: #1f2937; --admin-sidebar-width: 260px; }
+        #admin-login-screen, #admin-view { display: none !important; min-height: 100vh; font-family: 'Inter', sans-serif; }
         #admin-login-screen.active, #admin-view.active { display: flex !important; position: fixed !important; inset: 0 !important; z-index: 9999 !important; }
-        .admin-login-screen { min-height: 100vh; align-items: center; justify-content: center; padding: 20px; background: #f8fafc; overflow-y: auto; }
-        .admin-login-card { background: white; padding: 40px; border-radius: 16px; box-shadow: 0 4px 24px rgba(0,0,0,0.08); max-width: 400px; width: 100%; }
-        .admin-login-card h1 { margin-bottom: 8px; font-size: 1.5rem; }
-        .admin-login-card p { color: #6b7280; margin-bottom: 24px; font-size: 0.9rem; }
+        .admin-login-screen { min-height: 100vh; align-items: center; justify-content: center; padding: 20px; background: var(--admin-gray-50); overflow-y: auto; font-family: 'Inter', sans-serif; }
+        .admin-login-card { background: white; padding: 40px; border-radius: 16px; box-shadow: 0 4px 24px rgba(0,0,0,0.08); max-width: 400px; width: 100%; border: 1px solid var(--admin-gray-200); }
+        .admin-login-card h1 { margin-bottom: 8px; font-size: 1.5rem; font-weight: 700; color: var(--admin-gray-800); }
+        .admin-login-card p { color: var(--admin-gray-500); margin-bottom: 24px; font-size: 0.9rem; }
         .admin-form-group { margin-bottom: 20px; }
-        .admin-form-group label { display: block; margin-bottom: 8px; font-weight: 500; font-size: 0.9rem; }
-        .admin-form-group input { width: 100%; padding: 12px 16px; border: 1px solid #e5e7eb; border-radius: 8px; font-size: 1rem; }
-        .admin-btn { display: block; width: 100%; padding: 14px; border: none; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; background: linear-gradient(to right, var(--primary), #8b5cf6); color: white; }
-        .admin-btn:hover { opacity: 0.95; }
-        .admin-btn-secondary { background: #e5e7eb; color: #374151; }
-        .admin-status { margin-top: 16px; padding: 12px; border-radius: 8px; font-size: 0.9rem; display: none; }
+        .admin-form-group label { display: block; margin-bottom: 8px; font-weight: 500; font-size: 0.9rem; color: var(--admin-gray-700); }
+        .admin-form-group input { width: 100%; padding: 12px 16px; border: 1px solid var(--admin-gray-200); border-radius: 10px; font-size: 1rem; transition: all 0.3s ease; }
+        .admin-form-group input:focus { outline: none; border-color: var(--admin-primary); box-shadow: 0 0 0 3px rgba(79,70,229,0.1); }
+        .admin-btn { display: block; width: 100%; padding: 14px; border: none; border-radius: 10px; font-size: 1rem; font-weight: 600; cursor: pointer; background: linear-gradient(135deg, var(--admin-primary) 0%, var(--admin-primary-dark) 100%); color: white; transition: all 0.3s ease; }
+        .admin-btn:hover { opacity: 0.95; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(79,70,229,0.3); }
+        .admin-btn-secondary { background: var(--admin-gray-100); color: var(--admin-gray-700); }
+        .admin-btn-secondary:hover { background: var(--admin-gray-200); }
+        .admin-status { margin-top: 16px; padding: 12px; border-radius: 10px; font-size: 0.9rem; display: none; }
         .admin-status.show { display: block; }
-        .admin-status.error { background: #fee2e2; color: #b91c1c; }
-        .admin-status.success { background: #d1fae5; color: #065f46; }
-        #admin-view.active { flex-direction: row !important; }
-        .admin-sidebar { width: 260px; min-width: 260px; background: white; box-shadow: 2px 0 8px rgba(0,0,0,0.08); padding: 0 0 16px 0; position: fixed; left: 0; top: 0; height: 100vh; overflow-y: auto; z-index: 1000; border-right: 1px solid #e5e7eb; display: flex; flex-direction: column; }
-        .admin-sidebar .logo { padding: 20px; border-bottom: 1px solid #e5e7eb; }
-        .admin-sidebar .logo img { max-width: 100%; height: 48px; object-fit: contain; }
-        .admin-sidebar .admin-info { padding: 16px 20px; border-bottom: 1px solid #e5e7eb; }
-        .admin-sidebar .admin-info .label { font-size: 0.75rem; color: #6b7280; text-transform: uppercase; margin-bottom: 4px; }
-        .admin-sidebar .admin-info .email { font-size: 0.9rem; font-weight: 500; word-break: break-all; }
-        .admin-sidebar .nav-menu { list-style: none; padding: 10px 0; margin: 0; flex: 1; }
+        .admin-status.error { background: rgba(239,68,68,0.1); color: #b91c1c; }
+        .admin-status.success { background: rgba(16,185,129,0.1); color: #065f46; }
+        #admin-view.active { flex-direction: row !important; font-family: 'Inter', sans-serif; }
+        .admin-sidebar { width: var(--admin-sidebar-width); min-width: var(--admin-sidebar-width); background: linear-gradient(180deg,#fff 0%,var(--admin-gray-50) 100%); box-shadow: none; padding: 0 0 16px 0; position: fixed; left: 0; top: 0; height: 100vh; overflow-y: auto; z-index: 1000; border-right: 1px solid var(--admin-gray-200); display: flex; flex-direction: column; }
+        .admin-sidebar .sidebar-header { padding: 20px; border-bottom: 1px solid var(--admin-gray-200); display: flex; align-items: center; gap: 12px; }
+        .admin-sidebar .logo { padding: 0; border: none; display: flex; align-items: center; gap: 12px; }
+        .admin-sidebar .logo-img { width: 40px; height: 40px; background: linear-gradient(135deg, var(--admin-primary) 0%, var(--admin-secondary) 100%); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 20px; }
+        .admin-sidebar .logo img { max-width: 40px; height: 40px; object-fit: contain; border-radius: 10px; }
+        .admin-sidebar .brand-name { font-size: 22px; font-weight: 700; color: var(--admin-gray-800); }
+        .admin-sidebar .admin-info { padding: 16px 20px; border-bottom: 1px solid var(--admin-gray-200); }
+        .admin-sidebar .admin-info .label { font-size: 0.75rem; color: var(--admin-gray-400); text-transform: uppercase; margin-bottom: 4px; letter-spacing: 0.5px; }
+        .admin-sidebar .admin-info .email { font-size: 0.9rem; font-weight: 500; word-break: break-all; color: var(--admin-gray-700); }
+        .admin-sidebar .nav-menu { list-style: none; padding: 15px 0; margin: 0; flex: 1; }
         .admin-sidebar .nav-item { margin-bottom: 2px; }
-        .admin-sidebar .nav-link { display: flex; align-items: center; padding: 12px 20px; color: #4b5563; border-radius: 8px; transition: all 0.2s; font-weight: 500; font-size: 0.9375rem; margin: 2px 12px; text-decoration: none; cursor: pointer; }
-        .admin-sidebar .nav-link:hover { background: #f3f4f6; color: var(--primary); }
-        .admin-sidebar .nav-link.active { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; }
-        .admin-sidebar .nav-link i { margin-right: 10px; width: 20px; text-align: center; }
-        .admin-main { flex: 1; margin-left: 260px; padding: 32px 40px; min-height: 100vh; background: #f8fafc; min-width: 0; }
+        .admin-sidebar .nav-link { display: flex; align-items: center; padding: 12px 20px; color: var(--admin-gray-600); border-radius: 0; border-left: 3px solid transparent; transition: all 0.3s ease; font-weight: 500; font-size: 0.9375rem; margin: 2px 0; text-decoration: none; cursor: pointer; }
+        .admin-sidebar .nav-link:hover { background: var(--admin-gray-100); color: var(--admin-primary); }
+        .admin-sidebar .nav-link.active { background: linear-gradient(90deg,rgba(79,70,229,0.1) 0%,transparent 100%); color: var(--admin-primary); border-left-color: var(--admin-primary); font-weight: 600; }
+        .admin-sidebar .nav-link i { margin-right: 10px; width: 20px; text-align: center; font-size: 18px; }
+        .admin-main { flex: 1; margin-left: var(--admin-sidebar-width); min-height: 100vh; background: var(--admin-gray-50); min-width: 0; display: flex; flex-direction: column; }
+        .admin-header-bar { height: 70px; background: white; border-bottom: 1px solid var(--admin-gray-200); display: flex; align-items: center; justify-content: space-between; padding: 0 30px; flex-shrink: 0; }
+        .admin-search-bar { flex: 1; max-width: 500px; position: relative; }
+        .admin-search-bar input { width: 100%; padding: 10px 15px 10px 40px; border: 1px solid var(--admin-gray-200); border-radius: 10px; font-size: 14px; transition: all 0.3s ease; }
+        .admin-search-bar input:focus { outline: none; border-color: var(--admin-primary); box-shadow: 0 0 0 3px rgba(79,70,229,0.1); }
+        .admin-search-bar i { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); color: var(--admin-gray-400); }
+        .admin-header-actions { display: flex; align-items: center; gap: 20px; }
+        .admin-icon-btn { width: 40px; height: 40px; border-radius: 10px; border: none; background: var(--admin-gray-50); color: var(--admin-gray-600); cursor: pointer; display: flex; align-items: center; justify-content: center; position: relative; transition: all 0.3s ease; }
+        .admin-icon-btn:hover { background: var(--admin-gray-100); color: var(--admin-primary); }
+        .admin-user-menu { display: flex; align-items: center; gap: 12px; padding: 5px 15px 5px 5px; border-radius: 25px; border: 1px solid var(--admin-gray-200); cursor: pointer; transition: all 0.3s ease; }
+        .admin-user-menu:hover { background: var(--admin-gray-50); }
+        .admin-user-avatar { width: 35px; height: 35px; border-radius: 50%; background: linear-gradient(135deg, var(--admin-primary) 0%, var(--admin-secondary) 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; }
+        .admin-main-content { padding: 30px; flex: 1; }
         .admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 16px; }
-        .admin-header h1 { font-size: 1.75rem; font-weight: 700; color: #1f2937; }
-        .admin-card { background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); border: 1px solid #e5e7eb; overflow: hidden; margin-bottom: 24px; }
-        .admin-card-header { padding: 20px 24px; border-bottom: 1px solid #e5e7eb; font-weight: 600; font-size: 1.1rem; }
+        .admin-header h1 { font-size: 1.75rem; font-weight: 700; color: var(--admin-gray-800); }
+        .admin-card { background: white; border-radius: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); border: 1px solid var(--admin-gray-200); overflow: hidden; margin-bottom: 24px; transition: all 0.3s ease; }
+        .admin-card:hover { box-shadow: 0 10px 30px rgba(0,0,0,0.06); }
+        .admin-card-header { padding: 20px 24px; border-bottom: 1px solid var(--admin-gray-200); font-weight: 600; font-size: 1.1rem; color: var(--admin-gray-800); }
         .admin-table { width: 100%; border-collapse: collapse; }
-        .admin-table th, .admin-table td { padding: 14px 20px; text-align: left; border-bottom: 1px solid #e5e7eb; }
-        .admin-table th { background: #f9fafb; font-size: 0.875rem; color: #6b7280; font-weight: 600; }
-        .admin-table tr:hover { background: #f9fafb; }
-        .admin-stat { font-size: 1.5rem; font-weight: 700; color: var(--primary); margin-bottom: 4px; }
-        .admin-stat-label { font-size: 0.875rem; color: #6b7280; }
-        .admin-stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 24px; }
-        .admin-stat-card { background: white; border-radius: 12px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); border: 1px solid #e5e7eb; }
-        .admin-stat-card .stat-icon { width: 48px; height: 48px; border-radius: 12px; background: linear-gradient(135deg, var(--primary) 0%, #2563eb 100%); color: white; display: flex; align-items: center; justify-content: center; margin-bottom: 12px; font-size: 1.25rem; }
+        .admin-table th, .admin-table td { padding: 14px 20px; text-align: left; border-bottom: 1px solid var(--admin-gray-200); }
+        .admin-table th { background: var(--admin-gray-50); font-size: 0.75rem; color: var(--admin-gray-600); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+        .admin-table tr:hover td { background: var(--admin-gray-50); }
+        .admin-table td { color: var(--admin-gray-700); font-size: 14px; }
+        .admin-stat { font-size: 2rem; font-weight: 700; color: var(--admin-gray-800); margin-bottom: 4px; }
+        .admin-stat-label { font-size: 0.875rem; color: var(--admin-gray-500); }
+        .admin-stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 24px; }
+        .admin-stat-card { background: white; border-radius: 15px; padding: 25px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); border: 1px solid var(--admin-gray-200); transition: all 0.3s ease; }
+        .admin-stat-card:hover { box-shadow: 0 10px 30px rgba(0,0,0,0.08); transform: translateY(-2px); }
+        .admin-stat-card .stat-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 15px; font-size: 1.25rem; }
+        .admin-stat-card .stat-icon.blue { background: rgba(79,70,229,0.1); color: var(--admin-primary); }
+        .admin-stat-card .stat-icon.cyan { background: rgba(6,182,212,0.1); color: var(--admin-secondary); }
+        .admin-stat-card .stat-icon.green { background: rgba(16,185,129,0.1); color: var(--admin-success); }
+        .admin-stat-card .stat-icon.orange { background: rgba(245,158,11,0.1); color: var(--admin-warning); }
+        .admin-stat-card .stat-icon:not(.blue):not(.cyan):not(.green):not(.orange) { background: linear-gradient(135deg, var(--admin-primary) 0%, var(--admin-primary-dark) 100%); color: white; }
         .admin-page { display: none; }
-        .admin-page.active { display: block; }
-        .admin-btn-sm { padding: 6px 12px; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 6px; width: auto; margin-right: 6px; margin-bottom: 4px; }
+        .admin-page.active { display: block; animation: adminFadeIn 0.3s ease; }
+        @keyframes adminFadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .admin-btn-sm { padding: 6px 12px; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 6px; width: auto; margin-right: 6px; margin-bottom: 4px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; transition: all 0.3s ease; }
+        .admin-btn-sm.admin-btn-secondary { background: var(--admin-gray-100); color: var(--admin-gray-700); }
+        .admin-btn-sm.admin-btn-secondary:hover { background: var(--admin-gray-200); }
         .admin-card .badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
-        .admin-card .badge-active { background: #dcfce7; color: #16a34a; }
-        .admin-card .badge-suspended { background: #fee2e2; color: #b91c1c; }
+        .admin-card .badge-active { background: rgba(16,185,129,0.1); color: #16a34a; }
+        .admin-card .badge-suspended { background: rgba(239,68,68,0.1); color: #b91c1c; }
+        .admin-chart-container { position: relative; height: 300px; margin-top: 16px; }
+        #admin-view .form-control { padding: 10px 15px; border: 1px solid var(--admin-gray-200); border-radius: 10px; font-size: 14px; font-family: 'Inter', sans-serif; }
+        #admin-view .form-control:focus { outline: none; border-color: var(--admin-primary); box-shadow: 0 0 0 3px rgba(79,70,229,0.1); }
+        @media (max-width: 768px) { .admin-sidebar { transform: translateX(-100%); } .admin-main { margin-left: 0; } .admin-stats-grid { grid-template-columns: 1fr; } }
     </style>
 
     <!-- Authenticated Dashboard View (KotaPal simple copy design) -->
@@ -4614,56 +4651,123 @@
     </div>
     <div id="admin-view">
         <aside class="admin-sidebar">
-            <div class="logo"><img src="images/IMG_4258.png" alt="KotaPal" onerror="this.outerHTML='<span style=\'font-weight:700;font-size:1.25rem;color:var(--primary)\'>KotaPal</span>'"></div>
+            <div class="sidebar-header">
+                <div class="logo">
+                    <div class="logo-img">K</div>
+                </div>
+                <div class="brand-name">Kotapal</div>
+            </div>
             <div class="admin-info">
                 <div class="label">Signed in as</div>
                 <div class="email" id="adminEmailDisplay"></div>
             </div>
-            <ul class="nav-menu">
-                <li class="nav-item"><a href="javascript:void(0)" class="nav-link active" data-page="dashboard" onclick="showAdminPage('dashboard'); return false;"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
-                <li class="nav-item"><a href="javascript:void(0)" class="nav-link" data-page="users" onclick="showAdminPage('users'); return false;"><i class="fas fa-users"></i> Users</a></li>
-                <li class="nav-item"><a href="javascript:void(0)" class="nav-link" data-page="blocks" onclick="showAdminPage('blocks'); return false;"><i class="fas fa-cubes"></i> SmartBlocks</a></li>
-                <li class="nav-item"><a href="javascript:void(0)" class="nav-link" data-page="stats" onclick="showAdminPage('stats'); return false;"><i class="fas fa-chart-bar"></i> Analytics</a></li>
-                <li class="nav-item"><a href="javascript:void(0)" class="nav-link" data-page="reports" onclick="showAdminPage('reports'); return false;"><i class="fas fa-file-alt"></i> Reports</a></li>
-                <li class="nav-item"><a href="javascript:void(0)" class="nav-link" data-page="billing" onclick="showAdminPage('billing'); return false;"><i class="fas fa-credit-card"></i> Billing</a></li>
-                <li class="nav-item"><a href="javascript:void(0)" class="nav-link" data-page="support" onclick="showAdminPage('support'); return false;"><i class="fas fa-headset"></i> Support</a></li>
-                <li class="nav-item"><a href="javascript:void(0)" class="nav-link" data-page="activity" onclick="showAdminPage('activity'); return false;"><i class="fas fa-history"></i> Activity Logs</a></li>
-                <li class="nav-item"><a href="javascript:void(0)" class="nav-link" data-page="settings" onclick="showAdminPage('settings'); return false;"><i class="fas fa-cog"></i> Settings</a></li>
-                <li class="nav-item"><a href="javascript:void(0)" class="nav-link" onclick="handleAdminLogout(); return false;"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
-            </ul>
+            <nav class="nav-menu">
+                <div class="nav-section" style="padding:15px 20px 8px;font-size:11px;font-weight:600;text-transform:uppercase;color:var(--admin-gray-400);letter-spacing:0.5px;">Overview</div>
+                <div class="nav-item"><a href="javascript:void(0)" class="nav-link active" data-page="dashboard" onclick="showAdminPage('dashboard'); return false;"><i class="fas fa-tachometer-alt"></i> Dashboard</a></div>
+                <div class="nav-section" style="padding:15px 20px 8px;font-size:11px;font-weight:600;text-transform:uppercase;color:var(--admin-gray-400);letter-spacing:0.5px;">Management</div>
+                <div class="nav-item"><a href="javascript:void(0)" class="nav-link" data-page="users" onclick="showAdminPage('users'); return false;"><i class="fas fa-users"></i> Users</a></div>
+                <div class="nav-item"><a href="javascript:void(0)" class="nav-link" data-page="blocks" onclick="showAdminPage('blocks'); return false;"><i class="fas fa-cubes"></i> SmartBlocks</a></div>
+                <div class="nav-item"><a href="javascript:void(0)" class="nav-link" data-page="billing" onclick="showAdminPage('billing'); return false;"><i class="fas fa-credit-card"></i> Billing</a></div>
+                <div class="nav-section" style="padding:15px 20px 8px;font-size:11px;font-weight:600;text-transform:uppercase;color:var(--admin-gray-400);letter-spacing:0.5px;">Analytics</div>
+                <div class="nav-item"><a href="javascript:void(0)" class="nav-link" data-page="stats" onclick="showAdminPage('stats'); return false;"><i class="fas fa-chart-bar"></i> Analytics</a></div>
+                <div class="nav-item"><a href="javascript:void(0)" class="nav-link" data-page="reports" onclick="showAdminPage('reports'); return false;"><i class="fas fa-file-alt"></i> Reports</a></div>
+                <div class="nav-item"><a href="javascript:void(0)" class="nav-link" data-page="support" onclick="showAdminPage('support'); return false;"><i class="fas fa-headset"></i> Support</a></div>
+                <div class="nav-section" style="padding:15px 20px 8px;font-size:11px;font-weight:600;text-transform:uppercase;color:var(--admin-gray-400);letter-spacing:0.5px;">System</div>
+                <div class="nav-item"><a href="javascript:void(0)" class="nav-link" data-page="activity" onclick="showAdminPage('activity'); return false;"><i class="fas fa-history"></i> Activity Logs</a></div>
+                <div class="nav-item"><a href="javascript:void(0)" class="nav-link" data-page="settings" onclick="showAdminPage('settings'); return false;"><i class="fas fa-cog"></i> Settings</a></div>
+                <div class="nav-item"><a href="javascript:void(0)" class="nav-link" onclick="handleAdminLogout(); return false;"><i class="fas fa-sign-out-alt"></i> Logout</a></div>
+            </nav>
         </aside>
         <main class="admin-main">
-            <div id="admin-page-dashboard" class="admin-page active">
-                <div class="admin-header"><h1><i class="fas fa-tachometer-alt"></i> Dashboard</h1></div>
-                <div class="admin-stats-grid">
-                    <div class="admin-stat-card"><div class="stat-icon"><i class="fas fa-users"></i></div><div class="admin-stat" id="admin-dash-users">0</div><div class="admin-stat-label">Total Users</div></div>
-                    <div class="admin-stat-card"><div class="stat-icon"><i class="fas fa-user-check"></i></div><div class="admin-stat" id="admin-dash-active">0</div><div class="admin-stat-label">Active</div></div>
-                    <div class="admin-stat-card"><div class="stat-icon"><i class="fas fa-user-slash"></i></div><div class="admin-stat" id="admin-dash-suspended">0</div><div class="admin-stat-label">Suspended</div></div>
+            <header class="admin-header-bar">
+                <div style="display:flex;align-items:center;flex:1;">
+                    <div class="admin-search-bar">
+                        <i class="fas fa-search"></i>
+                        <input type="text" placeholder="Search users, products, transactions..." id="adminSearchInput">
+                    </div>
                 </div>
-                <div class="admin-card"><div class="admin-card-header">Quick Actions</div><div style="padding:24px;display:flex;gap:12px;flex-wrap:wrap;"><a href="javascript:void(0)" class="admin-btn admin-btn-secondary" style="width:auto;padding:12px 24px;" onclick="showAdminPage('users'); return false;"><i class="fas fa-users"></i> Manage Users</a><a href="javascript:void(0)" class="admin-btn admin-btn-secondary" style="width:auto;padding:12px 24px;" onclick="showAdminPage('stats'); return false;"><i class="fas fa-chart-bar"></i> View Analytics</a></div></div>
+                <div class="admin-header-actions">
+                    <button class="admin-icon-btn" type="button" title="Notifications"><i class="fas fa-bell"></i></button>
+                    <button class="admin-icon-btn" type="button" title="Messages"><i class="fas fa-envelope"></i></button>
+                    <div class="admin-user-menu">
+                        <div class="admin-user-avatar" id="adminUserAvatar">A</div>
+                        <span class="user-name" id="adminUserName">Admin</span>
+                        <i class="fas fa-chevron-down" style="color:var(--admin-gray-400);font-size:12px;"></i>
+                    </div>
+                </div>
+            </header>
+            <div class="admin-main-content">
+            <div id="admin-page-dashboard" class="admin-page active">
+                <h1 class="page-title" style="font-size:28px;font-weight:700;color:var(--admin-gray-800);margin-bottom:25px;">Dashboard Overview</h1>
+                <div class="admin-stats-grid">
+                    <div class="admin-stat-card">
+                        <div class="stat-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:15px;">
+                            <div class="admin-stat-label">Total Users</div>
+                            <div class="stat-icon blue"><i class="fas fa-users"></i></div>
+                        </div>
+                        <div class="admin-stat" id="admin-dash-users">0</div>
+                        <div class="stat-change positive" style="font-size:13px;color:var(--admin-success);display:flex;align-items:center;gap:5px;"><i class="fas fa-arrow-up"></i><span>From Firestore</span></div>
+                    </div>
+                    <div class="admin-stat-card">
+                        <div class="stat-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:15px;">
+                            <div class="admin-stat-label">Active</div>
+                            <div class="stat-icon cyan"><i class="fas fa-user-check"></i></div>
+                        </div>
+                        <div class="admin-stat" id="admin-dash-active">0</div>
+                        <div class="stat-change positive" style="font-size:13px;color:var(--admin-success);"><span>Non-suspended users</span></div>
+                    </div>
+                    <div class="admin-stat-card">
+                        <div class="stat-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:15px;">
+                            <div class="admin-stat-label">Suspended</div>
+                            <div class="stat-icon orange"><i class="fas fa-user-slash"></i></div>
+                        </div>
+                        <div class="admin-stat" id="admin-dash-suspended">0</div>
+                        <div style="font-size:13px;color:var(--admin-gray-500);">Accounts suspended</div>
+                    </div>
+                </div>
+                <div class="admin-card">
+                    <div class="admin-card-header" style="display:flex;align-items:center;justify-content:space-between;">
+                        <span>Revenue Overview</span>
+                        <select class="form-control" id="adminRevenueRange" style="width:auto;padding:8px 12px;border-radius:8px;font-size:13px;">
+                            <option>Last 7 Months</option>
+                            <option>Last Year</option>
+                            <option>All Time</option>
+                        </select>
+                    </div>
+                    <div class="admin-chart-container">
+                        <canvas id="adminRevenueChart"></canvas>
+                    </div>
+                </div>
+                <div class="admin-card">
+                    <div class="admin-card-header">Quick Actions</div>
+                    <div style="padding:24px;display:flex;gap:12px;flex-wrap:wrap;">
+                        <a href="javascript:void(0)" class="admin-btn admin-btn-secondary" style="width:auto;padding:12px 24px;display:inline-flex;align-items:center;gap:8px;text-decoration:none;" onclick="showAdminPage('users'); return false;"><i class="fas fa-users"></i> Manage Users</a>
+                        <a href="javascript:void(0)" class="admin-btn admin-btn-secondary" style="width:auto;padding:12px 24px;display:inline-flex;align-items:center;gap:8px;text-decoration:none;" onclick="showAdminPage('stats'); return false;"><i class="fas fa-chart-bar"></i> View Analytics</a>
+                    </div>
+                </div>
             </div>
             <div id="admin-page-users" class="admin-page">
-                <div class="admin-header"><h1><i class="fas fa-users"></i> Users</h1><button type="button" class="admin-btn admin-btn-secondary" style="width:auto;padding:10px 20px;" onclick="loadAdminUsers()"><i class="fas fa-sync-alt"></i> Refresh</button></div>
-                <div class="admin-stats-grid"><div class="admin-stat-card"><div class="stat-icon"><i class="fas fa-users"></i></div><div class="admin-stat" id="admin-stat-users">0</div><div class="admin-stat-label">Total Users</div></div></div>
+                <div class="admin-header"><h1><i class="fas fa-users"></i> User Management</h1><button type="button" class="admin-btn admin-btn-secondary" style="width:auto;padding:10px 20px;display:inline-flex;align-items:center;gap:8px;" onclick="loadAdminUsers()"><i class="fas fa-sync-alt"></i> Refresh</button></div>
+                <div class="admin-stats-grid"><div class="admin-stat-card"><div class="stat-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:15px;"><div class="admin-stat-label">Total Users</div><div class="stat-icon blue"><i class="fas fa-users"></i></div></div><div class="admin-stat" id="admin-stat-users">0</div><div class="admin-stat-label">Firestore users</div></div></div>
                 <div class="admin-card"><div class="admin-card-header">All Users — Firestore (project: kotapal-1e8f6)</div><div style="overflow-x:auto;-webkit-overflow-scrolling:touch;"><table class="admin-table"><thead><tr><th>Email</th><th>Name</th><th>Plan</th><th>Status</th><th>Joined</th><th>Last Sign In</th><th>Actions</th></tr></thead><tbody id="adminUsersTableBody"></tbody></table></div></div>
             </div>
             <div id="admin-page-blocks" class="admin-page"><div class="admin-header"><h1><i class="fas fa-cubes"></i> SmartBlocks</h1></div><div class="admin-card"><div class="admin-card-header">All Blocks</div><div style="padding:24px;color:#6b7280;">Blocks are stored per-user in Firestore.</div></div></div>
-            <div id="admin-page-stats" class="admin-page"><div class="admin-header"><h1><i class="fas fa-chart-bar"></i> Stats</h1></div><div class="admin-stats-grid"><div class="admin-stat-card"><div class="stat-icon"><i class="fas fa-users"></i></div><div class="admin-stat" id="admin-stat-total">0</div><div class="admin-stat-label">Total Users</div></div><div class="admin-stat-card"><div class="stat-icon"><i class="fas fa-user-check"></i></div><div class="admin-stat" id="admin-stat-active">0</div><div class="admin-stat-label">Active</div></div><div class="admin-stat-card"><div class="stat-icon"><i class="fas fa-user-slash"></i></div><div class="admin-stat" id="admin-stat-suspended">0</div><div class="admin-stat-label">Suspended</div></div></div></div>
+            <div id="admin-page-stats" class="admin-page"><div class="admin-header"><h1><i class="fas fa-chart-bar"></i> Analytics</h1></div><div class="admin-stats-grid"><div class="admin-stat-card"><div class="stat-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:15px;"><div class="admin-stat-label">Total Users</div><div class="stat-icon blue"><i class="fas fa-users"></i></div></div><div class="admin-stat" id="admin-stat-total">0</div><div class="admin-stat-label">Registered</div></div><div class="admin-stat-card"><div class="stat-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:15px;"><div class="admin-stat-label">Active</div><div class="stat-icon green"><i class="fas fa-user-check"></i></div></div><div class="admin-stat" id="admin-stat-active">0</div><div class="admin-stat-label">Non-suspended</div></div><div class="admin-stat-card"><div class="stat-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:15px;"><div class="admin-stat-label">Suspended</div><div class="stat-icon orange"><i class="fas fa-user-slash"></i></div></div><div class="admin-stat" id="admin-stat-suspended">0</div><div class="admin-stat-label">Suspended accounts</div></div></div></div>
             <div id="admin-page-reports" class="admin-page"><div class="admin-header"><h1><i class="fas fa-file-alt"></i> Reports</h1></div><div class="admin-card"><div class="admin-card-header">Platform Reports</div><div style="padding:24px;color:#6b7280;">User activity reports and export options.</div></div></div>
             <div id="admin-page-billing" class="admin-page">
-                <div class="admin-header"><h1><i class="fas fa-credit-card"></i> Billing & Payments</h1><button type="button" class="admin-btn admin-btn-secondary" style="width:auto;padding:10px 20px;" onclick="loadAdminBilling()"><i class="fas fa-sync-alt"></i> Refresh</button></div>
+                <div class="admin-header"><h1><i class="fas fa-credit-card"></i> Billing & Payments</h1><button type="button" class="admin-btn admin-btn-secondary" style="width:auto;padding:10px 20px;display:inline-flex;align-items:center;gap:8px;" onclick="loadAdminBilling()"><i class="fas fa-sync-alt"></i> Refresh</button></div>
                 <div class="admin-stats-grid">
-                    <div class="admin-stat-card"><div class="stat-icon"><i class="fas fa-dollar-sign"></i></div><div class="admin-stat" id="admin-billing-total">0</div><div class="admin-stat-label">Total Revenue</div></div>
-                    <div class="admin-stat-card"><div class="stat-icon"><i class="fas fa-receipt"></i></div><div class="admin-stat" id="admin-billing-transactions">0</div><div class="admin-stat-label">Transactions</div></div>
+                    <div class="admin-stat-card"><div class="stat-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:15px;"><div class="admin-stat-label">Total Revenue</div><div class="stat-icon green"><i class="fas fa-dollar-sign"></i></div></div><div class="admin-stat" id="admin-billing-total">0</div><div class="admin-stat-label">Total collected</div></div>
+                    <div class="admin-stat-card"><div class="stat-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:15px;"><div class="admin-stat-label">Transactions</div><div class="stat-icon cyan"><i class="fas fa-receipt"></i></div></div><div class="admin-stat" id="admin-billing-transactions">0</div><div class="admin-stat-label">Payment records</div></div>
                 </div>
                 <div class="admin-card"><div class="admin-card-header">Payment History</div><div style="overflow-x:auto;-webkit-overflow-scrolling:touch;"><table class="admin-table"><thead><tr><th>Date</th><th>User</th><th>Plan</th><th>Amount</th><th>Status</th></tr></thead><tbody id="adminBillingTableBody"></tbody></table></div></div>
                 <div class="admin-card"><div class="admin-card-header">Subscription Overview</div><div style="overflow-x:auto;-webkit-overflow-scrolling:touch;"><table class="admin-table"><thead><tr><th>Plan</th><th>Active Users</th><th>MRR</th></tr></thead><tbody id="adminSubscriptionsTableBody"></tbody></table></div></div>
             </div>
             <div id="admin-page-support" class="admin-page">
-                <div class="admin-header"><h1><i class="fas fa-headset"></i> Support & Inquiries</h1><button type="button" class="admin-btn admin-btn-secondary" style="width:auto;padding:10px 20px;" onclick="loadAdminSupport()"><i class="fas fa-sync-alt"></i> Refresh</button></div>
+                <div class="admin-header"><h1><i class="fas fa-headset"></i> Support & Inquiries</h1><button type="button" class="admin-btn admin-btn-secondary" style="width:auto;padding:10px 20px;display:inline-flex;align-items:center;gap:8px;" onclick="loadAdminSupport()"><i class="fas fa-sync-alt"></i> Refresh</button></div>
                 <div class="admin-stats-grid">
-                    <div class="admin-stat-card"><div class="stat-icon"><i class="fas fa-ticket-alt"></i></div><div class="admin-stat" id="admin-support-total">0</div><div class="admin-stat-label">Total Tickets</div></div>
-                    <div class="admin-stat-card"><div class="stat-icon"><i class="fas fa-clock"></i></div><div class="admin-stat" id="admin-support-pending">0</div><div class="admin-stat-label">Pending</div></div>
+                    <div class="admin-stat-card"><div class="stat-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:15px;"><div class="admin-stat-label">Total Tickets</div><div class="stat-icon blue"><i class="fas fa-ticket-alt"></i></div></div><div class="admin-stat" id="admin-support-total">0</div><div class="admin-stat-label">Support tickets</div></div>
+                    <div class="admin-stat-card"><div class="stat-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:15px;"><div class="admin-stat-label">Pending</div><div class="stat-icon orange"><i class="fas fa-clock"></i></div></div><div class="admin-stat" id="admin-support-pending">0</div><div class="admin-stat-label">Awaiting response</div></div>
                 </div>
                 <div class="admin-card"><div class="admin-card-header">Support Tickets</div><div style="overflow-x:auto;-webkit-overflow-scrolling:touch;"><table class="admin-table"><thead><tr><th>Date</th><th>Subject</th><th>User</th><th>Status</th><th>Actions</th></tr></thead><tbody id="adminSupportTableBody"></tbody></table></div></div>
             </div>
@@ -4671,7 +4775,8 @@
                 <div class="admin-header"><h1><i class="fas fa-history"></i> Activity Logs</h1><button type="button" class="admin-btn admin-btn-secondary" style="width:auto;padding:10px 20px;" onclick="loadAdminActivity()"><i class="fas fa-sync-alt"></i> Refresh</button></div>
                 <div class="admin-card"><div class="admin-card-header">Recent Platform Activity</div><div style="overflow-x:auto;-webkit-overflow-scrolling:touch;"><table class="admin-table"><thead><tr><th>Time</th><th>User</th><th>Action</th><th>Details</th></tr></thead><tbody id="adminActivityTableBody"></tbody></table></div></div>
             </div>
-            <div id="admin-page-settings" class="admin-page"><div class="admin-header"><h1><i class="fas fa-cog"></i> Settings</h1></div><div class="admin-card"><div class="admin-card-header">Admin Configuration</div><div style="padding:24px;"><p style="color:#6b7280;">Admin emails: admin@kotapal.com, wreck@gmail.com, earlhugue@gmail.com, emmanuelmobinzo222@gmail.com, emmanuelmobinzo21@gmail.com</p></div></div></div>
+            <div id="admin-page-settings" class="admin-page"><div class="admin-header"><h1><i class="fas fa-cog"></i> Settings</h1></div><div class="admin-card"><div class="admin-card-header">Admin Configuration</div><div style="padding:24px;"><p style="color:var(--admin-gray-500);">Admin emails: admin@kotapal.com, wreck@gmail.com, earlhugue@gmail.com, emmanuelmobinzo222@gmail.com, emmanuelmobinzo21@gmail.com</p></div></div></div>
+            </div>
         </main>
     </div>
     <div id="changePlanModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:2000;align-items:center;justify-content:center;padding:20px;">
@@ -5442,6 +5547,7 @@
                 var adminView = document.getElementById('admin-view');
                 if (adminLogin) adminLogin.classList.remove('active');
                 if (adminView) adminView.classList.add('active');
+                if (typeof initAdminRevenueChart === 'function') setTimeout(initAdminRevenueChart, 100);
             }
             function applyAdminView() {
                 var hash = window.location.hash;
@@ -5467,6 +5573,8 @@
                     showAdminDashboard();
                     var emailEl = document.getElementById('adminEmailDisplay');
                     if (emailEl) emailEl.textContent = auth.currentUser.email;
+                    var avatarEl = document.getElementById('adminUserAvatar');
+                    if (avatarEl && auth.currentUser.email) avatarEl.textContent = (auth.currentUser.email.charAt(0) || 'A').toUpperCase();
                     if (typeof loadAdminUsers === 'function') loadAdminUsers().then(function() { if (typeof updateDashboardPage === 'function') updateDashboardPage(); });
                 }
             }
@@ -5482,6 +5590,8 @@
                         showAdminDashboard();
                         var emailEl = document.getElementById('adminEmailDisplay');
                         if (emailEl) emailEl.textContent = user.email;
+                        var avatarEl = document.getElementById('adminUserAvatar');
+                        if (avatarEl && user.email) avatarEl.textContent = (user.email.charAt(0) || 'A').toUpperCase();
                         if (typeof loadAdminUsers === 'function') loadAdminUsers().then(function() { if (typeof updateDashboardPage === 'function') updateDashboardPage(); });
                     } else {
                         showAdminUI(true);
@@ -5569,10 +5679,21 @@
                 if (pageEl) pageEl.classList.add('active');
                 if (linkEl) linkEl.classList.add('active');
                 if (pageName === 'stats' && typeof updateStatsPage === 'function') updateStatsPage();
-                if (pageName === 'dashboard' && typeof updateDashboardPage === 'function') updateDashboardPage();
+                if (pageName === 'dashboard') { if (typeof updateDashboardPage === 'function') updateDashboardPage(); if (typeof initAdminRevenueChart === 'function') initAdminRevenueChart(); }
                 if (pageName === 'billing' && typeof loadAdminBilling === 'function') loadAdminBilling();
                 if (pageName === 'support' && typeof loadAdminSupport === 'function') loadAdminSupport();
                 if (pageName === 'activity' && typeof loadAdminActivity === 'function') loadAdminActivity();
+            };
+            window.initAdminRevenueChart = function() {
+                if (window._adminRevenueChartInited) return;
+                var canvas = document.getElementById('adminRevenueChart');
+                if (!canvas || typeof Chart === 'undefined') return;
+                window._adminRevenueChartInited = true;
+                var ctx = canvas.getContext('2d');
+                var grad = ctx.createLinearGradient(0, 0, 0, 400);
+                grad.addColorStop(0, 'rgba(79, 70, 229, 0.3)');
+                grad.addColorStop(1, 'rgba(79, 70, 229, 0.0)');
+                new Chart(ctx, { type: 'line', data: { labels: ['Jan','Feb','Mar','Apr','May','Jun','Jul'], datasets: [{ label: 'Monthly Recurring Revenue', data: [12000,15000,18000,16000,20000,22000,24750], borderColor: '#4f46e5', backgroundColor: grad, borderWidth: 3, fill: true, tension: 0.4, pointBackgroundColor: '#4f46e5', pointBorderColor: '#fff', pointBorderWidth: 2, pointRadius: 5 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true, position: 'top' } }, scales: { y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { callback: function(v) { return '$' + v.toLocaleString(); } } }, x: { grid: { display: false } } } } });
             };
             window.handleAdminLogout = function() {
                 sessionStorage.removeItem('admin_logged_in');
