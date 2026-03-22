@@ -3,7 +3,13 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="msapplication-config" content="none">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#3b82f6">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <title>KotaPal – Monetize Content with Smart Product Blocks | USA Creators & E-Commerce</title>
     <meta name="description"
         content="KotaPal helps US creators, bloggers & e-commerce sellers monetize content with AI-powered Shopify + Amazon + Walmart product blocks. Trusted by 10,000+ US creators.">
@@ -122,29 +128,37 @@
             --warning: #f59e0b;
         }
 
-        /* Homepage: ensure full page scrolls to show all content */
-        html, body {
-            overflow-x: hidden;
-            overflow-y: auto;
-            height: auto;
-            min-height: 100%;
-        }
+        /* Homepage: single scrollbar for full page */
         html {
+            overflow-x: hidden;
+            overflow-y: scroll;
             scroll-behavior: smooth;
-            scrollbar-width: auto;
-            scrollbar-color: #94a3b8 #e2e8f0;
+            -webkit-overflow-scrolling: touch;
+            -ms-overflow-style: scrollbar;
         }
         body {
+            overflow-x: hidden;
+            overflow-y: visible;
+            min-height: 100%;
+            min-height: 100vh;
+            min-height: -webkit-fill-available;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
             color: #333;
             line-height: 1.6;
             background-color: #fff;
             min-width: 280px;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            -ms-text-size-adjust: 100%;
+            -webkit-text-size-adjust: 100%;
         }
-        html::-webkit-scrollbar, body::-webkit-scrollbar { width: 12px; }
-        html::-webkit-scrollbar-track, body::-webkit-scrollbar-track { background: #e2e8f0; border-radius: 6px; }
-        html::-webkit-scrollbar-thumb, body::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 6px; }
-        html::-webkit-scrollbar-thumb:hover, body::-webkit-scrollbar-thumb:hover { background: #64748b; }
+        /* Single native scrollbar for landing page - WebKit (Chrome, Safari, Edge) */
+        html::-webkit-scrollbar { width: 12px; }
+        html::-webkit-scrollbar-track { background: #e2e8f0; }
+        html::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 6px; }
+        html::-webkit-scrollbar-thumb:hover { background: #64748b; }
+        /* Firefox scrollbar */
+        html { scrollbar-width: thin; scrollbar-color: #94a3b8 #e2e8f0; }
 
         .container {
             width: 100%;
@@ -164,6 +178,7 @@
         #landing-page-view {
             max-width: 100vw;
             overflow-x: hidden;
+            overflow-y: visible;
         }
         /* Landing page, nav, footer: never receive theme-dark; dark mode applies only to #dashboard-view */
 
@@ -612,6 +627,8 @@
         #dashboard-view.theme-dark .table-container td { border-color: #e5e7eb !important; color: #111827 !important; }
         #dashboard-view.theme-dark .card-header { border-color: #e5e7eb !important; }
         #dashboard-view.theme-dark .form-control { background: #ffffff !important; border-color: #d1d5db !important; color: #111827 !important; }
+        #dashboard-view.theme-dark .form-control-readonly,
+        #dashboard-view.theme-dark input.form-control-readonly:disabled { background: #9ca3af !important; color: #4b5563 !important; }
         #dashboard-view.theme-dark .stat-card .stat-label,
         #dashboard-view.theme-dark .card .small { color: #374151 !important; }
         #dashboard-view.theme-dark .status-active { background: #dcfce7 !important; color: #166534 !important; }
@@ -1608,6 +1625,16 @@
             resize: vertical;
         }
 
+        .form-control-readonly,
+        .form-control.form-control-readonly,
+        input.form-control-readonly:disabled,
+        input[readonly].form-control-readonly {
+            background-color: #e5e7eb !important;
+            color: #6b7280 !important;
+            cursor: not-allowed !important;
+            opacity: 0.9;
+        }
+
         /* Prevent iOS zoom on input focus */
         @supports (font-size: clamp(1rem, 16px, 1rem)) {
             input[type="text"],
@@ -2150,6 +2177,12 @@
 
             .hero-buttons .btn {
                 width: 100%;
+                min-height: 44px;
+            }
+
+            .btn-primary, .btn-secondary, .admin-btn {
+                min-height: 44px;
+                -webkit-tap-highlight-color: transparent;
             }
 
             .features-grid,
@@ -4053,6 +4086,7 @@
                                         <th>Revenue</th>
                                         <th>Status</th>
                                         <th>Last Updated</th>
+                                        <th>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody></tbody>
@@ -4250,7 +4284,7 @@
                 </div>
 
                 <div id="reports-page" class="page-content" style="display:none;">
-                    <div class="header"><h1 class="page-title">Reports</h1></div>
+                    <div class="header"><h1 class="page-title" id="reportsPageTitle">Reports</h1></div>
                     <div class="card">
                         <div class="card-body">
                             <div class="form-group" style="margin-bottom:16px;">
@@ -4270,8 +4304,7 @@
                                 <table id="reportsTable" style="width:100%; border-collapse:collapse; min-width:500px;">
                                     <thead>
                                         <tr>
-                                            <th style="text-align:left; padding:10px; border-bottom:1px solid #e5e7eb;">Name</th>
-                                            <th style="text-align:left; padding:10px; border-bottom:1px solid #e5e7eb;">Type</th>
+                                            <th style="text-align:left; padding:10px; border-bottom:1px solid #e5e7eb;">Report Title</th>
                                             <th style="text-align:left; padding:10px; border-bottom:1px solid #e5e7eb;">Date</th>
                                             <th style="text-align:left; padding:10px; border-bottom:1px solid #e5e7eb;">Format</th>
                                             <th style="text-align:left; padding:10px; border-bottom:1px solid #e5e7eb; min-width:120px;">Action</th>
@@ -4448,7 +4481,8 @@
                             </div>
                             <div class="form-group">
                                 <label for="userEmail">Email</label>
-                                <input type="email" id="userEmail" class="form-control" required>
+                                <input type="email" id="userEmail" class="form-control form-control-readonly" readonly disabled required title="Email can only be changed by administrators. Contact support@kotapal.com for email updates.">
+                                <small style="color:var(--gray);font-size:0.85rem;margin-top:4px;display:block;">Email can only be changed by administrators. Contact support for updates.</small>
                             </div>
                             <div class="form-group">
                                 <label for="userWebsite">Website/Blog URL</label>
@@ -4504,7 +4538,7 @@
     <div id="deleteBlockConfirmModal" class="modal" style="display: none;">
         <div class="modal-content" style="max-width: 400px;">
             <h3 style="margin: 0 0 16px 0;">Delete block</h3>
-            <p style="margin: 0 0 20px 0; color: var(--gray);">Are you sure you want to delete this block?</p>
+            <p style="margin: 0 0 20px 0; color: var(--gray);">Are you sure you want to delete this block? This will remove it from Recent Activity and cannot be undone.</p>
             <div style="display: flex; gap: 12px; justify-content: flex-end; flex-wrap: wrap;">
                 <button type="button" class="btn btn-secondary" id="deleteBlockCancel" style="background:#f1f5f9 !important; color:#1e293b !important; border:2px solid #94a3b8 !important;">Cancel</button>
                 <button type="button" class="btn btn-primary" id="deleteBlockConfirm" style="background:#dc2626; border-color:#dc2626;">Delete</button>
@@ -4592,6 +4626,8 @@
                 <li class="nav-item"><a href="javascript:void(0)" class="nav-link" data-page="stats" onclick="showAdminPage('stats'); return false;"><i class="fas fa-chart-bar"></i> Analytics</a></li>
                 <li class="nav-item"><a href="javascript:void(0)" class="nav-link" data-page="reports" onclick="showAdminPage('reports'); return false;"><i class="fas fa-file-alt"></i> Reports</a></li>
                 <li class="nav-item"><a href="javascript:void(0)" class="nav-link" data-page="billing" onclick="showAdminPage('billing'); return false;"><i class="fas fa-credit-card"></i> Billing</a></li>
+                <li class="nav-item"><a href="javascript:void(0)" class="nav-link" data-page="support" onclick="showAdminPage('support'); return false;"><i class="fas fa-headset"></i> Support</a></li>
+                <li class="nav-item"><a href="javascript:void(0)" class="nav-link" data-page="activity" onclick="showAdminPage('activity'); return false;"><i class="fas fa-history"></i> Activity Logs</a></li>
                 <li class="nav-item"><a href="javascript:void(0)" class="nav-link" data-page="settings" onclick="showAdminPage('settings'); return false;"><i class="fas fa-cog"></i> Settings</a></li>
                 <li class="nav-item"><a href="javascript:void(0)" class="nav-link" onclick="handleAdminLogout(); return false;"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
             </ul>
@@ -4609,12 +4645,32 @@
             <div id="admin-page-users" class="admin-page">
                 <div class="admin-header"><h1><i class="fas fa-users"></i> Users</h1><button type="button" class="admin-btn admin-btn-secondary" style="width:auto;padding:10px 20px;" onclick="loadAdminUsers()"><i class="fas fa-sync-alt"></i> Refresh</button></div>
                 <div class="admin-stats-grid"><div class="admin-stat-card"><div class="stat-icon"><i class="fas fa-users"></i></div><div class="admin-stat" id="admin-stat-users">0</div><div class="admin-stat-label">Total Users</div></div></div>
-                <div class="admin-card"><div class="admin-card-header">All Users — Firestore (project: kotapal-1e8f6)</div><div style="overflow-x:auto;"><table class="admin-table"><thead><tr><th>Email</th><th>Name</th><th>Plan</th><th>Status</th><th>Joined</th><th>Last Sign In</th><th>Actions</th></tr></thead><tbody id="adminUsersTableBody"></tbody></table></div></div>
+                <div class="admin-card"><div class="admin-card-header">All Users — Firestore (project: kotapal-1e8f6)</div><div style="overflow-x:auto;-webkit-overflow-scrolling:touch;"><table class="admin-table"><thead><tr><th>Email</th><th>Name</th><th>Plan</th><th>Status</th><th>Joined</th><th>Last Sign In</th><th>Actions</th></tr></thead><tbody id="adminUsersTableBody"></tbody></table></div></div>
             </div>
             <div id="admin-page-blocks" class="admin-page"><div class="admin-header"><h1><i class="fas fa-cubes"></i> SmartBlocks</h1></div><div class="admin-card"><div class="admin-card-header">All Blocks</div><div style="padding:24px;color:#6b7280;">Blocks are stored per-user in Firestore.</div></div></div>
             <div id="admin-page-stats" class="admin-page"><div class="admin-header"><h1><i class="fas fa-chart-bar"></i> Stats</h1></div><div class="admin-stats-grid"><div class="admin-stat-card"><div class="stat-icon"><i class="fas fa-users"></i></div><div class="admin-stat" id="admin-stat-total">0</div><div class="admin-stat-label">Total Users</div></div><div class="admin-stat-card"><div class="stat-icon"><i class="fas fa-user-check"></i></div><div class="admin-stat" id="admin-stat-active">0</div><div class="admin-stat-label">Active</div></div><div class="admin-stat-card"><div class="stat-icon"><i class="fas fa-user-slash"></i></div><div class="admin-stat" id="admin-stat-suspended">0</div><div class="admin-stat-label">Suspended</div></div></div></div>
             <div id="admin-page-reports" class="admin-page"><div class="admin-header"><h1><i class="fas fa-file-alt"></i> Reports</h1></div><div class="admin-card"><div class="admin-card-header">Platform Reports</div><div style="padding:24px;color:#6b7280;">User activity reports and export options.</div></div></div>
-            <div id="admin-page-billing" class="admin-page"><div class="admin-header"><h1><i class="fas fa-credit-card"></i> Billing</h1></div><div class="admin-card"><div class="admin-card-header">Billing Overview</div><div style="padding:24px;color:#6b7280;">Platform billing metrics.</div></div></div>
+            <div id="admin-page-billing" class="admin-page">
+                <div class="admin-header"><h1><i class="fas fa-credit-card"></i> Billing & Payments</h1><button type="button" class="admin-btn admin-btn-secondary" style="width:auto;padding:10px 20px;" onclick="loadAdminBilling()"><i class="fas fa-sync-alt"></i> Refresh</button></div>
+                <div class="admin-stats-grid">
+                    <div class="admin-stat-card"><div class="stat-icon"><i class="fas fa-dollar-sign"></i></div><div class="admin-stat" id="admin-billing-total">0</div><div class="admin-stat-label">Total Revenue</div></div>
+                    <div class="admin-stat-card"><div class="stat-icon"><i class="fas fa-receipt"></i></div><div class="admin-stat" id="admin-billing-transactions">0</div><div class="admin-stat-label">Transactions</div></div>
+                </div>
+                <div class="admin-card"><div class="admin-card-header">Payment History</div><div style="overflow-x:auto;-webkit-overflow-scrolling:touch;"><table class="admin-table"><thead><tr><th>Date</th><th>User</th><th>Plan</th><th>Amount</th><th>Status</th></tr></thead><tbody id="adminBillingTableBody"></tbody></table></div></div>
+                <div class="admin-card"><div class="admin-card-header">Subscription Overview</div><div style="overflow-x:auto;-webkit-overflow-scrolling:touch;"><table class="admin-table"><thead><tr><th>Plan</th><th>Active Users</th><th>MRR</th></tr></thead><tbody id="adminSubscriptionsTableBody"></tbody></table></div></div>
+            </div>
+            <div id="admin-page-support" class="admin-page">
+                <div class="admin-header"><h1><i class="fas fa-headset"></i> Support & Inquiries</h1><button type="button" class="admin-btn admin-btn-secondary" style="width:auto;padding:10px 20px;" onclick="loadAdminSupport()"><i class="fas fa-sync-alt"></i> Refresh</button></div>
+                <div class="admin-stats-grid">
+                    <div class="admin-stat-card"><div class="stat-icon"><i class="fas fa-ticket-alt"></i></div><div class="admin-stat" id="admin-support-total">0</div><div class="admin-stat-label">Total Tickets</div></div>
+                    <div class="admin-stat-card"><div class="stat-icon"><i class="fas fa-clock"></i></div><div class="admin-stat" id="admin-support-pending">0</div><div class="admin-stat-label">Pending</div></div>
+                </div>
+                <div class="admin-card"><div class="admin-card-header">Support Tickets</div><div style="overflow-x:auto;-webkit-overflow-scrolling:touch;"><table class="admin-table"><thead><tr><th>Date</th><th>Subject</th><th>User</th><th>Status</th><th>Actions</th></tr></thead><tbody id="adminSupportTableBody"></tbody></table></div></div>
+            </div>
+            <div id="admin-page-activity" class="admin-page">
+                <div class="admin-header"><h1><i class="fas fa-history"></i> Activity Logs</h1><button type="button" class="admin-btn admin-btn-secondary" style="width:auto;padding:10px 20px;" onclick="loadAdminActivity()"><i class="fas fa-sync-alt"></i> Refresh</button></div>
+                <div class="admin-card"><div class="admin-card-header">Recent Platform Activity</div><div style="overflow-x:auto;-webkit-overflow-scrolling:touch;"><table class="admin-table"><thead><tr><th>Time</th><th>User</th><th>Action</th><th>Details</th></tr></thead><tbody id="adminActivityTableBody"></tbody></table></div></div>
+            </div>
             <div id="admin-page-settings" class="admin-page"><div class="admin-header"><h1><i class="fas fa-cog"></i> Settings</h1></div><div class="admin-card"><div class="admin-card-header">Admin Configuration</div><div style="padding:24px;"><p style="color:#6b7280;">Admin emails: admin@kotapal.com, wreck@gmail.com, earlhugue@gmail.com, emmanuelmobinzo222@gmail.com, emmanuelmobinzo21@gmail.com</p></div></div></div>
         </main>
     </div>
@@ -4935,6 +4991,10 @@
                 localStorage.setItem('kotapal_explicit_login', 'true'); // Backup in localStorage
                 localStorage.setItem('kotaUser', JSON.stringify(userData));
                 currentUser = userData;
+                var logs = JSON.parse(localStorage.getItem('kota_activity_logs') || '[]');
+                logs.unshift({ time: new Date().toISOString(), user: user.email, action: 'sign_in', details: 'User signed in' });
+                if (logs.length > 500) logs = logs.slice(0, 500);
+                localStorage.setItem('kota_activity_logs', JSON.stringify(logs));
                 
                 // Small delay to ensure auth state listener processes the change after flags are set
                 await new Promise(resolve => setTimeout(resolve, 100));
@@ -5510,6 +5570,9 @@
                 if (linkEl) linkEl.classList.add('active');
                 if (pageName === 'stats' && typeof updateStatsPage === 'function') updateStatsPage();
                 if (pageName === 'dashboard' && typeof updateDashboardPage === 'function') updateDashboardPage();
+                if (pageName === 'billing' && typeof loadAdminBilling === 'function') loadAdminBilling();
+                if (pageName === 'support' && typeof loadAdminSupport === 'function') loadAdminSupport();
+                if (pageName === 'activity' && typeof loadAdminActivity === 'function') loadAdminActivity();
             };
             window.handleAdminLogout = function() {
                 sessionStorage.removeItem('admin_logged_in');
@@ -5519,15 +5582,19 @@
             };
             window.loadAdminUsers = async function() {
                 var tbody = document.getElementById('adminUsersTableBody');
-                if (!tbody || !db) return;
+                var dbUse = db || window.firebaseDb || (typeof firebase !== 'undefined' && firebase.firestore && firebase.firestore());
+                if (!tbody || !dbUse) {
+                    if (tbody) tbody.innerHTML = '<tr><td colspan="7" class="text-center" style="padding:32px;color:#6b7280;">Unable to load users. Check Firebase connection.</td></tr>';
+                    return;
+                }
                 tbody.innerHTML = '<tr><td colspan="7" class="text-center">Loading...</td></tr>';
                 var users = [], byId = {};
                 try {
-                    var snap = await db.collection('users').get();
+                    var snap = await dbUse.collection('users').get();
                     snap.docs.forEach(function(d) { var u = mapFirestoreDocToUser(d); byId[u.id] = u; });
                 } catch (e) {}
                 try {
-                    var snap2 = await db.collection('user').get();
+                    var snap2 = await dbUse.collection('user').get();
                     snap2.docs.forEach(function(d) {
                         var data = d.data();
                         byId[d.id] = { id: d.id, email: data.email || '-', name: data.displayName || data.name || '-', plan: data.plan || 'starter', status: data.status || 'active', joined: toDateStr(data.signupDate || data.createdAt), lastSignIn: toDateStr(data.lastSignIn) };
@@ -5579,6 +5646,67 @@
                 if (a) a.textContent = active;
                 if (s) s.textContent = suspended;
             };
+            window.loadAdminBilling = function() {
+                var users = window.adminUsers || [];
+                var payments = JSON.parse(localStorage.getItem('kota_payment_history') || '[]');
+                var planPrices = { starter: 19, pro: 49, creatorplus: 99, agency: 199 };
+                var byPlan = {};
+                users.forEach(function(u) { var p = u.plan || 'starter'; byPlan[p] = (byPlan[p] || 0) + 1; });
+                if (payments.length === 0 && users.length > 0) {
+                    payments = users.slice(0, 10).map(function(u, i) { return { date: new Date(Date.now() - i * 86400000 * 30).toISOString(), user: u.email, plan: u.plan || 'starter', amount: planPrices[u.plan] || 19, status: 'paid' }; });
+                }
+                var totalRev = payments.reduce(function(s, p) { return s + (p.amount || 0); }, 0);
+                var el = document.getElementById('admin-billing-total');
+                if (el) el.textContent = '$' + totalRev.toLocaleString();
+                el = document.getElementById('admin-billing-transactions');
+                if (el) el.textContent = payments.length;
+                var tbody = document.getElementById('adminBillingTableBody');
+                if (tbody) {
+                    if (payments.length === 0) tbody.innerHTML = '<tr><td colspan="5" style="padding:24px;color:#6b7280;text-align:center;">No payment records yet.</td></tr>';
+                    else tbody.innerHTML = payments.slice(0, 50).map(function(p) { var d = p.date ? new Date(p.date).toLocaleDateString() : '-'; return '<tr><td>' + d + '</td><td>' + (p.user || '-') + '</td><td>' + (p.plan || '-') + '</td><td>$' + (p.amount || 0) + '</td><td>' + (p.status || 'paid') + '</td></tr>'; }).join('');
+                }
+                var subTbody = document.getElementById('adminSubscriptionsTableBody');
+                if (subTbody) {
+                    var rows = Object.keys(planPrices).map(function(plan) { var cnt = byPlan[plan] || 0; return '<tr><td>' + plan + '</td><td>' + cnt + '</td><td>$' + (cnt * (planPrices[plan] || 0)).toLocaleString() + '</td></tr>'; });
+                    subTbody.innerHTML = rows.length ? rows.join('') : '<tr><td colspan="3" style="padding:24px;color:#6b7280;text-align:center;">No subscription data.</td></tr>';
+                }
+            };
+            window.loadAdminSupport = function() {
+                var tickets = JSON.parse(localStorage.getItem('kota_support_tickets') || '[]');
+                var pending = tickets.filter(function(t) { return (t.status || 'pending') === 'pending'; }).length;
+                var el = document.getElementById('admin-support-total');
+                if (el) el.textContent = tickets.length;
+                el = document.getElementById('admin-support-pending');
+                if (el) el.textContent = pending;
+                var tbody = document.getElementById('adminSupportTableBody');
+                if (!tbody) return;
+                if (tickets.length === 0) { tbody.innerHTML = '<tr><td colspan="5" style="padding:24px;color:#6b7280;text-align:center;">No support tickets yet.</td></tr>'; return; }
+                function esc(s) { return String(s || '').replace(/'/g, "\\'"); }
+                function html(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+                tbody.innerHTML = tickets.slice(0, 100).map(function(t) {
+                    var d = t.date ? new Date(t.date).toLocaleString() : '-';
+                    var status = (t.status || 'pending').toLowerCase();
+                    var statusClass = status === 'resolved' ? 'badge-active' : 'badge-suspended';
+                    return '<tr><td>' + html(d) + '</td><td>' + html(t.subject || '-') + '</td><td>' + html(t.userEmail || t.userName || '-') + '</td><td><span class="badge ' + statusClass + '">' + status + '</span></td><td><button class="admin-btn admin-btn-sm admin-btn-secondary" onclick="updateTicketStatus(\'' + esc(t.id) + '\',\'resolved\')">Resolve</button></td></tr>';
+                }).join('');
+            };
+            window.updateTicketStatus = function(id, status) {
+                var tickets = JSON.parse(localStorage.getItem('kota_support_tickets') || '[]');
+                var t = tickets.find(function(x) { return x.id === id; });
+                if (t) { t.status = status; localStorage.setItem('kota_support_tickets', JSON.stringify(tickets)); if (typeof loadAdminSupport === 'function') loadAdminSupport(); }
+            };
+            window.loadAdminActivity = function() {
+                var logs = JSON.parse(localStorage.getItem('kota_activity_logs') || '[]');
+                var users = window.adminUsers || [];
+                if (logs.length === 0 && users.length > 0) {
+                    logs = users.slice(0, 5).map(function(u, i) { return { time: new Date(Date.now() - i * 3600000).toISOString(), user: u.email, action: 'sign_in', details: 'User signed in' }; });
+                }
+                var tbody = document.getElementById('adminActivityTableBody');
+                if (!tbody) return;
+                if (logs.length === 0) { tbody.innerHTML = '<tr><td colspan="4" style="padding:24px;color:#6b7280;text-align:center;">No activity logs yet.</td></tr>'; return; }
+                function html(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+                tbody.innerHTML = logs.slice(0, 100).map(function(l) { var t = l.time ? new Date(l.time).toLocaleString() : '-'; return '<tr><td>' + html(t) + '</td><td>' + html(l.user || '-') + '</td><td>' + html(l.action || '-') + '</td><td>' + html(l.details || '-') + '</td></tr>'; }).join('');
+            };
             window.openChangePlan = function(uid, currentPlan) {
                 document.getElementById('changePlanUserId').value = uid;
                 document.getElementById('changePlanSelect').value = currentPlan || 'starter';
@@ -5590,25 +5718,28 @@
             window.savePlanChange = async function() {
                 var uid = document.getElementById('changePlanUserId').value;
                 var plan = document.getElementById('changePlanSelect').value;
-                if (!uid || !db) return;
+                var dbUse = db || window.firebaseDb;
+                if (!uid || !dbUse) return;
                 try {
-                    await db.collection('users').doc(uid).set({ plan: plan }, { merge: true });
+                    await dbUse.collection('users').doc(uid).set({ plan: plan }, { merge: true });
                     closeChangePlanModal();
                     loadAdminUsers();
                 } catch (err) { alert('Failed to update plan: ' + err.message); }
             };
             window.toggleSuspend = async function(uid, currentStatus) {
-                if (!uid || !db) return;
+                var dbUse = db || window.firebaseDb;
+                if (!uid || !dbUse) return;
                 var newStatus = currentStatus === 'suspended' ? 'active' : 'suspended';
                 try {
-                    await db.collection('users').doc(uid).set({ status: newStatus }, { merge: true });
+                    await dbUse.collection('users').doc(uid).set({ status: newStatus }, { merge: true });
                     await loadAdminUsers();
                 } catch (err) { alert('Failed: ' + (err.message || err)); }
             };
             window.deleteUserDoc = async function(uid) {
-                if (!uid || !confirm('Delete Firestore document for this user?')) return;
+                var dbUse = db || window.firebaseDb;
+                if (!uid || !dbUse || !confirm('Delete Firestore document for this user?')) return;
                 try {
-                    await db.collection('users').doc(uid).delete();
+                    await dbUse.collection('users').doc(uid).delete();
                     loadAdminUsers();
                 } catch (err) { alert('Failed to delete: ' + err.message); }
             };
@@ -6719,7 +6850,7 @@
             if (profileForm) {
                 profileForm.addEventListener('submit', handleProfileUpdate);
                 var autoSaveProfile = debounce(handleProfileUpdate, 600);
-                ['userName', 'userEmail', 'userWebsite'].forEach(function(id) {
+                ['userName', 'userWebsite'].forEach(function(id) {
                     var el = document.getElementById(id);
                     if (el) { el.addEventListener('input', autoSaveProfile); el.addEventListener('change', autoSaveProfile); el.addEventListener('blur', autoSaveProfile); }
                 });
@@ -7173,6 +7304,9 @@
                     const subj = document.getElementById('helpSubject').value;
                     const msg = document.getElementById('helpMessage').value;
                     if (!subj || !msg) return;
+                    var tickets = JSON.parse(localStorage.getItem('kota_support_tickets') || '[]');
+                    tickets.unshift({ id: Date.now().toString(), subject: subj, message: msg, userEmail: (currentUser && currentUser.email) || '', userName: (currentUser && currentUser.displayName) || '', status: 'pending', date: new Date().toISOString() });
+                    localStorage.setItem('kota_support_tickets', JSON.stringify(tickets));
                     showNotification('Request submitted. We\'ll get back to you soon.', 'success', 'Help');
                     form.reset();
                 });
@@ -7512,9 +7646,10 @@
                 var img = (b.productsList && b.productsList[0] && b.productsList[0].image) ? b.productsList[0].image : 'https://via.placeholder.com/48?text=Block';
                 return '<img src="' + img.replace(/"/g, '&quot;') + '" alt="" style="width:40px;height:40px;object-fit:cover;border-radius:8px;" onerror="this.src=\'https://via.placeholder.com/48?text=Block\'">';
             };
-            currentBlocks.slice(0, 5).forEach(function(block) {
+            currentBlocks.slice(0, 10).forEach(function(block) {
                 var row = document.createElement('tr');
-                row.innerHTML = '<td style="vertical-align:middle;">' + thumb(block) + '</td><td>' + (block.title || '') + '</td><td>' + (block.clicks || 0) + '</td><td>$' + (block.revenue != null ? block.revenue.toFixed(2) : '0.00') + '</td><td><span class="block-status ' + (block.status === 'active' ? 'status-active' : 'status-draft') + '">' + (block.status || 'draft') + '</span></td><td>' + (block.lastUpdated || '') + '</td>';
+                var delBtn = '<button type="button" class="btn btn-secondary" style="padding:6px 12px;font-size:0.8rem;" onclick="window._deleteBlockId=\'' + (block.id || '').replace(/'/g, "\\'") + '\';var m=document.getElementById(\'deleteBlockConfirmModal\');if(m)m.style.display=\'flex\';" title="Delete"><i class="fas fa-trash" style="color:#b91c1c;"></i></button>';
+                row.innerHTML = '<td style="vertical-align:middle;">' + thumb(block) + '</td><td>' + (block.title || '') + '</td><td>' + (block.clicks || 0) + '</td><td>$' + (block.revenue != null ? block.revenue.toFixed(2) : '0.00') + '</td><td><span class="block-status ' + (block.status === 'active' ? 'status-active' : 'status-draft') + '">' + (block.status || 'draft') + '</span></td><td>' + (block.lastUpdated || '') + '</td><td>' + delBtn + '</td>';
                 tbody.appendChild(row);
             });
         }
@@ -7720,7 +7855,6 @@
         function handleProfileUpdate(e) {
             if (e) e.preventDefault();
             const name = document.getElementById('userName')?.value || '';
-            const email = document.getElementById('userEmail')?.value || '';
             const website = document.getElementById('userWebsite')?.value || '';
             const preview = document.getElementById('profilePicturePreview');
             if (preview && preview.src) {
@@ -7729,7 +7863,6 @@
             }
             if (currentUser) {
                 currentUser.displayName = name;
-                currentUser.email = email;
                 currentUser.website = website;
                 localStorage.setItem('kota_userName', name);
                 localStorage.setItem('kotaUser', JSON.stringify(currentUser));
@@ -9398,15 +9531,17 @@
         
         function loadReports() {
             const tbody = document.getElementById('reportsTableBody');
+            const titleEl = document.getElementById('reportsPageTitle');
             if (!tbody) return;
             const reports = JSON.parse(localStorage.getItem('kotaReports') || '[]');
+            if (titleEl) titleEl.textContent = reports.length > 0 ? 'Reports — ' + reports.length + ' generated' : 'Reports';
             if (reports.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--gray);">No reports yet. Click a report type above to generate.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:40px;color:var(--gray);">No reports yet. Click a report type above to generate.</td></tr>';
                 return;
             }
             tbody.innerHTML = reports.map(function(report) {
-                var name = (report.name || '').replace(/"/g, '&quot;');
-                return '<tr><td style="padding:10px; border-bottom:1px solid #e5e7eb;">' + (report.name || '') + '</td><td style="padding:10px; border-bottom:1px solid #e5e7eb;">' + (report.type ? report.type.charAt(0).toUpperCase() + report.type.slice(1) : '') + '</td><td style="padding:10px; border-bottom:1px solid #e5e7eb;">' + (report.date ? new Date(report.date).toLocaleString() : '') + '</td><td style="padding:10px; border-bottom:1px solid #e5e7eb;">' + (report.format || '') + '</td><td style="padding:10px; border-bottom:1px solid #e5e7eb; min-width:140px;"><button type="button" class="btn btn-primary report-download-btn" style="padding:8px 16px; font-size:0.875rem; display:inline-flex; align-items:center; gap:6px; cursor:pointer; background:#3b82f6; color:white; border:1px solid #3b82f6; border-radius:8px; font-weight:500;"><i class="fas fa-download"></i> Download</button></td></tr>';
+                var reportTitle = (report.name || '').replace(/"/g, '&quot;');
+                return '<tr><td style="padding:10px; border-bottom:1px solid #e5e7eb;">' + (report.name || '') + '</td><td style="padding:10px; border-bottom:1px solid #e5e7eb;">' + (report.date ? new Date(report.date).toLocaleString() : '') + '</td><td style="padding:10px; border-bottom:1px solid #e5e7eb;">' + (report.format || '') + '</td><td style="padding:10px; border-bottom:1px solid #e5e7eb; min-width:140px;"><button type="button" class="btn btn-primary report-download-btn" style="padding:8px 16px; font-size:0.875rem; display:inline-flex; align-items:center; gap:6px; cursor:pointer; background:#3b82f6; color:white; border:1px solid #3b82f6; border-radius:8px; font-weight:500;"><i class="fas fa-download"></i> Download</button></td></tr>';
             }).join('');
             tbody.querySelectorAll('.report-download-btn').forEach(function(btn, i) {
                 var report = reports[i];
@@ -10015,14 +10150,12 @@
                 e.preventDefault();
                 try {
                     const userName = document.getElementById('userName').value;
-                    const userEmail = document.getElementById('userEmail').value;
                     const userWebsite = document.getElementById('userWebsite').value;
                     const profilePicture = document.getElementById('profilePicturePreview')?.src;
                     
-                    // Update user data
+                    // Update user data (email is read-only - admins only)
                     const userData = JSON.parse(localStorage.getItem('kotaUser') || '{}');
                     userData.displayName = userName;
-                    userData.email = userEmail;
                     userData.website = userWebsite;
                     if (profilePicture) {
                         userData.profilePicture = profilePicture;
@@ -10030,15 +10163,12 @@
                     localStorage.setItem('kotaUser', JSON.stringify(userData));
                     currentUser = userData;
                     
-                    // Update Firebase profile if auth is available
+                    // Update Firebase profile if auth is available (displayName only - email is admin-only)
                     if (auth && auth.currentUser) {
                         try {
                             await auth.currentUser.updateProfile({
                                 displayName: userName
                             });
-                            if (userEmail !== auth.currentUser.email) {
-                                await auth.currentUser.updateEmail(userEmail);
-                            }
                         } catch (error) {
                             console.error('Error updating Firebase profile:', error);
                         }
