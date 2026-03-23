@@ -82,6 +82,10 @@
         function adminClickHandler(e) {
             e.preventDefault();
             e.stopPropagation();
+            var nl = document.querySelector('.nav-links');
+            if (nl) nl.classList.remove('active');
+            var mbtn = document.getElementById('mobileMenuBtn');
+            if (mbtn) mbtn.classList.remove('active');
             window.location.hash = 'admin';
             showAdminPage();
             return false;
@@ -2132,19 +2136,25 @@
             }
 
             .nav-links {
-                display: none;
+                display: flex;
+                flex-direction: column;
                 position: absolute;
                 top: 100%;
                 left: 0;
                 width: 100%;
                 background: white;
-                flex-direction: column;
                 padding: 20px;
                 box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+                opacity: 0;
+                visibility: hidden;
+                pointer-events: none;
+                transition: opacity 0.25s ease, visibility 0.25s ease;
             }
 
             .nav-links.active {
-                display: flex;
+                opacity: 1;
+                visibility: visible;
+                pointer-events: auto;
             }
 
             .nav-links li {
@@ -2884,7 +2894,7 @@
                 <li><a href="#dashboard-preview" class="nav-link" data-section="dashboard-preview" onclick="scrollToSection('dashboard-preview', this); return false;">Dashboard</a></li>
                 <li><a href="#about" class="nav-link" data-section="about" onclick="scrollToSection('about', this); return false;">About</a></li>
                 <li><a href="#" class="nav-link" data-section="contact" onclick="goToContactForm(this); return false;">Contact</a></li>
-                <li><a href="#admin" id="adminNavLink">Admin</a></li>
+                <li><a href="#admin" id="adminNavLink" onclick="if(typeof goToAdmin==='function'){goToAdmin();return false;}">Admin</a></li>
                 <li><a href="#" id="loginBtn">Login</a></li>
             </ul>
 
@@ -3599,7 +3609,7 @@
                         <li><a href="#" onclick="goToContactForm(); return false;">Contact</a></li>
                         <li><a href="#" id="privacyLink">Privacy Policy</a></li>
                         <li><a href="#" id="tosLink">Terms of Service</a></li>
-                        <li><a href="#admin" style="opacity:0.7;">Admin</a></li>
+                        <li><a href="#admin" onclick="if(typeof goToAdmin==='function'){goToAdmin();return false;}">Admin</a></li>
                     </ul>
                 </div>
 
@@ -6687,6 +6697,10 @@
                 document.querySelectorAll('.nav-links a[data-section]').forEach(function(a) { a.classList.remove('active'); });
                 clickedEl.classList.add('active');
             }
+            var nl = document.querySelector('.nav-links');
+            if (nl) nl.classList.remove('active');
+            var mbtn = document.getElementById('mobileMenuBtn');
+            if (mbtn) mbtn.classList.remove('active');
             showLandingPage('home-page');
             var section = document.getElementById(sectionId);
             if (section) {
@@ -6698,6 +6712,10 @@
                 document.querySelectorAll('.nav-links a[data-section]').forEach(function(a) { a.classList.remove('active'); });
                 clickedEl.classList.add('active');
             }
+            var nl = document.querySelector('.nav-links');
+            if (nl) nl.classList.remove('active');
+            var mbtn = document.getElementById('mobileMenuBtn');
+            if (mbtn) mbtn.classList.remove('active');
             var landing = document.getElementById('landing-page-view');
             var dashboard = document.getElementById('dashboard-view');
             var nav = document.querySelector('nav');
@@ -9086,13 +9104,11 @@
             sidebarOverlay.addEventListener('click', closeSidebar);
         }
         
-        // Close sidebar when clicking nav links on mobile
-        const navLinks = document.querySelectorAll('.nav-link');
-        navLinks.forEach(link => {
+        // Close sidebar when clicking nav links on mobile (dashboard only - do not affect landing nav)
+        const dashboardNavLinks = document.querySelectorAll('#dashboard-view .nav-link');
+        dashboardNavLinks.forEach(link => {
             link.addEventListener('click', () => {
-                if (window.innerWidth <= 1024) {
-                    closeSidebar();
-                }
+                if (window.innerWidth <= 1024) closeSidebar();
             });
         });
         
