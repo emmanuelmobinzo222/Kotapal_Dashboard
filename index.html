@@ -101,6 +101,9 @@
                 showAdminPage();
             }
         }
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.location.hash === '#admin') setTimeout(showAdminPage, 0);
+        });
     })();
     </script>
 
@@ -3943,7 +3946,7 @@
         /* Admin Dashboard (Kotapal design - Inter, indigo/cyan theme) */
         :root { --admin-primary: #4f46e5; --admin-primary-dark: #4338ca; --admin-secondary: #06b6d4; --admin-success: #10b981; --admin-warning: #f59e0b; --admin-danger: #ef4444; --admin-gray-50: #f9fafb; --admin-gray-100: #f3f4f6; --admin-gray-200: #e5e7eb; --admin-gray-400: #9ca3af; --admin-gray-500: #6b7280; --admin-gray-600: #4b5563; --admin-gray-700: #374151; --admin-gray-800: #1f2937; --admin-sidebar-width: 260px; }
         #admin-login-screen, #admin-view { display: none !important; min-height: 100vh; font-family: 'Inter', sans-serif; }
-        #admin-login-screen.active, #admin-view.active { display: flex !important; position: fixed !important; inset: 0 !important; z-index: 9999 !important; }
+        #admin-login-screen.active, #admin-view.active { display: flex !important; position: fixed !important; inset: 0 !important; z-index: 10001 !important; }
         .admin-login-screen { min-height: 100vh; align-items: center; justify-content: center; padding: 20px; background: var(--admin-gray-50); overflow-y: auto; font-family: 'Inter', sans-serif; }
         .admin-login-card { background: white; padding: 40px; border-radius: 16px; box-shadow: 0 4px 24px rgba(0,0,0,0.08); max-width: 400px; width: 100%; border: 1px solid var(--admin-gray-200); }
         .admin-login-card h1 { margin-bottom: 8px; font-size: 1.5rem; font-weight: 700; color: var(--admin-gray-800); }
@@ -4019,10 +4022,73 @@
         .admin-card .badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
         .admin-card .badge-active { background: rgba(16,185,129,0.1); color: #16a34a; }
         .admin-card .badge-suspended { background: rgba(239,68,68,0.1); color: #b91c1c; }
-        .admin-chart-container { position: relative; height: 300px; margin-top: 16px; }
-        #admin-view .form-control { padding: 10px 15px; border: 1px solid var(--admin-gray-200); border-radius: 10px; font-size: 14px; font-family: 'Inter', sans-serif; }
+        .admin-chart-container { position: relative; height: 350px; margin-top: 16px; }
+        #admin-view .form-control { padding: 10px 15px; border: 1px solid var(--admin-gray-200); border-radius: 8px; font-size: 14px; font-family: 'Inter', sans-serif; }
         #admin-view .form-control:focus { outline: none; border-color: var(--admin-primary); box-shadow: 0 0 0 3px rgba(79,70,229,0.1); }
-        @media (max-width: 768px) { .admin-sidebar { transform: translateX(-100%); } .admin-main { margin-left: 0; } .admin-stats-grid { grid-template-columns: 1fr; } }
+        #admin-view .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        #admin-view .stat-card { background: white; padding: 25px; border-radius: 15px; border: 1px solid var(--admin-gray-200); transition: all 0.3s ease; }
+        #admin-view .stat-card:hover { box-shadow: 0 10px 30px rgba(0,0,0,0.08); transform: translateY(-2px); }
+        #admin-view .stat-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; }
+        #admin-view .stat-title { font-size: 14px; color: var(--admin-gray-500); font-weight: 500; }
+        #admin-view .stat-value { font-size: 32px; font-weight: 700; color: var(--admin-gray-800); margin-bottom: 8px; }
+        #admin-view .stat-change { font-size: 13px; display: flex; align-items: center; gap: 5px; }
+        #admin-view .stat-change.positive { color: var(--admin-success); }
+        #admin-view .stat-change.negative { color: var(--admin-danger); }
+        #admin-view .chart-section { background: white; padding: 25px; border-radius: 15px; border: 1px solid var(--admin-gray-200); margin-bottom: 30px; }
+        #admin-view .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+        #admin-view .section-title { font-size: 18px; font-weight: 700; color: var(--admin-gray-800); }
+        #admin-view .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-bottom: 30px; }
+        #admin-view .card { background: white; padding: 25px; border-radius: 15px; border: 1px solid var(--admin-gray-200); }
+        #admin-view .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+        #admin-view .card-title { font-size: 16px; font-weight: 700; color: var(--admin-gray-800); }
+        #admin-view .more-btn { color: var(--admin-gray-400); cursor: pointer; transition: color 0.3s ease; }
+        #admin-view .user-list { display: flex; flex-direction: column; gap: 15px; }
+        #admin-view .user-item { display: flex; align-items: center; gap: 15px; padding: 12px 0; border-bottom: 1px solid var(--admin-gray-100); }
+        #admin-view .user-item:last-child { border-bottom: none; }
+        #admin-view .user-info { flex: 1; }
+        #admin-view .user-name-text { font-weight: 600; color: var(--admin-gray-800); margin-bottom: 3px; }
+        #admin-view .user-email { font-size: 13px; color: var(--admin-gray-500); }
+        #admin-view .user-meta { text-align: right; }
+        #admin-view .user-date { font-size: 13px; color: var(--admin-gray-500); margin-bottom: 5px; }
+        #admin-view .badge-tag { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+        #admin-view .badge-tag.pro { background: rgba(239,68,68,0.1); color: var(--admin-danger); }
+        #admin-view .badge-tag.basic { background: rgba(79,70,229,0.1); color: var(--admin-primary); }
+        #admin-view .transaction-list { display: flex; flex-direction: column; gap: 12px; }
+        #admin-view .transaction-item { display: flex; align-items: center; justify-content: space-between; padding: 15px; background: var(--admin-gray-50); border-radius: 10px; transition: all 0.3s ease; }
+        #admin-view .transaction-item:hover { background: var(--admin-gray-100); }
+        #admin-view .transaction-info { display: flex; align-items: center; gap: 12px; }
+        #admin-view .transaction-icon { width: 40px; height: 40px; border-radius: 10px; background: white; display: flex; align-items: center; justify-content: center; color: var(--admin-primary); }
+        #admin-view .transaction-details { flex: 1; }
+        #admin-view .transaction-name { font-weight: 600; color: var(--admin-gray-800); margin-bottom: 3px; }
+        #admin-view .transaction-type { font-size: 12px; color: var(--admin-gray-500); }
+        #admin-view .transaction-amount { font-weight: 700; color: var(--admin-gray-800); margin-right: 15px; }
+        #admin-view .transaction-amount.negative { color: var(--admin-danger); }
+        #admin-view .status-badge { padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+        #admin-view .status-badge.completed { background: rgba(16,185,129,0.1); color: var(--admin-success); }
+        #admin-view .status-badge.pending { background: rgba(245,158,11,0.1); color: var(--admin-warning); }
+        #admin-view .status-badge.refunded { background: rgba(239,68,68,0.1); color: var(--admin-danger); }
+        #admin-view .status-list { display: flex; flex-direction: column; gap: 15px; }
+        #admin-view .status-item { display: flex; align-items: center; justify-content: space-between; padding: 15px; background: var(--admin-gray-50); border-radius: 10px; }
+        #admin-view .status-label { display: flex; align-items: center; gap: 10px; color: var(--admin-gray-700); }
+        #admin-view .status-indicator { width: 10px; height: 10px; border-radius: 50%; background: var(--admin-success); }
+        #admin-view .status-value { font-weight: 600; color: var(--admin-success); }
+        #admin-view .table-container { overflow-x: auto; }
+        #admin-view .table-container table { width: 100%; border-collapse: collapse; }
+        #admin-view .table-container th, #admin-view .table-container td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--admin-gray-200); }
+        #admin-view .table-container th { background: var(--admin-gray-50); font-weight: 600; color: var(--admin-gray-600); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+        #admin-view .table-container td { color: var(--admin-gray-700); font-size: 14px; }
+        #admin-view .table-container tr:hover td { background: var(--admin-gray-50); }
+        #admin-view .action-btns { display: flex; gap: 8px; }
+        #admin-view .btn { padding: 8px 16px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; transition: all 0.3s ease; font-size: 13px; }
+        #admin-view .btn-primary { background: var(--admin-primary); color: white; }
+        #admin-view .btn-primary:hover { background: var(--admin-primary-dark); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(79,70,229,0.3); }
+        #admin-view .btn-secondary { background: var(--admin-gray-100); color: var(--admin-gray-700); }
+        #admin-view .btn-secondary:hover { background: var(--admin-gray-200); }
+        #admin-view .btn-sm { padding: 6px 12px; font-size: 12px; }
+        #admin-view .page-title { font-size: 28px; font-weight: 700; color: var(--admin-gray-800); margin-bottom: 25px; }
+        #admin-view .user-avatar { width: 35px; height: 35px; border-radius: 50%; background: linear-gradient(135deg, var(--admin-primary) 0%, var(--admin-secondary) 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; }
+        @media (max-width: 1024px) { #admin-view .grid-2 { grid-template-columns: 1fr; } }
+        @media (max-width: 768px) { .admin-sidebar { transform: translateX(-100%); } .admin-main { margin-left: 0; } #admin-view .admin-stats-grid, #admin-view .stats-grid { grid-template-columns: 1fr; } }
     </style>
 
     <!-- Authenticated Dashboard View (KotaPal simple copy design) -->
@@ -4698,37 +4764,45 @@
             </header>
             <div class="admin-main-content">
             <div id="admin-page-dashboard" class="admin-page active">
-                <h1 class="page-title" style="font-size:28px;font-weight:700;color:var(--admin-gray-800);margin-bottom:25px;">Dashboard Overview</h1>
-                <div class="admin-stats-grid">
-                    <div class="admin-stat-card">
-                        <div class="stat-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:15px;">
-                            <div class="admin-stat-label">Total Users</div>
+                <h1 class="page-title">Dashboard Overview</h1>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-title">Total Users</div>
                             <div class="stat-icon blue"><i class="fas fa-users"></i></div>
                         </div>
-                        <div class="admin-stat" id="admin-dash-users">0</div>
-                        <div class="stat-change positive" style="font-size:13px;color:var(--admin-success);display:flex;align-items:center;gap:5px;"><i class="fas fa-arrow-up"></i><span>From Firestore</span></div>
+                        <div class="stat-value" id="admin-dash-users">0</div>
+                        <div class="stat-change positive"><i class="fas fa-arrow-up"></i><span>From Firestore</span></div>
                     </div>
-                    <div class="admin-stat-card">
-                        <div class="stat-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:15px;">
-                            <div class="admin-stat-label">Active</div>
-                            <div class="stat-icon cyan"><i class="fas fa-user-check"></i></div>
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-title">Active Subscriptions</div>
+                            <div class="stat-icon cyan"><i class="fas fa-crown"></i></div>
                         </div>
-                        <div class="admin-stat" id="admin-dash-active">0</div>
-                        <div class="stat-change positive" style="font-size:13px;color:var(--admin-success);"><span>Non-suspended users</span></div>
+                        <div class="stat-value" id="admin-dash-active">0</div>
+                        <div class="stat-change positive"><i class="fas fa-arrow-up"></i><span>Non-suspended users</span></div>
                     </div>
-                    <div class="admin-stat-card">
-                        <div class="stat-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:15px;">
-                            <div class="admin-stat-label">Suspended</div>
-                            <div class="stat-icon orange"><i class="fas fa-user-slash"></i></div>
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-title">Monthly Revenue</div>
+                            <div class="stat-icon green"><i class="fas fa-dollar-sign"></i></div>
                         </div>
-                        <div class="admin-stat" id="admin-dash-suspended">0</div>
-                        <div style="font-size:13px;color:var(--admin-gray-500);">Accounts suspended</div>
+                        <div class="stat-value" id="admin-dash-revenue">$0</div>
+                        <div class="stat-change positive"><i class="fas fa-arrow-up"></i><span>From billing</span></div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-title">Churn Rate</div>
+                            <div class="stat-icon orange"><i class="fas fa-chart-line"></i></div>
+                        </div>
+                        <div class="stat-value" id="admin-dash-churn">0%</div>
+                        <div class="stat-change negative"><i class="fas fa-arrow-down"></i><span>Tracked over time</span></div>
                     </div>
                 </div>
-                <div class="admin-card">
-                    <div class="admin-card-header" style="display:flex;align-items:center;justify-content:space-between;">
-                        <span>Revenue Overview</span>
-                        <select class="form-control" id="adminRevenueRange" style="width:auto;padding:8px 12px;border-radius:8px;font-size:13px;">
+                <div class="chart-section">
+                    <div class="section-header">
+                        <h2 class="section-title">Revenue Overview</h2>
+                        <select class="form-control" id="adminRevenueRange" style="width: auto;">
                             <option>Last 7 Months</option>
                             <option>Last Year</option>
                             <option>All Time</option>
@@ -4738,18 +4812,79 @@
                         <canvas id="adminRevenueChart"></canvas>
                     </div>
                 </div>
-                <div class="admin-card">
-                    <div class="admin-card-header">Quick Actions</div>
-                    <div style="padding:24px;display:flex;gap:12px;flex-wrap:wrap;">
-                        <a href="javascript:void(0)" class="admin-btn admin-btn-secondary" style="width:auto;padding:12px 24px;display:inline-flex;align-items:center;gap:8px;text-decoration:none;" onclick="showAdminPage('users'); return false;"><i class="fas fa-users"></i> Manage Users</a>
-                        <a href="javascript:void(0)" class="admin-btn admin-btn-secondary" style="width:auto;padding:12px 24px;display:inline-flex;align-items:center;gap:8px;text-decoration:none;" onclick="showAdminPage('stats'); return false;"><i class="fas fa-chart-bar"></i> View Analytics</a>
+                <div class="grid-2">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Recent Users</h3>
+                            <i class="fas fa-ellipsis-h more-btn" onclick="showAdminPage('users'); return false;" title="View all"></i>
+                        </div>
+                        <div class="user-list" id="adminRecentUsersList">
+                            <div class="user-item"><div class="user-avatar" style="width:45px;height:45px;font-size:16px;">-</div><div class="user-info"><div class="user-name-text">Loading...</div><div class="user-email">-</div></div><div class="user-meta"><div class="user-date">-</div><span class="badge-tag basic">-</span></div></div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Latest Transactions</h3>
+                            <i class="fas fa-ellipsis-h more-btn" onclick="showAdminPage('billing'); return false;" title="View all"></i>
+                        </div>
+                        <div class="transaction-list" id="adminLatestTransactionsList">
+                            <div class="transaction-item"><div class="transaction-info"><div class="transaction-icon"><i class="fas fa-arrow-down"></i></div><div class="transaction-details"><div class="transaction-name">Loading...</div><div class="transaction-type">-</div></div></div><div class="transaction-amount">$0</div><span class="status-badge completed">-</span></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="grid-2">
+                    <div class="card">
+                        <div class="card-header"><h3 class="card-title">System Status</h3></div>
+                        <div class="status-list">
+                            <div class="status-item"><div class="status-label"><div class="status-indicator"></div><span>Server Status</span></div><div class="status-value">All Systems Operational</div></div>
+                            <div class="status-item"><div class="status-label"><div class="status-indicator"></div><span>API Response</span></div><div class="status-value">Normal</div></div>
+                            <div class="status-item"><div class="status-label"><div class="status-indicator"></div><span>Database</span></div><div class="status-value">Healthy</div></div>
+                            <div class="status-item"><div class="status-label"><div class="status-indicator" style="background:var(--admin-warning);"></div><span>Storage</span></div><div class="status-value" style="color:var(--admin-warning);">75% Used</div></div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header"><h3 class="card-title">Top Selling Products</h3></div>
+                        <div class="table-container">
+                            <table>
+                                <thead><tr><th>Product</th><th>Sales</th><th>Revenue</th></tr></thead>
+                                <tbody id="adminTopProductsBody">
+                                    <tr><td>—</td><td>—</td><td>—</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
             <div id="admin-page-users" class="admin-page">
-                <div class="admin-header"><h1><i class="fas fa-users"></i> User Management</h1><button type="button" class="admin-btn admin-btn-secondary" style="width:auto;padding:10px 20px;display:inline-flex;align-items:center;gap:8px;" onclick="loadAdminUsers()"><i class="fas fa-sync-alt"></i> Refresh</button></div>
-                <div class="admin-stats-grid"><div class="admin-stat-card"><div class="stat-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:15px;"><div class="admin-stat-label">Total Users</div><div class="stat-icon blue"><i class="fas fa-users"></i></div></div><div class="admin-stat" id="admin-stat-users">0</div><div class="admin-stat-label">Firestore users</div></div></div>
-                <div class="admin-card"><div class="admin-card-header">All Users — Firestore (project: kotapal-1e8f6)</div><div style="overflow-x:auto;-webkit-overflow-scrolling:touch;"><table class="admin-table"><thead><tr><th>Email</th><th>Name</th><th>Plan</th><th>Status</th><th>Joined</th><th>Last Sign In</th><th>Actions</th></tr></thead><tbody id="adminUsersTableBody"></tbody></table></div></div>
+                <h1 class="page-title">User Management</h1>
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">User Directory</h3>
+                        <div style="display:flex;gap:12px;align-items:center;">
+                            <button type="button" class="btn btn-secondary" onclick="loadAdminUsers()"><i class="fas fa-sync-alt"></i> Refresh</button>
+                        </div>
+                    </div>
+                    <div class="filters" style="display:flex;gap:15px;margin-bottom:20px;flex-wrap:wrap;">
+                        <div class="filter-group" style="display:flex;align-items:center;gap:10px;">
+                            <span class="filter-label" style="font-size:14px;color:var(--admin-gray-600);font-weight:500;">Search:</span>
+                            <input type="text" class="form-control" id="adminUserSearch" placeholder="Search users..." style="width:250px;">
+                        </div>
+                        <div class="filter-group" style="display:flex;align-items:center;gap:10px;">
+                            <span class="filter-label" style="font-size:14px;color:var(--admin-gray-600);font-weight:500;">Status:</span>
+                            <select class="form-control" id="adminUserStatusFilter" style="width:150px;"><option>All</option><option>Active</option><option>Suspended</option></select>
+                        </div>
+                        <div class="filter-group" style="display:flex;align-items:center;gap:10px;">
+                            <span class="filter-label" style="font-size:14px;color:var(--admin-gray-600);font-weight:500;">Plan:</span>
+                            <select class="form-control" id="adminUserPlanFilter" style="width:150px;"><option>All</option><option>starter</option><option>pro</option><option>creatorplus</option><option>agency</option></select>
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead><tr><th>User</th><th>Email</th><th>Plan</th><th>Status</th><th>Joined</th><th>Actions</th></tr></thead>
+                            <tbody id="adminUsersTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
             <div id="admin-page-blocks" class="admin-page"><div class="admin-header"><h1><i class="fas fa-cubes"></i> SmartBlocks</h1></div><div class="admin-card"><div class="admin-card-header">All Blocks</div><div style="padding:24px;color:#6b7280;">Blocks are stored per-user in Firestore.</div></div></div>
             <div id="admin-page-stats" class="admin-page"><div class="admin-header"><h1><i class="fas fa-chart-bar"></i> Analytics</h1></div><div class="admin-stats-grid"><div class="admin-stat-card"><div class="stat-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:15px;"><div class="admin-stat-label">Total Users</div><div class="stat-icon blue"><i class="fas fa-users"></i></div></div><div class="admin-stat" id="admin-stat-total">0</div><div class="admin-stat-label">Registered</div></div><div class="admin-stat-card"><div class="stat-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:15px;"><div class="admin-stat-label">Active</div><div class="stat-icon green"><i class="fas fa-user-check"></i></div></div><div class="admin-stat" id="admin-stat-active">0</div><div class="admin-stat-label">Non-suspended</div></div><div class="admin-stat-card"><div class="stat-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:15px;"><div class="admin-stat-label">Suspended</div><div class="stat-icon orange"><i class="fas fa-user-slash"></i></div></div><div class="admin-stat" id="admin-stat-suspended">0</div><div class="admin-stat-label">Suspended accounts</div></div></div></div>
@@ -5705,10 +5840,10 @@
                 var tbody = document.getElementById('adminUsersTableBody');
                 var dbUse = db || window.firebaseDb || (typeof firebase !== 'undefined' && firebase.firestore && firebase.firestore());
                 if (!tbody || !dbUse) {
-                    if (tbody) tbody.innerHTML = '<tr><td colspan="7" class="text-center" style="padding:32px;color:#6b7280;">Unable to load users. Check Firebase connection.</td></tr>';
+                    if (tbody) tbody.innerHTML = '<tr><td colspan="6" class="text-center" style="padding:32px;color:#6b7280;">Unable to load users. Check Firebase connection.</td></tr>';
                     return;
                 }
-                tbody.innerHTML = '<tr><td colspan="7" class="text-center">Loading...</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center">Loading...</td></tr>';
                 var users = [], byId = {};
                 try {
                     var snap = await dbUse.collection('users').get();
@@ -5724,21 +5859,21 @@
                 users = Object.keys(byId).map(function(k) { return byId[k]; });
                 window.adminUsers = users;
                 if (users.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="7" class="text-center" style="padding:32px;color:#6b7280;">No users found. Users appear when they sign up via the main app.</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="6" class="text-center" style="padding:32px;color:#6b7280;">No users found. Users appear when they sign up via the main app.</td></tr>';
                 } else {
                     function esc(s) { return String(s || '').replace(/'/g, "\\'"); }
                     function html(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+                    function initials(n) { if (!n || n === '-') return '-'; var p = n.trim().split(/\s+/); return (p[0][0] || '') + (p[1] ? p[1][0] : '') || n[0] || '-'; }
                     tbody.innerHTML = users.map(function(u) {
                         var joined = (u.joined && u.joined !== '-') ? new Date(u.joined).toLocaleDateString() : (u.joined || '-');
-                        var lastSignIn = (u.lastSignIn && u.lastSignIn !== '-') ? new Date(u.lastSignIn).toLocaleDateString() : (u.lastSignIn || '-');
                         var status = (u.status || 'active').toLowerCase();
-                        var statusBadge = '<span class="badge ' + (status === 'suspended' ? 'badge-suspended' : 'badge-active') + '">' + (status === 'suspended' ? 'Suspended' : 'Active') + '</span>';
+                        var statusBadge = '<span class="status-badge ' + (status === 'suspended' ? 'refunded' : 'completed') + '">' + (status === 'suspended' ? 'Suspended' : 'Active') + '</span>';
                         var uid = esc(u.id || u.email);
                         var plan = esc(u.plan || 'starter');
-                        var actions = '<button class="admin-btn admin-btn-sm admin-btn-secondary" onclick="openChangePlan(\'' + uid + '\',\'' + plan + '\')"><i class="fas fa-edit"></i> Plan</button>';
-                        actions += '<button class="admin-btn admin-btn-sm ' + (status === 'suspended' ? '' : 'admin-btn-secondary') + '" style="' + (status === 'suspended' ? 'background:#dcfce7;color:#16a34a;' : '') + '" onclick="toggleSuspend(\'' + uid + '\',\'' + status + '\')"><i class="fas fa-' + (status === 'suspended' ? 'user-check' : 'user-slash') + '"></i> ' + (status === 'suspended' ? 'Unsuspend' : 'Suspend') + '</button>';
-                        actions += '<button class="admin-btn admin-btn-sm" style="background:#fee2e2;color:#b91c1c;" onclick="deleteUserDoc(\'' + uid + '\')"><i class="fas fa-trash"></i> Delete</button>';
-                        return '<tr><td>' + html(u.email || '-') + '</td><td>' + html(u.name || '-') + '</td><td>' + html(u.plan || '-') + '</td><td>' + statusBadge + '</td><td>' + html(joined) + '</td><td>' + html(lastSignIn) + '</td><td>' + actions + '</td></tr>';
+                        var planBadge = '<span class="badge-tag ' + (plan === 'pro' ? 'pro' : 'basic') + '">' + html(plan) + '</span>';
+                        var actions = '<div class="action-btns"><button class="btn btn-secondary btn-sm" onclick="openChangePlan(\'' + uid + '\',\'' + plan + '\')"><i class="fas fa-edit"></i> Edit</button><button class="btn btn-primary btn-sm" onclick="toggleSuspend(\'' + uid + '\',\'' + status + '\')"><i class="fas fa-' + (status === 'suspended' ? 'user-check' : 'user-slash') + '"></i> ' + (status === 'suspended' ? 'Unsuspend' : 'Suspend') + '</button><button class="btn btn-secondary btn-sm" style="background:rgba(239,68,68,0.1);color:#b91c1c;" onclick="deleteUserDoc(\'' + uid + '\')"><i class="fas fa-trash"></i> Delete</button></div>';
+                        var userCell = '<div style="display:flex;align-items:center;gap:10px;"><div class="user-avatar" style="width:35px;height:35px;font-size:14px;">' + html(initials(u.name)) + '</div><span>' + html(u.name || '-') + '</span></div>';
+                        return '<tr><td>' + userCell + '</td><td>' + html(u.email || '-') + '</td><td>' + planBadge + '</td><td>' + statusBadge + '</td><td>' + html(joined) + '</td><td>' + actions + '</td></tr>';
                     }).join('');
                 }
                 var statEl = document.getElementById('admin-stat-users');
@@ -5746,15 +5881,47 @@
                 if (typeof updateDashboardPage === 'function') updateDashboardPage();
             };
             window.updateDashboardPage = function() {
-                var total = (window.adminUsers || []).length;
-                var active = (window.adminUsers || []).filter(function(u) { return String(u.status || 'active').toLowerCase() !== 'suspended'; }).length;
+                var users = window.adminUsers || [];
+                var total = users.length;
+                var active = users.filter(function(u) { return String(u.status || 'active').toLowerCase() !== 'suspended'; }).length;
                 var suspended = total - active;
                 var el = document.getElementById('admin-dash-users');
                 if (el) el.textContent = total;
                 el = document.getElementById('admin-dash-active');
                 if (el) el.textContent = active;
-                el = document.getElementById('admin-dash-suspended');
-                if (el) el.textContent = suspended;
+                el = document.getElementById('admin-dash-revenue');
+                if (el) {
+                    var payments = JSON.parse(localStorage.getItem('kota_payment_history') || '[]');
+                    var totalRev = payments.reduce(function(s, p) { return s + (p.amount || 0); }, 0);
+                    el.textContent = '$' + totalRev.toLocaleString();
+                }
+                el = document.getElementById('admin-dash-churn');
+                if (el) el.textContent = (suspended && total ? ((suspended / total) * 100).toFixed(1) : '0') + '%';
+                var recentList = document.getElementById('adminRecentUsersList');
+                if (recentList) {
+                    function initials(n) { if (!n || n === '-') return '-'; var p = String(n).trim().split(/\s+/); return (p[0][0] || '') + (p[1] ? p[1][0] : '') || n[0] || '-'; }
+                    function html(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+                    var recent = users.slice(0, 4);
+                    if (recent.length === 0) recentList.innerHTML = '<div class="user-item"><div class="user-info"><div class="user-name-text">No users yet</div><div class="user-email">Users appear when they sign up</div></div></div>';
+                    else recentList.innerHTML = recent.map(function(u) {
+                        var joined = (u.joined && u.joined !== '-') ? new Date(u.joined).toLocaleDateString() : (u.joined || '-');
+                        var plan = (u.plan || 'starter').toLowerCase();
+                        var tag = '<span class="badge-tag ' + (plan === 'pro' ? 'pro' : 'basic') + '">' + (plan === 'pro' ? 'Pro' : 'Basic') + '</span>';
+                        return '<div class="user-item"><div class="user-avatar" style="width:45px;height:45px;font-size:16px;">' + html(initials(u.name)) + '</div><div class="user-info"><div class="user-name-text">' + html(u.name || '-') + '</div><div class="user-email">' + html(u.email || '-') + '</div></div><div class="user-meta"><div class="user-date">' + html(joined) + '</div>' + tag + '</div></div>';
+                    }).join('');
+                }
+                var txList = document.getElementById('adminLatestTransactionsList');
+                if (txList) {
+                    var payments = JSON.parse(localStorage.getItem('kota_payment_history') || '[]');
+                    payments = payments.slice(0, 5);
+                    function html(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+                    if (payments.length === 0) txList.innerHTML = '<div class="transaction-item"><div class="transaction-info"><div class="transaction-icon"><i class="fas fa-arrow-down"></i></div><div class="transaction-details"><div class="transaction-name">No transactions yet</div><div class="transaction-type">Payments will appear here</div></div></div><div class="transaction-amount">$0</div><span class="status-badge completed">-</span></div>';
+                    else txList.innerHTML = payments.map(function(p) {
+                        var amt = p.amount || 0;
+                        var neg = p.status === 'refund' || (p.type && String(p.type).toLowerCase().indexOf('refund') >= 0);
+                        return '<div class="transaction-item"><div class="transaction-info"><div class="transaction-icon" style="color:' + (neg ? 'var(--admin-danger)' : 'var(--admin-primary)') + ';"><i class="fas fa-' + (neg ? 'undo' : 'arrow-down') + '"></i></div><div class="transaction-details"><div class="transaction-name">' + (neg ? 'Refund to ' : 'Payment from ') + html(p.user || '-') + '</div><div class="transaction-type">' + html(p.plan || 'Subscription') + '</div></div></div><div class="transaction-amount' + (neg ? ' negative' : '') + '">' + (neg ? '-' : '') + '$' + amt + '</div><span class="status-badge ' + (p.status === 'refunded' || neg ? 'refunded' : p.status === 'pending' ? 'pending' : 'completed') + '">' + (neg ? 'Refunded' : p.status || 'Completed') + '</span></div>';
+                    }).join('');
+                }
             };
             window.updateStatsPage = function() {
                 var total = (window.adminUsers || []).length;
