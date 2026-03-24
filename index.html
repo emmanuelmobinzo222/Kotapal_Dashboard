@@ -71,6 +71,7 @@
             if (authModal) authModal.style.display = 'none';
             if (adminView) adminView.classList.remove('active');
             if (adminLogin) adminLogin.classList.add('active');
+            if (typeof window.syncLandingLayoutMode === 'function') window.syncLandingLayoutMode();
         }
         window.goToAdmin = showAdminPage;
         function initAdminLinks() {
@@ -107,6 +108,19 @@
         }
         document.addEventListener('DOMContentLoaded', function() {
             if (window.location.hash === '#admin') setTimeout(showAdminPage, 0);
+            (function initLandingScrollMode() {
+                var lv = document.getElementById('landing-page-view');
+                function syncLandingLayoutMode() {
+                    if (!lv) return;
+                    var on = window.getComputedStyle(lv).display !== 'none';
+                    document.documentElement.classList.toggle('lp-internal-scroll', on);
+                }
+                window.syncLandingLayoutMode = syncLandingLayoutMode;
+                if (lv) {
+                    new MutationObserver(syncLandingLayoutMode).observe(lv, { attributes: true, attributeFilter: ['style', 'class'] });
+                }
+                syncLandingLayoutMode();
+            })();
         });
     })();
     </script>
@@ -177,6 +191,29 @@
         #landing-page-view {
             max-width: 100%;
             overflow-x: hidden;
+        }
+
+        /* Landing visible: no document scrollbar — scroll only inside #landing-page-view (scrollbar hidden, still scrollable) */
+        html.lp-internal-scroll,
+        html.lp-internal-scroll body {
+            height: 100%;
+            overflow: hidden;
+        }
+        html.lp-internal-scroll #landing-page-view {
+            height: 100%;
+            max-height: 100vh;
+            max-height: 100dvh;
+            min-height: 0;
+            overflow-x: hidden;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        html.lp-internal-scroll #landing-page-view::-webkit-scrollbar {
+            display: none !important;
+            width: 0 !important;
+            height: 0 !important;
         }
         /* Landing page, nav, footer: never receive theme-dark; dark mode applies only to #dashboard-view */
 
@@ -274,8 +311,8 @@
             text-align: center;
         }
 
-        /* Navigation */
-        nav {
+        /* Navigation — ONLY the marketing header (do not use bare `nav` or it breaks #admin-view sidebar <nav>) */
+        #landing-page-view > nav {
             position: fixed;
             top: 0;
             width: 100%;
@@ -2359,7 +2396,7 @@
                 font-size: 1rem;
             }
 
-            nav {
+            #landing-page-view > nav {
                 height: 55px;
             }
 
@@ -2556,7 +2593,7 @@
                 margin-bottom: 25px;
             }
 
-            nav {
+            #landing-page-view > nav {
                 height: 50px;
             }
 
@@ -3973,6 +4010,24 @@
         .admin-sidebar .admin-info .email { font-size: 0.875rem; font-weight: 500; word-break: break-all; color: var(--admin-gray-700); }
         .admin-sidebar .nav-menu { list-style: none; padding: 8px 0 20px; margin: 0; flex: 1; min-height: 0; overflow-x: hidden; overflow-y: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; -ms-overflow-style: none; }
         .admin-sidebar .nav-menu::-webkit-scrollbar { width: 0 !important; height: 0 !important; display: none; }
+        /* Sidebar uses <nav class="nav-menu"> — reset any stray global nav styles */
+        #admin-view .admin-sidebar nav.nav-menu {
+            position: static !important;
+            top: auto !important;
+            left: auto !important;
+            right: auto !important;
+            width: 100% !important;
+            min-height: 0 !important;
+            height: auto !important;
+            display: block !important;
+            z-index: auto !important;
+            background: transparent !important;
+            border: none !important;
+            backdrop-filter: none !important;
+            box-shadow: none !important;
+            align-items: stretch !important;
+            justify-content: flex-start !important;
+        }
         .admin-sidebar .nav-section-label { padding: 16px 20px 8px; font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--admin-gray-400); letter-spacing: 0.06em; }
         .admin-sidebar .nav-item { margin-bottom: 0; }
         .admin-sidebar .nav-link { display: flex; align-items: center; padding: 11px 20px 11px 17px; color: var(--admin-gray-600); border-radius: 0; border-left: 3px solid transparent; transition: background 0.2s ease, color 0.2s ease; font-weight: 500; font-size: 0.9375rem; margin: 1px 12px 1px 0; text-decoration: none; cursor: pointer; }
