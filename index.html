@@ -139,19 +139,13 @@
             --warning: #f59e0b;
         }
 
-        /* Homepage: one vertical scrollbar on the document (html) only — avoids double gutter/track */
+        /* Landing: default browser scrollbar only — no custom tracks/thumbs (avoids double-bar glitches) */
         html {
             overflow-x: hidden;
-            overflow-y: scroll;
             scroll-behavior: smooth;
-            -webkit-overflow-scrolling: touch;
-            -ms-overflow-style: scrollbar;
-            scrollbar-gutter: stable;
         }
         body {
             overflow-x: hidden;
-            overflow-y: hidden;
-            min-height: 100%;
             min-height: 100vh;
             min-height: -webkit-fill-available;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
@@ -164,13 +158,6 @@
             -ms-text-size-adjust: 100%;
             -webkit-text-size-adjust: 100%;
         }
-        /* Single native scrollbar for landing page - WebKit (Chrome, Safari, Edge) */
-        html::-webkit-scrollbar { width: 12px; }
-        html::-webkit-scrollbar-track { background: #e2e8f0; }
-        html::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 6px; }
-        html::-webkit-scrollbar-thumb:hover { background: #64748b; }
-        /* Firefox scrollbar */
-        html { scrollbar-width: thin; scrollbar-color: #94a3b8 #e2e8f0; }
 
         .container {
             width: 100%;
@@ -188,9 +175,8 @@
         }
 
         #landing-page-view {
-            max-width: 100vw;
+            max-width: 100%;
             overflow-x: hidden;
-            overflow-y: visible;
         }
         /* Landing page, nav, footer: never receive theme-dark; dark mode applies only to #dashboard-view */
 
@@ -5774,9 +5760,13 @@
         // FORCE LANDING PAGE ON INITIAL LOAD - NO AUTO LOGIN
         let isInitialLoad = true;
         window.addEventListener('DOMContentLoaded', () => {
-            // Ensure page can scroll (restore if modal was left open)
+            // Restore scroll after modal (use defaults — no inline overflow hacks on landing)
             document.documentElement.style.overflow = '';
             document.body.style.overflow = '';
+            if (window.location.hash === '#admin' || window.location.hash === '#admin-setup') {
+                var pl = document.getElementById('pageLoader');
+                if (pl) pl.classList.add('hidden');
+            }
             // Always show landing page first on initial load
             const landingView = document.getElementById('landing-page-view');
             const nav = document.querySelector('nav');
@@ -5801,14 +5791,14 @@
                 // This is a fresh page load, ensure landing page is shown
             }
             
-            // Page loader - hide after load
-            window.addEventListener('load', function() {
-                setTimeout(function() {
-                    var loader = document.getElementById('pageLoader');
-                    if (loader) loader.classList.add('hidden');
-                    document.body.classList.add('loaded');
-                }, 500);
-            });
+            // Page loader — hide after load; always clear on a timer so admin/login never sits behind it forever
+            function hidePageLoader() {
+                var loader = document.getElementById('pageLoader');
+                if (loader) loader.classList.add('hidden');
+                document.body.classList.add('loaded');
+            }
+            window.addEventListener('load', function() { setTimeout(hidePageLoader, 300); });
+            setTimeout(hidePageLoader, 4000);
             
             // Nav scroll highlight (updateActiveMenu)
             function updateActiveMenu() {
@@ -5876,6 +5866,9 @@
                 }
             }
             function showAdminDashboard() {
+                var pl = document.getElementById('pageLoader');
+                if (pl) pl.classList.add('hidden');
+                document.body.classList.add('loaded');
                 var adminLogin = document.getElementById('admin-login-screen');
                 var adminView = document.getElementById('admin-view');
                 if (adminLogin) adminLogin.classList.remove('active');
@@ -5889,6 +5882,8 @@
                 var nav = document.querySelector('nav');
                 var footer = document.querySelector('footer');
                 if (hash === '#admin-setup') {
+                    var plSetup = document.getElementById('pageLoader');
+                    if (plSetup) plSetup.classList.add('hidden');
                     if (landing) landing.style.display = 'none';
                     if (nav) nav.style.display = 'none';
                     if (footer) footer.style.display = 'none';
@@ -5900,6 +5895,8 @@
                 }
                 if (setupScreen) setupScreen.style.display = 'none';
                 if (hash !== '#admin') { showAdminUI(false); return; }
+                var pl0 = document.getElementById('pageLoader');
+                if (pl0) pl0.classList.add('hidden');
                 showAdminUI(true);
                 var adminLoggedIn = sessionStorage.getItem('admin_logged_in') === '1';
                 if (auth && auth.currentUser && isAdminUser(auth.currentUser.email) && adminLoggedIn) {
@@ -5908,7 +5905,9 @@
                     if (emailEl) emailEl.textContent = auth.currentUser.email;
                     var avatarEl = document.getElementById('adminUserAvatar');
                     if (avatarEl && auth.currentUser.email) avatarEl.textContent = (auth.currentUser.email.charAt(0) || 'A').toUpperCase();
-                    if (typeof loadAdminUsers === 'function') loadAdminUsers().then(function() { if (typeof updateDashboardPage === 'function') updateDashboardPage(); });
+                    if (typeof loadAdminUsers === 'function') {
+                        loadAdminUsers().then(function() { if (typeof updateDashboardPage === 'function') updateDashboardPage(); }).catch(function() { if (typeof updateDashboardPage === 'function') updateDashboardPage(); });
+                    }
                 }
             }
             window.addEventListener('hashchange', applyAdminView);
@@ -5925,10 +5924,12 @@
                         if (emailEl) emailEl.textContent = user.email;
                         var avatarEl = document.getElementById('adminUserAvatar');
                         if (avatarEl && user.email) avatarEl.textContent = (user.email.charAt(0) || 'A').toUpperCase();
-                        if (typeof loadAdminUsers === 'function') loadAdminUsers().then(function() { if (typeof updateDashboardPage === 'function') updateDashboardPage(); });
+                        if (typeof loadAdminUsers === 'function') {
+                            loadAdminUsers().then(function() { if (typeof updateDashboardPage === 'function') updateDashboardPage(); }).catch(function() { if (typeof updateDashboardPage === 'function') updateDashboardPage(); });
+                        }
                     } else {
                         showAdminUI(true);
-                        if (user) auth.signOut();
+                        if (user && !isAdminUser(user.email)) auth.signOut();
                     }
                 });
             }
@@ -5987,16 +5988,36 @@
                 var email = document.getElementById('adminEmail').value.trim();
                 var password = document.getElementById('adminPassword').value;
                 var statusEl = document.getElementById('adminLoginStatus');
+                var submitBtn = this.querySelector('button[type="submit"]');
                 if (!isAdminUser(email)) { statusEl.textContent = 'Admin access required.'; statusEl.className = 'admin-status show error'; return; }
+                if (!auth) {
+                    statusEl.textContent = 'Firebase Auth is not available. Check firebase-config.js and network.';
+                    statusEl.className = 'admin-status show error';
+                    return;
+                }
+                sessionStorage.removeItem('admin_logged_in');
+                if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Signing in...'; }
+                statusEl.textContent = '';
+                statusEl.className = 'admin-status';
                 try {
-                    sessionStorage.setItem('admin_logged_in', '1');
                     await auth.signInWithEmailAndPassword(email, password);
+                    sessionStorage.setItem('admin_logged_in', '1');
                     statusEl.textContent = 'Login successful!';
                     statusEl.className = 'admin-status show success';
+                    showAdminDashboard();
+                    var emailEl = document.getElementById('adminEmailDisplay');
+                    if (emailEl) emailEl.textContent = email;
+                    var avatarEl = document.getElementById('adminUserAvatar');
+                    if (avatarEl && email) avatarEl.textContent = (email.charAt(0) || 'A').toUpperCase();
+                    if (typeof loadAdminUsers === 'function') {
+                        loadAdminUsers().then(function() { if (typeof updateDashboardPage === 'function') updateDashboardPage(); }).catch(function() { if (typeof updateDashboardPage === 'function') updateDashboardPage(); });
+                    }
                 } catch (err) {
                     sessionStorage.removeItem('admin_logged_in');
-                    statusEl.textContent = err.message || 'Login failed.';
+                    statusEl.textContent = (err && err.message) ? err.message : 'Login failed.';
                     statusEl.className = 'admin-status show error';
+                } finally {
+                    if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Sign In'; }
                 }
             });
             function toDateStr(val) { if (!val || val === '-') return '-'; if (val && typeof val.toDate === 'function') return val.toDate().toISOString(); if (typeof val === 'string' || typeof val === 'number') return String(val); return '-'; }
@@ -6066,6 +6087,12 @@
                 window.location.reload();
             };
             window.loadAdminUsers = async function() {
+                function withTimeout(promise, ms) {
+                    return Promise.race([
+                        promise,
+                        new Promise(function(_, reject) { setTimeout(function() { reject(new Error('timeout')); }, ms); })
+                    ]);
+                }
                 var tbody = document.getElementById('adminUsersTableBody');
                 var dbUse = db || window.firebaseDb || (typeof firebase !== 'undefined' && firebase.firestore && firebase.firestore());
                 if (!tbody || !dbUse) {
@@ -6075,11 +6102,11 @@
                 tbody.innerHTML = '<tr><td colspan="6" class="text-center">Loading...</td></tr>';
                 var users = [], byId = {};
                 try {
-                    var snap = await dbUse.collection('users').get();
+                    var snap = await withTimeout(dbUse.collection('users').get(), 12000);
                     snap.docs.forEach(function(d) { var u = mapFirestoreDocToUser(d); byId[u.id] = u; });
                 } catch (e) {}
                 try {
-                    var snap2 = await dbUse.collection('user').get();
+                    var snap2 = await withTimeout(dbUse.collection('user').get(), 12000);
                     snap2.docs.forEach(function(d) {
                         var data = d.data();
                         byId[d.id] = { id: d.id, email: data.email || '-', name: data.displayName || data.name || '-', plan: data.plan || 'starter', status: data.status || 'active', joined: toDateStr(data.signupDate || data.createdAt), lastSignIn: toDateStr(data.lastSignIn) };
