@@ -71,7 +71,6 @@
             if (authModal) authModal.style.display = 'none';
             if (adminView) adminView.classList.remove('active');
             if (adminLogin) adminLogin.classList.add('active');
-            if (typeof window.syncLandingLayoutMode === 'function') window.syncLandingLayoutMode();
         }
         window.goToAdmin = showAdminPage;
         function initAdminLinks() {
@@ -108,19 +107,6 @@
         }
         document.addEventListener('DOMContentLoaded', function() {
             if (window.location.hash === '#admin') setTimeout(showAdminPage, 0);
-            (function initLandingScrollMode() {
-                var lv = document.getElementById('landing-page-view');
-                function syncLandingLayoutMode() {
-                    if (!lv) return;
-                    var on = window.getComputedStyle(lv).display !== 'none';
-                    document.documentElement.classList.toggle('lp-internal-scroll', on);
-                }
-                window.syncLandingLayoutMode = syncLandingLayoutMode;
-                if (lv) {
-                    new MutationObserver(syncLandingLayoutMode).observe(lv, { attributes: true, attributeFilter: ['style', 'class'] });
-                }
-                syncLandingLayoutMode();
-            })();
         });
     })();
     </script>
@@ -153,10 +139,27 @@
             --warning: #f59e0b;
         }
 
-        /* Landing: default browser scrollbar only — no custom tracks/thumbs (avoids double-bar glitches) */
         html {
             overflow-x: hidden;
             scroll-behavior: smooth;
+            scrollbar-gutter: stable;
+            scrollbar-width: thin;
+            scrollbar-color: #a5b4fc #f1f5f9;
+        }
+        html::-webkit-scrollbar {
+            width: 12px;
+        }
+        html::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 6px;
+        }
+        html::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #c4b5fd 0%, #6366f1 100%);
+            border-radius: 6px;
+            border: 3px solid #f1f5f9;
+        }
+        html::-webkit-scrollbar-thumb:hover {
+            background: #4f46e5;
         }
         body {
             overflow-x: hidden;
@@ -191,29 +194,6 @@
         #landing-page-view {
             max-width: 100%;
             overflow-x: hidden;
-        }
-
-        /* Landing visible: no document scrollbar — scroll only inside #landing-page-view (scrollbar hidden, still scrollable) */
-        html.lp-internal-scroll,
-        html.lp-internal-scroll body {
-            height: 100%;
-            overflow: hidden;
-        }
-        html.lp-internal-scroll #landing-page-view {
-            height: 100%;
-            max-height: 100vh;
-            max-height: 100dvh;
-            min-height: 0;
-            overflow-x: hidden;
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
-            scrollbar-width: none;
-            -ms-overflow-style: none;
-        }
-        html.lp-internal-scroll #landing-page-view::-webkit-scrollbar {
-            display: none !important;
-            width: 0 !important;
-            height: 0 !important;
         }
         /* Landing page, nav, footer: never receive theme-dark; dark mode applies only to #dashboard-view */
 
@@ -4008,8 +3988,14 @@
         .admin-sidebar .admin-info { padding: 14px 20px; border-bottom: 1px solid var(--admin-gray-200); flex-shrink: 0; }
         .admin-sidebar .admin-info .label { font-size: 0.75rem; color: var(--admin-gray-400); text-transform: uppercase; margin-bottom: 4px; letter-spacing: 0.5px; }
         .admin-sidebar .admin-info .email { font-size: 0.875rem; font-weight: 500; word-break: break-all; color: var(--admin-gray-700); }
-        .admin-sidebar .nav-menu { list-style: none; padding: 8px 0 20px; margin: 0; flex: 1; min-height: 0; overflow-x: hidden; overflow-y: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; -ms-overflow-style: none; }
-        .admin-sidebar .nav-menu::-webkit-scrollbar { width: 0 !important; height: 0 !important; display: none; }
+        .admin-sidebar .nav-menu { list-style: none; padding: 8px 0 20px; margin: 0; flex: 1; min-height: 0; overflow-x: hidden; overflow-y: auto; -webkit-overflow-scrolling: touch; scrollbar-width: thin; scrollbar-color: #a5b4fc #f1f5f9; }
+        .admin-sidebar .nav-menu::-webkit-scrollbar { width: 8px; }
+        .admin-sidebar .nav-menu::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; margin: 4px 0; }
+        .admin-sidebar .nav-menu::-webkit-scrollbar-thumb { background: linear-gradient(180deg, #c4b5fd, #6366f1); border-radius: 4px; }
+        .admin-sidebar .nav-menu::-webkit-scrollbar-thumb:hover { background: #4f46e5; }
+        .admin-sidebar .nav-item.nav-logout { margin-top: 8px; padding-top: 12px; border-top: 1px solid var(--admin-gray-200); }
+        .admin-sidebar .nav-link.nav-link-logout { color: var(--admin-danger); }
+        .admin-sidebar .nav-link.nav-link-logout:hover { background: rgba(239, 68, 68, 0.08); color: #b91c1c; }
         /* Sidebar uses <nav class="nav-menu"> — reset any stray global nav styles */
         #admin-view .admin-sidebar nav.nav-menu {
             position: static !important;
@@ -4034,7 +4020,11 @@
         .admin-sidebar .nav-link:hover { background: var(--admin-gray-100); color: var(--admin-primary); }
         .admin-sidebar .nav-link.active { background: #eef2ff; color: #4f46e5; border-left-color: #4f46e5; font-weight: 600; }
         .admin-sidebar .nav-link i { margin-right: 12px; width: 20px; text-align: center; font-size: 17px; }
-        .admin-main { flex: 1; margin-left: var(--admin-sidebar-width); min-height: 0; max-height: 100vh; height: 100vh; background: var(--admin-gray-50); min-width: 0; display: flex; flex-direction: column; overflow-x: hidden; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+        .admin-main { flex: 1; margin-left: var(--admin-sidebar-width); min-height: 0; max-height: 100vh; height: 100vh; background: var(--admin-gray-50); min-width: 0; display: flex; flex-direction: column; overflow-x: hidden; overflow-y: auto; -webkit-overflow-scrolling: touch; scrollbar-width: thin; scrollbar-color: #c4b5fd #f8fafc; }
+        .admin-main::-webkit-scrollbar { width: 10px; }
+        .admin-main::-webkit-scrollbar-track { background: #f8fafc; }
+        .admin-main::-webkit-scrollbar-thumb { background: #e9d5ff; border-radius: 5px; border: 2px solid #f8fafc; }
+        .admin-main::-webkit-scrollbar-thumb:hover { background: #a78bfa; }
         .admin-header-bar { height: 70px; background: white; border-bottom: 1px solid var(--admin-gray-200); display: flex; align-items: center; justify-content: space-between; padding: 0 30px; flex-shrink: 0; position: sticky; top: 0; z-index: 20; }
         .admin-search-bar { flex: 1; max-width: 500px; position: relative; }
         .admin-search-bar input { width: 100%; padding: 10px 15px 10px 40px; border: 1px solid var(--admin-gray-200); border-radius: 10px; font-size: 14px; transition: all 0.3s ease; }
@@ -4793,14 +4783,18 @@
                 <div class="nav-item"><a href="javascript:void(0)" class="nav-link" data-page="billing" onclick="showAdminPage('billing'); return false;"><i class="fas fa-credit-card"></i> Payments</a></div>
                 <div class="nav-section-label">Analytics &amp; Support</div>
                 <div class="nav-item"><a href="javascript:void(0)" class="nav-link" data-page="stats" onclick="showAdminPage('stats'); return false;"><i class="fas fa-chart-line"></i> Analytics</a></div>
-                <div class="nav-item"><a href="javascript:void(0)" class="nav-link" data-page="support" onclick="showAdminPage('support'); return false;"><i class="fas fa-life-ring"></i> Support</a></div>
+                <div class="nav-item"><a href="javascript:void(0)" class="nav-link" data-page="reports" onclick="showAdminPage('reports'); return false;"><i class="fas fa-file-lines"></i> Reports</a></div>
+                <div class="nav-item"><a href="javascript:void(0)" class="nav-link" data-page="support" onclick="showAdminPage('support'); return false;"><i class="fas fa-life-ring"></i> Support &amp; Tickets</a></div>
                 <div class="nav-item"><a href="javascript:void(0)" class="nav-link" data-page="notifications" onclick="showAdminPage('notifications'); return false;"><i class="fas fa-bell"></i> Notifications</a></div>
                 <div class="nav-section-label">System</div>
                 <div class="nav-item"><a href="javascript:void(0)" class="nav-link" data-page="api" onclick="showAdminPage('api'); return false;"><i class="fas fa-code"></i> API &amp; Integrations</a></div>
                 <div class="nav-item"><a href="javascript:void(0)" class="nav-link" data-page="security" onclick="showAdminPage('security'); return false;"><i class="fas fa-shield-alt"></i> Security</a></div>
                 <div class="nav-item"><a href="javascript:void(0)" class="nav-link" data-page="activity" onclick="showAdminPage('activity'); return false;"><i class="fas fa-history"></i> Activity Logs</a></div>
-                <div class="nav-item"><a href="javascript:void(0)" class="nav-link" data-page="settings" onclick="showAdminPage('settings'); return false;"><i class="fas fa-cog"></i> Settings</a></div>
-                <div class="nav-item"><a href="javascript:void(0)" class="nav-link" onclick="handleAdminLogout(); return false;"><i class="fas fa-sign-out-alt"></i> Logout</a></div>
+                <div class="nav-section-label">Resources</div>
+                <div class="nav-item"><a href="javascript:void(0)" class="nav-link" data-page="help" onclick="showAdminPage('help'); return false;"><i class="fas fa-book"></i> Help &amp; Documentation</a></div>
+                <div class="nav-section-label">Account</div>
+                <div class="nav-item"><a href="javascript:void(0)" class="nav-link" data-page="settings" onclick="showAdminPage('settings'); return false;"><i class="fas fa-cog"></i> Platform Settings</a></div>
+                <div class="nav-item nav-logout"><a href="javascript:void(0)" class="nav-link nav-link-logout" onclick="handleAdminLogout(); return false;"><i class="fas fa-sign-out-alt"></i> Log out</a></div>
             </nav>
         </aside>
         <main class="admin-main">
@@ -5009,7 +5003,7 @@
                     <div class="admin-chart-container" style="height:320px;"><canvas id="adminAnalyticsBarChart"></canvas></div>
                 </div>
                 <div class="grid-2">
-                    <div class="card"><div class="card-header"><h3 class="card-title">Traffic Sources</h3></div><div class="admin-chart-container" style="height:260px;position:relative;"><canvas id="adminTrafficDoughnut"></canvas></div></div>
+                    <div class="card"><div class="card-header"><h3 class="card-title">Traffic mix (full pie)</h3></div><div class="admin-chart-container" style="height:260px;position:relative;"><canvas id="adminTrafficDoughnut"></canvas></div></div>
                     <div class="card"><div class="card-header"><h3 class="card-title">Conversion Rates</h3></div><div class="admin-chart-container" style="height:260px;"><canvas id="adminConversionLine"></canvas></div></div>
                 </div>
                 <div class="admin-stats-grid" style="margin-top:8px;">
@@ -5018,7 +5012,16 @@
                     <div class="admin-stat-card"><div class="stat-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:15px;"><div class="admin-stat-label">Suspended</div><div class="stat-icon orange"><i class="fas fa-user-slash"></i></div></div><div class="admin-stat" id="admin-stat-suspended">0</div><div class="admin-stat-label">Suspended accounts</div></div>
                 </div>
             </div>
-            <div id="admin-page-reports" class="admin-page"><div class="admin-header"><h1><i class="fas fa-file-alt"></i> Reports</h1></div><div class="admin-card"><div class="admin-card-header">Platform Reports</div><div style="padding:24px;color:#6b7280;">Reports are shown on the Analytics &amp; Reports page.</div></div></div>
+            <div id="admin-page-reports" class="admin-page">
+                <div class="admin-header"><h1><i class="fas fa-file-lines"></i> Reports</h1><button type="button" class="admin-btn admin-btn-secondary" style="width:auto;padding:10px 20px;display:inline-flex;align-items:center;gap:8px;" onclick="showAdminPage('stats'); return false;"><i class="fas fa-chart-line"></i> Open Analytics</button></div>
+                <p style="font-size:14px;color:var(--admin-gray-500);margin:-12px 0 20px;">Export-ready summaries and a quick trend preview. Full interactive charts live on <strong>Analytics</strong>.</p>
+                <div class="admin-stats-grid">
+                    <div class="admin-stat-card"><div class="stat-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:15px;"><div class="admin-stat-label">Monthly export</div><div class="stat-icon blue"><i class="fas fa-file-export"></i></div></div><div class="admin-stat">CSV / PDF</div><div class="admin-stat-label">From Analytics toolbar</div></div>
+                    <div class="admin-stat-card"><div class="stat-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:15px;"><div class="admin-stat-label">Scheduled reports</div><div class="stat-icon cyan"><i class="fas fa-clock"></i></div></div><div class="admin-stat">Weekly</div><div class="admin-stat-label">Configure in Settings</div></div>
+                    <div class="admin-stat-card"><div class="stat-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:15px;"><div class="admin-stat-label">Data freshness</div><div class="stat-icon green"><i class="fas fa-sync-alt"></i></div></div><div class="admin-stat">Live</div><div class="admin-stat-label">Firestore-backed metrics</div></div>
+                </div>
+                <div class="admin-card"><div class="admin-card-header">Trend preview</div><div style="padding:16px 24px 24px;"><div class="admin-chart-container" style="height:300px;"><canvas id="adminReportsPreviewChart"></canvas></div></div></div>
+            </div>
             <div id="admin-page-billing" class="admin-page">
                 <div class="admin-header"><h1>Payments &amp; Billing</h1><button type="button" class="admin-btn admin-btn-secondary" style="width:auto;padding:10px 20px;display:inline-flex;align-items:center;gap:8px;" onclick="loadAdminBilling()"><i class="fas fa-sync-alt"></i> Refresh</button></div>
                 <div class="admin-stats-grid">
@@ -5148,6 +5151,31 @@
                 <div class="admin-card">
                     <div class="admin-card-header">Admin Configuration</div>
                     <div style="padding:24px;"><p style="color:var(--admin-gray-500);line-height:1.6;">Admin emails: admin@kotapal.com, wreck@gmail.com, earlhugue@gmail.com, emmanuelmobinzo222@gmail.com, emmanuelmobinzo21@gmail.com</p></div>
+                </div>
+            </div>
+            <div id="admin-page-help" class="admin-page">
+                <h1 class="page-title">Help &amp; Documentation</h1>
+                <div class="grid-2">
+                    <div class="admin-card" style="margin:0;">
+                        <div class="admin-card-header">Getting started</div>
+                        <div style="padding:24px;font-size:14px;color:var(--admin-gray-700);line-height:1.65;">
+                            <p style="margin-bottom:12px;">Use the sidebar to manage <strong>Users</strong>, <strong>Products</strong>, <strong>Payments</strong>, and <strong>Support</strong>. Analytics charts animate when you open the Analytics page.</p>
+                            <ul style="margin:0;padding-left:20px;">
+                                <li style="margin-bottom:8px;"><strong>Firestore</strong> — user and billing tables load from your Firebase project.</li>
+                                <li style="margin-bottom:8px;"><strong>Reports</strong> — quick exports and previews; open Analytics for full charts.</li>
+                                <li><strong>Log out</strong> — use the red <em>Log out</em> item at the bottom of the nav.</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="admin-card" style="margin:0;">
+                        <div class="admin-card-header">Shortcuts</div>
+                        <div style="padding:24px;display:flex;flex-direction:column;gap:12px;">
+                            <button type="button" class="admin-btn admin-btn-secondary" style="width:100%;justify-content:center;" onclick="showAdminPage('stats'); return false;"><i class="fas fa-chart-line"></i> Analytics &amp; charts</button>
+                            <button type="button" class="admin-btn admin-btn-secondary" style="width:100%;justify-content:center;" onclick="showAdminPage('support'); return false;"><i class="fas fa-life-ring"></i> Support &amp; tickets</button>
+                            <button type="button" class="admin-btn admin-btn-secondary" style="width:100%;justify-content:center;" onclick="showAdminPage('api'); return false;"><i class="fas fa-code"></i> API &amp; webhooks</button>
+                            <a href="mailto:support@kotapal.com" class="admin-btn admin-btn-secondary" style="width:100%;justify-content:center;text-decoration:none;text-align:center;">Email support@kotapal.com</a>
+                        </div>
+                    </div>
                 </div>
             </div>
             </div>
@@ -6081,7 +6109,6 @@
                 return { id: d.id, email: data.email || '-', name: data.displayName || data.name || data.display_name || '-', plan: data.plan || 'starter', status: data.status || 'active', joined: toDateStr(data.signupDate || data.createdAt || data.joined), lastSignIn: toDateStr(data.lastSignIn || data.lastSignInTime) };
             }
             window.showAdminPage = function(pageName) {
-                if (pageName === 'reports') pageName = 'stats';
                 document.querySelectorAll('.admin-page').forEach(function(p) { p.classList.remove('active'); });
                 document.querySelectorAll('.admin-sidebar .nav-link[data-page]').forEach(function(l) { l.classList.remove('active'); });
                 var pageEl = document.getElementById('admin-page-' + pageName);
@@ -6090,6 +6117,7 @@
                 if (linkEl) linkEl.classList.add('active');
                 if (pageName === 'stats' && typeof updateStatsPage === 'function') updateStatsPage();
                 if (pageName === 'stats' && typeof initAdminAnalyticsCharts === 'function') initAdminAnalyticsCharts();
+                if (pageName === 'reports' && typeof initAdminReportsPreviewChart === 'function') initAdminReportsPreviewChart();
                 if (pageName === 'dashboard') { if (typeof updateDashboardPage === 'function') updateDashboardPage(); if (typeof initAdminRevenueChart === 'function') initAdminRevenueChart(); }
                 if ((pageName === 'billing' || pageName === 'subscriptions') && typeof loadAdminBilling === 'function') loadAdminBilling();
                 if (pageName === 'subscriptions') {
@@ -6111,20 +6139,88 @@
                 var grad = ctx.createLinearGradient(0, 0, 0, 400);
                 grad.addColorStop(0, 'rgba(79, 70, 229, 0.3)');
                 grad.addColorStop(1, 'rgba(79, 70, 229, 0.0)');
-                new Chart(ctx, { type: 'line', data: { labels: ['Jan','Feb','Mar','Apr','May','Jun','Jul'], datasets: [{ label: 'Monthly Recurring Revenue', data: [12000,15000,18000,16000,20000,22000,24750], borderColor: '#4f46e5', backgroundColor: grad, borderWidth: 3, fill: true, tension: 0.4, pointBackgroundColor: '#4f46e5', pointBorderColor: '#fff', pointBorderWidth: 2, pointRadius: 5 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true, position: 'top' } }, scales: { y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { callback: function(v) { return '$' + v.toLocaleString(); } } }, x: { grid: { display: false } } } } });
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: ['Jan','Feb','Mar','Apr','May','Jun','Jul'],
+                        datasets: [{
+                            label: 'Monthly Recurring Revenue',
+                            data: [12000,15000,18000,16000,20000,22000,24750],
+                            borderColor: '#4f46e5',
+                            backgroundColor: grad,
+                            borderWidth: 3,
+                            fill: true,
+                            tension: 0.4,
+                            pointBackgroundColor: '#4f46e5',
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 2,
+                            pointRadius: 5
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        animation: { duration: 1600, easing: 'easeOutQuart' },
+                        plugins: { legend: { display: true, position: 'top' } },
+                        scales: {
+                            y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { callback: function(v) { return '$' + v.toLocaleString(); } } },
+                            x: { grid: { display: false } }
+                        }
+                    }
+                });
             };
             window.initAdminAnalyticsCharts = function() {
                 if (typeof Chart === 'undefined') return;
                 var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul'];
+                var barAnim = {
+                    duration: 1400,
+                    easing: 'easeOutQuart',
+                    delay: function(ctx) {
+                        if (ctx.type === 'data' && ctx.mode === 'default') return (ctx.dataIndex * 85) + (ctx.datasetIndex * 100);
+                        return 0;
+                    }
+                };
+                var arcAnim = { duration: 1800, easing: 'easeOutCubic' };
                 var bar = document.getElementById('adminAnalyticsBarChart');
                 if (bar) {
                     if (window._adminBarChart) { window._adminBarChart.destroy(); window._adminBarChart = null; }
-                    window._adminBarChart = new Chart(bar.getContext('2d'), { type: 'bar', data: { labels: months, datasets: [{ label: 'New Users', data: [420,532,601,734,690,812,900], backgroundColor: '#6366f1', borderRadius: 6, barPercentage: 0.68 }, { label: 'Active Users', data: [980,1100,1250,1180,1320,1400,1550], backgroundColor: '#06b6d4', borderRadius: 6, barPercentage: 0.68 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } }, y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.06)' } } } } });
+                    window._adminBarChart = new Chart(bar.getContext('2d'), {
+                        type: 'bar',
+                        data: {
+                            labels: months,
+                            datasets: [
+                                { label: 'New Users', data: [420,532,601,734,690,812,900], backgroundColor: '#6366f1', borderRadius: 6, barPercentage: 0.68 },
+                                { label: 'Active Users', data: [980,1100,1250,1180,1320,1400,1550], backgroundColor: '#06b6d4', borderRadius: 6, barPercentage: 0.68 }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            animation: barAnim,
+                            plugins: { legend: { display: false } },
+                            scales: {
+                                x: { grid: { display: false } },
+                                y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.06)' } }
+                            }
+                        }
+                    });
                 }
                 var dough = document.getElementById('adminTrafficDoughnut');
                 if (dough) {
                     if (window._adminDoughnut) { window._adminDoughnut.destroy(); window._adminDoughnut = null; }
-                    window._adminDoughnut = new Chart(dough.getContext('2d'), { type: 'doughnut', data: { labels: ['Direct','Organic Search','Referral','Social Media'], datasets: [{ data: [35, 28, 22, 15], backgroundColor: ['#6366f1','#06b6d4','#10b981','#f97316'], borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: false, cutout: '62%', plugins: { legend: { position: 'right', labels: { boxWidth: 12, padding: 12, font: { size: 12 } } } } } });
+                    window._adminDoughnut = new Chart(dough.getContext('2d'), {
+                        type: 'pie',
+                        data: {
+                            labels: ['Direct','Organic Search','Referral','Social Media'],
+                            datasets: [{ data: [35, 28, 22, 15], backgroundColor: ['#6366f1','#06b6d4','#10b981','#f97316'], borderWidth: 2, borderColor: '#fff' }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            animation: arcAnim,
+                            plugins: { legend: { position: 'right', labels: { boxWidth: 12, padding: 12, font: { size: 12 } } } }
+                        }
+                    });
                 }
                 var line = document.getElementById('adminConversionLine');
                 if (line) {
@@ -6132,8 +6228,69 @@
                     var g = line.getContext('2d').createLinearGradient(0, 0, 0, 220);
                     g.addColorStop(0, 'rgba(6,182,212,0.25)');
                     g.addColorStop(1, 'rgba(6,182,212,0)');
-                    window._adminLineChart = new Chart(line.getContext('2d'), { type: 'line', data: { labels: ['Week 1','Week 2','Week 3','Week 4'], datasets: [{ label: 'Conversion', data: [1.2, 2.1, 2.8, 3.2], borderColor: '#06b6d4', backgroundColor: g, borderWidth: 2, fill: true, tension: 0.35, pointRadius: 5, pointBackgroundColor: '#06b6d4', pointBorderColor: '#fff', pointBorderWidth: 2 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, max: 3.5, grid: { color: 'rgba(0,0,0,0.06)' } }, x: { grid: { display: false } } } } });
+                    window._adminLineChart = new Chart(line.getContext('2d'), {
+                        type: 'line',
+                        data: {
+                            labels: ['Week 1','Week 2','Week 3','Week 4'],
+                            datasets: [{
+                                label: 'Conversion',
+                                data: [1.2, 2.1, 2.8, 3.2],
+                                borderColor: '#06b6d4',
+                                backgroundColor: g,
+                                borderWidth: 2,
+                                fill: true,
+                                tension: 0.35,
+                                pointRadius: 5,
+                                pointBackgroundColor: '#06b6d4',
+                                pointBorderColor: '#fff',
+                                pointBorderWidth: 2
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            animation: { duration: 1500, easing: 'easeOutQuart' },
+                            plugins: { legend: { display: false } },
+                            scales: {
+                                y: { beginAtZero: true, max: 3.5, grid: { color: 'rgba(0,0,0,0.06)' } },
+                                x: { grid: { display: false } }
+                            }
+                        }
+                    });
                 }
+            };
+            window.initAdminReportsPreviewChart = function() {
+                if (typeof Chart === 'undefined') return;
+                var cv = document.getElementById('adminReportsPreviewChart');
+                if (!cv) return;
+                if (window._adminReportsPreviewChart) { window._adminReportsPreviewChart.destroy(); window._adminReportsPreviewChart = null; }
+                window._adminReportsPreviewChart = new Chart(cv.getContext('2d'), {
+                    type: 'line',
+                    data: {
+                        labels: ['W1','W2','W3','W4','W5','W6'],
+                        datasets: [{
+                            label: 'Signups',
+                            data: [12, 19, 24, 22, 30, 35],
+                            borderColor: '#4f46e5',
+                            backgroundColor: 'rgba(79,70,229,0.12)',
+                            fill: true,
+                            tension: 0.35,
+                            borderWidth: 2,
+                            pointRadius: 4,
+                            pointBackgroundColor: '#4f46e5'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        animation: { duration: 1400, easing: 'easeOutQuart' },
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.06)' } },
+                            x: { grid: { display: false } }
+                        }
+                    }
+                });
             };
             window.handleAdminLogout = function() {
                 sessionStorage.removeItem('admin_logged_in');
