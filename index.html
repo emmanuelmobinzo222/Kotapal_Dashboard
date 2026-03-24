@@ -139,17 +139,18 @@
             --warning: #f59e0b;
         }
 
-        /* Homepage: single scrollbar for full page */
+        /* Homepage: one vertical scrollbar on the document (html) only — avoids double gutter/track */
         html {
             overflow-x: hidden;
             overflow-y: scroll;
             scroll-behavior: smooth;
             -webkit-overflow-scrolling: touch;
             -ms-overflow-style: scrollbar;
+            scrollbar-gutter: stable;
         }
         body {
             overflow-x: hidden;
-            overflow-y: visible;
+            overflow-y: hidden;
             min-height: 100%;
             min-height: 100vh;
             min-height: -webkit-fill-available;
@@ -370,8 +371,9 @@
             bottom: -5px;
             left: 50%;
             width: 0;
-            height: 2px;
-            background: linear-gradient(to right, var(--primary), var(--secondary));
+            height: 4px;
+            border-radius: 2px;
+            background: var(--primary);
             transition: width 0.2s ease;
             transform: translateX(-50%);
         }
@@ -2886,7 +2888,7 @@
             </div>
 
             <ul class="nav-links">
-                <li><a href="#home" class="nav-link" data-section="home" onclick="scrollToSection('home', this); return false;">Home</a></li>
+                <li><a href="#home" class="nav-link active" data-section="home" onclick="scrollToSection('home', this); return false;">Home</a></li>
                 <li><a href="#features" class="nav-link" data-section="features" onclick="scrollToSection('features', this); return false;">Features</a></li>
                 <li><a href="#pricing" class="nav-link" data-section="pricing" onclick="scrollToSection('pricing', this); return false;">Pricing</a></li>
                 <li><a href="#trending-products" class="nav-link" data-section="trending-products" onclick="scrollToSection('trending-products', this); return false;">Trending</a></li>
@@ -3973,30 +3975,32 @@
         .admin-status.show { display: block; }
         .admin-status.error { background: rgba(239,68,68,0.1); color: #b91c1c; }
         .admin-status.success { background: rgba(16,185,129,0.1); color: #065f46; }
-        #admin-view.active { flex-direction: row !important; font-family: 'Inter', sans-serif; }
-        .admin-sidebar { width: var(--admin-sidebar-width); min-width: var(--admin-sidebar-width); background: linear-gradient(180deg,#fff 0%,var(--admin-gray-50) 100%); box-shadow: none; padding: 0 0 16px 0; position: fixed; left: 0; top: 0; height: 100vh; overflow-y: auto; z-index: 1000; border-right: 1px solid var(--admin-gray-200); display: flex; flex-direction: column; }
-        .admin-sidebar .sidebar-header { padding: 20px; border-bottom: 1px solid var(--admin-gray-200); display: flex; align-items: center; gap: 12px; }
+        #admin-view.active { flex-direction: row !important; font-family: 'Inter', sans-serif; align-items: stretch; height: 100vh; max-height: 100vh; min-height: 0; overflow: hidden; }
+        .admin-sidebar { width: var(--admin-sidebar-width); min-width: var(--admin-sidebar-width); background: #fff; box-shadow: none; padding: 0; position: fixed; left: 0; top: 0; height: 100vh; max-height: 100vh; overflow: hidden; z-index: 1000; border-right: 1px solid var(--admin-gray-200); display: flex; flex-direction: column; }
+        .admin-sidebar .sidebar-header { padding: 20px; border-bottom: 1px solid var(--admin-gray-200); display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
         .admin-sidebar .logo { padding: 0; border: none; display: flex; align-items: center; gap: 12px; }
-        .admin-sidebar .logo-img { width: 40px; height: 40px; background: linear-gradient(135deg, var(--admin-primary) 0%, var(--admin-secondary) 100%); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 20px; }
+        .admin-sidebar .logo-img { width: 40px; height: 40px; background: #3b82f6; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 20px; }
         .admin-sidebar .logo img { max-width: 40px; height: 40px; object-fit: contain; border-radius: 10px; }
-        .admin-sidebar .brand-name { font-size: 22px; font-weight: 700; color: var(--admin-gray-800); }
-        .admin-sidebar .admin-info { padding: 16px 20px; border-bottom: 1px solid var(--admin-gray-200); }
+        .admin-sidebar .brand-name { font-size: 22px; font-weight: 700; color: var(--admin-gray-800); letter-spacing: -0.02em; }
+        .admin-sidebar .admin-info { padding: 14px 20px; border-bottom: 1px solid var(--admin-gray-200); flex-shrink: 0; }
         .admin-sidebar .admin-info .label { font-size: 0.75rem; color: var(--admin-gray-400); text-transform: uppercase; margin-bottom: 4px; letter-spacing: 0.5px; }
-        .admin-sidebar .admin-info .email { font-size: 0.9rem; font-weight: 500; word-break: break-all; color: var(--admin-gray-700); }
-        .admin-sidebar .nav-menu { list-style: none; padding: 15px 0; margin: 0; flex: 1; }
-        .admin-sidebar .nav-item { margin-bottom: 2px; }
-        .admin-sidebar .nav-link { display: flex; align-items: center; padding: 12px 20px; color: var(--admin-gray-600); border-radius: 0; border-left: 3px solid transparent; transition: all 0.3s ease; font-weight: 500; font-size: 0.9375rem; margin: 2px 0; text-decoration: none; cursor: pointer; }
+        .admin-sidebar .admin-info .email { font-size: 0.875rem; font-weight: 500; word-break: break-all; color: var(--admin-gray-700); }
+        .admin-sidebar .nav-menu { list-style: none; padding: 8px 0 20px; margin: 0; flex: 1; min-height: 0; overflow-x: hidden; overflow-y: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; -ms-overflow-style: none; }
+        .admin-sidebar .nav-menu::-webkit-scrollbar { width: 0 !important; height: 0 !important; display: none; }
+        .admin-sidebar .nav-section-label { padding: 16px 20px 8px; font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--admin-gray-400); letter-spacing: 0.06em; }
+        .admin-sidebar .nav-item { margin-bottom: 0; }
+        .admin-sidebar .nav-link { display: flex; align-items: center; padding: 11px 20px 11px 17px; color: var(--admin-gray-600); border-radius: 0; border-left: 3px solid transparent; transition: background 0.2s ease, color 0.2s ease; font-weight: 500; font-size: 0.9375rem; margin: 1px 12px 1px 0; text-decoration: none; cursor: pointer; }
         .admin-sidebar .nav-link:hover { background: var(--admin-gray-100); color: var(--admin-primary); }
-        .admin-sidebar .nav-link.active { background: linear-gradient(90deg,rgba(79,70,229,0.1) 0%,transparent 100%); color: var(--admin-primary); border-left-color: var(--admin-primary); font-weight: 600; }
-        .admin-sidebar .nav-link i { margin-right: 10px; width: 20px; text-align: center; font-size: 18px; }
-        .admin-main { flex: 1; margin-left: var(--admin-sidebar-width); min-height: 100vh; background: var(--admin-gray-50); min-width: 0; display: flex; flex-direction: column; }
-        .admin-header-bar { height: 70px; background: white; border-bottom: 1px solid var(--admin-gray-200); display: flex; align-items: center; justify-content: space-between; padding: 0 30px; flex-shrink: 0; }
+        .admin-sidebar .nav-link.active { background: #eef2ff; color: #4f46e5; border-left-color: #4f46e5; font-weight: 600; }
+        .admin-sidebar .nav-link i { margin-right: 12px; width: 20px; text-align: center; font-size: 17px; }
+        .admin-main { flex: 1; margin-left: var(--admin-sidebar-width); min-height: 0; max-height: 100vh; height: 100vh; background: var(--admin-gray-50); min-width: 0; display: flex; flex-direction: column; overflow-x: hidden; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+        .admin-header-bar { height: 70px; background: white; border-bottom: 1px solid var(--admin-gray-200); display: flex; align-items: center; justify-content: space-between; padding: 0 30px; flex-shrink: 0; position: sticky; top: 0; z-index: 20; }
         .admin-search-bar { flex: 1; max-width: 500px; position: relative; }
         .admin-search-bar input { width: 100%; padding: 10px 15px 10px 40px; border: 1px solid var(--admin-gray-200); border-radius: 10px; font-size: 14px; transition: all 0.3s ease; }
         .admin-search-bar input:focus { outline: none; border-color: var(--admin-primary); box-shadow: 0 0 0 3px rgba(79,70,229,0.1); }
         .admin-search-bar i { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); color: var(--admin-gray-400); }
         .admin-header-actions { display: flex; align-items: center; gap: 20px; }
-        .admin-icon-btn { width: 40px; height: 40px; border-radius: 10px; border: none; background: var(--admin-gray-50); color: var(--admin-gray-600); cursor: pointer; display: flex; align-items: center; justify-content: center; position: relative; transition: all 0.3s ease; }
+        .admin-icon-btn { width: 42px; height: 42px; border-radius: 50%; border: none; background: var(--admin-gray-100); color: var(--admin-gray-600); cursor: pointer; display: flex; align-items: center; justify-content: center; position: relative; transition: all 0.3s ease; }
         .admin-icon-btn:hover { background: var(--admin-gray-100); color: var(--admin-primary); }
         .admin-user-menu { display: flex; align-items: center; gap: 12px; padding: 5px 15px 5px 5px; border-radius: 25px; border: 1px solid var(--admin-gray-200); cursor: pointer; transition: all 0.3s ease; }
         .admin-user-menu:hover { background: var(--admin-gray-50); }
@@ -4738,17 +4742,21 @@
                 <div class="email" id="adminEmailDisplay"></div>
             </div>
             <nav class="nav-menu">
-                <div class="nav-section" style="padding:15px 20px 8px;font-size:11px;font-weight:600;text-transform:uppercase;color:var(--admin-gray-400);letter-spacing:0.5px;">Overview</div>
-                <div class="nav-item"><a href="javascript:void(0)" class="nav-link active" data-page="dashboard" onclick="showAdminPage('dashboard'); return false;"><i class="fas fa-tachometer-alt"></i> Dashboard</a></div>
-                <div class="nav-section" style="padding:15px 20px 8px;font-size:11px;font-weight:600;text-transform:uppercase;color:var(--admin-gray-400);letter-spacing:0.5px;">Management</div>
+                <div class="nav-item"><a href="javascript:void(0)" class="nav-link active" data-page="dashboard" onclick="showAdminPage('dashboard'); return false;"><i class="fas fa-home"></i> Dashboard</a></div>
+                <div class="nav-section-label">Management</div>
                 <div class="nav-item"><a href="javascript:void(0)" class="nav-link" data-page="users" onclick="showAdminPage('users'); return false;"><i class="fas fa-users"></i> Users</a></div>
-                <div class="nav-item"><a href="javascript:void(0)" class="nav-link" data-page="blocks" onclick="showAdminPage('blocks'); return false;"><i class="fas fa-cubes"></i> SmartBlocks</a></div>
-                <div class="nav-item"><a href="javascript:void(0)" class="nav-link" data-page="billing" onclick="showAdminPage('billing'); return false;"><i class="fas fa-credit-card"></i> Billing</a></div>
-                <div class="nav-section" style="padding:15px 20px 8px;font-size:11px;font-weight:600;text-transform:uppercase;color:var(--admin-gray-400);letter-spacing:0.5px;">Analytics</div>
-                <div class="nav-item"><a href="javascript:void(0)" class="nav-link" data-page="stats" onclick="showAdminPage('stats'); return false;"><i class="fas fa-chart-bar"></i> Analytics</a></div>
-                <div class="nav-item"><a href="javascript:void(0)" class="nav-link" data-page="reports" onclick="showAdminPage('reports'); return false;"><i class="fas fa-file-alt"></i> Reports</a></div>
-                <div class="nav-item"><a href="javascript:void(0)" class="nav-link" data-page="support" onclick="showAdminPage('support'); return false;"><i class="fas fa-headset"></i> Support</a></div>
-                <div class="nav-section" style="padding:15px 20px 8px;font-size:11px;font-weight:600;text-transform:uppercase;color:var(--admin-gray-400);letter-spacing:0.5px;">System</div>
+                <div class="nav-item"><a href="javascript:void(0)" class="nav-link" data-page="creators" onclick="showAdminPage('creators'); return false;"><i class="fas fa-store"></i> Creators / Sellers</a></div>
+                <div class="nav-item"><a href="javascript:void(0)" class="nav-link" data-page="blocks" onclick="showAdminPage('blocks'); return false;"><i class="fas fa-box-open"></i> Products</a></div>
+                <div class="nav-item"><a href="javascript:void(0)" class="nav-link" data-page="subscriptions" onclick="showAdminPage('subscriptions'); return false;"><i class="fas fa-crown"></i> Subscriptions</a></div>
+                <div class="nav-item"><a href="javascript:void(0)" class="nav-link" data-page="plans" onclick="showAdminPage('plans'); return false;"><i class="fas fa-tags"></i> Plans &amp; Pricing</a></div>
+                <div class="nav-item"><a href="javascript:void(0)" class="nav-link" data-page="billing" onclick="showAdminPage('billing'); return false;"><i class="fas fa-credit-card"></i> Payments</a></div>
+                <div class="nav-section-label">Analytics &amp; Support</div>
+                <div class="nav-item"><a href="javascript:void(0)" class="nav-link" data-page="stats" onclick="showAdminPage('stats'); return false;"><i class="fas fa-chart-line"></i> Analytics</a></div>
+                <div class="nav-item"><a href="javascript:void(0)" class="nav-link" data-page="support" onclick="showAdminPage('support'); return false;"><i class="fas fa-life-ring"></i> Support</a></div>
+                <div class="nav-item"><a href="javascript:void(0)" class="nav-link" data-page="notifications" onclick="showAdminPage('notifications'); return false;"><i class="fas fa-bell"></i> Notifications</a></div>
+                <div class="nav-section-label">System</div>
+                <div class="nav-item"><a href="javascript:void(0)" class="nav-link" data-page="api" onclick="showAdminPage('api'); return false;"><i class="fas fa-code"></i> API &amp; Integrations</a></div>
+                <div class="nav-item"><a href="javascript:void(0)" class="nav-link" data-page="security" onclick="showAdminPage('security'); return false;"><i class="fas fa-shield-alt"></i> Security</a></div>
                 <div class="nav-item"><a href="javascript:void(0)" class="nav-link" data-page="activity" onclick="showAdminPage('activity'); return false;"><i class="fas fa-history"></i> Activity Logs</a></div>
                 <div class="nav-item"><a href="javascript:void(0)" class="nav-link" data-page="settings" onclick="showAdminPage('settings'); return false;"><i class="fas fa-cog"></i> Settings</a></div>
                 <div class="nav-item"><a href="javascript:void(0)" class="nav-link" onclick="handleAdminLogout(); return false;"><i class="fas fa-sign-out-alt"></i> Logout</a></div>
@@ -4759,7 +4767,7 @@
                 <div style="display:flex;align-items:center;flex:1;">
                     <div class="admin-search-bar">
                         <i class="fas fa-search"></i>
-                        <input type="text" placeholder="Search users, products, transactions..." id="adminSearchInput">
+                        <input type="text" placeholder="Search users, products, tran..." id="adminSearchInput">
                     </div>
                 </div>
                 <div class="admin-header-actions">
@@ -4870,7 +4878,8 @@
                 <div class="card">
                     <div class="card-header">
                         <h3 class="card-title">User Directory</h3>
-                        <div style="display:flex;gap:12px;align-items:center;">
+                        <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+                            <button type="button" class="btn btn-primary btn-sm" style="display:inline-flex;align-items:center;gap:6px;"><i class="fas fa-plus"></i> Add User</button>
                             <button type="button" class="btn btn-secondary" onclick="loadAdminUsers()"><i class="fas fa-sync-alt"></i> Refresh</button>
                         </div>
                     </div>
@@ -4896,31 +4905,210 @@
                     </div>
                 </div>
             </div>
-            <div id="admin-page-blocks" class="admin-page"><div class="admin-header"><h1><i class="fas fa-cubes"></i> SmartBlocks</h1></div><div class="admin-card"><div class="admin-card-header">All Blocks</div><div style="padding:24px;color:#6b7280;">Blocks are stored per-user in Firestore.</div></div></div>
-            <div id="admin-page-stats" class="admin-page"><div class="admin-header"><h1><i class="fas fa-chart-bar"></i> Analytics</h1></div><div class="admin-stats-grid"><div class="admin-stat-card"><div class="stat-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:15px;"><div class="admin-stat-label">Total Users</div><div class="stat-icon blue"><i class="fas fa-users"></i></div></div><div class="admin-stat" id="admin-stat-total">0</div><div class="admin-stat-label">Registered</div></div><div class="admin-stat-card"><div class="stat-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:15px;"><div class="admin-stat-label">Active</div><div class="stat-icon green"><i class="fas fa-user-check"></i></div></div><div class="admin-stat" id="admin-stat-active">0</div><div class="admin-stat-label">Non-suspended</div></div><div class="admin-stat-card"><div class="stat-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:15px;"><div class="admin-stat-label">Suspended</div><div class="stat-icon orange"><i class="fas fa-user-slash"></i></div></div><div class="admin-stat" id="admin-stat-suspended">0</div><div class="admin-stat-label">Suspended accounts</div></div></div></div>
-            <div id="admin-page-reports" class="admin-page"><div class="admin-header"><h1><i class="fas fa-file-alt"></i> Reports</h1></div><div class="admin-card"><div class="admin-card-header">Platform Reports</div><div style="padding:24px;color:#6b7280;">User activity reports and export options.</div></div></div>
-            <div id="admin-page-billing" class="admin-page">
-                <div class="admin-header"><h1><i class="fas fa-credit-card"></i> Billing & Payments</h1><button type="button" class="admin-btn admin-btn-secondary" style="width:auto;padding:10px 20px;display:inline-flex;align-items:center;gap:8px;" onclick="loadAdminBilling()"><i class="fas fa-sync-alt"></i> Refresh</button></div>
+            <div id="admin-page-creators" class="admin-page">
+                <h1 class="page-title">Creator / Seller Management</h1>
                 <div class="admin-stats-grid">
-                    <div class="admin-stat-card"><div class="stat-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:15px;"><div class="admin-stat-label">Total Revenue</div><div class="stat-icon green"><i class="fas fa-dollar-sign"></i></div></div><div class="admin-stat" id="admin-billing-total">0</div><div class="admin-stat-label">Total collected</div></div>
+                    <div class="admin-stat-card"><div class="stat-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:15px;"><div class="admin-stat-label">Total Creators</div><div class="stat-icon blue"><i class="fas fa-store"></i></div></div><div class="admin-stat">1,245</div><div class="admin-stat-label" style="color:var(--admin-success);"><i class="fas fa-arrow-up"></i> 5.2% this month</div></div>
+                    <div class="admin-stat-card"><div class="stat-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:15px;"><div class="admin-stat-label">Verified</div><div class="stat-icon green"><i class="fas fa-check-circle"></i></div></div><div class="admin-stat">982</div><div class="admin-stat-label" style="color:var(--admin-success);">78.9% verification rate</div></div>
+                    <div class="admin-stat-card"><div class="stat-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:15px;"><div class="admin-stat-label">Pending Approval</div><div class="stat-icon orange"><i class="fas fa-clock"></i></div></div><div class="admin-stat">63</div><div class="admin-stat-label">Awaiting review</div></div>
+                </div>
+                <div class="admin-card">
+                    <div class="admin-card-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;"><span>Registered Creators</span><button type="button" class="admin-btn admin-btn-sm" style="width:auto;background:var(--admin-primary);color:#fff;"><i class="fas fa-plus"></i> Add Creator</button></div>
+                    <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;"><table class="admin-table"><thead><tr><th>Creator</th><th>Store Name</th><th>Products</th><th>Total Sales</th><th>Verification</th><th>Status</th><th>Actions</th></tr></thead><tbody><tr><td>Alex Johnson</td><td>TechGear Store</td><td>45</td><td>$125,430</td><td><span class="status-badge completed">Verified</span></td><td><span class="status-badge completed">Active</span></td><td><div class="action-btns"><button type="button" class="btn btn-secondary btn-sm">View</button><button type="button" class="btn btn-primary btn-sm">Manage</button></div></td></tr><tr><td>Maria Garcia</td><td>Fashion Hub</td><td>128</td><td>$89,250</td><td><span class="status-badge completed">Verified</span></td><td><span class="status-badge completed">Active</span></td><td><div class="action-btns"><button type="button" class="btn btn-secondary btn-sm">View</button><button type="button" class="btn btn-primary btn-sm">Manage</button></div></td></tr></tbody></table></div>
+                </div>
+            </div>
+            <div id="admin-page-blocks" class="admin-page">
+                <h1 class="page-title">Product Management</h1>
+                <div class="admin-card">
+                    <div class="admin-card-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;"><span>All Products</span><button type="button" class="admin-btn admin-btn-sm" style="width:auto;background:var(--admin-primary);color:#fff;"><i class="fas fa-plus"></i> Add Product</button></div>
+                    <div style="padding:0 24px 16px;display:flex;gap:16px;flex-wrap:wrap;align-items:center;">
+                        <div style="display:flex;align-items:center;gap:8px;"><span style="font-size:14px;color:var(--admin-gray-600);">Category:</span><select class="form-control" style="width:auto;min-width:160px;"><option>All Categories</option></select></div>
+                        <div style="display:flex;align-items:center;gap:8px;"><span style="font-size:14px;color:var(--admin-gray-600);">Status:</span><select class="form-control" style="width:auto;min-width:120px;"><option>All</option></select></div>
+                    </div>
+                    <div style="padding:0 24px 24px;color:#6b7280;font-size:14px;border-top:1px solid var(--admin-gray-200);padding-top:16px;">Product blocks and catalog entries are stored per user in Firestore. Use the user dashboard to manage live blocks.</div>
+                    <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;padding:0 24px 24px;"><table class="admin-table"><thead><tr><th>Product</th><th>Category</th><th>Price</th><th>Stock</th><th>Sales</th><th>Status</th><th>Actions</th></tr></thead><tbody><tr><td>Wireless Headphones</td><td>Electronics</td><td>$99.00</td><td>120</td><td>342</td><td><span class="status-badge completed">Active</span></td><td><div class="action-btns"><button type="button" class="btn btn-secondary btn-sm">Edit</button><button type="button" class="btn btn-primary btn-sm">View</button></div></td></tr><tr><td>Smart Watch Pro</td><td>Wearables</td><td>$249.00</td><td>45</td><td>189</td><td><span class="status-badge completed">Active</span></td><td><div class="action-btns"><button type="button" class="btn btn-secondary btn-sm">Edit</button><button type="button" class="btn btn-primary btn-sm">View</button></div></td></tr></tbody></table></div>
+                </div>
+            </div>
+            <div id="admin-page-subscriptions" class="admin-page">
+                <h1 class="page-title">Subscription Management</h1>
+                <div class="admin-stats-grid">
+                    <div class="admin-stat-card"><div class="stat-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:15px;"><div class="admin-stat-label">Active Subscriptions</div><div class="stat-icon blue"><i class="fas fa-crown"></i></div></div><div class="admin-stat">3,280</div></div>
+                    <div class="admin-stat-card"><div class="stat-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:15px;"><div class="admin-stat-label">Trial Users</div><div class="stat-icon green"><i class="fas fa-gift"></i></div></div><div class="admin-stat">456</div></div>
+                    <div class="admin-stat-card"><div class="stat-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:15px;"><div class="admin-stat-label">Cancelled (This Month)</div><div class="stat-icon orange"><i class="fas fa-times-circle"></i></div></div><div class="admin-stat">89</div></div>
+                </div>
+                <div class="admin-card">
+                    <div class="admin-card-header">Active Subscriptions</div>
+                    <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;"><table class="admin-table"><thead><tr><th>User</th><th>Plan</th><th>Started</th><th>Renews</th><th>Amount</th><th>Status</th><th>Actions</th></tr></thead><tbody><tr><td>John Doe</td><td><span class="badge-tag pro" style="background:rgba(239,68,68,0.12);">Pro Monthly</span></td><td>Jan 15, 2026</td><td>Feb 15, 2026</td><td>$29.99/mo</td><td><span class="status-badge completed">Active</span></td><td><div class="action-btns"><a href="#" style="color:var(--admin-primary);font-weight:600;font-size:13px;">Modify</a><button type="button" class="btn btn-primary btn-sm">View</button></div></td></tr></tbody></table></div>
+                    <div style="padding:16px 24px 24px;font-size:13px;color:var(--admin-gray-500);">Live subscription rows below mirror your billing overview when you click Payments and refresh.</div>
+                    <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;padding:0 24px 24px;"><table class="admin-table"><thead><tr><th>Plan</th><th>Active Users</th><th>MRR</th></tr></thead><tbody id="adminSubscriptionsTableBodyMirror"></tbody></table></div>
+                </div>
+            </div>
+            <div id="admin-page-plans" class="admin-page">
+                <h1 class="page-title">Plans &amp; Pricing</h1>
+                <div class="admin-card" style="box-shadow:none;background:transparent;border:none;padding:0;">
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px;">
+                        <h2 style="font-size:1.125rem;font-weight:700;color:var(--admin-gray-800);margin:0;">Subscription Plans</h2>
+                        <button type="button" class="admin-btn admin-btn-sm" style="width:auto;background:var(--admin-primary);color:#fff;"><i class="fas fa-plus"></i> Create Plan</button>
+                    </div>
+                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px;">
+                        <div class="admin-card" style="margin:0;"><div style="padding:24px;"><div style="font-weight:700;font-size:1.1rem;margin-bottom:8px;">Basic</div><div style="font-size:1.75rem;font-weight:700;color:var(--admin-primary);margin-bottom:16px;">$9.99<span style="font-size:0.9rem;font-weight:500;color:var(--admin-gray-500);">/mo</span></div><ul style="list-style:none;padding:0;margin:0 0 20px;font-size:14px;color:var(--admin-gray-700);"><li style="margin-bottom:10px;"><i class="fas fa-check" style="color:var(--admin-success);margin-right:8px;"></i>Up to 10 products</li><li style="margin-bottom:10px;"><i class="fas fa-check" style="color:var(--admin-success);margin-right:8px;"></i>Basic analytics</li><li style="margin-bottom:10px;"><i class="fas fa-check" style="color:var(--admin-success);margin-right:8px;"></i>Email support</li></ul><button type="button" class="btn btn-secondary" style="width:100%;">Edit Plan</button></div></div>
+                        <div class="admin-card" style="margin:0;border:2px solid var(--admin-primary);position:relative;"><div style="position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--admin-primary);color:#fff;font-size:11px;font-weight:700;padding:4px 14px;border-radius:20px;">POPULAR</div><div style="padding:24px;"><div style="font-weight:700;font-size:1.1rem;margin-bottom:8px;">Pro</div><div style="font-size:1.75rem;font-weight:700;color:var(--admin-primary);margin-bottom:16px;">$29.99<span style="font-size:0.9rem;font-weight:500;color:var(--admin-gray-500);">/mo</span></div><ul style="list-style:none;padding:0;margin:0 0 20px;font-size:14px;color:var(--admin-gray-700);"><li style="margin-bottom:10px;"><i class="fas fa-check" style="color:var(--admin-success);margin-right:8px;"></i>Up to 100 products</li><li style="margin-bottom:10px;"><i class="fas fa-check" style="color:var(--admin-success);margin-right:8px;"></i>Advanced analytics</li><li style="margin-bottom:10px;"><i class="fas fa-check" style="color:var(--admin-success);margin-right:8px;"></i>Priority support</li><li style="margin-bottom:10px;"><i class="fas fa-check" style="color:var(--admin-success);margin-right:8px;"></i>API access</li></ul><button type="button" class="btn btn-primary" style="width:100%;background:var(--admin-primary);">Edit Plan</button></div></div>
+                        <div class="admin-card" style="margin:0;"><div style="padding:24px;"><div style="font-weight:700;font-size:1.1rem;margin-bottom:8px;">Premium</div><div style="font-size:1.75rem;font-weight:700;color:var(--admin-primary);margin-bottom:16px;">$99.99<span style="font-size:0.9rem;font-weight:500;color:var(--admin-gray-500);">/mo</span></div><ul style="list-style:none;padding:0;margin:0 0 20px;font-size:14px;color:var(--admin-gray-700);"><li style="margin-bottom:10px;"><i class="fas fa-check" style="color:var(--admin-success);margin-right:8px;"></i>Unlimited products</li><li style="margin-bottom:10px;"><i class="fas fa-check" style="color:var(--admin-success);margin-right:8px;"></i>Custom analytics</li><li style="margin-bottom:10px;"><i class="fas fa-check" style="color:var(--admin-success);margin-right:8px;"></i>24/7 phone support</li><li style="margin-bottom:10px;"><i class="fas fa-check" style="color:var(--admin-success);margin-right:8px;"></i>Full API access</li></ul><button type="button" class="btn btn-secondary" style="width:100%;">Edit Plan</button></div></div>
+                    </div>
+                </div>
+            </div>
+            <div id="admin-page-stats" class="admin-page">
+                <h1 class="page-title">Analytics &amp; Reports</h1>
+                <div class="chart-section">
+                    <div class="section-header">
+                        <h2 class="section-title">User Growth</h2>
+                        <button type="button" class="btn btn-primary btn-sm" style="display:inline-flex;align-items:center;gap:8px;"><i class="fas fa-download"></i> Export Report</button>
+                    </div>
+                    <p style="font-size:13px;color:var(--admin-gray-500);margin:-8px 0 16px;"><span style="display:inline-block;width:10px;height:10px;background:#6366f1;border-radius:2px;margin-right:6px;"></span>New Users <span style="margin-left:16px;display:inline-block;width:10px;height:10px;background:#06b6d4;border-radius:2px;margin-right:6px;"></span>Active Users</p>
+                    <div class="admin-chart-container" style="height:320px;"><canvas id="adminAnalyticsBarChart"></canvas></div>
+                </div>
+                <div class="grid-2">
+                    <div class="card"><div class="card-header"><h3 class="card-title">Traffic Sources</h3></div><div class="admin-chart-container" style="height:260px;position:relative;"><canvas id="adminTrafficDoughnut"></canvas></div></div>
+                    <div class="card"><div class="card-header"><h3 class="card-title">Conversion Rates</h3></div><div class="admin-chart-container" style="height:260px;"><canvas id="adminConversionLine"></canvas></div></div>
+                </div>
+                <div class="admin-stats-grid" style="margin-top:8px;">
+                    <div class="admin-stat-card"><div class="stat-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:15px;"><div class="admin-stat-label">Total Users</div><div class="stat-icon blue"><i class="fas fa-users"></i></div></div><div class="admin-stat" id="admin-stat-total">0</div><div class="admin-stat-label">Registered</div></div>
+                    <div class="admin-stat-card"><div class="stat-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:15px;"><div class="admin-stat-label">Active</div><div class="stat-icon green"><i class="fas fa-user-check"></i></div></div><div class="admin-stat" id="admin-stat-active">0</div><div class="admin-stat-label">Non-suspended</div></div>
+                    <div class="admin-stat-card"><div class="stat-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:15px;"><div class="admin-stat-label">Suspended</div><div class="stat-icon orange"><i class="fas fa-user-slash"></i></div></div><div class="admin-stat" id="admin-stat-suspended">0</div><div class="admin-stat-label">Suspended accounts</div></div>
+                </div>
+            </div>
+            <div id="admin-page-reports" class="admin-page"><div class="admin-header"><h1><i class="fas fa-file-alt"></i> Reports</h1></div><div class="admin-card"><div class="admin-card-header">Platform Reports</div><div style="padding:24px;color:#6b7280;">Reports are shown on the Analytics &amp; Reports page.</div></div></div>
+            <div id="admin-page-billing" class="admin-page">
+                <div class="admin-header"><h1>Payments &amp; Billing</h1><button type="button" class="admin-btn admin-btn-secondary" style="width:auto;padding:10px 20px;display:inline-flex;align-items:center;gap:8px;" onclick="loadAdminBilling()"><i class="fas fa-sync-alt"></i> Refresh</button></div>
+                <div class="admin-stats-grid">
+                    <div class="admin-stat-card"><div class="stat-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:15px;"><div class="admin-stat-label">Total Revenue</div><div class="stat-icon green"><i class="fas fa-dollar-sign"></i></div></div><div class="admin-stat" id="admin-billing-total">0</div><div class="admin-stat-label" style="color:var(--admin-success);"><i class="fas fa-arrow-up"></i> From billing data</div></div>
+                    <div class="admin-stat-card"><div class="stat-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:15px;"><div class="admin-stat-label">Failed Payments</div><div class="stat-icon orange"><i class="fas fa-exclamation-triangle"></i></div></div><div class="admin-stat">—</div><div class="admin-stat-label" style="color:var(--admin-danger);">Needs attention</div></div>
                     <div class="admin-stat-card"><div class="stat-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:15px;"><div class="admin-stat-label">Transactions</div><div class="stat-icon cyan"><i class="fas fa-receipt"></i></div></div><div class="admin-stat" id="admin-billing-transactions">0</div><div class="admin-stat-label">Payment records</div></div>
                 </div>
-                <div class="admin-card"><div class="admin-card-header">Payment History</div><div style="overflow-x:auto;-webkit-overflow-scrolling:touch;"><table class="admin-table"><thead><tr><th>Date</th><th>User</th><th>Plan</th><th>Amount</th><th>Status</th></tr></thead><tbody id="adminBillingTableBody"></tbody></table></div></div>
+                <div class="admin-card"><div class="admin-card-header">Recent Transactions</div><div style="overflow-x:auto;-webkit-overflow-scrolling:touch;"><table class="admin-table"><thead><tr><th>Transaction ID</th><th>User</th><th>Amount</th><th>Type</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead><tbody id="adminBillingTableBody"></tbody></table></div></div>
                 <div class="admin-card"><div class="admin-card-header">Subscription Overview</div><div style="overflow-x:auto;-webkit-overflow-scrolling:touch;"><table class="admin-table"><thead><tr><th>Plan</th><th>Active Users</th><th>MRR</th></tr></thead><tbody id="adminSubscriptionsTableBody"></tbody></table></div></div>
             </div>
             <div id="admin-page-support" class="admin-page">
-                <div class="admin-header"><h1><i class="fas fa-headset"></i> Support & Inquiries</h1><button type="button" class="admin-btn admin-btn-secondary" style="width:auto;padding:10px 20px;display:inline-flex;align-items:center;gap:8px;" onclick="loadAdminSupport()"><i class="fas fa-sync-alt"></i> Refresh</button></div>
+                <div class="admin-header"><h1>Support &amp; Tickets</h1><button type="button" class="admin-btn admin-btn-secondary" style="width:auto;padding:10px 20px;display:inline-flex;align-items:center;gap:8px;" onclick="loadAdminSupport()"><i class="fas fa-sync-alt"></i> Refresh</button></div>
                 <div class="admin-stats-grid">
-                    <div class="admin-stat-card"><div class="stat-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:15px;"><div class="admin-stat-label">Total Tickets</div><div class="stat-icon blue"><i class="fas fa-ticket-alt"></i></div></div><div class="admin-stat" id="admin-support-total">0</div><div class="admin-stat-label">Support tickets</div></div>
-                    <div class="admin-stat-card"><div class="stat-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:15px;"><div class="admin-stat-label">Pending</div><div class="stat-icon orange"><i class="fas fa-clock"></i></div></div><div class="admin-stat" id="admin-support-pending">0</div><div class="admin-stat-label">Awaiting response</div></div>
+                    <div class="admin-stat-card"><div class="stat-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:15px;"><div class="admin-stat-label">Open Tickets</div><div class="stat-icon blue"><i class="fas fa-inbox"></i></div></div><div class="admin-stat" id="admin-support-open">45</div></div>
+                    <div class="admin-stat-card"><div class="stat-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:15px;"><div class="admin-stat-label">Resolved (This Week)</div><div class="stat-icon green"><i class="fas fa-check"></i></div></div><div class="admin-stat">128</div></div>
+                    <div class="admin-stat-card"><div class="stat-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:15px;"><div class="admin-stat-label">Avg Response Time</div><div class="stat-icon cyan"><i class="fas fa-clock"></i></div></div><div class="admin-stat">2.4h</div></div>
                 </div>
-                <div class="admin-card"><div class="admin-card-header">Support Tickets</div><div style="overflow-x:auto;-webkit-overflow-scrolling:touch;"><table class="admin-table"><thead><tr><th>Date</th><th>Subject</th><th>User</th><th>Status</th><th>Actions</th></tr></thead><tbody id="adminSupportTableBody"></tbody></table></div></div>
+                <div class="admin-card"><div class="admin-card-header">Support Tickets</div><div style="overflow-x:auto;-webkit-overflow-scrolling:touch;"><table class="admin-table"><thead><tr><th>Ticket ID</th><th>Subject</th><th>User</th><th>Priority</th><th>Status</th><th>Assigned</th><th>Actions</th></tr></thead><tbody id="adminSupportTableBody"></tbody></table></div></div>
+            </div>
+            <div id="admin-page-notifications" class="admin-page">
+                <h1 class="page-title">Notifications</h1>
+                <div class="admin-card">
+                    <div class="admin-card-header">Send Notification</div>
+                    <div style="padding:24px;">
+                        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-bottom:20px;">
+                            <div><label style="display:block;font-size:13px;font-weight:600;margin-bottom:8px;color:var(--admin-gray-700);">Notification Type</label><select class="form-control"><option>Email Notification</option><option>In-app</option></select></div>
+                            <div><label style="display:block;font-size:13px;font-weight:600;margin-bottom:8px;color:var(--admin-gray-700);">Target Audience</label><select class="form-control"><option>All Users</option><option>Pro only</option></select></div>
+                        </div>
+                        <div class="admin-form-group"><label>Subject</label><input type="text" class="form-control" placeholder="Enter notification subject"></div>
+                        <div class="admin-form-group"><label>Message</label><textarea class="form-control" rows="5" placeholder="Enter your message here..."></textarea></div>
+                        <button type="button" class="admin-btn" style="width:auto;display:inline-flex;align-items:center;gap:8px;"><i class="fas fa-paper-plane"></i> Send Notification</button>
+                    </div>
+                </div>
+            </div>
+            <div id="admin-page-api" class="admin-page">
+                <h1 class="page-title">API &amp; Integrations</h1>
+                <div class="grid-2">
+                    <div class="admin-card" style="margin:0;">
+                        <div class="admin-card-header" style="display:flex;justify-content:space-between;align-items:center;"><span>API Keys</span><button type="button" class="admin-btn admin-btn-sm" style="width:auto;background:var(--admin-primary);color:#fff;"><i class="fas fa-plus"></i> Generate Key</button></div>
+                        <div style="overflow-x:auto;"><table class="admin-table"><thead><tr><th>Key Name</th><th>Key</th><th>Created</th><th>Actions</th></tr></thead><tbody><tr><td>Production Key</td><td>pk_live_••••••••</td><td>Jan 1, 2026</td><td><button type="button" class="btn btn-secondary btn-sm">Revoke</button></td></tr></tbody></table></div>
+                    </div>
+                    <div class="admin-card" style="margin:0;">
+                        <div class="admin-card-header">API Usage</div>
+                        <div style="padding:0 24px 24px;">
+                            <div style="margin-bottom:20px;"><div style="display:flex;justify-content:space-between;font-size:14px;margin-bottom:8px;"><span>Requests This Month</span><span>45,234 / 100,000</span></div><div style="height:8px;background:var(--admin-gray-100);border-radius:4px;overflow:hidden;"><div style="height:100%;width:45%;background:var(--admin-primary);border-radius:4px;"></div></div></div>
+                            <div><div style="display:flex;justify-content:space-between;font-size:14px;margin-bottom:8px;"><span>Rate Limit</span><span>1,000 req/min</span></div><div style="height:8px;background:var(--admin-gray-100);border-radius:4px;overflow:hidden;"><div style="height:100%;width:20%;background:var(--admin-success);border-radius:4px;"></div></div></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="admin-card">
+                    <div class="admin-card-header">Webhook Configuration</div>
+                    <div style="padding:24px;">
+                        <div class="admin-form-group"><label>Webhook URL</label><input type="url" class="form-control" value="https://your-domain.com/webhook" placeholder="https://"></div>
+                        <div class="admin-form-group"><label style="margin-bottom:10px;display:block;">Events to Listen</label><label style="display:flex;align-items:center;gap:8px;font-weight:500;margin-bottom:8px;"><input type="checkbox" checked> Payment Completed</label><label style="display:flex;align-items:center;gap:8px;font-weight:500;margin-bottom:8px;"><input type="checkbox" checked> Subscription Created</label><label style="display:flex;align-items:center;gap:8px;font-weight:500;"><input type="checkbox"> User Registered</label></div>
+                        <button type="button" class="admin-btn" style="width:auto;">Save Webhook</button>
+                    </div>
+                </div>
+            </div>
+            <div id="admin-page-security" class="admin-page">
+                <h1 class="page-title">Security</h1>
+                <div class="grid-2">
+                    <div class="admin-card" style="margin:0;">
+                        <div class="admin-card-header">Admin Roles &amp; Permissions</div>
+                        <div style="overflow-x:auto;"><table class="admin-table"><thead><tr><th>Role</th><th>Admin</th><th>Permissions</th><th>Actions</th></tr></thead><tbody><tr><td>Super Admin</td><td>admin@kotapal.com</td><td>Full Access</td><td><button type="button" class="btn btn-secondary btn-sm">Edit</button></td></tr><tr><td>Support Admin</td><td>support@kotapal.com</td><td>Limited Access</td><td><button type="button" class="btn btn-secondary btn-sm">Edit</button></td></tr></tbody></table></div>
+                    </div>
+                    <div class="admin-card" style="margin:0;">
+                        <div class="admin-card-header">Security Settings</div>
+                        <div style="padding:24px;">
+                            <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 0;border-bottom:1px solid var(--admin-gray-100);"><div><div style="font-weight:600;">Two-Factor Authentication</div><div style="font-size:13px;color:var(--admin-gray-500);">Add an extra layer of security</div></div><span style="width:44px;height:24px;background:var(--admin-success);border-radius:12px;display:inline-block;position:relative;"><span style="position:absolute;right:4px;top:3px;width:18px;height:18px;background:#fff;border-radius:50%;"></span></span></div>
+                            <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 0;"><div><div style="font-weight:600;">IP Restrictions</div><div style="font-size:13px;color:var(--admin-gray-500);">Limit access by IP address</div></div><span style="width:44px;height:24px;background:var(--admin-gray-200);border-radius:12px;display:inline-block;position:relative;"><span style="position:absolute;left:4px;top:3px;width:18px;height:18px;background:#fff;border-radius:50%;"></span></span></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="admin-card">
+                    <div class="admin-card-header">Login Activity</div>
+                    <div style="overflow-x:auto;"><table class="admin-table"><thead><tr><th>User</th><th>IP Address</th><th>Location</th><th>Device</th><th>Date &amp; Time</th><th>Status</th></tr></thead><tbody><tr><td>admin@kotapal.com</td><td>192.168.1.1</td><td>New York, USA</td><td>Chrome on Windows</td><td>Mar 17, 2026 10:30 AM</td><td><span class="status-badge completed">Success</span></td></tr></tbody></table></div>
+                </div>
             </div>
             <div id="admin-page-activity" class="admin-page">
-                <div class="admin-header"><h1><i class="fas fa-history"></i> Activity Logs</h1><button type="button" class="admin-btn admin-btn-secondary" style="width:auto;padding:10px 20px;" onclick="loadAdminActivity()"><i class="fas fa-sync-alt"></i> Refresh</button></div>
+                <div class="admin-header"><h1>Activity Logs</h1><button type="button" class="admin-btn admin-btn-secondary" style="width:auto;padding:10px 20px;" onclick="loadAdminActivity()"><i class="fas fa-sync-alt"></i> Refresh</button></div>
                 <div class="admin-card"><div class="admin-card-header">Recent Platform Activity</div><div style="overflow-x:auto;-webkit-overflow-scrolling:touch;"><table class="admin-table"><thead><tr><th>Time</th><th>User</th><th>Action</th><th>Details</th></tr></thead><tbody id="adminActivityTableBody"></tbody></table></div></div>
             </div>
-            <div id="admin-page-settings" class="admin-page"><div class="admin-header"><h1><i class="fas fa-cog"></i> Settings</h1></div><div class="admin-card"><div class="admin-card-header">Admin Configuration</div><div style="padding:24px;"><p style="color:var(--admin-gray-500);">Admin emails: admin@kotapal.com, wreck@gmail.com, earlhugue@gmail.com, emmanuelmobinzo222@gmail.com, emmanuelmobinzo21@gmail.com</p></div></div></div>
+            <div id="admin-page-settings" class="admin-page">
+                <h1 class="page-title">Platform Settings</h1>
+                <div class="grid-2">
+                    <div class="admin-card" style="margin:0;">
+                        <div class="admin-card-header">General Settings</div>
+                        <div style="padding:24px;">
+                            <div class="admin-form-group"><label>Platform Name</label><input type="text" class="form-control" value="Kotapal"></div>
+                            <div class="admin-form-group"><label>Platform Description</label><textarea class="form-control" rows="3">Your marketplace platform</textarea></div>
+                            <div class="admin-form-group"><label>Contact Email</label><input type="email" class="form-control" value="support@kotapal.com"></div>
+                            <button type="button" class="admin-btn" style="width:auto;">Save Changes</button>
+                        </div>
+                    </div>
+                    <div class="admin-card" style="margin:0;">
+                        <div class="admin-card-header">Branding</div>
+                        <div style="padding:24px;">
+                            <div style="border:2px dashed var(--admin-gray-200);border-radius:12px;padding:40px;text-align:center;color:var(--admin-gray-500);margin-bottom:20px;"><i class="fas fa-cloud-upload-alt" style="font-size:2rem;margin-bottom:12px;display:block;"></i>Drop your logo here or click to upload</div>
+                            <div class="admin-form-group"><label>Primary Color</label><div style="height:12px;border-radius:6px;background:linear-gradient(90deg,#6366f1,#4338ca);"></div></div>
+                            <div class="admin-form-group"><label>Secondary Color</label><div style="height:12px;border-radius:6px;background:linear-gradient(90deg,#06b6d4,#0e7490);"></div></div>
+                            <button type="button" class="admin-btn" style="width:auto;">Update Branding</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="admin-card">
+                    <div class="admin-card-header">Email &amp; Payment Settings</div>
+                    <div style="padding:24px;">
+                        <h3 style="font-size:1rem;margin-bottom:16px;color:var(--admin-gray-800);">SMTP Configuration</h3>
+                        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px;">
+                            <div class="admin-form-group" style="margin:0;"><label>SMTP Host</label><input type="text" class="form-control" value="smtp.gmail.com"></div>
+                            <div class="admin-form-group" style="margin:0;"><label>SMTP Port</label><input type="text" class="form-control" value="587"></div>
+                            <div class="admin-form-group" style="margin:0;grid-column:1/-1;"><label>Username</label><input type="text" class="form-control" value="your@email.com"></div>
+                        </div>
+                        <h3 style="font-size:1rem;margin-bottom:16px;color:var(--admin-gray-800);">Payment Gateway</h3>
+                        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;">
+                            <div class="admin-form-group" style="margin:0;"><label>Provider</label><select class="form-control"><option>Stripe</option></select></div>
+                            <div class="admin-form-group" style="margin:0;"><label>API Key</label><input type="password" class="form-control" value="sk_live_••••"></div>
+                            <div class="admin-form-group" style="margin:0;"><label>Webhook Secret</label><input type="password" class="form-control" value="whsec_••••"></div>
+                        </div>
+                        <button type="button" class="admin-btn" style="width:auto;margin-top:20px;">Save Settings</button>
+                    </div>
+                </div>
+                <div class="admin-card">
+                    <div class="admin-card-header" style="display:flex;justify-content:space-between;align-items:center;"><span>Maintenance Mode</span><span style="width:44px;height:24px;background:var(--admin-gray-200);border-radius:12px;display:inline-block;position:relative;"><span style="position:absolute;left:4px;top:3px;width:18px;height:18px;background:#fff;border-radius:50%;"></span></span></div>
+                    <div style="padding:0 24px 24px;font-size:14px;color:var(--admin-gray-500);">Temporarily disable access to your platform.</div>
+                </div>
+                <div class="admin-card">
+                    <div class="admin-card-header">Admin Configuration</div>
+                    <div style="padding:24px;"><p style="color:var(--admin-gray-500);line-height:1.6;">Admin emails: admin@kotapal.com, wreck@gmail.com, earlhugue@gmail.com, emmanuelmobinzo222@gmail.com, emmanuelmobinzo21@gmail.com</p></div>
+                </div>
+            </div>
             </div>
         </main>
     </div>
@@ -5817,6 +6005,7 @@
                 return { id: d.id, email: data.email || '-', name: data.displayName || data.name || data.display_name || '-', plan: data.plan || 'starter', status: data.status || 'active', joined: toDateStr(data.signupDate || data.createdAt || data.joined), lastSignIn: toDateStr(data.lastSignIn || data.lastSignInTime) };
             }
             window.showAdminPage = function(pageName) {
+                if (pageName === 'reports') pageName = 'stats';
                 document.querySelectorAll('.admin-page').forEach(function(p) { p.classList.remove('active'); });
                 document.querySelectorAll('.admin-sidebar .nav-link[data-page]').forEach(function(l) { l.classList.remove('active'); });
                 var pageEl = document.getElementById('admin-page-' + pageName);
@@ -5824,8 +6013,16 @@
                 if (pageEl) pageEl.classList.add('active');
                 if (linkEl) linkEl.classList.add('active');
                 if (pageName === 'stats' && typeof updateStatsPage === 'function') updateStatsPage();
+                if (pageName === 'stats' && typeof initAdminAnalyticsCharts === 'function') initAdminAnalyticsCharts();
                 if (pageName === 'dashboard') { if (typeof updateDashboardPage === 'function') updateDashboardPage(); if (typeof initAdminRevenueChart === 'function') initAdminRevenueChart(); }
-                if (pageName === 'billing' && typeof loadAdminBilling === 'function') loadAdminBilling();
+                if ((pageName === 'billing' || pageName === 'subscriptions') && typeof loadAdminBilling === 'function') loadAdminBilling();
+                if (pageName === 'subscriptions') {
+                    setTimeout(function() {
+                        var src = document.getElementById('adminSubscriptionsTableBody');
+                        var mir = document.getElementById('adminSubscriptionsTableBodyMirror');
+                        if (src && mir) mir.innerHTML = src.innerHTML;
+                    }, 0);
+                }
                 if (pageName === 'support' && typeof loadAdminSupport === 'function') loadAdminSupport();
                 if (pageName === 'activity' && typeof loadAdminActivity === 'function') loadAdminActivity();
             };
@@ -5839,6 +6036,28 @@
                 grad.addColorStop(0, 'rgba(79, 70, 229, 0.3)');
                 grad.addColorStop(1, 'rgba(79, 70, 229, 0.0)');
                 new Chart(ctx, { type: 'line', data: { labels: ['Jan','Feb','Mar','Apr','May','Jun','Jul'], datasets: [{ label: 'Monthly Recurring Revenue', data: [12000,15000,18000,16000,20000,22000,24750], borderColor: '#4f46e5', backgroundColor: grad, borderWidth: 3, fill: true, tension: 0.4, pointBackgroundColor: '#4f46e5', pointBorderColor: '#fff', pointBorderWidth: 2, pointRadius: 5 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true, position: 'top' } }, scales: { y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { callback: function(v) { return '$' + v.toLocaleString(); } } }, x: { grid: { display: false } } } } });
+            };
+            window.initAdminAnalyticsCharts = function() {
+                if (typeof Chart === 'undefined') return;
+                var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul'];
+                var bar = document.getElementById('adminAnalyticsBarChart');
+                if (bar) {
+                    if (window._adminBarChart) { window._adminBarChart.destroy(); window._adminBarChart = null; }
+                    window._adminBarChart = new Chart(bar.getContext('2d'), { type: 'bar', data: { labels: months, datasets: [{ label: 'New Users', data: [420,532,601,734,690,812,900], backgroundColor: '#6366f1', borderRadius: 6, barPercentage: 0.68 }, { label: 'Active Users', data: [980,1100,1250,1180,1320,1400,1550], backgroundColor: '#06b6d4', borderRadius: 6, barPercentage: 0.68 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } }, y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.06)' } } } } });
+                }
+                var dough = document.getElementById('adminTrafficDoughnut');
+                if (dough) {
+                    if (window._adminDoughnut) { window._adminDoughnut.destroy(); window._adminDoughnut = null; }
+                    window._adminDoughnut = new Chart(dough.getContext('2d'), { type: 'doughnut', data: { labels: ['Direct','Organic Search','Referral','Social Media'], datasets: [{ data: [35, 28, 22, 15], backgroundColor: ['#6366f1','#06b6d4','#10b981','#f97316'], borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: false, cutout: '62%', plugins: { legend: { position: 'right', labels: { boxWidth: 12, padding: 12, font: { size: 12 } } } } } });
+                }
+                var line = document.getElementById('adminConversionLine');
+                if (line) {
+                    if (window._adminLineChart) { window._adminLineChart.destroy(); window._adminLineChart = null; }
+                    var g = line.getContext('2d').createLinearGradient(0, 0, 0, 220);
+                    g.addColorStop(0, 'rgba(6,182,212,0.25)');
+                    g.addColorStop(1, 'rgba(6,182,212,0)');
+                    window._adminLineChart = new Chart(line.getContext('2d'), { type: 'line', data: { labels: ['Week 1','Week 2','Week 3','Week 4'], datasets: [{ label: 'Conversion', data: [1.2, 2.1, 2.8, 3.2], borderColor: '#06b6d4', backgroundColor: g, borderWidth: 2, fill: true, tension: 0.35, pointRadius: 5, pointBackgroundColor: '#06b6d4', pointBorderColor: '#fff', pointBorderWidth: 2 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, max: 3.5, grid: { color: 'rgba(0,0,0,0.06)' } }, x: { grid: { display: false } } } } });
+                }
             };
             window.handleAdminLogout = function() {
                 sessionStorage.removeItem('admin_logged_in');
@@ -5960,32 +6179,43 @@
                 if (el) el.textContent = payments.length;
                 var tbody = document.getElementById('adminBillingTableBody');
                 if (tbody) {
-                    if (payments.length === 0) tbody.innerHTML = '<tr><td colspan="5" style="padding:24px;color:#6b7280;text-align:center;">No payment records yet.</td></tr>';
-                    else tbody.innerHTML = payments.slice(0, 50).map(function(p) { var d = p.date ? new Date(p.date).toLocaleDateString() : '-'; return '<tr><td>' + d + '</td><td>' + (p.user || '-') + '</td><td>' + (p.plan || '-') + '</td><td>$' + (p.amount || 0) + '</td><td>' + (p.status || 'paid') + '</td></tr>'; }).join('');
+                    if (payments.length === 0) tbody.innerHTML = '<tr><td colspan="7" style="padding:24px;color:#6b7280;text-align:center;">No payment records yet.</td></tr>';
+                    else tbody.innerHTML = payments.slice(0, 50).map(function(p) {
+                        var d = p.date ? new Date(p.date).toLocaleDateString() : '-';
+                        var st = (p.status || 'paid').toLowerCase();
+                        var badge = st === 'refund' || st === 'refunded' ? 'refunded' : st === 'pending' ? 'pending' : 'completed';
+                        var stLabel = badge === 'refunded' ? 'Refunded' : badge === 'pending' ? 'Pending' : 'Completed';
+                        return '<tr><td>—</td><td>' + (p.user || '-') + '</td><td>$' + (p.amount || 0) + '</td><td>Subscription</td><td><span class="status-badge ' + badge + '">' + stLabel + '</span></td><td>' + d + '</td><td><div class="action-btns"><button type="button" class="btn btn-secondary btn-sm">Invoice</button><button type="button" class="btn btn-primary btn-sm">View</button></div></td></tr>';
+                    }).join('');
                 }
                 var subTbody = document.getElementById('adminSubscriptionsTableBody');
                 if (subTbody) {
                     var rows = Object.keys(planPrices).map(function(plan) { var cnt = byPlan[plan] || 0; return '<tr><td>' + plan + '</td><td>' + cnt + '</td><td>$' + (cnt * (planPrices[plan] || 0)).toLocaleString() + '</td></tr>'; });
                     subTbody.innerHTML = rows.length ? rows.join('') : '<tr><td colspan="3" style="padding:24px;color:#6b7280;text-align:center;">No subscription data.</td></tr>';
                 }
+                var subMir = document.getElementById('adminSubscriptionsTableBodyMirror');
+                if (subMir && subTbody) subMir.innerHTML = subTbody.innerHTML;
             };
             window.loadAdminSupport = function() {
                 var tickets = JSON.parse(localStorage.getItem('kota_support_tickets') || '[]');
                 var pending = tickets.filter(function(t) { return (t.status || 'pending') === 'pending'; }).length;
                 var el = document.getElementById('admin-support-total');
                 if (el) el.textContent = tickets.length;
-                el = document.getElementById('admin-support-pending');
+                el = document.getElementById('admin-support-open');
                 if (el) el.textContent = pending;
                 var tbody = document.getElementById('adminSupportTableBody');
                 if (!tbody) return;
-                if (tickets.length === 0) { tbody.innerHTML = '<tr><td colspan="5" style="padding:24px;color:#6b7280;text-align:center;">No support tickets yet.</td></tr>'; return; }
+                if (tickets.length === 0) { tbody.innerHTML = '<tr><td colspan="7" style="padding:24px;color:#6b7280;text-align:center;">No support tickets yet.</td></tr>'; return; }
                 function esc(s) { return String(s || '').replace(/'/g, "\\'"); }
                 function html(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
-                tbody.innerHTML = tickets.slice(0, 100).map(function(t) {
+                tbody.innerHTML = tickets.slice(0, 100).map(function(t, idx) {
                     var d = t.date ? new Date(t.date).toLocaleString() : '-';
                     var status = (t.status || 'pending').toLowerCase();
-                    var statusClass = status === 'resolved' ? 'badge-active' : 'badge-suspended';
-                    return '<tr><td>' + html(d) + '</td><td>' + html(t.subject || '-') + '</td><td>' + html(t.userEmail || t.userName || '-') + '</td><td><span class="badge ' + statusClass + '">' + status + '</span></td><td><button class="admin-btn admin-btn-sm admin-btn-secondary" onclick="updateTicketStatus(\'' + esc(t.id) + '\',\'resolved\')">Resolve</button></td></tr>';
+                    var statusBadge = status === 'resolved' ? '<span class="status-badge completed">Resolved</span>' : '<span class="status-badge pending">Open</span>';
+                    var pri = (t.priority || 'medium').toLowerCase();
+                    var priHtml = pri === 'high' ? '<span class="status-badge refunded">High</span>' : pri === 'low' ? '<span class="status-badge" style="background:rgba(59,130,246,0.12);color:#1d4ed8;">Low</span>' : '<span class="status-badge pending">Medium</span>';
+                    var tid = 'TKT-' + String(idx + 1).padStart(4, '0');
+                    return '<tr><td>' + html(tid) + '</td><td>' + html(t.subject || '-') + '</td><td>' + html(t.userEmail || t.userName || '-') + '</td><td>' + priHtml + '</td><td>' + statusBadge + '</td><td>—</td><td><button type="button" class="btn btn-primary btn-sm" onclick="updateTicketStatus(\'' + esc(t.id) + '\',\'resolved\')">View</button></td></tr>';
                 }).join('');
             };
             window.updateTicketStatus = function(id, status) {
