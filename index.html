@@ -4138,6 +4138,13 @@
         #admin-view .user-avatar { width: 35px; height: 35px; border-radius: 50%; background: linear-gradient(135deg, var(--admin-primary) 0%, var(--admin-secondary) 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; }
         @media (max-width: 1024px) { #admin-view .grid-2 { grid-template-columns: 1fr; } }
         @media (max-width: 768px) { .admin-sidebar { transform: translateX(-100%); } .admin-main { margin-left: 0; } #admin-view .admin-stats-grid, #admin-view .stats-grid { grid-template-columns: 1fr; } }
+        #admin-toast-host { position: fixed; bottom: 22px; right: 22px; z-index: 100000; display: flex; flex-direction: column; gap: 8px; pointer-events: none; font-family: 'Inter', sans-serif; }
+        .admin-toast { pointer-events: auto; padding: 12px 16px; border-radius: 10px; font-size: 13px; font-weight: 600; max-width: min(360px, 92vw); box-shadow: 0 10px 28px rgba(0,0,0,0.14); border: 1px solid transparent; animation: adminToastIn 0.22s ease; }
+        .admin-toast.info { background: #eff6ff; color: #1e40af; border-color: #93c5fd; }
+        .admin-toast.success { background: #ecfdf5; color: #065f46; border-color: #6ee7b7; }
+        .admin-toast.warn { background: #fffbeb; color: #92400e; border-color: #fcd34d; }
+        @keyframes adminToastIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+        #admin-view .admin-toggle-btn { cursor: pointer; border: none; background: transparent; padding: 0; }
     </style>
 
     <!-- Authenticated Dashboard View (KotaPal simple copy design) -->
@@ -4806,13 +4813,13 @@
                 <div style="display:flex;align-items:center;flex:1;">
                     <div class="admin-search-bar">
                         <i class="fas fa-search"></i>
-                        <input type="text" placeholder="Search users, products, tran..." id="adminSearchInput">
+                        <input type="text" placeholder="Search users, products, tran..." id="adminSearchInput" autocomplete="off">
                     </div>
                 </div>
                 <div class="admin-header-actions">
-                    <button class="admin-icon-btn" type="button" title="Notifications"><i class="fas fa-bell"></i></button>
-                    <button class="admin-icon-btn" type="button" title="Messages"><i class="fas fa-envelope"></i></button>
-                    <div class="admin-user-menu">
+                    <button class="admin-icon-btn" type="button" title="Notifications" id="adminHeaderNotifBtn"><i class="fas fa-bell"></i></button>
+                    <button class="admin-icon-btn" type="button" title="Messages" id="adminHeaderMsgBtn"><i class="fas fa-envelope"></i></button>
+                    <div class="admin-user-menu" id="adminUserMenuBtn" role="button" tabindex="0" title="Account menu">
                         <div class="admin-user-avatar" id="adminUserAvatar">A</div>
                         <span class="user-name" id="adminUserName">Admin</span>
                         <i class="fas fa-chevron-down" style="color:var(--admin-gray-400);font-size:12px;"></i>
@@ -4918,7 +4925,7 @@
                     <div class="card-header">
                         <h3 class="card-title">User Directory</h3>
                         <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
-                            <button type="button" class="btn btn-primary btn-sm" style="display:inline-flex;align-items:center;gap:6px;"><i class="fas fa-plus"></i> Add User</button>
+                            <button type="button" class="btn btn-primary btn-sm" id="adminAddUserBtn" style="display:inline-flex;align-items:center;gap:6px;"><i class="fas fa-plus"></i> Add User</button>
                             <button type="button" class="btn btn-secondary" onclick="loadAdminUsers()"><i class="fas fa-sync-alt"></i> Refresh</button>
                         </div>
                     </div>
@@ -4952,20 +4959,20 @@
                     <div class="admin-stat-card"><div class="stat-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:15px;"><div class="admin-stat-label">Pending Approval</div><div class="stat-icon orange"><i class="fas fa-clock"></i></div></div><div class="admin-stat">63</div><div class="admin-stat-label">Awaiting review</div></div>
                 </div>
                 <div class="admin-card">
-                    <div class="admin-card-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;"><span>Registered Creators</span><button type="button" class="admin-btn admin-btn-sm" style="width:auto;background:var(--admin-primary);color:#fff;"><i class="fas fa-plus"></i> Add Creator</button></div>
-                    <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;"><table class="admin-table"><thead><tr><th>Creator</th><th>Store Name</th><th>Products</th><th>Total Sales</th><th>Verification</th><th>Status</th><th>Actions</th></tr></thead><tbody><tr><td>Alex Johnson</td><td>TechGear Store</td><td>45</td><td>$125,430</td><td><span class="status-badge completed">Verified</span></td><td><span class="status-badge completed">Active</span></td><td><div class="action-btns"><button type="button" class="btn btn-secondary btn-sm">View</button><button type="button" class="btn btn-primary btn-sm">Manage</button></div></td></tr><tr><td>Maria Garcia</td><td>Fashion Hub</td><td>128</td><td>$89,250</td><td><span class="status-badge completed">Verified</span></td><td><span class="status-badge completed">Active</span></td><td><div class="action-btns"><button type="button" class="btn btn-secondary btn-sm">View</button><button type="button" class="btn btn-primary btn-sm">Manage</button></div></td></tr></tbody></table></div>
+                    <div class="admin-card-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;"><span>Registered Creators</span><button type="button" class="admin-btn admin-btn-sm" data-admin-demo="Creator onboarding is managed in Firestore / user profiles. Use Users to verify seller accounts." style="width:auto;background:var(--admin-primary);color:#fff;"><i class="fas fa-plus"></i> Add Creator</button></div>
+                    <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;"><table class="admin-table"><thead><tr><th>Creator</th><th>Store Name</th><th>Products</th><th>Total Sales</th><th>Verification</th><th>Status</th><th>Actions</th></tr></thead><tbody><tr><td>Alex Johnson</td><td>TechGear Store</td><td>45</td><td>$125,430</td><td><span class="status-badge completed">Verified</span></td><td><span class="status-badge completed">Active</span></td><td><div class="action-btns"><button type="button" class="btn btn-secondary btn-sm" data-admin-demo="Demo creator: Alex Johnson — details are illustrative.">View</button><button type="button" class="btn btn-primary btn-sm" data-admin-open-users="1" data-admin-demo="Open Users to manage real creator accounts tied to Firebase.">Manage</button></div></td></tr><tr><td>Maria Garcia</td><td>Fashion Hub</td><td>128</td><td>$89,250</td><td><span class="status-badge completed">Verified</span></td><td><span class="status-badge completed">Active</span></td><td><div class="action-btns"><button type="button" class="btn btn-secondary btn-sm" data-admin-demo="Demo creator: Maria Garcia — illustrative row.">View</button><button type="button" class="btn btn-primary btn-sm" data-admin-open-users="1">Manage</button></div></td></tr></tbody></table></div>
                 </div>
             </div>
             <div id="admin-page-blocks" class="admin-page">
                 <h1 class="page-title">Product Management</h1>
                 <div class="admin-card">
-                    <div class="admin-card-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;"><span>All Products</span><button type="button" class="admin-btn admin-btn-sm" style="width:auto;background:var(--admin-primary);color:#fff;"><i class="fas fa-plus"></i> Add Product</button></div>
+                    <div class="admin-card-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;"><span>All Products</span><button type="button" class="admin-btn admin-btn-sm" data-admin-demo="Live product blocks are created in each user’s dashboard. This action opens guidance only." style="width:auto;background:var(--admin-primary);color:#fff;"><i class="fas fa-plus"></i> Add Product</button></div>
                     <div style="padding:0 24px 16px;display:flex;gap:16px;flex-wrap:wrap;align-items:center;">
                         <div style="display:flex;align-items:center;gap:8px;"><span style="font-size:14px;color:var(--admin-gray-600);">Category:</span><select class="form-control" style="width:auto;min-width:160px;"><option>All Categories</option></select></div>
                         <div style="display:flex;align-items:center;gap:8px;"><span style="font-size:14px;color:var(--admin-gray-600);">Status:</span><select class="form-control" style="width:auto;min-width:120px;"><option>All</option></select></div>
                     </div>
                     <div style="padding:0 24px 24px;color:#6b7280;font-size:14px;border-top:1px solid var(--admin-gray-200);padding-top:16px;">Product blocks and catalog entries are stored per user in Firestore. Use the user dashboard to manage live blocks.</div>
-                    <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;padding:0 24px 24px;"><table class="admin-table"><thead><tr><th>Product</th><th>Category</th><th>Price</th><th>Stock</th><th>Sales</th><th>Status</th><th>Actions</th></tr></thead><tbody><tr><td>Wireless Headphones</td><td>Electronics</td><td>$99.00</td><td>120</td><td>342</td><td><span class="status-badge completed">Active</span></td><td><div class="action-btns"><button type="button" class="btn btn-secondary btn-sm">Edit</button><button type="button" class="btn btn-primary btn-sm">View</button></div></td></tr><tr><td>Smart Watch Pro</td><td>Wearables</td><td>$249.00</td><td>45</td><td>189</td><td><span class="status-badge completed">Active</span></td><td><div class="action-btns"><button type="button" class="btn btn-secondary btn-sm">Edit</button><button type="button" class="btn btn-primary btn-sm">View</button></div></td></tr></tbody></table></div>
+                    <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;padding:0 24px 24px;"><table class="admin-table"><thead><tr><th>Product</th><th>Category</th><th>Price</th><th>Stock</th><th>Sales</th><th>Status</th><th>Actions</th></tr></thead><tbody><tr><td>Wireless Headphones</td><td>Electronics</td><td>$99.00</td><td>120</td><td>342</td><td><span class="status-badge completed">Active</span></td><td><div class="action-btns"><button type="button" class="btn btn-secondary btn-sm" data-admin-demo="Demo product row — not linked to Firestore catalog.">Edit</button><button type="button" class="btn btn-primary btn-sm" data-admin-demo="Wireless Headphones (sample).">View</button></div></td></tr><tr><td>Smart Watch Pro</td><td>Wearables</td><td>$249.00</td><td>45</td><td>189</td><td><span class="status-badge completed">Active</span></td><td><div class="action-btns"><button type="button" class="btn btn-secondary btn-sm" data-admin-demo="Demo product row — sample only.">Edit</button><button type="button" class="btn btn-primary btn-sm" data-admin-demo="Smart Watch Pro (sample).">View</button></div></td></tr></tbody></table></div>
                 </div>
             </div>
             <div id="admin-page-subscriptions" class="admin-page">
@@ -4977,7 +4984,7 @@
                 </div>
                 <div class="admin-card">
                     <div class="admin-card-header">Active Subscriptions</div>
-                    <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;"><table class="admin-table"><thead><tr><th>User</th><th>Plan</th><th>Started</th><th>Renews</th><th>Amount</th><th>Status</th><th>Actions</th></tr></thead><tbody><tr><td>John Doe</td><td><span class="badge-tag pro" style="background:rgba(239,68,68,0.12);">Pro Monthly</span></td><td>Jan 15, 2026</td><td>Feb 15, 2026</td><td>$29.99/mo</td><td><span class="status-badge completed">Active</span></td><td><div class="action-btns"><a href="#" style="color:var(--admin-primary);font-weight:600;font-size:13px;">Modify</a><button type="button" class="btn btn-primary btn-sm">View</button></div></td></tr></tbody></table></div>
+                    <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;"><table class="admin-table"><thead><tr><th>User</th><th>Plan</th><th>Started</th><th>Renews</th><th>Amount</th><th>Status</th><th>Actions</th></tr></thead><tbody><tr><td>John Doe</td><td><span class="badge-tag pro" style="background:rgba(239,68,68,0.12);">Pro Monthly</span></td><td>Jan 15, 2026</td><td>Feb 15, 2026</td><td>$29.99/mo</td><td><span class="status-badge completed">Active</span></td><td><div class="action-btns"><button type="button" class="btn btn-secondary btn-sm" data-admin-demo="Modify subscription (demo — use Payments/Creator billing flows in production).">Modify</button><button type="button" class="btn btn-primary btn-sm" data-admin-demo="Sample subscription row for John Doe.">View</button></div></td></tr></tbody></table></div>
                     <div style="padding:16px 24px 24px;font-size:13px;color:var(--admin-gray-500);">Live subscription rows below mirror your billing overview when you click Payments and refresh.</div>
                     <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;padding:0 24px 24px;"><table class="admin-table"><thead><tr><th>Plan</th><th>Active Users</th><th>MRR</th></tr></thead><tbody id="adminSubscriptionsTableBodyMirror"></tbody></table></div>
                 </div>
@@ -4987,12 +4994,12 @@
                 <div class="admin-card" style="box-shadow:none;background:transparent;border:none;padding:0;">
                     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px;">
                         <h2 style="font-size:1.125rem;font-weight:700;color:var(--admin-gray-800);margin:0;">Subscription Plans</h2>
-                        <button type="button" class="admin-btn admin-btn-sm" style="width:auto;background:var(--admin-primary);color:#fff;"><i class="fas fa-plus"></i> Create Plan</button>
+                        <button type="button" class="admin-btn admin-btn-sm" data-admin-demo="New billing plans require Stripe / payment integration in production. Settings saved locally for preview." style="width:auto;background:var(--admin-primary);color:#fff;"><i class="fas fa-plus"></i> Create Plan</button>
                     </div>
                     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px;">
-                        <div class="admin-card" style="margin:0;"><div style="padding:24px;"><div style="font-weight:700;font-size:1.1rem;margin-bottom:8px;">Basic</div><div style="font-size:1.75rem;font-weight:700;color:var(--admin-primary);margin-bottom:16px;">$9.99<span style="font-size:0.9rem;font-weight:500;color:var(--admin-gray-500);">/mo</span></div><ul style="list-style:none;padding:0;margin:0 0 20px;font-size:14px;color:var(--admin-gray-700);"><li style="margin-bottom:10px;"><i class="fas fa-check" style="color:var(--admin-success);margin-right:8px;"></i>Up to 10 products</li><li style="margin-bottom:10px;"><i class="fas fa-check" style="color:var(--admin-success);margin-right:8px;"></i>Basic analytics</li><li style="margin-bottom:10px;"><i class="fas fa-check" style="color:var(--admin-success);margin-right:8px;"></i>Email support</li></ul><button type="button" class="btn btn-secondary" style="width:100%;">Edit Plan</button></div></div>
-                        <div class="admin-card" style="margin:0;border:2px solid var(--admin-primary);position:relative;"><div style="position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--admin-primary);color:#fff;font-size:11px;font-weight:700;padding:4px 14px;border-radius:20px;">POPULAR</div><div style="padding:24px;"><div style="font-weight:700;font-size:1.1rem;margin-bottom:8px;">Pro</div><div style="font-size:1.75rem;font-weight:700;color:var(--admin-primary);margin-bottom:16px;">$29.99<span style="font-size:0.9rem;font-weight:500;color:var(--admin-gray-500);">/mo</span></div><ul style="list-style:none;padding:0;margin:0 0 20px;font-size:14px;color:var(--admin-gray-700);"><li style="margin-bottom:10px;"><i class="fas fa-check" style="color:var(--admin-success);margin-right:8px;"></i>Up to 100 products</li><li style="margin-bottom:10px;"><i class="fas fa-check" style="color:var(--admin-success);margin-right:8px;"></i>Advanced analytics</li><li style="margin-bottom:10px;"><i class="fas fa-check" style="color:var(--admin-success);margin-right:8px;"></i>Priority support</li><li style="margin-bottom:10px;"><i class="fas fa-check" style="color:var(--admin-success);margin-right:8px;"></i>API access</li></ul><button type="button" class="btn btn-primary" style="width:100%;background:var(--admin-primary);">Edit Plan</button></div></div>
-                        <div class="admin-card" style="margin:0;"><div style="padding:24px;"><div style="font-weight:700;font-size:1.1rem;margin-bottom:8px;">Premium</div><div style="font-size:1.75rem;font-weight:700;color:var(--admin-primary);margin-bottom:16px;">$99.99<span style="font-size:0.9rem;font-weight:500;color:var(--admin-gray-500);">/mo</span></div><ul style="list-style:none;padding:0;margin:0 0 20px;font-size:14px;color:var(--admin-gray-700);"><li style="margin-bottom:10px;"><i class="fas fa-check" style="color:var(--admin-success);margin-right:8px;"></i>Unlimited products</li><li style="margin-bottom:10px;"><i class="fas fa-check" style="color:var(--admin-success);margin-right:8px;"></i>Custom analytics</li><li style="margin-bottom:10px;"><i class="fas fa-check" style="color:var(--admin-success);margin-right:8px;"></i>24/7 phone support</li><li style="margin-bottom:10px;"><i class="fas fa-check" style="color:var(--admin-success);margin-right:8px;"></i>Full API access</li></ul><button type="button" class="btn btn-secondary" style="width:100%;">Edit Plan</button></div></div>
+                        <div class="admin-card" style="margin:0;"><div style="padding:24px;"><div style="font-weight:700;font-size:1.1rem;margin-bottom:8px;">Basic</div><div style="font-size:1.75rem;font-weight:700;color:var(--admin-primary);margin-bottom:16px;">$9.99<span style="font-size:0.9rem;font-weight:500;color:var(--admin-gray-500);">/mo</span></div><ul style="list-style:none;padding:0;margin:0 0 20px;font-size:14px;color:var(--admin-gray-700);"><li style="margin-bottom:10px;"><i class="fas fa-check" style="color:var(--admin-success);margin-right:8px;"></i>Up to 10 products</li><li style="margin-bottom:10px;"><i class="fas fa-check" style="color:var(--admin-success);margin-right:8px;"></i>Basic analytics</li><li style="margin-bottom:10px;"><i class="fas fa-check" style="color:var(--admin-success);margin-right:8px;"></i>Email support</li></ul><button type="button" class="btn btn-secondary" style="width:100%;" data-admin-demo="Editing Basic plan (preview — connect billing in production).">Edit Plan</button></div></div>
+                        <div class="admin-card" style="margin:0;border:2px solid var(--admin-primary);position:relative;"><div style="position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--admin-primary);color:#fff;font-size:11px;font-weight:700;padding:4px 14px;border-radius:20px;">POPULAR</div><div style="padding:24px;"><div style="font-weight:700;font-size:1.1rem;margin-bottom:8px;">Pro</div><div style="font-size:1.75rem;font-weight:700;color:var(--admin-primary);margin-bottom:16px;">$29.99<span style="font-size:0.9rem;font-weight:500;color:var(--admin-gray-500);">/mo</span></div><ul style="list-style:none;padding:0;margin:0 0 20px;font-size:14px;color:var(--admin-gray-700);"><li style="margin-bottom:10px;"><i class="fas fa-check" style="color:var(--admin-success);margin-right:8px;"></i>Up to 100 products</li><li style="margin-bottom:10px;"><i class="fas fa-check" style="color:var(--admin-success);margin-right:8px;"></i>Advanced analytics</li><li style="margin-bottom:10px;"><i class="fas fa-check" style="color:var(--admin-success);margin-right:8px;"></i>Priority support</li><li style="margin-bottom:10px;"><i class="fas fa-check" style="color:var(--admin-success);margin-right:8px;"></i>API access</li></ul><button type="button" class="btn btn-primary" style="width:100%;background:var(--admin-primary);" data-admin-demo="Editing Pro plan (popular tier — preview).">Edit Plan</button></div></div>
+                        <div class="admin-card" style="margin:0;"><div style="padding:24px;"><div style="font-weight:700;font-size:1.1rem;margin-bottom:8px;">Premium</div><div style="font-size:1.75rem;font-weight:700;color:var(--admin-primary);margin-bottom:16px;">$99.99<span style="font-size:0.9rem;font-weight:500;color:var(--admin-gray-500);">/mo</span></div><ul style="list-style:none;padding:0;margin:0 0 20px;font-size:14px;color:var(--admin-gray-700);"><li style="margin-bottom:10px;"><i class="fas fa-check" style="color:var(--admin-success);margin-right:8px;"></i>Unlimited products</li><li style="margin-bottom:10px;"><i class="fas fa-check" style="color:var(--admin-success);margin-right:8px;"></i>Custom analytics</li><li style="margin-bottom:10px;"><i class="fas fa-check" style="color:var(--admin-success);margin-right:8px;"></i>24/7 phone support</li><li style="margin-bottom:10px;"><i class="fas fa-check" style="color:var(--admin-success);margin-right:8px;"></i>Full API access</li></ul><button type="button" class="btn btn-secondary" style="width:100%;" data-admin-demo="Editing Premium plan (preview).">Edit Plan</button></div></div>
                     </div>
                 </div>
             </div>
@@ -5001,7 +5008,7 @@
                 <div class="chart-section">
                     <div class="section-header">
                         <h2 class="section-title">User Growth</h2>
-                        <button type="button" class="btn btn-primary btn-sm" style="display:inline-flex;align-items:center;gap:8px;"><i class="fas fa-download"></i> Export Report</button>
+                        <button type="button" class="btn btn-primary btn-sm" id="adminExportReportBtn" style="display:inline-flex;align-items:center;gap:8px;"><i class="fas fa-download"></i> Export Report</button>
                     </div>
                     <p style="font-size:13px;color:var(--admin-gray-500);margin:-8px 0 16px;"><span style="display:inline-block;width:10px;height:10px;background:#6366f1;border-radius:2px;margin-right:6px;"></span>New Users <span style="margin-left:16px;display:inline-block;width:10px;height:10px;background:#06b6d4;border-radius:2px;margin-right:6px;"></span>Active Users</p>
                     <div class="admin-chart-container" style="height:320px;"><canvas id="adminAnalyticsBarChart"></canvas></div>
@@ -5054,9 +5061,9 @@
                             <div><label style="display:block;font-size:13px;font-weight:600;margin-bottom:8px;color:var(--admin-gray-700);">Notification Type</label><select class="form-control"><option>Email Notification</option><option>In-app</option></select></div>
                             <div><label style="display:block;font-size:13px;font-weight:600;margin-bottom:8px;color:var(--admin-gray-700);">Target Audience</label><select class="form-control"><option>All Users</option><option>Pro only</option></select></div>
                         </div>
-                        <div class="admin-form-group"><label>Subject</label><input type="text" class="form-control" placeholder="Enter notification subject"></div>
-                        <div class="admin-form-group"><label>Message</label><textarea class="form-control" rows="5" placeholder="Enter your message here..."></textarea></div>
-                        <button type="button" class="admin-btn" style="width:auto;display:inline-flex;align-items:center;gap:8px;"><i class="fas fa-paper-plane"></i> Send Notification</button>
+                        <div class="admin-form-group"><label>Subject</label><input type="text" id="adminNotifySubject" class="form-control" placeholder="Enter notification subject"></div>
+                        <div class="admin-form-group"><label>Message</label><textarea id="adminNotifyMessage" class="form-control" rows="5" placeholder="Enter your message here..."></textarea></div>
+                        <button type="button" class="admin-btn" id="adminSendNotificationBtn" style="width:auto;display:inline-flex;align-items:center;gap:8px;"><i class="fas fa-paper-plane"></i> Send Notification</button>
                     </div>
                 </div>
             </div>
@@ -5064,8 +5071,8 @@
                 <h1 class="page-title">API &amp; Integrations</h1>
                 <div class="grid-2">
                     <div class="admin-card" style="margin:0;">
-                        <div class="admin-card-header" style="display:flex;justify-content:space-between;align-items:center;"><span>API Keys</span><button type="button" class="admin-btn admin-btn-sm" style="width:auto;background:var(--admin-primary);color:#fff;"><i class="fas fa-plus"></i> Generate Key</button></div>
-                        <div style="overflow-x:auto;"><table class="admin-table"><thead><tr><th>Key Name</th><th>Key</th><th>Created</th><th>Actions</th></tr></thead><tbody><tr><td>Production Key</td><td>pk_live_••••••••</td><td>Jan 1, 2026</td><td><button type="button" class="btn btn-secondary btn-sm">Revoke</button></td></tr></tbody></table></div>
+                        <div class="admin-card-header" style="display:flex;justify-content:space-between;align-items:center;"><span>API Keys</span><button type="button" class="admin-btn admin-btn-sm" id="adminApiGenerateBtn" style="width:auto;background:var(--admin-primary);color:#fff;"><i class="fas fa-plus"></i> Generate Key</button></div>
+                        <div style="overflow-x:auto;"><table class="admin-table" id="adminApiKeysTable"><thead><tr><th>Key Name</th><th>Key</th><th>Created</th><th>Actions</th></tr></thead><tbody id="adminApiKeysTableBody"><tr data-key-id="default"><td>Production Key</td><td>pk_live_••••••••</td><td>Jan 1, 2026</td><td><button type="button" class="btn btn-secondary btn-sm admin-api-revoke-btn">Revoke</button></td></tr></tbody></table></div>
                     </div>
                     <div class="admin-card" style="margin:0;">
                         <div class="admin-card-header">API Usage</div>
@@ -5078,9 +5085,9 @@
                 <div class="admin-card">
                     <div class="admin-card-header">Webhook Configuration</div>
                     <div style="padding:24px;">
-                        <div class="admin-form-group"><label>Webhook URL</label><input type="url" class="form-control" value="https://your-domain.com/webhook" placeholder="https://"></div>
+                        <div class="admin-form-group"><label>Webhook URL</label><input type="url" id="adminWebhookUrlInput" class="form-control" value="https://your-domain.com/webhook" placeholder="https://"></div>
                         <div class="admin-form-group"><label style="margin-bottom:10px;display:block;">Events to Listen</label><label style="display:flex;align-items:center;gap:8px;font-weight:500;margin-bottom:8px;"><input type="checkbox" checked> Payment Completed</label><label style="display:flex;align-items:center;gap:8px;font-weight:500;margin-bottom:8px;"><input type="checkbox" checked> Subscription Created</label><label style="display:flex;align-items:center;gap:8px;font-weight:500;"><input type="checkbox"> User Registered</label></div>
-                        <button type="button" class="admin-btn" style="width:auto;">Save Webhook</button>
+                        <button type="button" class="admin-btn" id="adminSaveWebhookBtn" style="width:auto;">Save Webhook</button>
                     </div>
                 </div>
             </div>
@@ -5089,13 +5096,13 @@
                 <div class="grid-2">
                     <div class="admin-card" style="margin:0;">
                         <div class="admin-card-header">Admin Roles &amp; Permissions</div>
-                        <div style="overflow-x:auto;"><table class="admin-table"><thead><tr><th>Role</th><th>Admin</th><th>Permissions</th><th>Actions</th></tr></thead><tbody><tr><td>Super Admin</td><td>admin@kotapal.com</td><td>Full Access</td><td><button type="button" class="btn btn-secondary btn-sm">Edit</button></td></tr><tr><td>Support Admin</td><td>support@kotapal.com</td><td>Limited Access</td><td><button type="button" class="btn btn-secondary btn-sm">Edit</button></td></tr></tbody></table></div>
+                        <div style="overflow-x:auto;"><table class="admin-table"><thead><tr><th>Role</th><th>Admin</th><th>Permissions</th><th>Actions</th></tr></thead><tbody><tr><td>Super Admin</td><td>admin@kotapal.com</td><td>Full Access</td><td><button type="button" class="btn btn-secondary btn-sm" data-admin-demo="Role editor: Super Admin (configure in production IAM / Firestore rules).">Edit</button></td></tr><tr><td>Support Admin</td><td>support@kotapal.com</td><td>Limited Access</td><td><button type="button" class="btn btn-secondary btn-sm" data-admin-demo="Role editor: Support Admin (preview).">Edit</button></td></tr></tbody></table></div>
                     </div>
                     <div class="admin-card" style="margin:0;">
                         <div class="admin-card-header">Security Settings</div>
                         <div style="padding:24px;">
-                            <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 0;border-bottom:1px solid var(--admin-gray-100);"><div><div style="font-weight:600;">Two-Factor Authentication</div><div style="font-size:13px;color:var(--admin-gray-500);">Add an extra layer of security</div></div><span style="width:44px;height:24px;background:var(--admin-success);border-radius:12px;display:inline-block;position:relative;"><span style="position:absolute;right:4px;top:3px;width:18px;height:18px;background:#fff;border-radius:50%;"></span></span></div>
-                            <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 0;"><div><div style="font-weight:600;">IP Restrictions</div><div style="font-size:13px;color:var(--admin-gray-500);">Limit access by IP address</div></div><span style="width:44px;height:24px;background:var(--admin-gray-200);border-radius:12px;display:inline-block;position:relative;"><span style="position:absolute;left:4px;top:3px;width:18px;height:18px;background:#fff;border-radius:50%;"></span></span></div>
+                            <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 0;border-bottom:1px solid var(--admin-gray-100);"><div><div style="font-weight:600;">Two-Factor Authentication</div><div style="font-size:13px;color:var(--admin-gray-500);">Add an extra layer of security</div></div><button type="button" class="admin-toggle-btn" id="adminToggle2FA" aria-pressed="true" title="Toggle 2FA (simulated)"><span id="admin2FATrack" style="width:44px;height:24px;background:var(--admin-success);border-radius:12px;display:inline-block;position:relative;"><span id="admin2FAKnob" style="position:absolute;right:4px;top:3px;width:18px;height:18px;background:#fff;border-radius:50%;transition:left .2s,right .2s;"></span></span></button></div>
+                            <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 0;"><div><div style="font-weight:600;">IP Restrictions</div><div style="font-size:13px;color:var(--admin-gray-500);">Limit access by IP address</div></div><button type="button" class="admin-toggle-btn" id="adminToggleIP" aria-pressed="false" title="Toggle IP restrictions (simulated)"><span id="adminIPTrack" style="width:44px;height:24px;background:var(--admin-gray-200);border-radius:12px;display:inline-block;position:relative;"><span id="adminIPKnob" style="position:absolute;left:4px;top:3px;width:18px;height:18px;background:#fff;border-radius:50%;transition:left .2s,right .2s;"></span></span></button></div>
                         </div>
                     </div>
                 </div>
@@ -5117,7 +5124,7 @@
                             <div class="admin-form-group"><label>Platform Name</label><input type="text" class="form-control" value="Kotapal"></div>
                             <div class="admin-form-group"><label>Platform Description</label><textarea class="form-control" rows="3">Your marketplace platform</textarea></div>
                             <div class="admin-form-group"><label>Contact Email</label><input type="email" class="form-control" value="support@kotapal.com"></div>
-                            <button type="button" class="admin-btn" style="width:auto;">Save Changes</button>
+                            <button type="button" class="admin-btn" id="adminSaveGeneralBtn" style="width:auto;">Save Changes</button>
                         </div>
                     </div>
                     <div class="admin-card" style="margin:0;">
@@ -5126,7 +5133,7 @@
                             <div style="border:2px dashed var(--admin-gray-200);border-radius:12px;padding:40px;text-align:center;color:var(--admin-gray-500);margin-bottom:20px;"><i class="fas fa-cloud-upload-alt" style="font-size:2rem;margin-bottom:12px;display:block;"></i>Drop your logo here or click to upload</div>
                             <div class="admin-form-group"><label>Primary Color</label><div style="height:12px;border-radius:6px;background:linear-gradient(90deg,#6366f1,#4338ca);"></div></div>
                             <div class="admin-form-group"><label>Secondary Color</label><div style="height:12px;border-radius:6px;background:linear-gradient(90deg,#06b6d4,#0e7490);"></div></div>
-                            <button type="button" class="admin-btn" style="width:auto;">Update Branding</button>
+                            <button type="button" class="admin-btn" id="adminSaveBrandingBtn" style="width:auto;">Update Branding</button>
                         </div>
                     </div>
                 </div>
@@ -5145,11 +5152,11 @@
                             <div class="admin-form-group" style="margin:0;"><label>API Key</label><input type="password" class="form-control" value="sk_live_••••"></div>
                             <div class="admin-form-group" style="margin:0;"><label>Webhook Secret</label><input type="password" class="form-control" value="whsec_••••"></div>
                         </div>
-                        <button type="button" class="admin-btn" style="width:auto;margin-top:20px;">Save Settings</button>
+                        <button type="button" class="admin-btn" id="adminSaveEmailPaymentBtn" style="width:auto;margin-top:20px;">Save Settings</button>
                     </div>
                 </div>
                 <div class="admin-card">
-                    <div class="admin-card-header" style="display:flex;justify-content:space-between;align-items:center;"><span>Maintenance Mode</span><span style="width:44px;height:24px;background:var(--admin-gray-200);border-radius:12px;display:inline-block;position:relative;"><span style="position:absolute;left:4px;top:3px;width:18px;height:18px;background:#fff;border-radius:50%;"></span></span></div>
+                    <div class="admin-card-header" style="display:flex;justify-content:space-between;align-items:center;"><span>Maintenance Mode</span><button type="button" class="admin-toggle-btn" id="adminMaintenanceToggle" aria-pressed="false" title="Toggle maintenance mode"><span id="adminMaintenanceTrack" style="width:44px;height:24px;background:var(--admin-gray-200);border-radius:12px;display:inline-block;position:relative;"><span id="adminMaintenanceKnob" style="position:absolute;left:4px;top:3px;width:18px;height:18px;background:#fff;border-radius:50%;transition:left .2s,right .2s;"></span></span></button></div>
                     <div style="padding:0 24px 24px;font-size:14px;color:var(--admin-gray-500);">Temporarily disable access to your platform.</div>
                 </div>
                 <div class="admin-card">
@@ -6135,21 +6142,28 @@
                 if (pageName === 'activity' && typeof loadAdminActivity === 'function') loadAdminActivity();
             };
             window.initAdminRevenueChart = function() {
-                if (window._adminRevenueChartInited) return;
                 var canvas = document.getElementById('adminRevenueChart');
                 if (!canvas || typeof Chart === 'undefined') return;
-                window._adminRevenueChartInited = true;
+                var sel = document.getElementById('adminRevenueRange');
+                var key = sel && sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex].text : 'Last 7 Months';
+                var presets = {
+                    'Last 7 Months': { labels: ['Jan','Feb','Mar','Apr','May','Jun','Jul'], data: [12000,15000,18000,16000,20000,22000,24750] },
+                    'Last Year': { labels: ['Q1','Q2','Q3','Q4'], data: [52000,61000,58500,67200] },
+                    'All Time': { labels: ['Y1','Y2','Y3','Y4','Y5'], data: [180000,245000,310000,398000,475000] }
+                };
+                var P = presets[key] || presets['Last 7 Months'];
+                if (window._adminRevenueChartRef) { try { window._adminRevenueChartRef.destroy(); } catch (e) {} window._adminRevenueChartRef = null; }
                 var ctx = canvas.getContext('2d');
                 var grad = ctx.createLinearGradient(0, 0, 0, 400);
                 grad.addColorStop(0, 'rgba(79, 70, 229, 0.3)');
                 grad.addColorStop(1, 'rgba(79, 70, 229, 0.0)');
-                new Chart(ctx, {
+                window._adminRevenueChartRef = new Chart(ctx, {
                     type: 'line',
                     data: {
-                        labels: ['Jan','Feb','Mar','Apr','May','Jun','Jul'],
+                        labels: P.labels,
                         datasets: [{
                             label: 'Monthly Recurring Revenue',
-                            data: [12000,15000,18000,16000,20000,22000,24750],
+                            data: P.data,
                             borderColor: '#4f46e5',
                             backgroundColor: grad,
                             borderWidth: 3,
@@ -6164,7 +6178,7 @@
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        animation: { duration: 1600, easing: 'easeOutQuart' },
+                        animation: { duration: 1200, easing: 'easeOutQuart' },
                         plugins: { legend: { display: true, position: 'top' } },
                         scales: {
                             y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { callback: function(v) { return '$' + v.toLocaleString(); } } },
@@ -6335,6 +6349,7 @@
                 } else {
                     function esc(s) { return String(s || '').replace(/'/g, "\\'"); }
                     function html(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+                    function escAttr(s) { return String(s || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;'); }
                     function initials(n) { if (!n || n === '-') return '-'; var p = n.trim().split(/\s+/); return (p[0][0] || '') + (p[1] ? p[1][0] : '') || n[0] || '-'; }
                     tbody.innerHTML = users.map(function(u) {
                         var joined = (u.joined && u.joined !== '-') ? new Date(u.joined).toLocaleDateString() : (u.joined || '-');
@@ -6342,14 +6357,18 @@
                         var statusBadge = '<span class="status-badge ' + (status === 'suspended' ? 'refunded' : 'completed') + '">' + (status === 'suspended' ? 'Suspended' : 'Active') + '</span>';
                         var uid = esc(u.id || u.email);
                         var plan = esc(u.plan || 'starter');
+                        var planRaw = String(u.plan || 'starter').toLowerCase();
+                        var fe = String(u.email || '').toLowerCase();
+                        var fn = String(u.name || '').toLowerCase();
                         var planBadge = '<span class="badge-tag ' + (plan === 'pro' ? 'pro' : 'basic') + '">' + html(plan) + '</span>';
                         var actions = '<div class="action-btns"><button class="btn btn-secondary btn-sm" onclick="openChangePlan(\'' + uid + '\',\'' + plan + '\')"><i class="fas fa-edit"></i> Edit</button><button class="btn btn-primary btn-sm" onclick="toggleSuspend(\'' + uid + '\',\'' + status + '\')"><i class="fas fa-' + (status === 'suspended' ? 'user-check' : 'user-slash') + '"></i> ' + (status === 'suspended' ? 'Unsuspend' : 'Suspend') + '</button><button class="btn btn-secondary btn-sm" style="background:rgba(239,68,68,0.1);color:#b91c1c;" onclick="deleteUserDoc(\'' + uid + '\')"><i class="fas fa-trash"></i> Delete</button></div>';
                         var userCell = '<div style="display:flex;align-items:center;gap:10px;"><div class="user-avatar" style="width:35px;height:35px;font-size:14px;">' + html(initials(u.name)) + '</div><span>' + html(u.name || '-') + '</span></div>';
-                        return '<tr><td>' + userCell + '</td><td>' + html(u.email || '-') + '</td><td>' + planBadge + '</td><td>' + statusBadge + '</td><td>' + html(joined) + '</td><td>' + actions + '</td></tr>';
+                        return '<tr data-filter-email="' + escAttr(fe) + '" data-filter-name="' + escAttr(fn) + '" data-filter-status="' + escAttr(status) + '" data-filter-plan="' + escAttr(planRaw) + '"><td>' + userCell + '</td><td>' + html(u.email || '-') + '</td><td>' + planBadge + '</td><td>' + statusBadge + '</td><td>' + html(joined) + '</td><td>' + actions + '</td></tr>';
                     }).join('');
                 }
                 var statEl = document.getElementById('admin-stat-users');
                 if (statEl) statEl.textContent = users.length;
+                setTimeout(function() { if (typeof applyAdminUserFilters === 'function') applyAdminUserFilters(); }, 0);
                 if (typeof updateDashboardPage === 'function') updateDashboardPage();
             };
             window.updateDashboardPage = function() {
@@ -6428,7 +6447,7 @@
                         var st = (p.status || 'paid').toLowerCase();
                         var badge = st === 'refund' || st === 'refunded' ? 'refunded' : st === 'pending' ? 'pending' : 'completed';
                         var stLabel = badge === 'refunded' ? 'Refunded' : badge === 'pending' ? 'Pending' : 'Completed';
-                        return '<tr><td>—</td><td>' + (p.user || '-') + '</td><td>$' + (p.amount || 0) + '</td><td>Subscription</td><td><span class="status-badge ' + badge + '">' + stLabel + '</span></td><td>' + d + '</td><td><div class="action-btns"><button type="button" class="btn btn-secondary btn-sm">Invoice</button><button type="button" class="btn btn-primary btn-sm">View</button></div></td></tr>';
+                        return '<tr><td>—</td><td>' + (p.user || '-') + '</td><td>$' + (p.amount || 0) + '</td><td>Subscription</td><td><span class="status-badge ' + badge + '">' + stLabel + '</span></td><td>' + d + '</td><td><div class="action-btns"><button type="button" class="btn btn-secondary btn-sm" onclick="adminBillingInvoice(' + JSON.stringify(String(p.user || '')) + ',' + Number(p.amount || 0) + ')">Invoice</button><button type="button" class="btn btn-primary btn-sm" onclick="adminBillingDetail(' + JSON.stringify(String(p.user || '')) + ')">View</button></div></td></tr>';
                     }).join('');
                 }
                 var subTbody = document.getElementById('adminSubscriptionsTableBody');
@@ -6458,7 +6477,7 @@
                     var pri = (t.priority || 'medium').toLowerCase();
                     var priHtml = pri === 'high' ? '<span class="status-badge refunded">High</span>' : pri === 'low' ? '<span class="status-badge" style="background:rgba(59,130,246,0.12);color:#1d4ed8;">Low</span>' : '<span class="status-badge pending">Medium</span>';
                     var tid = 'TKT-' + String(idx + 1).padStart(4, '0');
-                    return '<tr><td>' + html(tid) + '</td><td>' + html(t.subject || '-') + '</td><td>' + html(t.userEmail || t.userName || '-') + '</td><td>' + priHtml + '</td><td>' + statusBadge + '</td><td>—</td><td><button type="button" class="btn btn-primary btn-sm" onclick="updateTicketStatus(\'' + esc(t.id) + '\',\'resolved\')">View</button></td></tr>';
+                    return '<tr><td>' + html(tid) + '</td><td>' + html(t.subject || '-') + '</td><td>' + html(t.userEmail || t.userName || '-') + '</td><td>' + priHtml + '</td><td>' + statusBadge + '</td><td>—</td><td><div class="action-btns"><button type="button" class="btn btn-secondary btn-sm" onclick="adminTicketDetail(' + idx + ')">View</button><button type="button" class="btn btn-primary btn-sm" onclick="adminResolveTicketAtIndex(' + idx + ')">Resolve</button></div></td></tr>';
                 }).join('');
             };
             window.updateTicketStatus = function(id, status) {
@@ -6493,9 +6512,17 @@
                 if (!uid || !dbUse) return;
                 try {
                     await dbUse.collection('users').doc(uid).set({ plan: plan }, { merge: true });
-                    closeChangePlanModal();
-                    loadAdminUsers();
-                } catch (err) { alert('Failed to update plan: ' + err.message); }
+                } catch (err1) {
+                    try {
+                        await dbUse.collection('user').doc(uid).set({ plan: plan }, { merge: true });
+                    } catch (err2) {
+                        alert('Failed to update plan: ' + (err2.message || err1.message));
+                        return;
+                    }
+                }
+                closeChangePlanModal();
+                loadAdminUsers();
+                if (typeof window.adminToast === 'function') window.adminToast('Plan updated to ' + plan + '.', 'success');
             };
             window.toggleSuspend = async function(uid, currentStatus) {
                 var dbUse = db || window.firebaseDb;
@@ -6503,17 +6530,314 @@
                 var newStatus = currentStatus === 'suspended' ? 'active' : 'suspended';
                 try {
                     await dbUse.collection('users').doc(uid).set({ status: newStatus }, { merge: true });
-                    await loadAdminUsers();
-                } catch (err) { alert('Failed: ' + (err.message || err)); }
+                } catch (err) {
+                    try {
+                        await dbUse.collection('user').doc(uid).set({ status: newStatus }, { merge: true });
+                    } catch (err2) {
+                        alert('Failed: ' + (err2.message || err.message));
+                        return;
+                    }
+                }
+                await loadAdminUsers();
+                if (typeof window.adminToast === 'function') window.adminToast(newStatus === 'suspended' ? 'User suspended.' : 'User reactivated.', 'success');
             };
             window.deleteUserDoc = async function(uid) {
                 var dbUse = db || window.firebaseDb;
                 if (!uid || !dbUse || !confirm('Delete Firestore document for this user?')) return;
                 try {
                     await dbUse.collection('users').doc(uid).delete();
-                    loadAdminUsers();
-                } catch (err) { alert('Failed to delete: ' + err.message); }
+                } catch (err) {
+                    try {
+                        await dbUse.collection('user').doc(uid).delete();
+                    } catch (err2) {
+                        alert('Failed to delete: ' + (err2.message || err.message));
+                        return;
+                    }
+                }
+                loadAdminUsers();
+                if (typeof window.adminToast === 'function') window.adminToast('User document removed from Firestore.', 'success');
             };
+            window.adminToast = function(message, type) {
+                type = type || 'info';
+                var host = document.getElementById('admin-toast-host');
+                if (!host) { host = document.createElement('div'); host.id = 'admin-toast-host'; document.body.appendChild(host); }
+                var el = document.createElement('div');
+                el.className = 'admin-toast ' + (type === 'success' ? 'success' : type === 'warn' ? 'warn' : 'info');
+                el.textContent = message;
+                host.appendChild(el);
+                setTimeout(function() { try { el.remove(); } catch (e) {} }, 4000);
+            };
+            window.applyAdminUserFilters = function() {
+                var inp = document.getElementById('adminUserSearch');
+                var q = (inp && inp.value || '').toLowerCase().trim();
+                var st = document.getElementById('adminUserStatusFilter') && document.getElementById('adminUserStatusFilter').value;
+                var pl = document.getElementById('adminUserPlanFilter') && document.getElementById('adminUserPlanFilter').value;
+                document.querySelectorAll('#adminUsersTableBody tr').forEach(function(tr) {
+                    if (!tr.getAttribute('data-filter-email')) { tr.style.display = ''; return; }
+                    var em = (tr.getAttribute('data-filter-email') || '').toLowerCase();
+                    var nm = (tr.getAttribute('data-filter-name') || '').toLowerCase();
+                    var status = (tr.getAttribute('data-filter-status') || '').toLowerCase();
+                    var plan = (tr.getAttribute('data-filter-plan') || '').toLowerCase();
+                    var ok = !q || em.indexOf(q) >= 0 || nm.indexOf(q) >= 0;
+                    if (st && st !== 'All') {
+                        if (st === 'Active') ok = ok && status !== 'suspended';
+                        else if (st === 'Suspended') ok = ok && status === 'suspended';
+                    }
+                    if (pl && pl !== 'All') ok = ok && plan === String(pl).toLowerCase();
+                    tr.style.display = ok ? '' : 'none';
+                });
+            };
+            window.adminBillingInvoice = function(user, amount) {
+                var line = 'Invoice — ' + user + ' — $' + amount;
+                if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(line).catch(function() {});
+                adminToast('Invoice summary copied: ' + line, 'success');
+            };
+            window.adminBillingDetail = function(user) {
+                adminToast('Payment record: ' + user + ' (see table above for amounts & dates).', 'info');
+            };
+            window.adminTicketDetail = function(idx) {
+                var tickets = JSON.parse(localStorage.getItem('kota_support_tickets') || '[]');
+                var t = tickets[idx];
+                if (!t) { adminToast('Ticket not found.', 'warn'); return; }
+                adminToast((t.subject || 'Ticket') + ' — from ' + (t.userEmail || t.userName || 'unknown'), 'info');
+            };
+            window.adminResolveTicketAtIndex = function(idx) {
+                var tickets = JSON.parse(localStorage.getItem('kota_support_tickets') || '[]');
+                if (!tickets[idx]) return;
+                tickets[idx].status = 'resolved';
+                localStorage.setItem('kota_support_tickets', JSON.stringify(tickets));
+                loadAdminSupport();
+                adminToast('Ticket marked resolved.', 'success');
+            };
+            window.adminExportUsersCsv = function() {
+                var users = window.adminUsers || [];
+                if (!users.length) { adminToast('No users loaded to export yet.', 'warn'); return; }
+                var rows = [['email','name','plan','status','joined']].concat(users.map(function(u) {
+                    return [u.email || '', u.name || '', u.plan || '', u.status || '', u.joined || ''];
+                }));
+                var csv = rows.map(function(r) { return r.map(function(c) { return '"' + String(c).replace(/"/g, '""') + '"'; }).join(','); }).join('\n');
+                var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                var a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = 'kotapal-users-export.csv';
+                a.click();
+                URL.revokeObjectURL(a.href);
+                adminToast('Exported ' + users.length + ' user(s) to CSV.', 'success');
+            };
+            function adminPersistApiKeysList(list) {
+                localStorage.setItem('admin_api_keys', JSON.stringify(list));
+            }
+            function adminDefaultApiKeys() {
+                return [{ id: 'default', name: 'Production Key', key: 'pk_live_••••••••', created: 'Jan 1, 2026' }];
+            }
+            window.adminRenderApiKeysTable = function() {
+                var tb = document.getElementById('adminApiKeysTableBody');
+                if (!tb) return;
+                var keys;
+                try { keys = JSON.parse(localStorage.getItem('admin_api_keys') || '[]'); } catch (e) { keys = []; }
+                if (!keys || !keys.length) keys = adminDefaultApiKeys();
+                tb.innerHTML = keys.map(function(k, i) {
+                    function escHtml(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+                    return '<tr data-key-id="' + escHtml(k.id || String(i)) + '"><td>' + escHtml(k.name) + '</td><td>' + escHtml(k.key) + '</td><td>' + escHtml(k.created) + '</td><td><button type="button" class="btn btn-secondary btn-sm admin-api-revoke-btn" data-key-idx="' + i + '">Revoke</button></td></tr>';
+                }).join('');
+            };
+            (function initAdminDashboardWiring() {
+                var av = document.getElementById('admin-view');
+                if (av && !av._adminWire) {
+                    av._adminWire = true;
+                    av.addEventListener('click', function(e) {
+                        var rev = e.target.closest('.admin-api-revoke-btn');
+                        if (rev) {
+                            var idx = parseInt(rev.getAttribute('data-key-idx'), 10);
+                            var keys = JSON.parse(localStorage.getItem('admin_api_keys') || '[]');
+                            if (!keys.length) keys = adminDefaultApiKeys();
+                            if (!isNaN(idx) && keys[idx]) {
+                                keys.splice(idx, 1);
+                                if (!keys.length) keys = adminDefaultApiKeys();
+                                adminPersistApiKeysList(keys);
+                                adminRenderApiKeysTable();
+                                adminToast('API key revoked. (Demo: stored in localStorage.)', 'success');
+                            }
+                            return;
+                        }
+                        var openU = e.target.closest('[data-admin-open-users]');
+                        if (openU) showAdminPage('users');
+                        var demo = e.target.closest('[data-admin-demo]');
+                        if (demo) adminToast(demo.getAttribute('data-admin-demo'), 'info');
+                    });
+                }
+                var cpm = document.getElementById('changePlanModal');
+                if (cpm && !cpm._backdropClose) {
+                    cpm._backdropClose = true;
+                    cpm.addEventListener('click', function(e) { if (e.target === cpm) closeChangePlanModal(); });
+                }
+                ['adminUserSearch','adminUserStatusFilter','adminUserPlanFilter'].forEach(function(id) {
+                    var el = document.getElementById(id);
+                    if (el && !el._filterWire) {
+                        el._filterWire = true;
+                        el.addEventListener('change', applyAdminUserFilters);
+                        el.addEventListener('input', function() { clearTimeout(el._ft); el._ft = setTimeout(applyAdminUserFilters, 200); });
+                    }
+                });
+                var globSearch = document.getElementById('adminSearchInput');
+                if (globSearch && !globSearch._wire) {
+                    globSearch._wire = true;
+                    globSearch.addEventListener('input', function() {
+                        clearTimeout(globSearch._st);
+                        globSearch._st = setTimeout(function() {
+                            if (document.getElementById('admin-page-users') && document.getElementById('admin-page-users').classList.contains('active')) {
+                                var u = document.getElementById('adminUserSearch');
+                                if (u) { u.value = globSearch.value; applyAdminUserFilters(); }
+                            }
+                        }, 250);
+                    });
+                }
+                var revSel = document.getElementById('adminRevenueRange');
+                if (revSel && !revSel._wire) {
+                    revSel._wire = true;
+                    revSel.addEventListener('change', function() {
+                        if (typeof initAdminRevenueChart === 'function') initAdminRevenueChart();
+                        adminToast('Revenue range: ' + revSel.options[revSel.selectedIndex].text, 'info');
+                    });
+                }
+                var nb = document.getElementById('adminHeaderNotifBtn');
+                if (nb && !nb._wire) { nb._wire = true; nb.addEventListener('click', function() { showAdminPage('notifications'); adminToast('Notifications composer', 'info'); }); }
+                var mb = document.getElementById('adminHeaderMsgBtn');
+                if (mb && !mb._wire) { mb._wire = true; mb.addEventListener('click', function() { showAdminPage('support'); adminToast('Support & tickets', 'info'); }); }
+                var um = document.getElementById('adminUserMenuBtn');
+                if (um && !um._wire) {
+                    um._wire = true;
+                    um.addEventListener('click', function() { showAdminPage('settings'); });
+                    um.addEventListener('keydown', function(ev) { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); showAdminPage('settings'); } });
+                }
+                var addU = document.getElementById('adminAddUserBtn');
+                if (addU && !addU._wire) {
+                    addU._wire = true;
+                    addU.addEventListener('click', function() {
+                        var em = prompt('Invite email (optional):', '');
+                        var text = 'You are invited to KotaPal. Sign up at: ' + (window.location.origin || '') + '/';
+                        if (em) text = 'Hi ' + em + ', ' + text;
+                        if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).catch(function() {});
+                        adminToast('Invite text copied to clipboard. New signups still use the public Create account flow.', 'success');
+                    });
+                }
+                var ex = document.getElementById('adminExportReportBtn');
+                if (ex && !ex._wire) { ex._wire = true; ex.addEventListener('click', adminExportUsersCsv); }
+                var snd = document.getElementById('adminSendNotificationBtn');
+                if (snd && !snd._wire) {
+                    snd._wire = true;
+                    snd.addEventListener('click', function() {
+                        var sub = (document.getElementById('adminNotifySubject') && document.getElementById('adminNotifySubject').value || '').trim();
+                        var msg = (document.getElementById('adminNotifyMessage') && document.getElementById('adminNotifyMessage').value || '').trim();
+                        if (!sub || !msg) { adminToast('Enter subject and message first.', 'warn'); return; }
+                        var q = JSON.parse(localStorage.getItem('admin_notification_queue') || '[]');
+                        q.push({ subject: sub, message: msg, at: new Date().toISOString() });
+                        localStorage.setItem('admin_notification_queue', JSON.stringify(q));
+                        adminToast('Notification queued locally (' + q.length + ' total). Connect email backend to send for real.', 'success');
+                    });
+                }
+                var wh = document.getElementById('adminSaveWebhookBtn');
+                if (wh && !wh._wire) {
+                    wh._wire = true;
+                    wh.addEventListener('click', function() {
+                        var u = document.getElementById('adminWebhookUrlInput');
+                        localStorage.setItem('admin_webhook_url', (u && u.value) || '');
+                        adminToast('Webhook URL saved locally.', 'success');
+                    });
+                }
+                var ag = document.getElementById('adminApiGenerateBtn');
+                if (ag && !ag._wire) {
+                    ag._wire = true;
+                    ag.addEventListener('click', function() {
+                        var keys = JSON.parse(localStorage.getItem('admin_api_keys') || '[]');
+                        if (!keys.length) keys = adminDefaultApiKeys();
+                        var rand = 'pk_test_' + Math.random().toString(36).slice(2, 14);
+                        keys.push({ id: 'k_' + Date.now(), name: 'Key ' + keys.length, key: rand, created: new Date().toLocaleDateString() });
+                        adminPersistApiKeysList(keys);
+                        adminRenderApiKeysTable();
+                        adminToast('New API key generated (demo). Copied to clipboard.', 'success');
+                        if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(rand).catch(function() {});
+                    });
+                }
+                var sg = document.getElementById('adminSaveGeneralBtn');
+                if (sg && !sg._wire) {
+                    sg._wire = true;
+                    sg.addEventListener('click', function() {
+                        var card = sg.closest('.admin-card');
+                        var data = {};
+                        if (card) card.querySelectorAll('input,textarea').forEach(function(inp) { if (inp.id) data[inp.id] = inp.value; });
+                        localStorage.setItem('admin_general_settings', JSON.stringify(data));
+                        adminToast('General settings saved locally.', 'success');
+                    });
+                }
+                var sb = document.getElementById('adminSaveBrandingBtn');
+                if (sb && !sb._wire) {
+                    sb._wire = true;
+                    sb.addEventListener('click', function() { localStorage.setItem('admin_branding_saved', '1'); adminToast('Branding preferences noted (upload requires file storage).', 'success'); });
+                }
+                var sep = document.getElementById('adminSaveEmailPaymentBtn');
+                if (sep && !sep._wire) {
+                    sep._wire = true;
+                    sep.addEventListener('click', function() {
+                        var card = sep.closest('.admin-card');
+                        var data = {};
+                        if (card) card.querySelectorAll('input,select,textarea').forEach(function(inp) { if (inp.name || inp.id) data[inp.name || inp.id] = inp.value; });
+                        localStorage.setItem('admin_email_payment', JSON.stringify(data));
+                        adminToast('Email & payment fields saved locally.', 'success');
+                    });
+                }
+                function styleToggle(trackEl, knobEl, on) {
+                    if (!trackEl || !knobEl) return;
+                    trackEl.style.background = on ? 'var(--admin-success)' : 'var(--admin-gray-200)';
+                    knobEl.style.left = on ? 'auto' : '4px';
+                    knobEl.style.right = on ? '4px' : 'auto';
+                }
+                var mt = document.getElementById('adminMaintenanceToggle');
+                var mtr = document.getElementById('adminMaintenanceTrack');
+                var mtk = document.getElementById('adminMaintenanceKnob');
+                if (mt && mtr && mtk && !mt._wire) {
+                    mt._wire = true;
+                    (function syncM() { var on = localStorage.getItem('admin_maintenance') === '1'; styleToggle(mtr, mtk, on); mt.setAttribute('aria-pressed', on ? 'true' : 'false'); })();
+                    mt.addEventListener('click', function() {
+                        var on = !(localStorage.getItem('admin_maintenance') === '1');
+                        localStorage.setItem('admin_maintenance', on ? '1' : '0');
+                        styleToggle(mtr, mtk, on);
+                        mt.setAttribute('aria-pressed', on ? 'true' : 'false');
+                        adminToast(on ? 'Maintenance mode ON (local flag only).' : 'Maintenance mode OFF.', on ? 'warn' : 'success');
+                    });
+                }
+                var t2 = document.getElementById('adminToggle2FA');
+                var t2tr = document.getElementById('admin2FATrack');
+                var t2k = document.getElementById('admin2FAKnob');
+                if (t2 && t2tr && t2k && !t2._wire) {
+                    t2._wire = true;
+                    (function sync2() { var on = localStorage.getItem('admin_2fa') !== '0'; styleToggle(t2tr, t2k, on); t2.setAttribute('aria-pressed', on ? 'true' : 'false'); })();
+                    t2.addEventListener('click', function() {
+                        var on = !(localStorage.getItem('admin_2fa') !== '0');
+                        localStorage.setItem('admin_2fa', on ? '1' : '0');
+                        styleToggle(t2tr, t2k, on);
+                        t2.setAttribute('aria-pressed', on ? 'true' : 'false');
+                        adminToast(on ? '2FA preference ON (demo).' : '2FA preference OFF (demo).', 'info');
+                    });
+                }
+                var tip = document.getElementById('adminToggleIP');
+                var tiptr = document.getElementById('adminIPTrack');
+                var tipk = document.getElementById('adminIPKnob');
+                if (tip && tiptr && tipk && !tip._wire) {
+                    tip._wire = true;
+                    (function syncIp() { var on = localStorage.getItem('admin_ip_restrict') === '1'; styleToggle(tiptr, tipk, on); tip.setAttribute('aria-pressed', on ? 'true' : 'false'); })();
+                    tip.addEventListener('click', function() {
+                        var on = !(localStorage.getItem('admin_ip_restrict') === '1');
+                        localStorage.setItem('admin_ip_restrict', on ? '1' : '0');
+                        styleToggle(tiptr, tipk, on);
+                        tip.setAttribute('aria-pressed', on ? 'true' : 'false');
+                        adminToast(on ? 'IP restriction flag ON (demo).' : 'IP restriction OFF (demo).', 'info');
+                    });
+                }
+                adminRenderApiKeysTable();
+                var whInp = document.getElementById('adminWebhookUrlInput');
+                if (whInp) { var saved = localStorage.getItem('admin_webhook_url'); if (saved) whInp.value = saved; }
+            })();
         }
         
         // Check authentication state and show appropriate view
