@@ -144,28 +144,39 @@
             --page-scrollbar-width: 10px;
         }
 
-        /* ONE vertical scrollbar only: `html` never scrolls; `body` scrolls the full page. No fixed height on `html` — it must grow with content or the landing page clips. */
+        /*
+         * Single scroll container: `html` only (wheel + scrollbar both work in Chrome/Edge/Safari).
+         * Scrolling on `body` while `html` has overflow:hidden breaks mouse-wheel scrolling — looks broken.
+         * `body` must not create a second scrollport (overflow-y: visible).
+         */
         html {
-            overflow-x: hidden;
-            overflow-y: hidden;
-            min-height: 100%;
-            scrollbar-width: none;
-            -ms-overflow-style: none;
-        }
-        html::-webkit-scrollbar {
-            width: 0 !important;
-            height: 0 !important;
-            display: none;
-        }
-        body {
             overflow-x: hidden;
             overflow-y: auto;
             scroll-behavior: smooth;
             scroll-padding-top: 100px;
-            min-height: 100vh;
-            min-height: -webkit-fill-available;
+            min-height: 100%;
             scrollbar-width: thin;
             scrollbar-color: var(--page-scrollbar-thumb) var(--page-scrollbar-track);
+        }
+        html::-webkit-scrollbar {
+            width: var(--page-scrollbar-width);
+        }
+        html::-webkit-scrollbar-track {
+            background: var(--page-scrollbar-track);
+            border-radius: 5px;
+        }
+        html::-webkit-scrollbar-thumb {
+            background: var(--page-scrollbar-thumb);
+            border-radius: 5px;
+        }
+        html::-webkit-scrollbar-thumb:hover {
+            background: var(--page-scrollbar-thumb-hover);
+        }
+        body {
+            overflow-x: hidden;
+            overflow-y: visible;
+            min-height: 100%;
+            min-height: -webkit-fill-available;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
             color: #333;
             line-height: 1.6;
@@ -175,20 +186,6 @@
             -moz-osx-font-smoothing: grayscale;
             -ms-text-size-adjust: 100%;
             -webkit-text-size-adjust: 100%;
-        }
-        body::-webkit-scrollbar {
-            width: var(--page-scrollbar-width);
-        }
-        body::-webkit-scrollbar-track {
-            background: var(--page-scrollbar-track);
-            border-radius: 5px;
-        }
-        body::-webkit-scrollbar-thumb {
-            background: var(--page-scrollbar-thumb);
-            border-radius: 5px;
-        }
-        body::-webkit-scrollbar-thumb:hover {
-            background: var(--page-scrollbar-thumb-hover);
         }
 
         .container {
@@ -7599,14 +7596,16 @@
             titleEl.textContent = plan.title;
             contentEl.innerHTML = '<div class="plan-modal-price">' + plan.price + '</div><p class="plan-modal-description">' + plan.description + '</p><h3>Features:</h3><ul class="plan-modal-features">' + plan.features.map(function(f) { return '<li>' + f + '</li>'; }).join('') + '</ul><button class="btn btn-primary" style="width: 100%;" onclick="closePlanModal(); showAuthModal();">Get Started</button>';
             modal.style.display = 'flex';
+            document.documentElement.style.overflow = 'hidden';
             document.body.style.overflow = 'hidden';
         }
         function closePlanModal() {
             const modal = document.getElementById('planDetailModal');
             if (modal) {
                 modal.style.display = 'none';
-                document.body.style.overflow = '';
             }
+            document.documentElement.style.overflow = '';
+            document.body.style.overflow = '';
         }
         document.querySelector('#planDetailModal .plan-modal-close') && document.querySelector('#planDetailModal .plan-modal-close').addEventListener('click', closePlanModal);
         document.getElementById('planDetailModal') && document.getElementById('planDetailModal').addEventListener('click', function(e) {
@@ -7622,11 +7621,14 @@
             titleEl.textContent = title;
             bodyEl.innerHTML = bodyHtml;
             lb.style.display = 'flex';
+            document.documentElement.style.overflow = 'hidden';
             document.body.style.overflow = 'hidden';
         }
         function closeCarouselItemLightbox() {
             var lb = document.getElementById('carouselItemLightbox');
-            if (lb) { lb.style.display = 'none'; document.body.style.overflow = ''; }
+            if (lb) { lb.style.display = 'none'; }
+            document.documentElement.style.overflow = '';
+            document.body.style.overflow = '';
         }
         document.getElementById('carouselItemLightboxClose') && document.getElementById('carouselItemLightboxClose').addEventListener('click', closeCarouselItemLightbox);
         document.getElementById('carouselItemLightbox') && document.getElementById('carouselItemLightbox').addEventListener('click', function(e) {
@@ -9055,13 +9057,15 @@
 
         function openBlockLightbox() {
             var lb = document.getElementById('blockImageLightbox');
-            if (lb) { lb.classList.add('active'); lb.setAttribute('aria-hidden', 'false'); document.body.style.overflow = 'hidden'; }
+            if (lb) { lb.classList.add('active'); lb.setAttribute('aria-hidden', 'false'); document.documentElement.style.overflow = 'hidden'; document.body.style.overflow = 'hidden'; }
             updateBlockLightboxImg();
         }
 
         function closeBlockLightbox() {
             var lb = document.getElementById('blockImageLightbox');
-            if (lb) { lb.classList.remove('active'); lb.setAttribute('aria-hidden', 'true'); document.body.style.overflow = ''; }
+            if (lb) { lb.classList.remove('active'); lb.setAttribute('aria-hidden', 'true'); }
+            document.documentElement.style.overflow = '';
+            document.body.style.overflow = '';
         }
 
         function updateBlockLightboxImg() {
