@@ -139,19 +139,22 @@
             --warning: #f59e0b;
         }
 
-        /* Landing / site: ONE vertical scrollbar only — html scrolls; body does NOT (prevents double bars under nav). */
+        /* Landing: single vertical scrollbar on body (html locked — avoids double scrollbars). */
         html {
+            overflow-x: hidden;
+            overflow-y: hidden;
+            height: 100%;
+        }
+        body {
+            --sb-track-color: #232E33;
+            --sb-thumb-color: #6BAF8D;
+            --sb-size: 14px;
             overflow-x: hidden;
             overflow-y: auto;
             scroll-behavior: smooth;
-            scrollbar-width: thin;
-            scrollbar-color: #64748b #e2e8f0;
-        }
-        body {
-            overflow-x: hidden;
-            overflow-y: visible;
-            min-height: 100vh;
+            min-height: 100%;
             min-height: -webkit-fill-available;
+            height: auto;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
             color: #333;
             line-height: 1.6;
@@ -162,21 +165,21 @@
             -ms-text-size-adjust: 100%;
             -webkit-text-size-adjust: 100%;
         }
-        html::-webkit-scrollbar {
-            width: 10px;
+        body::-webkit-scrollbar {
+            width: var(--sb-size);
         }
-        html::-webkit-scrollbar-corner {
-            background: #e2e8f0;
+        body::-webkit-scrollbar-track {
+            background: var(--sb-track-color);
+            border-radius: 3px;
         }
-        html::-webkit-scrollbar-track {
-            background: #e2e8f0;
+        body::-webkit-scrollbar-thumb {
+            background: var(--sb-thumb-color);
+            border-radius: 3px;
         }
-        html::-webkit-scrollbar-thumb {
-            background-color: #94a3b8;
-            border-radius: 5px;
-        }
-        html::-webkit-scrollbar-thumb:hover {
-            background-color: #64748b;
+        @supports not selector(::-webkit-scrollbar) {
+            body {
+                scrollbar-color: var(--sb-thumb-color) var(--sb-track-color);
+            }
         }
 
         .container {
@@ -4959,14 +4962,14 @@
                     <div class="admin-stat-card"><div class="stat-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:15px;"><div class="admin-stat-label">Pending Approval</div><div class="stat-icon orange"><i class="fas fa-clock"></i></div></div><div class="admin-stat">63</div><div class="admin-stat-label">Awaiting review</div></div>
                 </div>
                 <div class="admin-card">
-                    <div class="admin-card-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;"><span>Registered Creators</span><button type="button" class="admin-btn admin-btn-sm" data-admin-demo="Creator onboarding is managed in Firestore / user profiles. Use Users to verify seller accounts." style="width:auto;background:var(--admin-primary);color:#fff;"><i class="fas fa-plus"></i> Add Creator</button></div>
+                    <div class="admin-card-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;"><span>Registered Creators</span><button type="button" class="admin-btn admin-btn-sm" data-admin-action="open-add-user" style="width:auto;background:var(--admin-primary);color:#fff;"><i class="fas fa-plus"></i> Add Creator</button></div>
                     <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;"><table class="admin-table"><thead><tr><th>Creator</th><th>Store Name</th><th>Products</th><th>Total Sales</th><th>Verification</th><th>Status</th><th>Actions</th></tr></thead><tbody><tr><td>Alex Johnson</td><td>TechGear Store</td><td>45</td><td>$125,430</td><td><span class="status-badge completed">Verified</span></td><td><span class="status-badge completed">Active</span></td><td><div class="action-btns"><button type="button" class="btn btn-secondary btn-sm" data-admin-demo="Demo creator: Alex Johnson — details are illustrative.">View</button><button type="button" class="btn btn-primary btn-sm" data-admin-open-users="1" data-admin-demo="Open Users to manage real creator accounts tied to Firebase.">Manage</button></div></td></tr><tr><td>Maria Garcia</td><td>Fashion Hub</td><td>128</td><td>$89,250</td><td><span class="status-badge completed">Verified</span></td><td><span class="status-badge completed">Active</span></td><td><div class="action-btns"><button type="button" class="btn btn-secondary btn-sm" data-admin-demo="Demo creator: Maria Garcia — illustrative row.">View</button><button type="button" class="btn btn-primary btn-sm" data-admin-open-users="1">Manage</button></div></td></tr></tbody></table></div>
                 </div>
             </div>
             <div id="admin-page-blocks" class="admin-page">
                 <h1 class="page-title">Product Management</h1>
                 <div class="admin-card">
-                    <div class="admin-card-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;"><span>All Products</span><button type="button" class="admin-btn admin-btn-sm" data-admin-demo="Live product blocks are created in each user’s dashboard. This action opens guidance only." style="width:auto;background:var(--admin-primary);color:#fff;"><i class="fas fa-plus"></i> Add Product</button></div>
+                    <div class="admin-card-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;"><span>All Products</span><button type="button" class="admin-btn admin-btn-sm" data-admin-action="open-users-manage" style="width:auto;background:var(--admin-primary);color:#fff;"><i class="fas fa-plus"></i> Add Product</button></div>
                     <div style="padding:0 24px 16px;display:flex;gap:16px;flex-wrap:wrap;align-items:center;">
                         <div style="display:flex;align-items:center;gap:8px;"><span style="font-size:14px;color:var(--admin-gray-600);">Category:</span><select class="form-control" style="width:auto;min-width:160px;"><option>All Categories</option></select></div>
                         <div style="display:flex;align-items:center;gap:8px;"><span style="font-size:14px;color:var(--admin-gray-600);">Status:</span><select class="form-control" style="width:auto;min-width:120px;"><option>All</option></select></div>
@@ -5197,6 +5200,26 @@
             <h3 style="margin-bottom:16px;">Change Plan</h3><input type="hidden" id="changePlanUserId">
             <div class="admin-form-group"><label>Plan</label><select id="changePlanSelect" style="width:100%;padding:12px;border:1px solid #e5e7eb;border-radius:8px;"><option value="free">Free</option><option value="starter">Starter</option><option value="pro">Pro</option><option value="creatorplus">Creator+</option><option value="agency">Agency</option></select></div>
             <div style="display:flex;gap:12px;margin-top:20px;"><button type="button" class="admin-btn" onclick="savePlanChange()">Save</button><button type="button" class="admin-btn admin-btn-secondary" onclick="closeChangePlanModal()">Cancel</button></div>
+        </div>
+    </div>
+
+    <div id="adminUserManageModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:2100;align-items:center;justify-content:center;padding:20px;overflow-y:auto;">
+        <div style="background:white;padding:24px;border-radius:12px;max-width:560px;width:100%;max-height:92vh;overflow-y:auto;">
+            <h3 id="adminUserManageTitle" style="margin-bottom:8px;">Manage user</h3>
+            <p id="adminUserManageHelp" style="font-size:0.875rem;color:#6b7280;margin-bottom:16px;">Update this user’s Firestore profile, suspension state, and dashboard blocks. Blocks sync live to the user dashboard.</p>
+            <input type="hidden" id="adminUserManageMode" value="manage">
+            <div class="admin-form-group"><label>Firebase Auth UID</label><input type="text" id="adminUserManageUid" style="width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:8px;" placeholder="e.g. from Firebase Console → Authentication"></div>
+            <div class="admin-form-group"><label>Email</label><input type="email" id="adminUserManageEmail" style="width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:8px;"></div>
+            <div class="admin-form-group"><label>Display name</label><input type="text" id="adminUserManageName" style="width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:8px;"></div>
+            <div class="admin-form-group"><label>Plan</label><select id="adminUserManagePlan" style="width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:8px;"><option value="free">Free</option><option value="starter">Starter</option><option value="pro">Pro</option><option value="creatorplus">Creator+</option><option value="agency">Agency</option></select></div>
+            <div class="admin-form-group"><label>Account status</label><select id="adminUserManageStatus" style="width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:8px;"><option value="active">Active</option><option value="suspended">Suspended (disabled)</option></select></div>
+            <div class="admin-form-group" id="adminUserManageBlocksGroup"><label>Dashboard blocks (JSON array)</label><textarea id="adminUserManageBlocksJson" style="width:100%;min-height:180px;padding:10px;border:1px solid #e5e7eb;border-radius:8px;font-family:ui-monospace,monospace;font-size:12px;" placeholder="[]"></textarea><div style="font-size:0.8rem;color:#6b7280;margin-top:6px;">Saved to Firestore and updates the user’s dashboard in real time.</div></div>
+            <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:20px;">
+                <button type="button" class="admin-btn" onclick="adminUserManageSaveProfile()">Save profile</button>
+                <button type="button" class="admin-btn" onclick="adminUserManageSaveBlocks()">Save blocks</button>
+                <button type="button" class="admin-btn" style="background:rgba(239,68,68,0.12);color:#b91c1c;" onclick="adminUserManageDeleteFirestore()">Remove Firestore user</button>
+                <button type="button" class="admin-btn admin-btn-secondary" onclick="closeAdminUserManageModal()">Close</button>
+            </div>
         </div>
     </div>
 
@@ -5847,6 +5870,9 @@
         // Global state
         let currentUser = null;
         let currentBlocks = [];
+        let dashboardBlocksUnsub = null;
+        let appliedDashboardBlocksRevision = -1;
+        let saveBlocksFirestoreTimer = null;
         let currentIntegrations = [];
         let selectedProductsList = [];
         let currentLayout = 'grid';
@@ -6361,7 +6387,9 @@
                         var fe = String(u.email || '').toLowerCase();
                         var fn = String(u.name || '').toLowerCase();
                         var planBadge = '<span class="badge-tag ' + (plan === 'pro' ? 'pro' : 'basic') + '">' + html(plan) + '</span>';
-                        var actions = '<div class="action-btns"><button class="btn btn-secondary btn-sm" onclick="openChangePlan(\'' + uid + '\',\'' + plan + '\')"><i class="fas fa-edit"></i> Edit</button><button class="btn btn-primary btn-sm" onclick="toggleSuspend(\'' + uid + '\',\'' + status + '\')"><i class="fas fa-' + (status === 'suspended' ? 'user-check' : 'user-slash') + '"></i> ' + (status === 'suspended' ? 'Unsuspend' : 'Suspend') + '</button><button class="btn btn-secondary btn-sm" style="background:rgba(239,68,68,0.1);color:#b91c1c;" onclick="deleteUserDoc(\'' + uid + '\')"><i class="fas fa-trash"></i> Delete</button></div>';
+                        var emEsc = esc(String(u.email || ''));
+                        var nmEsc = esc(String(u.name || ''));
+                        var actions = '<div class="action-btns"><button type="button" class="btn btn-primary btn-sm" onclick="openAdminManageUser(\'' + uid + '\',\'' + emEsc + '\',\'' + nmEsc + '\',\'' + plan + '\',\'' + status + '\')"><i class="fas fa-cog"></i> Manage</button><button type="button" class="btn btn-secondary btn-sm" onclick="openChangePlan(\'' + uid + '\',\'' + plan + '\')"><i class="fas fa-edit"></i> Plan</button><button type="button" class="btn btn-primary btn-sm" onclick="toggleSuspend(\'' + uid + '\',\'' + status + '\')"><i class="fas fa-' + (status === 'suspended' ? 'user-check' : 'user-slash') + '"></i> ' + (status === 'suspended' ? 'Unsuspend' : 'Suspend') + '</button><button type="button" class="btn btn-secondary btn-sm" style="background:rgba(239,68,68,0.1);color:#b91c1c;" onclick="deleteUserDoc(\'' + uid + '\')"><i class="fas fa-trash"></i> Delete</button></div>';
                         var userCell = '<div style="display:flex;align-items:center;gap:10px;"><div class="user-avatar" style="width:35px;height:35px;font-size:14px;">' + html(initials(u.name)) + '</div><span>' + html(u.name || '-') + '</span></div>';
                         return '<tr data-filter-email="' + escAttr(fe) + '" data-filter-name="' + escAttr(fn) + '" data-filter-status="' + escAttr(status) + '" data-filter-plan="' + escAttr(planRaw) + '"><td>' + userCell + '</td><td>' + html(u.email || '-') + '</td><td>' + planBadge + '</td><td>' + statusBadge + '</td><td>' + html(joined) + '</td><td>' + actions + '</td></tr>';
                     }).join('');
@@ -6557,6 +6585,125 @@
                 loadAdminUsers();
                 if (typeof window.adminToast === 'function') window.adminToast('User document removed from Firestore.', 'success');
             };
+            window.closeAdminUserManageModal = function() {
+                var m = document.getElementById('adminUserManageModal');
+                if (m) m.style.display = 'none';
+            };
+            window.openAdminAddUser = function() {
+                var m = document.getElementById('adminUserManageModal');
+                if (!m) return;
+                var t = document.getElementById('adminUserManageTitle');
+                var h = document.getElementById('adminUserManageHelp');
+                if (t) t.textContent = 'Add / link user profile';
+                if (h) h.textContent = 'Link a Firebase Auth UID to a Firestore profile (Users collection). The user must exist in Firebase Authentication first—create them in Console or have them sign up—then paste their UID here.';
+                document.getElementById('adminUserManageMode').value = 'add';
+                document.getElementById('adminUserManageUid').value = '';
+                document.getElementById('adminUserManageUid').readOnly = false;
+                document.getElementById('adminUserManageEmail').value = '';
+                document.getElementById('adminUserManageName').value = '';
+                document.getElementById('adminUserManagePlan').value = 'starter';
+                document.getElementById('adminUserManageStatus').value = 'active';
+                document.getElementById('adminUserManageBlocksJson').value = '[]';
+                m.style.display = 'flex';
+            };
+            window.openAdminManageUser = function(uid, email, name, plan, status) {
+                var m = document.getElementById('adminUserManageModal');
+                if (!m) return;
+                var t = document.getElementById('adminUserManageTitle');
+                var h = document.getElementById('adminUserManageHelp');
+                if (t) t.textContent = 'Manage user';
+                if (h) h.textContent = 'Update profile, suspension, and dashboard blocks. Blocks sync to the user dashboard in real time.';
+                document.getElementById('adminUserManageMode').value = 'manage';
+                document.getElementById('adminUserManageUid').value = uid || '';
+                document.getElementById('adminUserManageUid').readOnly = true;
+                document.getElementById('adminUserManageEmail').value = email || '';
+                document.getElementById('adminUserManageName').value = name || '';
+                document.getElementById('adminUserManagePlan').value = String(plan || 'starter').toLowerCase();
+                document.getElementById('adminUserManageStatus').value = (String(status || '').toLowerCase() === 'suspended') ? 'suspended' : 'active';
+                m.style.display = 'flex';
+                var dbUse = db || window.firebaseDb;
+                var ta = document.getElementById('adminUserManageBlocksJson');
+                if (ta) ta.value = '[]';
+                if (dbUse && uid) {
+                    dbUse.collection('users').doc(uid).get().then(function(doc) {
+                        if (!doc.exists || !ta) return;
+                        var d = doc.data() || {};
+                        var js = d.dashboardBlocksJson;
+                        if (js && typeof js === 'string') {
+                            try { ta.value = JSON.stringify(JSON.parse(js), null, 2); } catch (e) { ta.value = js; }
+                        }
+                    }).catch(function() {});
+                }
+            };
+            window.adminUserManageSaveProfile = async function() {
+                var uid = (document.getElementById('adminUserManageUid') && document.getElementById('adminUserManageUid').value || '').trim();
+                var email = (document.getElementById('adminUserManageEmail') && document.getElementById('adminUserManageEmail').value || '').trim();
+                var name = (document.getElementById('adminUserManageName') && document.getElementById('adminUserManageName').value || '').trim();
+                var plan = document.getElementById('adminUserManagePlan') && document.getElementById('adminUserManagePlan').value;
+                var status = document.getElementById('adminUserManageStatus') && document.getElementById('adminUserManageStatus').value;
+                var dbUse = db || window.firebaseDb;
+                if (!uid || !dbUse) { window.adminToast('Enter a Firebase Auth UID and ensure Firebase is connected.', 'warn'); return; }
+                try {
+                    await dbUse.collection('users').doc(uid).set({
+                        email: email,
+                        displayName: name,
+                        name: name,
+                        plan: plan,
+                        status: status
+                    }, { merge: true });
+                } catch (e1) {
+                    window.adminToast('Save failed: ' + (e1.message || e1), 'warn');
+                    return;
+                }
+                try {
+                    await dbUse.collection('user').doc(uid).set({
+                        email: email,
+                        displayName: name,
+                        plan: plan,
+                        status: status
+                    }, { merge: true });
+                } catch (e2) {}
+                window.adminToast('Profile saved to Firestore.', 'success');
+                loadAdminUsers();
+            };
+            window.adminUserManageSaveBlocks = async function() {
+                var uid = (document.getElementById('adminUserManageUid') && document.getElementById('adminUserManageUid').value || '').trim();
+                var raw = document.getElementById('adminUserManageBlocksJson') && document.getElementById('adminUserManageBlocksJson').value;
+                var dbUse = db || window.firebaseDb;
+                if (!uid || !dbUse) { window.adminToast('Enter a UID and ensure Firebase is connected.', 'warn'); return; }
+                var arr;
+                try { arr = JSON.parse(raw || '[]'); } catch (e) { window.adminToast('Invalid JSON.', 'warn'); return; }
+                if (!Array.isArray(arr)) { window.adminToast('Blocks must be a JSON array.', 'warn'); return; }
+                var compact = JSON.stringify(arr);
+                try {
+                    await dbUse.collection('users').doc(uid).set({
+                        dashboardBlocksJson: compact,
+                        blocksRevision: firebase.firestore.FieldValue.increment(1)
+                    }, { merge: true });
+                } catch (e) {
+                    window.adminToast('Failed to save blocks: ' + (e.message || e), 'warn');
+                    return;
+                }
+                window.adminToast('Blocks saved. Connected user dashboards refresh automatically.', 'success');
+            };
+            window.adminUserManageDeleteFirestore = async function() {
+                var uid = (document.getElementById('adminUserManageUid') && document.getElementById('adminUserManageUid').value || '').trim();
+                var dbUse = db || window.firebaseDb;
+                if (!uid || !dbUse || !confirm('Remove this user\'s Firestore profile (users / user)?')) return;
+                try {
+                    await dbUse.collection('users').doc(uid).delete();
+                } catch (err) {
+                    try {
+                        await dbUse.collection('user').doc(uid).delete();
+                    } catch (err2) {
+                        window.adminToast('Failed to delete: ' + (err2.message || err.message), 'warn');
+                        return;
+                    }
+                }
+                loadAdminUsers();
+                window.adminToast('User document removed from Firestore.', 'success');
+                closeAdminUserManageModal();
+            };
             window.adminToast = function(message, type) {
                 type = type || 'info';
                 var host = document.getElementById('admin-toast-host');
@@ -6662,9 +6809,27 @@
                         }
                         var openU = e.target.closest('[data-admin-open-users]');
                         if (openU) showAdminPage('users');
+                        var actEl = e.target.closest('[data-admin-action]');
+                        if (actEl) {
+                            var act = actEl.getAttribute('data-admin-action');
+                            if (act === 'open-add-user' && typeof openAdminAddUser === 'function') {
+                                openAdminAddUser();
+                                return;
+                            }
+                            if (act === 'open-users-manage' && typeof showAdminPage === 'function') {
+                                showAdminPage('users');
+                                adminToast('Pick a user → Manage to add or edit product blocks live (syncs to their dashboard).', 'info');
+                                return;
+                            }
+                        }
                         var demo = e.target.closest('[data-admin-demo]');
                         if (demo) adminToast(demo.getAttribute('data-admin-demo'), 'info');
                     });
+                }
+                var aumm = document.getElementById('adminUserManageModal');
+                if (aumm && !aumm._backdropClose) {
+                    aumm._backdropClose = true;
+                    aumm.addEventListener('click', function(e) { if (e.target === aumm) closeAdminUserManageModal(); });
                 }
                 var cpm = document.getElementById('changePlanModal');
                 if (cpm && !cpm._backdropClose) {
@@ -6714,11 +6879,7 @@
                 if (addU && !addU._wire) {
                     addU._wire = true;
                     addU.addEventListener('click', function() {
-                        var em = prompt('Invite email (optional):', '');
-                        var text = 'You are invited to KotaPal. Sign up at: ' + (window.location.origin || '') + '/';
-                        if (em) text = 'Hi ' + em + ', ' + text;
-                        if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).catch(function() {});
-                        adminToast('Invite text copied to clipboard. New signups still use the public Create account flow.', 'success');
+                        if (typeof openAdminAddUser === 'function') openAdminAddUser();
                     });
                 }
                 var ex = document.getElementById('adminExportReportBtn');
@@ -7689,7 +7850,11 @@
         function initDashboard() {
             updateUserDisplay();
             applySavedProfileAndWallpaper();
+            if (typeof stopDashboardBlocksSync === 'function') stopDashboardBlocksSync();
             loadMockData();
+            if (currentUser && currentUser.uid && typeof startDashboardBlocksSync === 'function') {
+                startDashboardBlocksSync(currentUser.uid);
+            }
             setupDashboardEventListeners();
             resetInactivityTimer();
             if (localStorage.getItem('kota_nav_collapsed') === '1') {
@@ -7709,10 +7874,90 @@
             }
         }
 
-        // Persist user blocks to localStorage (keyed by user)
+        function stopDashboardBlocksSync() {
+            if (dashboardBlocksUnsub) {
+                try { dashboardBlocksUnsub(); } catch (e) {}
+                dashboardBlocksUnsub = null;
+            }
+            appliedDashboardBlocksRevision = -1;
+        }
+
+        function applyDashboardBlocksFromRemote(uid, jsonStr, revision) {
+            if (!uid || !jsonStr) return;
+            try {
+                const arr = JSON.parse(jsonStr);
+                if (!Array.isArray(arr)) return;
+                if (typeof revision === 'number') appliedDashboardBlocksRevision = Math.max(appliedDashboardBlocksRevision, revision);
+                currentBlocks = arr;
+                localStorage.setItem('kotaBlocks_' + uid, jsonStr);
+                updateDashboardStats();
+                renderBlocks();
+                renderIntegrations();
+                renderActivityTable();
+                renderAnalytics();
+                renderAlerts();
+            } catch (e) {
+                console.error('applyDashboardBlocksFromRemote', e);
+            }
+        }
+
+        function flushDashboardBlocksToFirestore(uid) {
+            const dbUse = window.firebaseDb || (typeof firebase !== 'undefined' && firebase.firestore && firebase.firestore());
+            if (!dbUse || !uid || !currentBlocks) return;
+            const payload = JSON.stringify(currentBlocks);
+            dbUse.collection('users').doc(uid).set({
+                dashboardBlocksJson: payload,
+                blocksRevision: firebase.firestore.FieldValue.increment(1)
+            }, { merge: true }).catch(function(err) {
+                console.error('Firestore blocks save failed:', err);
+            });
+        }
+
+        function startDashboardBlocksSync(uid) {
+            stopDashboardBlocksSync();
+            const dbUse = window.firebaseDb || (typeof firebase !== 'undefined' && firebase.firestore && firebase.firestore());
+            if (!uid || !dbUse) return;
+            let first = true;
+            dashboardBlocksUnsub = dbUse.collection('users').doc(uid).onSnapshot(function(snap) {
+                if (!snap.exists) return;
+                const data = snap.data() || {};
+                if (typeof auth !== 'undefined' && auth && auth.currentUser && auth.currentUser.uid === uid && window.location.hash !== '#admin' && String(data.status || '').toLowerCase() === 'suspended') {
+                    sessionStorage.removeItem('kotapal_explicit_login');
+                    localStorage.removeItem('kotapal_explicit_login');
+                    auth.signOut().catch(function() {});
+                    if (typeof showNotification === 'function') showNotification('Your account has been disabled. Contact support if this is a mistake.', 'error', 'Account');
+                    setTimeout(function() { window.location.reload(); }, 800);
+                    return;
+                }
+                const rev = typeof data.blocksRevision === 'number' ? data.blocksRevision : 0;
+                const js = data.dashboardBlocksJson;
+                if (first) {
+                    first = false;
+                    if ((!js || String(js).trim() === '') && currentBlocks && currentBlocks.length) {
+                        flushDashboardBlocksToFirestore(uid);
+                        return;
+                    }
+                }
+                if (!js || typeof js !== 'string') {
+                    appliedDashboardBlocksRevision = Math.max(appliedDashboardBlocksRevision, rev);
+                    return;
+                }
+                if (rev <= appliedDashboardBlocksRevision) return;
+                applyDashboardBlocksFromRemote(uid, js, rev);
+            }, function(err) {
+                console.error('Dashboard blocks listener:', err);
+            });
+        }
+
+        // Persist user blocks to localStorage (keyed by user) and sync to Firestore for admin / multi-device
         function saveUserBlocks() {
             const uid = currentUser?.uid;
             if (uid) localStorage.setItem('kotaBlocks_' + uid, JSON.stringify(currentBlocks));
+            if (!uid) return;
+            clearTimeout(saveBlocksFirestoreTimer);
+            saveBlocksFirestoreTimer = setTimeout(function() {
+                flushDashboardBlocksToFirestore(uid);
+            }, 500);
         }
 
         // Load user data: blocks from localStorage, then mock only if empty
@@ -7813,6 +8058,7 @@
                 sessionStorage.removeItem('kotapal_explicit_login');
                 sessionStorage.removeItem('settings_access_granted');
                 if (typeof currentUser !== 'undefined') currentUser = null;
+                if (typeof stopDashboardBlocksSync === 'function') stopDashboardBlocksSync();
                 showNotification('Logged out successfully', 'success', 'Logout');
                 const dashboardView = document.getElementById('dashboard-view');
                 const landingView = document.getElementById('landing-page-view');
