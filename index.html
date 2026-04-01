@@ -144,11 +144,11 @@
             --page-scrollbar-width: 10px;
         }
 
-        /* ONE vertical scrollbar only: never scroll `html` (kills the double bar). All page scroll happens on `body`. */
+        /* ONE vertical scrollbar only: `html` never scrolls; `body` scrolls the full page. No fixed height on `html` — it must grow with content or the landing page clips. */
         html {
             overflow-x: hidden;
             overflow-y: hidden;
-            height: 100%;
+            min-height: 100%;
             scrollbar-width: none;
             -ms-overflow-style: none;
         }
@@ -162,7 +162,7 @@
             overflow-y: auto;
             scroll-behavior: smooth;
             scroll-padding-top: 100px;
-            min-height: 100%;
+            min-height: 100vh;
             min-height: -webkit-fill-available;
             scrollbar-width: thin;
             scrollbar-color: var(--page-scrollbar-thumb) var(--page-scrollbar-track);
@@ -4597,6 +4597,11 @@
                         <div id="helpVideoList"></div>
                     </div>
                     <div class="card">
+                        <div class="card-header"><h3 class="card-title">My support requests</h3></div>
+                        <p style="font-size:0.875rem;color:var(--gray);margin:0 0 12px 0;">Submitted requests sync to the admin dashboard in real time. Status updates appear here automatically.</p>
+                        <div id="helpMyTicketsList"></div>
+                    </div>
+                    <div class="card">
                         <div class="card-header"><h3 class="card-title">Submit a request</h3></div>
                         <form id="helpRequestForm">
                             <div class="form-group">
@@ -4655,7 +4660,7 @@
                             <div class="form-group">
                                 <label for="userEmail">Email</label>
                                 <input type="email" id="userEmail" class="form-control form-control-readonly" readonly disabled required title="Email can only be changed by administrators. Contact support@kotapal.com for email updates.">
-                                <small style="color:var(--gray);font-size:0.85rem;margin-top:4px;display:block;">Email can only be changed by administrators. Contact support for updates.</small>
+                                <small style="color:var(--gray);font-size:0.85rem;margin-top:4px;display:block;">Administrators can update your profile email in Firebase; changes sync here in real time. Your sign-in email stays the same until you change it in Firebase Auth.</small>
                             </div>
                             <div class="form-group">
                                 <label for="userWebsite">Website/Blog URL</label>
@@ -5884,6 +5889,7 @@
         let dashboardBlocksUnsub = null;
         let appliedDashboardBlocksRevision = -1;
         let saveBlocksFirestoreTimer = null;
+        let userHelpTicketsUnsub = null;
         let currentIntegrations = [];
         let selectedProductsList = [];
         let currentLayout = 'grid';
@@ -5974,6 +5980,35 @@
             window.adminUsers = [];
             var db = window.firebaseDb || (typeof firebase !== 'undefined' && firebase.firestore && firebase.firestore());
             var auth = typeof firebase !== 'undefined' && firebase.auth && firebase.auth();
+            var adminSupportFirestoreUnsub = null;
+            window.adminTicketsById = {};
+            function ticketDateDisplayForAdmin(t) {
+                if (t && t.createdAt && typeof t.createdAt.toDate === 'function') return new Date(t.createdAt.toDate()).toLocaleString();
+                if (t && t.date) return new Date(t.date).toLocaleString();
+                return '—';
+            }
+            function renderAdminSupportFromTickets(tickets) {
+                var pending = tickets.filter(function(x) { return String(x.status || 'pending').toLowerCase() !== 'resolved'; }).length;
+                var el = document.getElementById('admin-support-total');
+                if (el) el.textContent = tickets.length;
+                el = document.getElementById('admin-support-open');
+                if (el) el.textContent = pending;
+                var tbody = document.getElementById('adminSupportTableBody');
+                if (!tbody) return;
+                if (tickets.length === 0) { tbody.innerHTML = '<tr><td colspan="7" style="padding:24px;color:#6b7280;text-align:center;">No support tickets yet.</td></tr>'; return; }
+                function html(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+                function escId(id) { return String(id || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'"); }
+                tbody.innerHTML = tickets.slice(0, 100).map(function(t, idx) {
+                    var d = ticketDateDisplayForAdmin(t);
+                    var status = (t.status || 'pending').toLowerCase();
+                    var statusBadge = status === 'resolved' ? '<span class="status-badge completed">Resolved</span>' : '<span class="status-badge pending">Open</span>';
+                    var pri = (t.priority || 'medium').toLowerCase();
+                    var priHtml = pri === 'high' ? '<span class="status-badge refunded">High</span>' : pri === 'low' ? '<span class="status-badge" style="background:rgba(59,130,246,0.12);color:#1d4ed8;">Low</span>' : '<span class="status-badge pending">Medium</span>';
+                    var tid = t.id ? String(t.id).slice(0, 10) : 'TKT-' + String(idx + 1).padStart(4, '0');
+                    var idAttr = escId(t.id);
+                    return '<tr><td>' + html(tid) + '</td><td>' + html(t.subject || '-') + '</td><td>' + html(t.userEmail || t.userName || '-') + '</td><td>' + priHtml + '</td><td>' + statusBadge + '</td><td>' + html(d) + '</td><td><div class="action-btns"><button type="button" class="btn btn-secondary btn-sm" onclick="adminTicketDetailById(\'' + idAttr + '\')">View</button><button type="button" class="btn btn-primary btn-sm" onclick="adminResolveTicketById(\'' + idAttr + '\')">Resolve</button></div></td></tr>';
+                }).join('');
+            }
             function showAdminUI(show) {
                 var landing = document.getElementById('landing-page-view');
                 var nav = document.querySelector('nav');
@@ -6005,6 +6040,7 @@
                 if (adminLogin) adminLogin.classList.remove('active');
                 if (adminView) adminView.classList.add('active');
                 if (typeof initAdminRevenueChart === 'function') setTimeout(initAdminRevenueChart, 100);
+                if (typeof loadAdminSupport === 'function') setTimeout(function() { loadAdminSupport(); }, 0);
             }
             function applyAdminView() {
                 var hash = window.location.hash;
@@ -6498,26 +6534,67 @@
                 if (subMir && subTbody) subMir.innerHTML = subTbody.innerHTML;
             };
             window.loadAdminSupport = function() {
-                var tickets = JSON.parse(localStorage.getItem('kota_support_tickets') || '[]');
-                var pending = tickets.filter(function(t) { return (t.status || 'pending') === 'pending'; }).length;
-                var el = document.getElementById('admin-support-total');
-                if (el) el.textContent = tickets.length;
-                el = document.getElementById('admin-support-open');
-                if (el) el.textContent = pending;
-                var tbody = document.getElementById('adminSupportTableBody');
-                if (!tbody) return;
-                if (tickets.length === 0) { tbody.innerHTML = '<tr><td colspan="7" style="padding:24px;color:#6b7280;text-align:center;">No support tickets yet.</td></tr>'; return; }
-                function esc(s) { return String(s || '').replace(/'/g, "\\'"); }
-                function html(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
-                tbody.innerHTML = tickets.slice(0, 100).map(function(t, idx) {
-                    var d = t.date ? new Date(t.date).toLocaleString() : '-';
-                    var status = (t.status || 'pending').toLowerCase();
-                    var statusBadge = status === 'resolved' ? '<span class="status-badge completed">Resolved</span>' : '<span class="status-badge pending">Open</span>';
-                    var pri = (t.priority || 'medium').toLowerCase();
-                    var priHtml = pri === 'high' ? '<span class="status-badge refunded">High</span>' : pri === 'low' ? '<span class="status-badge" style="background:rgba(59,130,246,0.12);color:#1d4ed8;">Low</span>' : '<span class="status-badge pending">Medium</span>';
-                    var tid = 'TKT-' + String(idx + 1).padStart(4, '0');
-                    return '<tr><td>' + html(tid) + '</td><td>' + html(t.subject || '-') + '</td><td>' + html(t.userEmail || t.userName || '-') + '</td><td>' + priHtml + '</td><td>' + statusBadge + '</td><td>—</td><td><div class="action-btns"><button type="button" class="btn btn-secondary btn-sm" onclick="adminTicketDetail(' + idx + ')">View</button><button type="button" class="btn btn-primary btn-sm" onclick="adminResolveTicketAtIndex(' + idx + ')">Resolve</button></div></td></tr>';
-                }).join('');
+                var dbUse = db || window.firebaseDb;
+                if (!dbUse) {
+                    var localTix = JSON.parse(localStorage.getItem('kota_support_tickets') || '[]');
+                    localTix.forEach(function(t, i) { if (!t.id) t.id = 'local_' + i; });
+                    renderAdminSupportFromTickets(localTix);
+                    return;
+                }
+                if (adminSupportFirestoreUnsub) {
+                    if (typeof window.adminToast === 'function') window.adminToast('Ticket stream is live (auto-updating).', 'info');
+                    return;
+                }
+                adminSupportFirestoreUnsub = dbUse.collection('supportTickets').onSnapshot(function(snap) {
+                    var tickets = snap.docs.map(function(d) {
+                        var o = d.data();
+                        o.id = d.id;
+                        return o;
+                    });
+                    tickets.sort(function(a, b) {
+                        var ta = a.createdAt && a.createdAt.toMillis ? a.createdAt.toMillis() : (a.date ? new Date(a.date).getTime() : 0);
+                        var tb = b.createdAt && b.createdAt.toMillis ? b.createdAt.toMillis() : (b.date ? new Date(b.date).getTime() : 0);
+                        return tb - ta;
+                    });
+                    window.adminTicketsById = {};
+                    tickets.forEach(function(t) { window.adminTicketsById[t.id] = t; });
+                    renderAdminSupportFromTickets(tickets);
+                }, function(err) {
+                    console.error('Admin tickets:', err);
+                    if (typeof window.adminToast === 'function') window.adminToast('Tickets: ' + (err.message || String(err)), 'warn');
+                });
+            };
+            window.adminTicketDetailById = function(id) {
+                var t = window.adminTicketsById && window.adminTicketsById[id];
+                if (!t) { if (typeof window.adminToast === 'function') window.adminToast('Ticket not found yet.', 'warn'); return; }
+                var msg = (t.message || '').slice(0, 400);
+                if (typeof window.adminToast === 'function') window.adminToast((t.subject || 'Ticket') + ' — ' + (t.userEmail || t.userName || '') + (msg ? '. ' + msg : ''), 'info');
+            };
+            window.adminResolveTicketById = async function(id) {
+                if (!id) return;
+                if (String(id).indexOf('local_') === 0) {
+                    var tix = JSON.parse(localStorage.getItem('kota_support_tickets') || '[]');
+                    var idx = parseInt(String(id).replace(/^local_/, ''), 10);
+                    if (!isNaN(idx) && tix[idx]) {
+                        tix[idx].status = 'resolved';
+                        localStorage.setItem('kota_support_tickets', JSON.stringify(tix));
+                        tix.forEach(function(t, i) { if (!t.id) t.id = 'local_' + i; });
+                        renderAdminSupportFromTickets(tix);
+                        if (typeof window.adminToast === 'function') window.adminToast('Ticket marked resolved.', 'success');
+                    }
+                    return;
+                }
+                var dbUse = db || window.firebaseDb;
+                if (!dbUse) return;
+                try {
+                    await dbUse.collection('supportTickets').doc(id).set({
+                        status: 'resolved',
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    }, { merge: true });
+                    if (typeof window.adminToast === 'function') window.adminToast('Ticket marked resolved.', 'success');
+                } catch (e) {
+                    if (typeof window.adminToast === 'function') window.adminToast('Failed: ' + (e.message || e), 'warn');
+                }
             };
             window.updateTicketStatus = function(id, status) {
                 var tickets = JSON.parse(localStorage.getItem('kota_support_tickets') || '[]');
@@ -6752,20 +6829,6 @@
             };
             window.adminBillingDetail = function(user) {
                 adminToast('Payment record: ' + user + ' (see table above for amounts & dates).', 'info');
-            };
-            window.adminTicketDetail = function(idx) {
-                var tickets = JSON.parse(localStorage.getItem('kota_support_tickets') || '[]');
-                var t = tickets[idx];
-                if (!t) { adminToast('Ticket not found.', 'warn'); return; }
-                adminToast((t.subject || 'Ticket') + ' — from ' + (t.userEmail || t.userName || 'unknown'), 'info');
-            };
-            window.adminResolveTicketAtIndex = function(idx) {
-                var tickets = JSON.parse(localStorage.getItem('kota_support_tickets') || '[]');
-                if (!tickets[idx]) return;
-                tickets[idx].status = 'resolved';
-                localStorage.setItem('kota_support_tickets', JSON.stringify(tickets));
-                loadAdminSupport();
-                adminToast('Ticket marked resolved.', 'success');
             };
             window.adminExportUsersCsv = function() {
                 var users = window.adminUsers || [];
@@ -7872,9 +7935,13 @@
             updateUserDisplay();
             applySavedProfileAndWallpaper();
             if (typeof stopDashboardBlocksSync === 'function') stopDashboardBlocksSync();
+            if (typeof stopUserHelpTicketsListener === 'function') stopUserHelpTicketsListener();
             loadMockData();
             if (currentUser && currentUser.uid && typeof startDashboardBlocksSync === 'function') {
                 startDashboardBlocksSync(currentUser.uid);
+            }
+            if (currentUser && currentUser.uid && typeof startUserHelpTicketsListener === 'function') {
+                startUserHelpTicketsListener(currentUser.uid);
             }
             setupDashboardEventListeners();
             resetInactivityTimer();
@@ -7901,6 +7968,75 @@
                 dashboardBlocksUnsub = null;
             }
             appliedDashboardBlocksRevision = -1;
+        }
+
+        function stopUserHelpTicketsListener() {
+            if (userHelpTicketsUnsub) {
+                try { userHelpTicketsUnsub(); } catch (e) {}
+                userHelpTicketsUnsub = null;
+            }
+        }
+
+        function ticketMillis(t) {
+            if (t && t.createdAt && typeof t.createdAt.toMillis === 'function') return t.createdAt.toMillis();
+            if (t && t.date) return new Date(t.date).getTime();
+            return 0;
+        }
+
+        function renderHelpTicketsListItems(items) {
+            const listEl = document.getElementById('helpMyTicketsList');
+            if (!listEl) return;
+            if (!items || items.length === 0) {
+                listEl.innerHTML = '<p style="color:var(--gray);margin:0;">No requests yet. Submit one below.</p>';
+                return;
+            }
+            function escHtml(s) {
+                var d = document.createElement('div');
+                d.textContent = s == null ? '' : String(s);
+                return d.innerHTML;
+            }
+            listEl.innerHTML = items.map(function(t) {
+                var st = (t.status || 'pending').toLowerCase();
+                var stLabel = st === 'resolved' ? 'Resolved' : 'Open';
+                var stClass = st === 'resolved' ? 'status-active' : 'status-draft';
+                var when = t.createdAt && t.createdAt.toDate ? t.createdAt.toDate().toLocaleString() : (t.date ? new Date(t.date).toLocaleString() : '—');
+                return '<div class="card" style="margin-bottom:12px;padding:14px;border:1px solid #e5e7eb;"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;"><strong>' + escHtml(t.subject) + '</strong><span class="block-status ' + stClass + '" style="font-size:0.75rem;">' + stLabel + '</span></div><p style="margin:8px 0 0 0;font-size:0.875rem;color:var(--gray);white-space:pre-wrap;">' + escHtml(t.message || '') + '</p><div style="margin-top:8px;font-size:0.8rem;color:var(--gray);">' + escHtml(when) + '</div></div>';
+            }).join('');
+        }
+
+        function startUserHelpTicketsListener(uid) {
+            stopUserHelpTicketsListener();
+            const dbUse = window.firebaseDb || (typeof firebase !== 'undefined' && firebase.firestore && firebase.firestore());
+            if (!dbUse || !uid) return;
+            userHelpTicketsUnsub = dbUse.collection('supportTickets').where('userId', '==', uid).onSnapshot(function(snap) {
+                var items = snap.docs.map(function(d) {
+                    var x = d.data();
+                    x.id = d.id;
+                    return x;
+                });
+                items.sort(function(a, b) { return ticketMillis(b) - ticketMillis(a); });
+                window.userHelpTicketsLast = items;
+                renderHelpTicketsListItems(items);
+            }, function(err) {
+                console.error('My tickets listener:', err);
+            });
+        }
+
+        function applyFirestoreUserProfile(uid, data) {
+            if (!data || !currentUser || currentUser.uid !== uid) return;
+            var authE = (typeof auth !== 'undefined' && auth && auth.currentUser) ? (auth.currentUser.email || '') : '';
+            var fsEmail = (data.email != null && String(data.email).trim()) ? String(data.email).trim() : '';
+            var merged = Object.assign({}, currentUser, JSON.parse(localStorage.getItem('kotaUser') || '{}'));
+            if (data.displayName) merged.displayName = data.displayName;
+            if (data.name && !data.displayName) merged.displayName = data.name;
+            if (data.plan) merged.plan = data.plan;
+            merged.email = fsEmail || authE || merged.email || '';
+            merged.loginEmail = authE;
+            if (data.website != null && data.website !== '') merged.website = data.website;
+            currentUser = merged;
+            localStorage.setItem('kotaUser', JSON.stringify(merged));
+            if (typeof updateSidebarUserInfo === 'function') updateSidebarUserInfo();
+            if (typeof loadProfileSettings === 'function') loadProfileSettings();
         }
 
         function applyDashboardBlocksFromRemote(uid, jsonStr, revision) {
@@ -7949,6 +8085,9 @@
                     if (typeof showNotification === 'function') showNotification('Your account has been disabled. Contact support if this is a mistake.', 'error', 'Account');
                     setTimeout(function() { window.location.reload(); }, 800);
                     return;
+                }
+                if (window.location.hash !== '#admin') {
+                    applyFirestoreUserProfile(uid, data);
                 }
                 const rev = typeof data.blocksRevision === 'number' ? data.blocksRevision : 0;
                 const js = data.dashboardBlocksJson;
@@ -8080,6 +8219,7 @@
                 sessionStorage.removeItem('settings_access_granted');
                 if (typeof currentUser !== 'undefined') currentUser = null;
                 if (typeof stopDashboardBlocksSync === 'function') stopDashboardBlocksSync();
+                if (typeof stopUserHelpTicketsListener === 'function') stopUserHelpTicketsListener();
                 showNotification('Logged out successfully', 'success', 'Logout');
                 const dashboardView = document.getElementById('dashboard-view');
                 const landingView = document.getElementById('landing-page-view');
@@ -8669,17 +8809,46 @@
             const form = document.getElementById('helpRequestForm');
             if (form && !form.dataset.bound) {
                 form.dataset.bound = '1';
-                form.addEventListener('submit', function(e) {
+                form.addEventListener('submit', async function(e) {
                     e.preventDefault();
-                    const subj = document.getElementById('helpSubject').value;
-                    const msg = document.getElementById('helpMessage').value;
+                    const subj = (document.getElementById('helpSubject') && document.getElementById('helpSubject').value || '').trim();
+                    const msg = (document.getElementById('helpMessage') && document.getElementById('helpMessage').value || '').trim();
                     if (!subj || !msg) return;
+                    if (!currentUser || !currentUser.uid) {
+                        showNotification('Please log in to submit a request.', 'error', 'Help');
+                        return;
+                    }
+                    var dbUse = window.firebaseDb || (typeof firebase !== 'undefined' && firebase.firestore && firebase.firestore());
+                    if (dbUse) {
+                        try {
+                            await dbUse.collection('supportTickets').add({
+                                subject: subj,
+                                message: msg,
+                                userId: currentUser.uid,
+                                userEmail: currentUser.email || '',
+                                userName: currentUser.displayName || '',
+                                status: 'pending',
+                                priority: 'medium',
+                                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                            });
+                            showNotification('Request submitted. Admins see it instantly in Support & Tickets.', 'success', 'Help');
+                            form.reset();
+                            return;
+                        } catch (err) {
+                            console.error('Ticket write failed:', err);
+                            showNotification('Could not submit (check Firebase rules / network).', 'error', 'Help');
+                        }
+                    }
                     var tickets = JSON.parse(localStorage.getItem('kota_support_tickets') || '[]');
                     tickets.unshift({ id: Date.now().toString(), subject: subj, message: msg, userEmail: (currentUser && currentUser.email) || '', userName: (currentUser && currentUser.displayName) || '', status: 'pending', date: new Date().toISOString() });
                     localStorage.setItem('kota_support_tickets', JSON.stringify(tickets));
-                    showNotification('Request submitted. We\'ll get back to you soon.', 'success', 'Help');
+                    showNotification('Request saved locally (Firebase not available).', 'success', 'Help');
                     form.reset();
                 });
+            }
+            if (typeof window.userHelpTicketsLast !== 'undefined' && window.userHelpTicketsLast && typeof renderHelpTicketsListItems === 'function') {
+                renderHelpTicketsListItems(window.userHelpTicketsLast);
             }
         }
 
@@ -11539,6 +11708,19 @@
                             });
                         } catch (error) {
                             console.error('Error updating Firebase profile:', error);
+                        }
+                        var dbProf = window.firebaseDb || (typeof firebase !== 'undefined' && firebase.firestore && firebase.firestore());
+                        if (dbProf && auth.currentUser.uid) {
+                            try {
+                                await dbProf.collection('users').doc(auth.currentUser.uid).set({
+                                    displayName: userName,
+                                    name: userName,
+                                    website: userWebsite || '',
+                                    email: auth.currentUser.email || userData.email || ''
+                                }, { merge: true });
+                            } catch (fsErr) {
+                                console.error('Firestore profile sync:', fsErr);
+                            }
                         }
                     }
                     
