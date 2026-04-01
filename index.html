@@ -137,24 +137,40 @@
             --success: #10b981;
             --danger: #ef4444;
             --warning: #f59e0b;
-        }
-
-        /* Landing: single vertical scrollbar on body (html locked — avoids double scrollbars). */
-        html {
-            overflow-x: hidden;
-            overflow-y: hidden;
-            height: 100%;
-        }
-        body {
             --sb-track-color: #232E33;
             --sb-thumb-color: #6BAF8D;
             --sb-size: 14px;
+        }
+
+        /* Landing: html scrolls the document (fixes full page + scrollIntoView). Nav stays fixed; gutter keeps scrollbar lane clear of the bar. */
+        html {
             overflow-x: hidden;
             overflow-y: auto;
             scroll-behavior: smooth;
-            min-height: 100%;
+            scroll-padding-top: 100px;
+            scrollbar-gutter: stable;
+        }
+        html::-webkit-scrollbar {
+            width: var(--sb-size);
+        }
+        html::-webkit-scrollbar-track {
+            background: var(--sb-track-color);
+            border-radius: 3px;
+        }
+        html::-webkit-scrollbar-thumb {
+            background: var(--sb-thumb-color);
+            border-radius: 3px;
+        }
+        @supports not selector(::-webkit-scrollbar) {
+            html {
+                scrollbar-color: var(--sb-thumb-color) var(--sb-track-color);
+            }
+        }
+        body {
+            overflow-x: hidden;
+            overflow-y: visible;
+            min-height: 100vh;
             min-height: -webkit-fill-available;
-            height: auto;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
             color: #333;
             line-height: 1.6;
@@ -164,22 +180,6 @@
             -moz-osx-font-smoothing: grayscale;
             -ms-text-size-adjust: 100%;
             -webkit-text-size-adjust: 100%;
-        }
-        body::-webkit-scrollbar {
-            width: var(--sb-size);
-        }
-        body::-webkit-scrollbar-track {
-            background: var(--sb-track-color);
-            border-radius: 3px;
-        }
-        body::-webkit-scrollbar-thumb {
-            background: var(--sb-thumb-color);
-            border-radius: 3px;
-        }
-        @supports not selector(::-webkit-scrollbar) {
-            body {
-                scrollbar-color: var(--sb-thumb-color) var(--sb-track-color);
-            }
         }
 
         .container {
@@ -302,6 +302,8 @@
         #landing-page-view > nav {
             position: fixed;
             top: 0;
+            left: 0;
+            right: 0;
             width: 100%;
             z-index: 1000;
             background: rgba(255, 255, 255, 0.95);
@@ -7649,6 +7651,16 @@
             if (mbtn) mbtn.classList.remove('active');
         }
 
+        function getDocumentScrollTop() {
+            return window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+        }
+        function scrollDocumentToElement(el, offsetPx, smooth) {
+            if (!el) return;
+            var off = typeof offsetPx === 'number' ? offsetPx : 100;
+            var top = el.getBoundingClientRect().top + getDocumentScrollTop() - off;
+            window.scrollTo({ top: Math.max(0, top), behavior: smooth ? 'smooth' : 'auto' });
+        }
+
         // Smooth scroll to section (landing home only) - set active immediately for instant underline
         function scrollToSection(sectionId, clickedEl) {
             if (clickedEl) {
@@ -7662,7 +7674,7 @@
             showLandingPage('home-page');
             var section = document.getElementById(sectionId);
             if (section) {
-                setTimeout(function() { section.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 50);
+                setTimeout(function() { scrollDocumentToElement(section, 100, true); }, 80);
             }
         }
         function goToContactForm(clickedEl) {
@@ -7690,7 +7702,7 @@
             if (contact) contact.style.display = 'block';
             setTimeout(function() {
                 var heading = document.querySelector('#contact-page h1');
-                if (heading) heading.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                if (heading) scrollDocumentToElement(heading, 100, true);
             }, 80);
         }
 
