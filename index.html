@@ -145,16 +145,19 @@
         }
 
         /*
-         * Single scroll container: `html` only (wheel + scrollbar both work in Chrome/Edge/Safari).
-         * Scrolling on `body` while `html` has overflow:hidden breaks mouse-wheel scrolling — looks broken.
-         * `body` must not create a second scrollport (overflow-y: visible).
+         * Single scroll root: `html` only. No global scroll-behavior:smooth on html (causes scrollbar thumb /
+         * wheel feel glitches with programmatic scroll + nav sync). Use smooth only in JS where needed.
+         * Avoid scrollbar-gutter: stable here: it reserves a full-height gutter that, combined with custom
+         * ::-webkit-scrollbar rules, often reads as two scrollbars (static track + moving thumb) until state settles.
          */
         html {
             overflow-x: hidden;
             overflow-y: auto;
-            scroll-behavior: smooth;
+            scroll-behavior: auto;
             scroll-padding-top: 100px;
             min-height: 100%;
+            min-height: 100dvh;
+            overscroll-behavior-y: auto;
             scrollbar-width: thin;
             scrollbar-color: var(--page-scrollbar-thumb) var(--page-scrollbar-track);
         }
@@ -176,6 +179,7 @@
             overflow-x: hidden;
             overflow-y: visible;
             min-height: 100%;
+            min-height: 100dvh;
             min-height: -webkit-fill-available;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
             color: #333;
@@ -433,11 +437,13 @@
         .hero {
             padding-top: 120px;
             min-height: 100vh;
+            min-height: 100dvh;
             background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('images/kotapal\ landing01.jpg') no-repeat center center/cover;
             color: white;
             display: flex;
             align-items: center;
-            background-attachment: fixed;
+            /* fixed attachment repaints on every scroll — causes scrollbar / main-thread jank */
+            background-attachment: scroll;
         }
 
         .hero-content {
@@ -1873,22 +1879,22 @@
             padding-bottom: 20px;
         }
 
-        #authModal .auth-login-admin-btn {
+        #authModal .auth-admin-login-row { margin-top: 8px; }
+        #authModal .auth-admin-login-row .toggle-wrap { width: 100%; }
+        #authModal .auth-admin-login-label-text {
             display: inline-flex;
             align-items: center;
-            justify-content: center;
             gap: 8px;
-            width: 100%;
-            text-decoration: none;
-            margin: 0;
-            background: #f3f4f6;
-            color: #1f2937;
-            border: 2px solid #d1d5db;
-            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--dark);
         }
-        #authModal .auth-login-admin-btn:hover {
-            background: #e5e7eb;
-            border-color: #9ca3af;
+        #authModal .auth-admin-login-label-text .fa-shield-alt { color: var(--primary); font-size: 0.95rem; }
+        #authModal .auth-admin-login-hint {
+            font-size: 0.75rem;
+            color: var(--gray);
+            margin-top: 8px;
+            line-height: 1.4;
         }
         #authModal .auth-form button[type="submit"] {
             display: block;
@@ -4048,8 +4054,47 @@
         .admin-header-actions { display: flex; align-items: center; gap: 20px; }
         .admin-icon-btn { width: 42px; height: 42px; border-radius: 50%; border: none; background: var(--admin-gray-100); color: var(--admin-gray-600); cursor: pointer; display: flex; align-items: center; justify-content: center; position: relative; transition: all 0.3s ease; }
         .admin-icon-btn:hover { background: var(--admin-gray-100); color: var(--admin-primary); }
+        .admin-user-menu-wrap { position: relative; }
         .admin-user-menu { display: flex; align-items: center; gap: 12px; padding: 5px 15px 5px 5px; border-radius: 25px; border: 1px solid var(--admin-gray-200); cursor: pointer; transition: all 0.3s ease; }
-        .admin-user-menu:hover { background: var(--admin-gray-50); }
+        .admin-user-menu:hover,
+        .admin-user-menu[aria-expanded="true"] { background: var(--admin-gray-50); }
+        .admin-header-dropdown {
+            position: absolute;
+            top: calc(100% + 8px);
+            right: 0;
+            min-width: 220px;
+            background: #fff;
+            border: 1px solid var(--admin-gray-200);
+            border-radius: 12px;
+            box-shadow: 0 12px 40px rgba(15, 23, 42, 0.12);
+            padding: 6px 0;
+            z-index: 200;
+        }
+        .admin-header-dropdown[hidden] { display: none !important; }
+        .admin-dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+            padding: 10px 16px;
+            border: none;
+            background: none;
+            font: inherit;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--admin-gray-700);
+            cursor: pointer;
+            text-align: left;
+            transition: background 0.15s ease;
+        }
+        .admin-dropdown-item:hover { background: var(--admin-gray-100); }
+        .admin-dropdown-item i { width: 18px; text-align: center; color: var(--admin-gray-500); }
+        .admin-dropdown-item.admin-dropdown-danger { color: #b91c1c; }
+        .admin-dropdown-item.admin-dropdown-danger:hover { background: rgba(239, 68, 68, 0.08); }
+        .admin-dropdown-item.admin-dropdown-danger i { color: #b91c1c; }
+        .admin-header-popover-wrap { position: relative; }
+        .admin-icon-dropdown { min-width: 260px; }
+        .admin-icon-dropdown .admin-dropdown-hint { padding: 10px 16px; font-size: 13px; color: var(--admin-gray-500); border-bottom: 1px solid var(--admin-gray-100); margin-bottom: 4px; }
         .admin-user-avatar { width: 35px; height: 35px; border-radius: 50%; background: linear-gradient(135deg, var(--admin-primary) 0%, var(--admin-secondary) 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; }
         .admin-main-content { padding: 30px; flex: 1; }
         .admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 16px; }
@@ -4833,12 +4878,30 @@
                     </div>
                 </div>
                 <div class="admin-header-actions">
-                    <button class="admin-icon-btn" type="button" title="Notifications" id="adminHeaderNotifBtn"><i class="fas fa-bell"></i></button>
-                    <button class="admin-icon-btn" type="button" title="Messages" id="adminHeaderMsgBtn"><i class="fas fa-envelope"></i></button>
-                    <div class="admin-user-menu" id="adminUserMenuBtn" role="button" tabindex="0" title="Account menu">
-                        <div class="admin-user-avatar" id="adminUserAvatar">A</div>
-                        <span class="user-name" id="adminUserName">Admin</span>
-                        <i class="fas fa-chevron-down" style="color:var(--admin-gray-400);font-size:12px;"></i>
+                    <div class="admin-header-popover-wrap">
+                        <button class="admin-icon-btn" type="button" title="Notifications" id="adminHeaderNotifBtn" aria-expanded="false" aria-haspopup="true"><i class="fas fa-bell"></i></button>
+                        <div class="admin-header-dropdown admin-icon-dropdown" id="adminNotifDropdown" role="menu" hidden>
+                            <div class="admin-dropdown-hint">Alerts and broadcast messages</div>
+                            <button type="button" class="admin-dropdown-item" id="adminNotifOpenComposer" role="menuitem"><i class="fas fa-bullhorn"></i> Open notifications center</button>
+                        </div>
+                    </div>
+                    <div class="admin-header-popover-wrap">
+                        <button class="admin-icon-btn" type="button" title="Messages" id="adminHeaderMsgBtn" aria-expanded="false" aria-haspopup="true"><i class="fas fa-envelope"></i></button>
+                        <div class="admin-header-dropdown admin-icon-dropdown" id="adminMsgDropdown" role="menu" hidden>
+                            <div class="admin-dropdown-hint">Support inbox &amp; tickets</div>
+                            <button type="button" class="admin-dropdown-item" id="adminMsgOpenSupport" role="menuitem"><i class="fas fa-life-ring"></i> Open support &amp; tickets</button>
+                        </div>
+                    </div>
+                    <div class="admin-user-menu-wrap">
+                        <div class="admin-user-menu" id="adminUserMenuBtn" role="button" tabindex="0" aria-expanded="false" aria-haspopup="true" title="Account menu">
+                            <div class="admin-user-avatar" id="adminUserAvatar">A</div>
+                            <span class="user-name" id="adminUserName">Admin</span>
+                            <i class="fas fa-chevron-down admin-user-chevron" style="color:var(--admin-gray-400);font-size:12px;transition:transform 0.2s ease;"></i>
+                        </div>
+                        <div class="admin-header-dropdown" id="adminUserMenuDropdown" role="menu" hidden>
+                            <button type="button" class="admin-dropdown-item" id="adminMenuSettings" role="menuitem"><i class="fas fa-cog"></i> Platform settings</button>
+                            <button type="button" class="admin-dropdown-item admin-dropdown-danger" id="adminMenuSignOut" role="menuitem"><i class="fas fa-sign-out-alt"></i> Sign out</button>
+                        </div>
                     </div>
                 </div>
             </header>
@@ -5272,9 +5335,18 @@
                     </div>
                     <button type="submit" class="btn btn-primary">Login</button>
                     <div id="authMessage" class="form-status" style="display: none;"></div>
+                    <div class="form-group auth-admin-login-row">
+                        <div class="toggle-wrap">
+                            <input type="checkbox" id="authAdminLoginToggle" class="toggle-input" autocomplete="off">
+                            <label for="authAdminLoginToggle" class="toggle-label" style="width:100%;justify-content:space-between;gap:12px;">
+                                <span class="auth-admin-login-label-text"><i class="fas fa-shield-alt"></i> Administrator login</span>
+                                <span class="toggle-slider" aria-hidden="true"></span>
+                            </label>
+                        </div>
+                        <p class="auth-admin-login-hint">When this is on, Login opens the admin sign-in screen (use your admin email and password there).</p>
+                    </div>
                     <div style="text-align: center; margin-top: 16px; padding-top: 16px; border-top: 1px solid #e5e7eb;">
-                        <a href="#admin" class="btn auth-login-admin-btn" style="display: inline-flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none;"><i class="fas fa-shield-alt"></i> Admin login</a>
-                        <a href="#" class="btn btn-secondary" id="backToHomepageFromLogin" style="display: block; margin-top: 10px; text-align: center; text-decoration: none;">Back to Homepage</a>
+                        <a href="#" class="btn btn-secondary" id="backToHomepageFromLogin" style="display: block; text-align: center; text-decoration: none;">Back to Homepage</a>
                     </div>
                 </form>
             </div>
@@ -5934,24 +6006,31 @@
             window.addEventListener('load', function() { setTimeout(hidePageLoader, 300); });
             setTimeout(hidePageLoader, 4000);
             
-            // Nav scroll highlight (updateActiveMenu)
+            // Nav scroll highlight — one update per frame (avoids layout thrash / scrollbar flicker)
+            var activeMenuScrollPending = false;
             function updateActiveMenu() {
-                var sections = document.querySelectorAll('section[id]');
-                var navLinks = document.querySelectorAll('.nav-links a[data-section]');
-                var currentSection = '';
-                sections.forEach(function(section) {
-                    var sectionTop = section.offsetTop - 100;
-                    var sectionHeight = section.clientHeight;
-                    if (window.scrollY >= sectionTop && window.scrollY < sectionTop + sectionHeight) {
-                        currentSection = section.getAttribute('id');
-                    }
-                });
-                navLinks.forEach(function(link) {
-                    link.classList.remove('active');
-                    if (link.getAttribute('data-section') === currentSection) link.classList.add('active');
+                if (activeMenuScrollPending) return;
+                activeMenuScrollPending = true;
+                requestAnimationFrame(function() {
+                    activeMenuScrollPending = false;
+                    var y = window.scrollY || document.documentElement.scrollTop || 0;
+                    var sections = document.querySelectorAll('section[id]');
+                    var navLinks = document.querySelectorAll('.nav-links a[data-section]');
+                    var currentSection = '';
+                    sections.forEach(function(section) {
+                        var sectionTop = section.offsetTop - 100;
+                        var sectionHeight = section.clientHeight;
+                        if (y >= sectionTop && y < sectionTop + sectionHeight) {
+                            currentSection = section.getAttribute('id');
+                        }
+                    });
+                    navLinks.forEach(function(link) {
+                        link.classList.remove('active');
+                        if (link.getAttribute('data-section') === currentSection) link.classList.add('active');
+                    });
                 });
             }
-            window.addEventListener('scroll', updateActiveMenu);
+            window.addEventListener('scroll', updateActiveMenu, { passive: true });
             window.addEventListener('load', updateActiveMenu);
             
             // Section reveal animation
@@ -6380,11 +6459,14 @@
                     }
                 });
             };
-            window.handleAdminLogout = function() {
+            window.handleAdminLogout = async function() {
                 sessionStorage.removeItem('admin_logged_in');
-                if (auth) auth.signOut();
+                try {
+                    if (typeof auth !== 'undefined' && auth) await auth.signOut();
+                } catch (err) { console.warn('Admin sign out:', err); }
                 window.location.hash = '';
-                window.location.reload();
+                if (typeof window.applyAdminView === 'function') window.applyAdminView();
+                else window.location.reload();
             };
             window.loadAdminUsers = async function() {
                 function withTimeout(promise, ms) {
@@ -6936,15 +7018,107 @@
                         adminToast('Revenue range: ' + revSel.options[revSel.selectedIndex].text, 'info');
                     });
                 }
+                function closeAllAdminHeaderMenus() {
+                    ['adminNotifDropdown', 'adminMsgDropdown', 'adminUserMenuDropdown'].forEach(function(id) {
+                        var el = document.getElementById(id);
+                        if (el) el.hidden = true;
+                    });
+                    ['adminHeaderNotifBtn', 'adminHeaderMsgBtn', 'adminUserMenuBtn'].forEach(function(id) {
+                        var b = document.getElementById(id);
+                        if (b) b.setAttribute('aria-expanded', 'false');
+                        var ch = b && b.querySelector ? b.querySelector('.admin-user-chevron') : null;
+                        if (ch) ch.style.transform = '';
+                    });
+                }
+                function toggleAdminHeaderMenu(panelId, btnId) {
+                    var panel = document.getElementById(panelId);
+                    var btn = document.getElementById(btnId);
+                    if (!panel || !btn) return;
+                    var willOpen = !!panel.hidden;
+                    closeAllAdminHeaderMenus();
+                    if (willOpen) {
+                        panel.hidden = false;
+                        btn.setAttribute('aria-expanded', 'true');
+                        var ch = btn.querySelector('.admin-user-chevron');
+                        if (ch) ch.style.transform = 'rotate(180deg)';
+                    }
+                }
+                if (!window._adminHeaderMenusDoc) {
+                    window._adminHeaderMenusDoc = true;
+                    document.addEventListener('click', function() { closeAllAdminHeaderMenus(); });
+                    document.addEventListener('keydown', function(ev) {
+                        if (ev.key === 'Escape') closeAllAdminHeaderMenus();
+                    });
+                }
+                ['adminNotifDropdown', 'adminMsgDropdown', 'adminUserMenuDropdown'].forEach(function(id) {
+                    var el = document.getElementById(id);
+                    if (el && !el._adminStop) {
+                        el._adminStop = true;
+                        el.addEventListener('click', function(e) { e.stopPropagation(); });
+                    }
+                });
                 var nb = document.getElementById('adminHeaderNotifBtn');
-                if (nb && !nb._wire) { nb._wire = true; nb.addEventListener('click', function() { showAdminPage('notifications'); adminToast('Notifications composer', 'info'); }); }
+                if (nb && !nb._wire) {
+                    nb._wire = true;
+                    nb.addEventListener('click', function(ev) {
+                        ev.stopPropagation();
+                        toggleAdminHeaderMenu('adminNotifDropdown', 'adminHeaderNotifBtn');
+                    });
+                }
+                var noc = document.getElementById('adminNotifOpenComposer');
+                if (noc && !noc._wire) {
+                    noc._wire = true;
+                    noc.addEventListener('click', function() {
+                        closeAllAdminHeaderMenus();
+                        showAdminPage('notifications');
+                    });
+                }
                 var mb = document.getElementById('adminHeaderMsgBtn');
-                if (mb && !mb._wire) { mb._wire = true; mb.addEventListener('click', function() { showAdminPage('support'); adminToast('Support & tickets', 'info'); }); }
+                if (mb && !mb._wire) {
+                    mb._wire = true;
+                    mb.addEventListener('click', function(ev) {
+                        ev.stopPropagation();
+                        toggleAdminHeaderMenu('adminMsgDropdown', 'adminHeaderMsgBtn');
+                    });
+                }
+                var mos = document.getElementById('adminMsgOpenSupport');
+                if (mos && !mos._wire) {
+                    mos._wire = true;
+                    mos.addEventListener('click', function() {
+                        closeAllAdminHeaderMenus();
+                        showAdminPage('support');
+                    });
+                }
                 var um = document.getElementById('adminUserMenuBtn');
-                if (um && !um._wire) {
+                var udd = document.getElementById('adminUserMenuDropdown');
+                if (um && udd && !um._wire) {
                     um._wire = true;
-                    um.addEventListener('click', function() { showAdminPage('settings'); });
-                    um.addEventListener('keydown', function(ev) { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); showAdminPage('settings'); } });
+                    um.addEventListener('click', function(ev) {
+                        ev.stopPropagation();
+                        toggleAdminHeaderMenu('adminUserMenuDropdown', 'adminUserMenuBtn');
+                    });
+                    um.addEventListener('keydown', function(ev) {
+                        if (ev.key === 'Enter' || ev.key === ' ') {
+                            ev.preventDefault();
+                            toggleAdminHeaderMenu('adminUserMenuDropdown', 'adminUserMenuBtn');
+                        }
+                    });
+                }
+                var ams = document.getElementById('adminMenuSettings');
+                if (ams && !ams._wire) {
+                    ams._wire = true;
+                    ams.addEventListener('click', function() {
+                        closeAllAdminHeaderMenus();
+                        showAdminPage('settings');
+                    });
+                }
+                var amo = document.getElementById('adminMenuSignOut');
+                if (amo && !amo._wire) {
+                    amo._wire = true;
+                    amo.addEventListener('click', function() {
+                        closeAllAdminHeaderMenus();
+                        if (typeof handleAdminLogout === 'function') handleAdminLogout();
+                    });
                 }
                 var addU = document.getElementById('adminAddUserBtn');
                 if (addU && !addU._wire) {
@@ -7159,14 +7333,7 @@
             console.warn('Firebase auth not initialized - authentication features will not work');
         }
         
-        // Logout handler: show in-website confirmation (performLogout does actual sign-out)
-        const logoutBtnEl = document.getElementById('logoutBtn');
-        if (logoutBtnEl) {
-            logoutBtnEl.addEventListener('click', function(e) {
-                e.preventDefault();
-                if (typeof showLogoutConfirm === 'function') showLogoutConfirm();
-            });
-        }
+        // Logout: listener attached in setupDashboardEventListeners (avoids duplicate handlers)
 
         // ============================================
         // Existing JavaScript Code
@@ -7279,6 +7446,14 @@
                     e.preventDefault();
                     e.stopPropagation();
                     try {
+                        const adminToggle = document.getElementById('authAdminLoginToggle');
+                        if (adminToggle && adminToggle.checked) {
+                            if (typeof closeAuthModal === 'function') closeAuthModal();
+                            adminToggle.checked = false;
+                            if (typeof window.goToAdmin === 'function') window.goToAdmin();
+                            else { window.location.hash = '#admin'; if (typeof window.applyAdminView === 'function') window.applyAdminView(); }
+                            return;
+                        }
                         const email = document.getElementById('loginEmail').value;
                         const password = document.getElementById('loginPassword').value;
                         console.log('Login attempt:', email);
@@ -8222,7 +8397,6 @@
                 if (typeof currentUser !== 'undefined') currentUser = null;
                 if (typeof stopDashboardBlocksSync === 'function') stopDashboardBlocksSync();
                 if (typeof stopUserHelpTicketsListener === 'function') stopUserHelpTicketsListener();
-                showNotification('Logged out successfully', 'success', 'Logout');
                 const dashboardView = document.getElementById('dashboard-view');
                 const landingView = document.getElementById('landing-page-view');
                 const nav = document.querySelector('nav');
