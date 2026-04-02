@@ -137,16 +137,11 @@
             --success: #10b981;
             --danger: #ef4444;
             --warning: #f59e0b;
-            /* Page scroll uses the browser default (single bar). Custom wide ::-webkit-scrollbar on html was
-               doubling up with the native/overlay bar — looked like one big static track + one small thumb. */
-            --page-scrollbar-track: #f1f5f9;
-            --page-scrollbar-thumb: #cbd5e1;
         }
 
         /*
-         * Single scroll root: `html` only. No global scroll-behavior:smooth on html (causes scrollbar thumb /
-         * wheel feel glitches with programmatic scroll + nav sync). Use smooth only in JS where needed.
-         * body uses overflow-y: clip so only html scrolls — avoids a second nested scrollport in some browsers.
+         * Landing page scroll: single root on `html` only (full page up/down).
+         * body overflow-y: clip avoids a second vertical scrollport.
          */
         html {
             overflow-x: hidden;
@@ -156,8 +151,9 @@
             min-height: 100%;
             min-height: 100dvh;
             overscroll-behavior-y: auto;
-            scrollbar-width: thin;
-            scrollbar-color: var(--page-scrollbar-thumb) var(--page-scrollbar-track);
+            /* scrollbar-color: [thumb-color] [track-color] */
+            scrollbar-color: #888888 #f1f1f1;
+            scrollbar-width: thin; /* Optional: Makes scrollbar thinner */
         }
         body {
             overflow-x: hidden;
