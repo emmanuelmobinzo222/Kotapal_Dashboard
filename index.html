@@ -137,18 +137,16 @@
             --success: #10b981;
             --danger: #ef4444;
             --warning: #f59e0b;
-            /* Single page scrollbar — light gray on white */
+            /* Page scroll uses the browser default (single bar). Custom wide ::-webkit-scrollbar on html was
+               doubling up with the native/overlay bar — looked like one big static track + one small thumb. */
             --page-scrollbar-track: #f1f5f9;
             --page-scrollbar-thumb: #cbd5e1;
-            --page-scrollbar-thumb-hover: #94a3b8;
-            --page-scrollbar-width: 10px;
         }
 
         /*
          * Single scroll root: `html` only. No global scroll-behavior:smooth on html (causes scrollbar thumb /
          * wheel feel glitches with programmatic scroll + nav sync). Use smooth only in JS where needed.
-         * Avoid scrollbar-gutter: stable here: it reserves a full-height gutter that, combined with custom
-         * ::-webkit-scrollbar rules, often reads as two scrollbars (static track + moving thumb) until state settles.
+         * body uses overflow-y: clip so only html scrolls — avoids a second nested scrollport in some browsers.
          */
         html {
             overflow-x: hidden;
@@ -161,23 +159,9 @@
             scrollbar-width: thin;
             scrollbar-color: var(--page-scrollbar-thumb) var(--page-scrollbar-track);
         }
-        html::-webkit-scrollbar {
-            width: var(--page-scrollbar-width);
-        }
-        html::-webkit-scrollbar-track {
-            background: var(--page-scrollbar-track);
-            border-radius: 5px;
-        }
-        html::-webkit-scrollbar-thumb {
-            background: var(--page-scrollbar-thumb);
-            border-radius: 5px;
-        }
-        html::-webkit-scrollbar-thumb:hover {
-            background: var(--page-scrollbar-thumb-hover);
-        }
         body {
             overflow-x: hidden;
-            overflow-y: visible;
+            overflow-y: clip;
             min-height: 100%;
             min-height: 100dvh;
             min-height: -webkit-fill-available;
