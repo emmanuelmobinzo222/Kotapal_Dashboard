@@ -39,7 +39,7 @@
 
 
     <!-- Favicon -->
-    <link rel="icon" href=".../images/kotapal favicon.png">
+    <link rel="icon" href="images/IMG_4258.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -55,7 +55,19 @@
     <!-- Admin routing - runs early, no Firebase dependency -->
     <script>
     (function() {
-        function showAdminPage() {
+        function showAdminLoginRoute() {
+            if (window._adminAuthModalLoginPending) {
+                var plPending = document.getElementById('pageLoader');
+                if (plPending) plPending.classList.remove('hidden');
+                var adminLoginPending = document.getElementById('admin-login-screen');
+                if (adminLoginPending) adminLoginPending.classList.remove('active');
+                return;
+            }
+            if (typeof window.applyAdminView === 'function') {
+                window.location.hash = '#admin';
+                window.applyAdminView();
+                return;
+            }
             var landing = document.getElementById('landing-page-view');
             var nav = document.querySelector('nav');
             var footer = document.querySelector('footer');
@@ -74,7 +86,7 @@
             if (adminView) adminView.classList.remove('active');
             if (adminLogin) adminLogin.classList.add('active');
         }
-        window.goToAdmin = showAdminPage;
+        window.goToAdmin = showAdminLoginRoute;
         function initAdminLinks() {
             document.querySelectorAll('a[href="#admin"]').forEach(function(a) {
                 a.removeEventListener('click', adminClickHandler);
@@ -89,7 +101,7 @@
             var mbtn = document.getElementById('mobileMenuBtn');
             if (mbtn) mbtn.classList.remove('active');
             window.location.hash = 'admin';
-            showAdminPage();
+            showAdminLoginRoute();
             return false;
         }
         if (document.readyState === 'loading') {
@@ -98,20 +110,49 @@
             initAdminLinks();
         }
         window.addEventListener('hashchange', function() {
-            if (window.location.hash === '#admin') showAdminPage();
+            if (window.location.hash === '#admin' || window.location.hash === '#admin-setup') {
+                if (typeof window.applyAdminView === 'function') window.applyAdminView();
+                else showAdminLoginRoute();
+            }
         });
-        if (window.location.hash === '#admin') {
+        if (window.location.hash === '#admin' || window.location.hash === '#admin-setup') {
             if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', showAdminPage);
+                document.addEventListener('DOMContentLoaded', showAdminLoginRoute);
             } else {
-                showAdminPage();
+                showAdminLoginRoute();
             }
         } else {
             document.documentElement.classList.add('landing-page-active');
         }
         document.addEventListener('DOMContentLoaded', function() {
-            if (window.location.hash === '#admin') setTimeout(showAdminPage, 0);
+            if (window.location.hash === '#admin' || window.location.hash === '#admin-setup') {
+                setTimeout(showAdminLoginRoute, 0);
+            }
+            initLandingMobileNav();
         });
+        function hidePageLoaderEarly() {
+            var pl = document.getElementById('pageLoader');
+            if (pl) pl.classList.add('hidden');
+        }
+        function initLandingMobileNav() {
+            hidePageLoaderEarly();
+            setTimeout(hidePageLoaderEarly, 2500);
+            var mbtn = document.getElementById('mobileMenuBtn');
+            if (!mbtn || mbtn._kotapalMenuBound) return;
+            mbtn._kotapalMenuBound = true;
+            function toggleMobileMenu(e) {
+                if (e) { e.preventDefault(); e.stopPropagation(); }
+                var isOpen = mbtn.classList.toggle('active');
+                mbtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+                var navLinks = document.querySelector('#landing-page-view .nav-links');
+                if (navLinks) navLinks.classList.toggle('active', isOpen);
+                var navEl = document.querySelector('#landing-page-view > nav');
+                if (navEl) navEl.classList.toggle('menu-open', isOpen);
+            }
+            mbtn.addEventListener('click', toggleMobileMenu);
+        }
+        if (document.readyState !== 'loading') initLandingMobileNav();
+        window.addEventListener('load', function() { setTimeout(hidePageLoaderEarly, 200); });
     })();
     </script>
 
@@ -120,6 +161,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-functions-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
@@ -432,6 +474,14 @@
             display: none;
             flex-direction: column;
             cursor: pointer;
+            position: relative;
+            z-index: 1001;
+            background: transparent;
+            border: none;
+            padding: 10px;
+            -webkit-appearance: none;
+            appearance: none;
+            -webkit-tap-highlight-color: transparent;
         }
 
         .mobile-menu-btn span {
@@ -727,7 +777,11 @@
         .page-loader.hidden {
             opacity: 0;
             visibility: hidden;
-            pointer-events: none;
+            pointer-events: none !important;
+            z-index: -1;
+        }
+        .page-loader.admin-auth-pending {
+            z-index: 10002;
         }
         .loader-spinner {
             width: 50px;
@@ -2064,6 +2118,13 @@
 
         /* Tablet & Below (max-width: 768px) */
         @media (max-width: 768px) {
+            #landing-page-view > nav {
+                overflow: visible;
+            }
+            .nav-container {
+                position: relative;
+            }
+
             h1 {
                 font-size: 2.5rem;
             }
@@ -2776,6 +2837,13 @@
             }
             #landing-page-view > nav {
                 padding-top: env(safe-area-inset-top, 0px);
+                overflow: visible;
+            }
+            #landing-page-view > nav.menu-open {
+                overflow: visible;
+            }
+            .nav-links.active {
+                z-index: 1000;
             }
             footer {
                 padding-bottom: max(24px, env(safe-area-inset-bottom, 0px));
@@ -2851,7 +2919,7 @@
                 <span style="display:none; font-weight: 700; font-size: 1.5rem; color: var(--primary);">KotaPal</span>
             </div>
 
-            <ul class="nav-links">
+            <ul class="nav-links" id="landingNavLinks">
                 <li><a href="#home" class="nav-link active" data-section="home" onclick="scrollToSection('home', this); return false;">Home</a></li>
                 <li><a href="#features" class="nav-link" data-section="features" onclick="scrollToSection('features', this); return false;">Features</a></li>
                 <li><a href="#pricing" class="nav-link" data-section="pricing" onclick="scrollToSection('pricing', this); return false;">Pricing</a></li>
@@ -2863,11 +2931,11 @@
                 <li><a href="#" id="loginBtn">Login</a></li>
             </ul>
 
-            <div class="mobile-menu-btn" id="mobileMenuBtn">
+            <button type="button" class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Open menu" aria-expanded="false" aria-controls="landingNavLinks">
                 <span></span>
                 <span></span>
                 <span></span>
-            </div>
+            </button>
         </div>
     </nav>
 
@@ -4071,8 +4139,16 @@
         .admin-page.active { display: block; animation: adminFadeIn 0.3s ease; }
         @keyframes adminFadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .admin-btn-sm { padding: 6px 12px; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 6px; width: auto; margin-right: 6px; margin-bottom: 4px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; transition: all 0.3s ease; }
+        .admin-btn-sm.admin-btn-primary,
+        #admin-view .admin-btn-sm:not(.admin-btn-secondary):not(.admin-btn-danger) { background: linear-gradient(135deg, var(--admin-primary) 0%, var(--admin-primary-dark) 100%); color: #fff; }
+        .admin-btn-sm.admin-btn-primary:hover,
+        #admin-view .admin-btn-sm:not(.admin-btn-secondary):not(.admin-btn-danger):hover { opacity: 0.95; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(79,70,229,0.3); }
         .admin-btn-sm.admin-btn-secondary { background: var(--admin-gray-100); color: var(--admin-gray-700); }
         .admin-btn-sm.admin-btn-secondary:hover { background: var(--admin-gray-200); }
+        .admin-btn-sm.admin-btn-danger { background: rgba(239,68,68,0.12); color: #b91c1c; }
+        .admin-btn-sm.admin-btn-danger:hover { background: rgba(239,68,68,0.2); }
+        #admin-view .btn.btn-primary,
+        #admin-view .btn.btn-secondary { font-family: 'Inter', sans-serif; }
         .admin-card .badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
         .admin-card .badge-active { background: rgba(16,185,129,0.1); color: #16a34a; }
         .admin-card .badge-suspended { background: rgba(239,68,68,0.1); color: #b91c1c; }
@@ -4982,8 +5058,9 @@
                     <div class="card-header">
                         <h3 class="card-title">User Directory</h3>
                         <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
-                            <button type="button" class="btn btn-primary btn-sm" id="adminAddUserBtn" style="display:inline-flex;align-items:center;gap:6px;"><i class="fas fa-plus"></i> Add User</button>
-                            <button type="button" class="btn btn-secondary" onclick="loadAdminUsers()"><i class="fas fa-sync-alt"></i> Refresh</button>
+                            <button type="button" class="admin-btn admin-btn-sm admin-btn-primary" id="adminAddUserBtn" style="display:inline-flex;align-items:center;gap:6px;"><i class="fas fa-plus"></i> Add User</button>
+                            <button type="button" class="admin-btn admin-btn-sm admin-btn-secondary" id="adminSyncAuthUsersBtn" title="Sync Firebase Auth users into Firestore"><i class="fas fa-cloud-download-alt"></i> Sync Auth</button>
+                            <button type="button" class="admin-btn admin-btn-sm admin-btn-secondary" onclick="loadAdminUsers()"><i class="fas fa-sync-alt"></i> Refresh</button>
                         </div>
                     </div>
                     <div class="filters" style="display:flex;gap:15px;margin-bottom:20px;flex-wrap:wrap;">
@@ -5011,13 +5088,13 @@
             <div id="admin-page-creators" class="admin-page">
                 <h1 class="page-title">Creator / Seller Management</h1>
                 <div class="admin-stats-grid">
-                    <div class="admin-stat-card"><div class="stat-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:15px;"><div class="admin-stat-label">Total Creators</div><div class="stat-icon blue"><i class="fas fa-store"></i></div></div><div class="admin-stat">1,245</div><div class="admin-stat-label" style="color:var(--admin-success);"><i class="fas fa-arrow-up"></i> 5.2% this month</div></div>
-                    <div class="admin-stat-card"><div class="stat-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:15px;"><div class="admin-stat-label">Verified</div><div class="stat-icon green"><i class="fas fa-check-circle"></i></div></div><div class="admin-stat">982</div><div class="admin-stat-label" style="color:var(--admin-success);">78.9% verification rate</div></div>
-                    <div class="admin-stat-card"><div class="stat-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:15px;"><div class="admin-stat-label">Pending Approval</div><div class="stat-icon orange"><i class="fas fa-clock"></i></div></div><div class="admin-stat">63</div><div class="admin-stat-label">Awaiting review</div></div>
+                    <div class="admin-stat-card"><div class="stat-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:15px;"><div class="admin-stat-label">Total Creators</div><div class="stat-icon blue"><i class="fas fa-store"></i></div></div><div class="admin-stat" id="admin-creators-total">0</div><div class="admin-stat-label">From Firestore users</div></div>
+                    <div class="admin-stat-card"><div class="stat-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:15px;"><div class="admin-stat-label">Active</div><div class="stat-icon green"><i class="fas fa-check-circle"></i></div></div><div class="admin-stat" id="admin-creators-active">0</div><div class="admin-stat-label">Non-suspended accounts</div></div>
+                    <div class="admin-stat-card"><div class="stat-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:15px;"><div class="admin-stat-label">Suspended</div><div class="stat-icon orange"><i class="fas fa-clock"></i></div></div><div class="admin-stat" id="admin-creators-suspended">0</div><div class="admin-stat-label">Suspended accounts</div></div>
                 </div>
                 <div class="admin-card">
                     <div class="admin-card-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;"><span>Registered Creators</span><button type="button" class="admin-btn admin-btn-sm" data-admin-action="open-add-user" style="width:auto;background:var(--admin-primary);color:#fff;"><i class="fas fa-plus"></i> Add Creator</button></div>
-                    <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;"><table class="admin-table"><thead><tr><th>Creator</th><th>Store Name</th><th>Products</th><th>Total Sales</th><th>Verification</th><th>Status</th><th>Actions</th></tr></thead><tbody><tr><td>Alex Johnson</td><td>TechGear Store</td><td>45</td><td>$125,430</td><td><span class="status-badge completed">Verified</span></td><td><span class="status-badge completed">Active</span></td><td><div class="action-btns"><button type="button" class="btn btn-secondary btn-sm" data-admin-demo="Demo creator: Alex Johnson — details are illustrative.">View</button><button type="button" class="btn btn-primary btn-sm" data-admin-open-users="1" data-admin-demo="Open Users to manage real creator accounts tied to Firebase.">Manage</button></div></td></tr><tr><td>Maria Garcia</td><td>Fashion Hub</td><td>128</td><td>$89,250</td><td><span class="status-badge completed">Verified</span></td><td><span class="status-badge completed">Active</span></td><td><div class="action-btns"><button type="button" class="btn btn-secondary btn-sm" data-admin-demo="Demo creator: Maria Garcia — illustrative row.">View</button><button type="button" class="btn btn-primary btn-sm" data-admin-open-users="1">Manage</button></div></td></tr></tbody></table></div>
+                    <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;"><table class="admin-table"><thead><tr><th>Creator</th><th>Email</th><th>Plan</th><th>Joined</th><th>Status</th><th>Actions</th></tr></thead><tbody id="adminCreatorsTableBody"><tr><td colspan="6" style="padding:24px;color:#6b7280;text-align:center;">Loading creators...</td></tr></tbody></table></div>
                 </div>
             </div>
             <div id="admin-page-blocks" class="admin-page">
@@ -5029,19 +5106,19 @@
                         <div style="display:flex;align-items:center;gap:8px;"><span style="font-size:14px;color:var(--admin-gray-600);">Status:</span><select class="form-control" style="width:auto;min-width:120px;"><option>All</option></select></div>
                     </div>
                     <div style="padding:0 24px 24px;color:#6b7280;font-size:14px;border-top:1px solid var(--admin-gray-200);padding-top:16px;">Product blocks and catalog entries are stored per user in Firestore. Use the user dashboard to manage live blocks.</div>
-                    <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;padding:0 24px 24px;"><table class="admin-table"><thead><tr><th>Product</th><th>Category</th><th>Price</th><th>Stock</th><th>Sales</th><th>Status</th><th>Actions</th></tr></thead><tbody><tr><td>Wireless Headphones</td><td>Electronics</td><td>$99.00</td><td>120</td><td>342</td><td><span class="status-badge completed">Active</span></td><td><div class="action-btns"><button type="button" class="btn btn-secondary btn-sm" data-admin-demo="Demo product row — not linked to Firestore catalog.">Edit</button><button type="button" class="btn btn-primary btn-sm" data-admin-demo="Wireless Headphones (sample).">View</button></div></td></tr><tr><td>Smart Watch Pro</td><td>Wearables</td><td>$249.00</td><td>45</td><td>189</td><td><span class="status-badge completed">Active</span></td><td><div class="action-btns"><button type="button" class="btn btn-secondary btn-sm" data-admin-demo="Demo product row — sample only.">Edit</button><button type="button" class="btn btn-primary btn-sm" data-admin-demo="Smart Watch Pro (sample).">View</button></div></td></tr></tbody></table></div>
+                    <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;padding:0 24px 24px;"><table class="admin-table"><thead><tr><th>Product</th><th>Category</th><th>Price</th><th>Stock</th><th>Sales</th><th>Status</th><th>Actions</th></tr></thead><tbody><tr><td>Wireless Headphones</td><td>Electronics</td><td>$99.00</td><td>120</td><td>342</td><td><span class="status-badge completed">Active</span></td><td><div class="action-btns"><button type="button" class="admin-btn-sm admin-btn-secondary" data-admin-nav="users" data-admin-demo="Product blocks are managed per user in User Management.">Edit</button><button type="button" class="admin-btn-sm admin-btn-primary" data-admin-nav="users" data-admin-demo="Open Users to view this creator's live product blocks.">View</button></div></td></tr><tr><td>Smart Watch Pro</td><td>Wearables</td><td>$249.00</td><td>45</td><td>189</td><td><span class="status-badge completed">Active</span></td><td><div class="action-btns"><button type="button" class="admin-btn-sm admin-btn-secondary" data-admin-nav="users" data-admin-demo="Product blocks are managed per user in User Management.">Edit</button><button type="button" class="admin-btn-sm admin-btn-primary" data-admin-nav="users">View</button></div></td></tr></tbody></table></div>
                 </div>
             </div>
             <div id="admin-page-subscriptions" class="admin-page">
                 <h1 class="page-title">Subscription Management</h1>
                 <div class="admin-stats-grid">
-                    <div class="admin-stat-card"><div class="stat-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:15px;"><div class="admin-stat-label">Active Subscriptions</div><div class="stat-icon blue"><i class="fas fa-crown"></i></div></div><div class="admin-stat">3,280</div></div>
-                    <div class="admin-stat-card"><div class="stat-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:15px;"><div class="admin-stat-label">Trial Users</div><div class="stat-icon green"><i class="fas fa-gift"></i></div></div><div class="admin-stat">456</div></div>
-                    <div class="admin-stat-card"><div class="stat-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:15px;"><div class="admin-stat-label">Cancelled (This Month)</div><div class="stat-icon orange"><i class="fas fa-times-circle"></i></div></div><div class="admin-stat">89</div></div>
+                    <div class="admin-stat-card"><div class="stat-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:15px;"><div class="admin-stat-label">Active Subscriptions</div><div class="stat-icon blue"><i class="fas fa-crown"></i></div></div><div class="admin-stat" id="admin-subs-active">0</div></div>
+                    <div class="admin-stat-card"><div class="stat-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:15px;"><div class="admin-stat-label">Starter / Free</div><div class="stat-icon green"><i class="fas fa-gift"></i></div></div><div class="admin-stat" id="admin-subs-starter">0</div></div>
+                    <div class="admin-stat-card"><div class="stat-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:15px;"><div class="admin-stat-label">Suspended</div><div class="stat-icon orange"><i class="fas fa-times-circle"></i></div></div><div class="admin-stat" id="admin-subs-suspended">0</div></div>
                 </div>
                 <div class="admin-card">
                     <div class="admin-card-header">Active Subscriptions</div>
-                    <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;"><table class="admin-table"><thead><tr><th>User</th><th>Plan</th><th>Started</th><th>Renews</th><th>Amount</th><th>Status</th><th>Actions</th></tr></thead><tbody><tr><td>John Doe</td><td><span class="badge-tag pro" style="background:rgba(239,68,68,0.12);">Pro</span></td><td>Jan 15, 2026</td><td>Feb 15, 2026</td><td>$49/mo</td><td><span class="status-badge completed">Active</span></td><td><div class="action-btns"><button type="button" class="btn btn-secondary btn-sm" data-admin-demo="Modify subscription (demo — use Payments/Creator billing flows in production).">Modify</button><button type="button" class="btn btn-primary btn-sm" data-admin-demo="Sample subscription row for John Doe.">View</button></div></td></tr></tbody></table></div>
+                    <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;"><table class="admin-table"><thead><tr><th>User</th><th>Plan</th><th>Joined</th><th>Amount</th><th>Status</th><th>Actions</th></tr></thead><tbody id="adminSubscriptionsUsersBody"><tr><td colspan="6" style="padding:24px;color:#6b7280;text-align:center;">Loading subscriptions...</td></tr></tbody></table></div>
                     <div style="padding:16px 24px 24px;font-size:13px;color:var(--admin-gray-500);">Live subscription rows below mirror your billing overview when you click Payments and refresh.</div>
                     <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;padding:0 24px 24px;"><table class="admin-table"><thead><tr><th>Plan</th><th>Active Users</th><th>MRR</th></tr></thead><tbody id="adminSubscriptionsTableBodyMirror"></tbody></table></div>
                 </div>
@@ -5061,7 +5138,7 @@
                 <div class="chart-section">
                     <div class="section-header">
                         <h2 class="section-title">User Growth</h2>
-                        <button type="button" class="btn btn-primary btn-sm" id="adminExportReportBtn" style="display:inline-flex;align-items:center;gap:8px;"><i class="fas fa-download"></i> Export Report</button>
+                        <button type="button" class="admin-btn admin-btn-sm admin-btn-primary" id="adminExportReportBtn" style="display:inline-flex;align-items:center;gap:8px;"><i class="fas fa-download"></i> Export Users (CSV)</button>
                     </div>
                     <p style="font-size:13px;color:var(--admin-gray-500);margin:-8px 0 16px;"><span style="display:inline-block;width:10px;height:10px;background:#6366f1;border-radius:2px;margin-right:6px;"></span>New Users <span style="margin-left:16px;display:inline-block;width:10px;height:10px;background:#06b6d4;border-radius:2px;margin-right:6px;"></span>Active Users</p>
                     <div class="admin-chart-container" style="height:320px;"><canvas id="adminAnalyticsBarChart"></canvas></div>
@@ -5097,9 +5174,9 @@
                 <div class="admin-card"><div class="admin-card-header">Subscription Overview</div><div style="overflow-x:auto;-webkit-overflow-scrolling:touch;"><table class="admin-table"><thead><tr><th>Plan</th><th>Active Users</th><th>MRR</th></tr></thead><tbody id="adminSubscriptionsTableBody"></tbody></table></div></div>
             </div>
             <div id="admin-page-support" class="admin-page">
-                <div class="admin-header"><h1>Support &amp; Tickets</h1><button type="button" class="admin-btn admin-btn-secondary" style="width:auto;padding:10px 20px;display:inline-flex;align-items:center;gap:8px;" onclick="loadAdminSupport()"><i class="fas fa-sync-alt"></i> Refresh</button></div>
+                <div class="admin-header"><h1>Support &amp; Tickets</h1><button type="button" class="admin-btn admin-btn-secondary" style="width:auto;padding:10px 20px;display:inline-flex;align-items:center;gap:8px;" onclick="loadAdminSupport(true)"><i class="fas fa-sync-alt"></i> Refresh</button></div>
                 <div class="admin-stats-grid">
-                    <div class="admin-stat-card"><div class="stat-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:15px;"><div class="admin-stat-label">Open Tickets</div><div class="stat-icon blue"><i class="fas fa-inbox"></i></div></div><div class="admin-stat" id="admin-support-open">45</div></div>
+                    <div class="admin-stat-card"><div class="stat-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:15px;"><div class="admin-stat-label">Open Tickets</div><div class="stat-icon blue"><i class="fas fa-inbox"></i></div></div><div class="admin-stat" id="admin-support-open">0</div></div>
                     <div class="admin-stat-card"><div class="stat-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:15px;"><div class="admin-stat-label">Resolved (This Week)</div><div class="stat-icon green"><i class="fas fa-check"></i></div></div><div class="admin-stat">128</div></div>
                     <div class="admin-stat-card"><div class="stat-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:15px;"><div class="admin-stat-label">Avg Response Time</div><div class="stat-icon cyan"><i class="fas fa-clock"></i></div></div><div class="admin-stat">2.4h</div></div>
                 </div>
@@ -5125,7 +5202,7 @@
                 <div class="grid-2">
                     <div class="admin-card" style="margin:0;">
                         <div class="admin-card-header" style="display:flex;justify-content:space-between;align-items:center;"><span>API Keys</span><button type="button" class="admin-btn admin-btn-sm" id="adminApiGenerateBtn" style="width:auto;background:var(--admin-primary);color:#fff;"><i class="fas fa-plus"></i> Generate Key</button></div>
-                        <div style="overflow-x:auto;"><table class="admin-table" id="adminApiKeysTable"><thead><tr><th>Key Name</th><th>Key</th><th>Created</th><th>Actions</th></tr></thead><tbody id="adminApiKeysTableBody"><tr data-key-id="default"><td>Production Key</td><td>pk_live_••••••••</td><td>Jan 1, 2026</td><td><button type="button" class="btn btn-secondary btn-sm admin-api-revoke-btn">Revoke</button></td></tr></tbody></table></div>
+                        <div style="overflow-x:auto;"><table class="admin-table" id="adminApiKeysTable"><thead><tr><th>Key Name</th><th>Key</th><th>Created</th><th>Actions</th></tr></thead><tbody id="adminApiKeysTableBody"><tr data-key-id="default"><td>Production Key</td><td>pk_live_••••••••</td><td>Jan 1, 2026</td><td><button type="button" class="admin-btn-sm admin-btn-secondary admin-api-revoke-btn">Revoke</button></td></tr></tbody></table></div>
                     </div>
                     <div class="admin-card" style="margin:0;">
                         <div class="admin-card-header">API Usage</div>
@@ -5149,7 +5226,7 @@
                 <div class="grid-2">
                     <div class="admin-card" style="margin:0;">
                         <div class="admin-card-header">Admin Roles &amp; Permissions</div>
-                        <div style="overflow-x:auto;"><table class="admin-table"><thead><tr><th>Role</th><th>Admin</th><th>Permissions</th><th>Actions</th></tr></thead><tbody><tr><td>Super Admin</td><td>admin@kotapal.com</td><td>Full Access</td><td><button type="button" class="btn btn-secondary btn-sm" data-admin-demo="Role editor: Super Admin (configure in production IAM / Firestore rules).">Edit</button></td></tr><tr><td>Support Admin</td><td>support@kotapal.com</td><td>Limited Access</td><td><button type="button" class="btn btn-secondary btn-sm" data-admin-demo="Role editor: Support Admin (preview).">Edit</button></td></tr></tbody></table></div>
+                        <div style="overflow-x:auto;"><table class="admin-table"><thead><tr><th>Role</th><th>Admin</th><th>Permissions</th><th>Actions</th></tr></thead><tbody><tr><td>Super Admin</td><td>admin@kotapal.com</td><td>Full Access</td><td><button type="button" class="admin-btn-sm admin-btn-secondary" data-admin-nav="settings" data-admin-demo="Role permissions are configured in Platform Settings and Firestore rules.">Edit</button></td></tr><tr><td>Support Admin</td><td>support@kotapal.com</td><td>Limited Access</td><td><button type="button" class="admin-btn-sm admin-btn-secondary" data-admin-nav="settings" data-admin-demo="Support admin roles are preview-only until IAM is connected.">Edit</button></td></tr></tbody></table></div>
                     </div>
                     <div class="admin-card" style="margin:0;">
                         <div class="admin-card-header">Security Settings</div>
@@ -5578,6 +5655,7 @@
                 firebase.initializeApp(firebaseConfig);
                 auth = firebase.auth();
                 window.firebaseDb = firebase.firestore();
+                if (firebase.functions) window.firebaseFunctions = firebase.functions();
                 
                 // Set persistence to LOCAL so users stay logged in across browser sessions
                 // This ensures the session persists even after closing the browser
@@ -6124,6 +6202,17 @@
             var auth = typeof firebase !== 'undefined' && firebase.auth && firebase.auth();
             var adminSupportFirestoreUnsub = null;
             window.adminTicketsById = {};
+            function getAdminCallable(name) {
+                try {
+                    var ff = window.firebaseFunctions;
+                    if (!ff && typeof firebase !== 'undefined' && firebase.functions) {
+                        ff = firebase.functions();
+                        window.firebaseFunctions = ff;
+                    }
+                    if (!ff || !ff.httpsCallable) return null;
+                    return ff.httpsCallable(name);
+                } catch (e) { return null; }
+            }
             function ticketDateDisplayForAdmin(t) {
                 if (t && t.createdAt && typeof t.createdAt.toDate === 'function') return new Date(t.createdAt.toDate()).toLocaleString();
                 if (t && t.date) return new Date(t.date).toLocaleString();
@@ -6148,7 +6237,7 @@
                     var priHtml = pri === 'high' ? '<span class="status-badge refunded">High</span>' : pri === 'low' ? '<span class="status-badge" style="background:rgba(59,130,246,0.12);color:#1d4ed8;">Low</span>' : '<span class="status-badge pending">Medium</span>';
                     var tid = t.id ? String(t.id).slice(0, 10) : 'TKT-' + String(idx + 1).padStart(4, '0');
                     var idAttr = escId(t.id);
-                    return '<tr><td>' + html(tid) + '</td><td>' + html(t.subject || '-') + '</td><td>' + html(t.userEmail || t.userName || '-') + '</td><td>' + priHtml + '</td><td>' + statusBadge + '</td><td>' + html(d) + '</td><td><div class="action-btns"><button type="button" class="btn btn-secondary btn-sm" onclick="adminTicketDetailById(\'' + idAttr + '\')">View</button><button type="button" class="btn btn-primary btn-sm" onclick="adminResolveTicketById(\'' + idAttr + '\')">Resolve</button></div></td></tr>';
+                    return '<tr><td>' + html(tid) + '</td><td>' + html(t.subject || '-') + '</td><td>' + html(t.userEmail || t.userName || '-') + '</td><td>' + priHtml + '</td><td>' + statusBadge + '</td><td>' + html(d) + '</td><td><div class="action-btns"><button type="button" class="admin-btn-sm admin-btn-secondary" onclick="adminTicketDetailById(\'' + idAttr + '\')">View</button><button type="button" class="admin-btn-sm admin-btn-primary" onclick="adminResolveTicketById(\'' + idAttr + '\')">Resolve</button></div></td></tr>';
                 }).join('');
             }
             function hideAuthModalForAdmin() {
@@ -6157,7 +6246,26 @@
                 document.documentElement.style.overflow = '';
                 document.body.style.overflow = '';
             }
-            function showAdminUI(show) {
+            function isAdminAuthModalLoginPending() {
+                return window._adminAuthModalLoginPending === true;
+            }
+            function setAdminAuthModalLoginPending(pending) {
+                window._adminAuthModalLoginPending = !!pending;
+                var pl = document.getElementById('pageLoader');
+                var adminLogin = document.getElementById('admin-login-screen');
+                if (pending) {
+                    if (pl) {
+                        pl.classList.remove('hidden');
+                        pl.classList.add('admin-auth-pending');
+                    }
+                    if (adminLogin) adminLogin.classList.remove('active');
+                } else if (pl) {
+                    pl.classList.remove('admin-auth-pending');
+                }
+            }
+            function showAdminUI(show, options) {
+                options = options || {};
+                var skipAdminLoginScreen = options.skipAdminLoginScreen || isAdminAuthModalLoginPending();
                 var landing = document.getElementById('landing-page-view');
                 var nav = document.querySelector('nav');
                 var footer = document.querySelector('footer');
@@ -6165,13 +6273,16 @@
                 var adminLogin = document.getElementById('admin-login-screen');
                 var adminView = document.getElementById('admin-view');
                 if (show) {
-                    hideAuthModalForAdmin();
+                    if (!skipAdminLoginScreen) hideAuthModalForAdmin();
                     if (landing) landing.style.display = 'none';
                     document.documentElement.classList.remove('landing-page-active');
                     if (nav) nav.style.display = 'none';
                     if (footer) footer.style.display = 'none';
                     if (dash) dash.style.display = 'none';
-                    if (adminLogin) { adminLogin.classList.add('active'); }
+                    if (adminLogin) {
+                        if (skipAdminLoginScreen) adminLogin.classList.remove('active');
+                        else adminLogin.classList.add('active');
+                    }
                     if (adminView) adminView.classList.remove('active');
                 } else {
                     if (adminLogin) adminLogin.classList.remove('active');
@@ -6215,6 +6326,10 @@
                 }
                 if (setupScreen) setupScreen.style.display = 'none';
                 if (hash !== '#admin') { showAdminUI(false); return; }
+                if (isAdminAuthModalLoginPending()) {
+                    showAdminUI(true, { skipAdminLoginScreen: true });
+                    return;
+                }
                 var pl0 = document.getElementById('pageLoader');
                 if (pl0) pl0.classList.add('hidden');
                 showAdminUI(true);
@@ -6237,6 +6352,7 @@
             if (auth) {
                 auth.onAuthStateChanged(function(user) {
                     if (window.location.hash !== '#admin') return;
+                    if (isAdminAuthModalLoginPending()) return;
                     var adminLoggedIn = sessionStorage.getItem('admin_logged_in') === '1';
                     if (user && isAdminUser(user.email) && adminLoggedIn) {
                         showAdminDashboard();
@@ -6290,12 +6406,16 @@
                     statusEl.textContent = '';
                     statusEl.className = 'admin-status';
                 }
+                if (fromAuthModal) setAdminAuthModalLoginPending(true);
                 window.location.hash = '#admin';
-                showAdminUI(true);
+                showAdminUI(true, { skipAdminLoginScreen: fromAuthModal });
                 try {
                     sessionStorage.setItem('admin_logged_in', '1');
                     await auth.signInWithEmailAndPassword(email, password);
-                    if (fromAuthModal) hideAuthModalForAdmin();
+                    if (fromAuthModal) {
+                        setAdminAuthModalLoginPending(false);
+                        hideAuthModalForAdmin();
+                    }
                     if (statusEl && !fromAuthModal) {
                         statusEl.textContent = 'Login successful!';
                         statusEl.className = 'admin-status show success';
@@ -6311,13 +6431,44 @@
                     return true;
                 } catch (err) {
                     sessionStorage.removeItem('admin_logged_in');
+                    if (fromAuthModal) {
+                        setAdminAuthModalLoginPending(false);
+                        var plErr = document.getElementById('pageLoader');
+                        if (plErr) plErr.classList.add('hidden');
+                        if (window.location.hash === '#admin') {
+                            history.replaceState(null, '', window.location.pathname + window.location.search);
+                        }
+                        var authModalEl = document.getElementById('authModal');
+                        if (authModalEl) authModalEl.style.display = 'flex';
+                        document.documentElement.style.overflow = 'hidden';
+                        document.body.style.overflow = 'hidden';
+                        var landingView = document.getElementById('landing-page-view');
+                        var navEl = document.querySelector('nav');
+                        var footerEl = document.querySelector('footer');
+                        var dashView = document.getElementById('dashboard-view');
+                        if (landingView) landingView.style.display = 'block';
+                        document.documentElement.classList.add('landing-page-active');
+                        if (navEl) navEl.style.display = 'flex';
+                        if (footerEl) footerEl.style.display = 'block';
+                        if (dashView) dashView.style.display = 'none';
+                    }
                     showAdminLoginError((err && err.message) ? err.message : 'Login failed.');
                     return false;
                 } finally {
-                    if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Sign In'; }
+                    if (fromAuthModal) setAdminAuthModalLoginPending(false);
+                    if (submitBtn) {
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = fromAuthModal ? 'Login' : 'Sign In';
+                    }
                 }
             };
-            document.getElementById('adminBackToHome') && document.getElementById('adminBackToHome').addEventListener('click', function(e) { e.preventDefault(); window.location.hash = ''; window.location.reload(); });
+            document.getElementById('adminBackToHome') && document.getElementById('adminBackToHome').addEventListener('click', function(e) {
+                e.preventDefault();
+                sessionStorage.removeItem('admin_logged_in');
+                window.location.hash = '';
+                if (typeof window.applyAdminView === 'function') window.applyAdminView();
+                else window.location.reload();
+            });
             document.getElementById('adminSetupCreateBtn') && document.getElementById('adminSetupCreateBtn').addEventListener('click', async function() {
                 var btn = this;
                 var statusEl = document.getElementById('adminSetupStatus');
@@ -6401,6 +6552,8 @@
                 if (pageName === 'support' && typeof loadAdminSupport === 'function') loadAdminSupport();
                 if (pageName === 'activity' && typeof loadAdminActivity === 'function') loadAdminActivity();
                 if (pageName === 'plans' && typeof renderAdminPlansGrid === 'function') renderAdminPlansGrid();
+                if (pageName === 'creators' && typeof renderAdminCreatorsTable === 'function') renderAdminCreatorsTable();
+                if (pageName === 'subscriptions' && typeof renderAdminSubscriptionUsers === 'function') renderAdminSubscriptionUsers();
                 if (window.innerWidth <= 1024 && typeof closeAdminSidebar === 'function') closeAdminSidebar();
             };
             window.initAdminRevenueChart = function() {
@@ -6596,17 +6749,32 @@
                 }
                 tbody.innerHTML = '<tr><td colspan="6" class="text-center">Loading...</td></tr>';
                 var users = [], byId = {};
+                var loadedFromAuth = false;
                 try {
-                    var snap = await withTimeout(dbUse.collection('users').get(), 12000);
-                    snap.docs.forEach(function(d) { var u = mapFirestoreDocToUser(d); byId[u.id] = u; });
-                } catch (e) {}
-                try {
-                    var snap2 = await withTimeout(dbUse.collection('user').get(), 12000);
-                    snap2.docs.forEach(function(d) {
-                        var data = d.data();
-                        byId[d.id] = { id: d.id, email: data.email || '-', name: data.displayName || data.name || '-', plan: data.plan || 'starter', status: data.status || 'active', joined: toDateStr(data.signupDate || data.createdAt), lastSignIn: toDateStr(data.lastSignIn) };
-                    });
-                } catch (e) {}
+                    var listFn = getAdminCallable('listAllUsers');
+                    if (listFn && auth && auth.currentUser) {
+                        var result = await withTimeout(listFn(), 15000);
+                        if (result && result.data && result.data.users && result.data.users.length) {
+                            result.data.users.forEach(function(u) {
+                                byId[u.id] = { id: u.id, email: u.email || '-', name: u.name || '-', plan: u.plan || 'starter', status: u.status || 'active', joined: toDateStr(u.joined), lastSignIn: toDateStr(u.lastSignIn) };
+                            });
+                            loadedFromAuth = true;
+                        }
+                    }
+                } catch (callableErr) { console.warn('listAllUsers:', callableErr); }
+                if (!loadedFromAuth) {
+                    try {
+                        var snap = await withTimeout(dbUse.collection('users').get(), 12000);
+                        snap.docs.forEach(function(d) { var u = mapFirestoreDocToUser(d); byId[u.id] = u; });
+                    } catch (e) {}
+                    try {
+                        var snap2 = await withTimeout(dbUse.collection('user').get(), 12000);
+                        snap2.docs.forEach(function(d) {
+                            var data = d.data();
+                            byId[d.id] = { id: d.id, email: data.email || '-', name: data.displayName || data.name || '-', plan: data.plan || 'starter', status: data.status || 'active', joined: toDateStr(data.signupDate || data.createdAt), lastSignIn: toDateStr(data.lastSignIn) };
+                        });
+                    } catch (e) {}
+                }
                 users = Object.keys(byId).map(function(k) { return byId[k]; });
                 window.adminUsers = users;
                 if (users.length === 0) {
@@ -6629,15 +6797,33 @@
                         var planBadge = '<span class="badge-tag ' + planInfo.badgeClass + '">' + html(planInfo.name) + '</span>';
                         var emEsc = esc(String(u.email || ''));
                         var nmEsc = esc(String(u.name || ''));
-                        var actions = '<div class="action-btns"><button type="button" class="btn btn-primary btn-sm" onclick="openAdminManageUser(\'' + uid + '\',\'' + emEsc + '\',\'' + nmEsc + '\',\'' + plan + '\',\'' + status + '\')"><i class="fas fa-cog"></i> Manage</button><button type="button" class="btn btn-secondary btn-sm" onclick="openChangePlan(\'' + uid + '\',\'' + plan + '\')"><i class="fas fa-edit"></i> Plan</button><button type="button" class="btn btn-primary btn-sm" onclick="toggleSuspend(\'' + uid + '\',\'' + status + '\')"><i class="fas fa-' + (status === 'suspended' ? 'user-check' : 'user-slash') + '"></i> ' + (status === 'suspended' ? 'Unsuspend' : 'Suspend') + '</button><button type="button" class="btn btn-secondary btn-sm" style="background:rgba(239,68,68,0.1);color:#b91c1c;" onclick="deleteUserDoc(\'' + uid + '\')"><i class="fas fa-trash"></i> Delete</button></div>';
+                        var actions = '<div class="action-btns"><button type="button" class="admin-btn-sm admin-btn-primary" onclick="openAdminManageUser(\'' + uid + '\',\'' + emEsc + '\',\'' + nmEsc + '\',\'' + plan + '\',\'' + status + '\')"><i class="fas fa-cog"></i> Manage</button><button type="button" class="admin-btn-sm admin-btn-secondary" onclick="openChangePlan(\'' + uid + '\',\'' + plan + '\')"><i class="fas fa-edit"></i> Plan</button><button type="button" class="admin-btn-sm admin-btn-primary" onclick="toggleSuspend(\'' + uid + '\',\'' + status + '\')"><i class="fas fa-' + (status === 'suspended' ? 'user-check' : 'user-slash') + '"></i> ' + (status === 'suspended' ? 'Unsuspend' : 'Suspend') + '</button><button type="button" class="admin-btn-sm admin-btn-danger" onclick="deleteUserDoc(\'' + uid + '\')"><i class="fas fa-trash"></i> Delete</button></div>';
                         var userCell = '<div style="display:flex;align-items:center;gap:10px;"><div class="user-avatar" style="width:35px;height:35px;font-size:14px;">' + html(initials(u.name)) + '</div><span>' + html(u.name || '-') + '</span></div>';
                         return '<tr data-filter-email="' + escAttr(fe) + '" data-filter-name="' + escAttr(fn) + '" data-filter-status="' + escAttr(status) + '" data-filter-plan="' + escAttr(planRaw) + '"><td>' + userCell + '</td><td>' + html(u.email || '-') + '</td><td>' + planBadge + '</td><td>' + statusBadge + '</td><td>' + html(joined) + '</td><td>' + actions + '</td></tr>';
                     }).join('');
                 }
-                var statEl = document.getElementById('admin-stat-users');
-                if (statEl) statEl.textContent = users.length;
+                if (typeof updateStatsPage === 'function') updateStatsPage();
                 setTimeout(function() { if (typeof applyAdminUserFilters === 'function') applyAdminUserFilters(); }, 0);
                 if (typeof updateDashboardPage === 'function') updateDashboardPage();
+            };
+            window.syncAdminUsersFromAuth = async function() {
+                var btn = document.getElementById('adminSyncAuthUsersBtn');
+                var syncFn = getAdminCallable('syncUsersToFirestore');
+                if (!syncFn) {
+                    if (typeof window.adminToast === 'function') window.adminToast('Cloud Functions unavailable. Deploy Firebase Functions (syncUsersToFirestore).', 'warn');
+                    return;
+                }
+                if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Syncing...'; }
+                try {
+                    var result = await syncFn();
+                    var n = (result && result.data && result.data.synced) ? result.data.synced : 0;
+                    if (typeof window.adminToast === 'function') window.adminToast('Synced ' + n + ' user(s) from Firebase Auth to Firestore.', 'success');
+                    await loadAdminUsers();
+                } catch (e) {
+                    if (typeof window.adminToast === 'function') window.adminToast('Sync failed: ' + (e.message || e), 'warn');
+                } finally {
+                    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-cloud-download-alt"></i> Sync Auth'; }
+                }
             };
             window.updateDashboardPage = function() {
                 var users = window.adminUsers || [];
@@ -6682,6 +6868,9 @@
                         return '<div class="transaction-item"><div class="transaction-info"><div class="transaction-icon" style="color:' + (neg ? 'var(--admin-danger)' : 'var(--admin-primary)') + ';"><i class="fas fa-' + (neg ? 'undo' : 'arrow-down') + '"></i></div><div class="transaction-details"><div class="transaction-name">' + (neg ? 'Refund to ' : 'Payment from ') + html(p.user || '-') + '</div><div class="transaction-type">' + html(p.plan || 'Subscription') + '</div></div></div><div class="transaction-amount' + (neg ? ' negative' : '') + '">' + (neg ? '-' : '') + '$' + amt + '</div><span class="status-badge ' + (p.status === 'refunded' || neg ? 'refunded' : p.status === 'pending' ? 'pending' : 'completed') + '">' + (neg ? 'Refunded' : p.status || 'Completed') + '</span></div>';
                     }).join('');
                 }
+                if (typeof renderAdminCreatorsTable === 'function') renderAdminCreatorsTable();
+                if (typeof renderAdminSubscriptionUsers === 'function') renderAdminSubscriptionUsers();
+                if (typeof updateStatsPage === 'function') updateStatsPage();
             };
             window.updateStatsPage = function() {
                 var total = (window.adminUsers || []).length;
@@ -6693,6 +6882,64 @@
                 if (t) t.textContent = total;
                 if (a) a.textContent = active;
                 if (s) s.textContent = suspended;
+                var ct = document.getElementById('admin-creators-total');
+                var ca = document.getElementById('admin-creators-active');
+                var cs = document.getElementById('admin-creators-suspended');
+                if (ct) ct.textContent = total;
+                if (ca) ca.textContent = active;
+                if (cs) cs.textContent = suspended;
+                var sa = document.getElementById('admin-subs-active');
+                var ss = document.getElementById('admin-subs-starter');
+                var sx = document.getElementById('admin-subs-suspended');
+                if (sa) sa.textContent = active;
+                if (ss) ss.textContent = (window.adminUsers || []).filter(function(u) { var p = String(u.plan || 'starter').toLowerCase(); return p === 'starter' || p === 'free'; }).length;
+                if (sx) sx.textContent = suspended;
+            };
+            window.renderAdminCreatorsTable = function() {
+                var tbody = document.getElementById('adminCreatorsTableBody');
+                var users = window.adminUsers || [];
+                if (!tbody) return;
+                if (!users.length) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="padding:24px;color:#6b7280;text-align:center;">No creators yet. Users appear when they sign up.</td></tr>';
+                    return;
+                }
+                function esc(s) { return String(s || '').replace(/'/g, "\\'"); }
+                function html(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+                tbody.innerHTML = users.slice(0, 50).map(function(u) {
+                    var status = (u.status || 'active').toLowerCase();
+                    var statusBadge = '<span class="status-badge ' + (status === 'suspended' ? 'refunded' : 'completed') + '">' + (status === 'suspended' ? 'Suspended' : 'Active') + '</span>';
+                    var joined = (u.joined && u.joined !== '-') ? new Date(u.joined).toLocaleDateString() : (u.joined || '-');
+                    var planInfo = getKotaPlan(String(u.plan || 'starter').toLowerCase());
+                    var planBadge = '<span class="badge-tag ' + planInfo.badgeClass + '">' + html(planInfo.name) + '</span>';
+                    var uid = esc(u.id || u.email);
+                    var emEsc = esc(String(u.email || ''));
+                    var nmEsc = esc(String(u.name || ''));
+                    var plan = esc(u.plan || 'starter');
+                    return '<tr><td>' + html(u.name || '-') + '</td><td>' + html(u.email || '-') + '</td><td>' + planBadge + '</td><td>' + html(joined) + '</td><td>' + statusBadge + '</td><td><div class="action-btns"><button type="button" class="admin-btn-sm admin-btn-secondary" onclick="openAdminManageUser(\'' + uid + '\',\'' + emEsc + '\',\'' + nmEsc + '\',\'' + plan + '\',\'' + status + '\')">View</button><button type="button" class="admin-btn-sm admin-btn-primary" onclick="openAdminManageUser(\'' + uid + '\',\'' + emEsc + '\',\'' + nmEsc + '\',\'' + plan + '\',\'' + status + '\')">Manage</button></div></td></tr>';
+                }).join('');
+            };
+            window.renderAdminSubscriptionUsers = function() {
+                var tbody = document.getElementById('adminSubscriptionsUsersBody');
+                var users = window.adminUsers || [];
+                if (!tbody) return;
+                if (!users.length) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="padding:24px;color:#6b7280;text-align:center;">No subscriptions yet.</td></tr>';
+                    return;
+                }
+                function esc(s) { return String(s || '').replace(/'/g, "\\'"); }
+                function html(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+                tbody.innerHTML = users.slice(0, 50).map(function(u) {
+                    var status = (u.status || 'active').toLowerCase();
+                    var statusBadge = '<span class="status-badge ' + (status === 'suspended' ? 'refunded' : 'completed') + '">' + (status === 'suspended' ? 'Suspended' : 'Active') + '</span>';
+                    var joined = (u.joined && u.joined !== '-') ? new Date(u.joined).toLocaleDateString() : (u.joined || '-');
+                    var planRaw = String(u.plan || 'starter').toLowerCase();
+                    var planInfo = getKotaPlan(planRaw);
+                    var planBadge = '<span class="badge-tag ' + planInfo.badgeClass + '">' + html(planInfo.name) + '</span>';
+                    var uid = esc(u.id || u.email);
+                    var plan = esc(u.plan || 'starter');
+                    var price = '$' + getKotaPlanPrice(planRaw) + '/mo';
+                    return '<tr><td>' + html(u.name || u.email || '-') + '</td><td>' + planBadge + '</td><td>' + html(joined) + '</td><td>' + html(price) + '</td><td>' + statusBadge + '</td><td><div class="action-btns"><button type="button" class="admin-btn-sm admin-btn-secondary" onclick="openChangePlan(\'' + uid + '\',\'' + plan + '\')">Modify</button><button type="button" class="admin-btn-sm admin-btn-primary" onclick="openAdminManageUser(\'' + uid + '\',\'' + esc(String(u.email || '')) + '\',\'' + esc(String(u.name || '')) + '\',\'' + plan + '\',\'' + status + '\')">View</button></div></td></tr>';
+                }).join('');
             };
             window.loadAdminBilling = function() {
                 var users = window.adminUsers || [];
@@ -6716,7 +6963,7 @@
                         var st = (p.status || 'paid').toLowerCase();
                         var badge = st === 'refund' || st === 'refunded' ? 'refunded' : st === 'pending' ? 'pending' : 'completed';
                         var stLabel = badge === 'refunded' ? 'Refunded' : badge === 'pending' ? 'Pending' : 'Completed';
-                        return '<tr><td>—</td><td>' + (p.user || '-') + '</td><td>$' + (p.amount || 0) + '</td><td>Subscription</td><td><span class="status-badge ' + badge + '">' + stLabel + '</span></td><td>' + d + '</td><td><div class="action-btns"><button type="button" class="btn btn-secondary btn-sm" onclick="adminBillingInvoice(' + JSON.stringify(String(p.user || '')) + ',' + Number(p.amount || 0) + ')">Invoice</button><button type="button" class="btn btn-primary btn-sm" onclick="adminBillingDetail(' + JSON.stringify(String(p.user || '')) + ')">View</button></div></td></tr>';
+                        return '<tr><td>—</td><td>' + (p.user || '-') + '</td><td>$' + (p.amount || 0) + '</td><td>Subscription</td><td><span class="status-badge ' + badge + '">' + stLabel + '</span></td><td>' + d + '</td><td><div class="action-btns"><button type="button" class="admin-btn-sm admin-btn-secondary" onclick="adminBillingInvoice(' + JSON.stringify(String(p.user || '')) + ',' + Number(p.amount || 0) + ')">Invoice</button><button type="button" class="admin-btn-sm admin-btn-primary" onclick="adminBillingDetail(' + JSON.stringify(String(p.user || '')) + ')">View</button></div></td></tr>';
                     }).join('');
                 }
                 var subTbody = document.getElementById('adminSubscriptionsTableBody');
@@ -6731,7 +6978,7 @@
                 var subMir = document.getElementById('adminSubscriptionsTableBodyMirror');
                 if (subMir && subTbody) subMir.innerHTML = subTbody.innerHTML;
             };
-            window.loadAdminSupport = function() {
+            window.loadAdminSupport = function(forceRefresh) {
                 var dbUse = db || window.firebaseDb;
                 if (!dbUse) {
                     var localTix = JSON.parse(localStorage.getItem('kota_support_tickets') || '[]');
@@ -6740,8 +6987,12 @@
                     return;
                 }
                 if (adminSupportFirestoreUnsub) {
-                    if (typeof window.adminToast === 'function') window.adminToast('Ticket stream is live (auto-updating).', 'info');
-                    return;
+                    if (!forceRefresh) {
+                        if (typeof window.adminToast === 'function') window.adminToast('Tickets auto-update in real time.', 'info');
+                        return;
+                    }
+                    adminSupportFirestoreUnsub();
+                    adminSupportFirestoreUnsub = null;
                 }
                 adminSupportFirestoreUnsub = dbUse.collection('supportTickets').onSnapshot(function(snap) {
                     var tickets = snap.docs.map(function(d) {
@@ -6842,18 +7093,38 @@
                 var dbUse = db || window.firebaseDb;
                 if (!uid || !dbUse) return;
                 var newStatus = currentStatus === 'suspended' ? 'active' : 'suspended';
+                var usedCloudFn = false;
                 try {
-                    await dbUse.collection('users').doc(uid).set({ status: newStatus }, { merge: true });
-                } catch (err) {
+                    var fnName = newStatus === 'suspended' ? 'adminSuspendUser' : 'adminUnsuspendUser';
+                    var cloudFn = getAdminCallable(fnName);
+                    if (cloudFn && auth && auth.currentUser) {
+                        await cloudFn({ uid: uid });
+                        usedCloudFn = true;
+                    }
+                } catch (cloudErr) {
+                    console.warn('toggleSuspend cloud:', cloudErr);
+                }
+                if (!usedCloudFn) {
                     try {
-                        await dbUse.collection('user').doc(uid).set({ status: newStatus }, { merge: true });
-                    } catch (err2) {
-                        alert('Failed: ' + (err2.message || err.message));
-                        return;
+                        await dbUse.collection('users').doc(uid).set({ status: newStatus }, { merge: true });
+                    } catch (err) {
+                        try {
+                            await dbUse.collection('user').doc(uid).set({ status: newStatus }, { merge: true });
+                        } catch (err2) {
+                            alert('Failed: ' + (err2.message || err.message));
+                            return;
+                        }
                     }
                 }
                 await loadAdminUsers();
-                if (typeof window.adminToast === 'function') window.adminToast(newStatus === 'suspended' ? 'User suspended.' : 'User reactivated.', 'success');
+                if (typeof window.adminToast === 'function') {
+                    window.adminToast(
+                        newStatus === 'suspended'
+                            ? (usedCloudFn ? 'User suspended — login disabled in Firebase Auth.' : 'User suspended in Firestore.')
+                            : (usedCloudFn ? 'User reactivated — can log in again.' : 'User reactivated in Firestore.'),
+                        'success'
+                    );
+                }
             };
             window.deleteUserDoc = async function(uid) {
                 var dbUse = db || window.firebaseDb;
@@ -7057,7 +7328,7 @@
                 if (!keys || !keys.length) keys = adminDefaultApiKeys();
                 tb.innerHTML = keys.map(function(k, i) {
                     function escHtml(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
-                    return '<tr data-key-id="' + escHtml(k.id || String(i)) + '"><td>' + escHtml(k.name) + '</td><td>' + escHtml(k.key) + '</td><td>' + escHtml(k.created) + '</td><td><button type="button" class="btn btn-secondary btn-sm admin-api-revoke-btn" data-key-idx="' + i + '">Revoke</button></td></tr>';
+                    return '<tr data-key-id="' + escHtml(k.id || String(i)) + '"><td>' + escHtml(k.name) + '</td><td>' + escHtml(k.key) + '</td><td>' + escHtml(k.created) + '</td><td><button type="button" class="admin-btn-sm admin-btn-secondary admin-api-revoke-btn" data-key-idx="' + i + '">Revoke</button></td></tr>';
                 }).join('');
             };
             (function initAdminDashboardWiring() {
@@ -7081,6 +7352,14 @@
                         }
                         var openU = e.target.closest('[data-admin-open-users]');
                         if (openU) showAdminPage('users');
+                        var navEl = e.target.closest('[data-admin-nav]');
+                        if (navEl) {
+                            var navPage = navEl.getAttribute('data-admin-nav');
+                            if (navPage && typeof showAdminPage === 'function') showAdminPage(navPage);
+                            var navMsg = navEl.getAttribute('data-admin-demo');
+                            if (navMsg) adminToast(navMsg, 'info');
+                            return;
+                        }
                         var actEl = e.target.closest('[data-admin-action]');
                         if (actEl) {
                             var act = actEl.getAttribute('data-admin-action');
@@ -7122,9 +7401,14 @@
                     globSearch.addEventListener('input', function() {
                         clearTimeout(globSearch._st);
                         globSearch._st = setTimeout(function() {
-                            if (document.getElementById('admin-page-users') && document.getElementById('admin-page-users').classList.contains('active')) {
+                            var usersPage = document.getElementById('admin-page-users');
+                            if (usersPage && usersPage.classList.contains('active')) {
                                 var u = document.getElementById('adminUserSearch');
                                 if (u) { u.value = globSearch.value; applyAdminUserFilters(); }
+                            } else if (globSearch.value.trim()) {
+                                if (typeof showAdminPage === 'function') showAdminPage('users');
+                                var u2 = document.getElementById('adminUserSearch');
+                                if (u2) { u2.value = globSearch.value; applyAdminUserFilters(); }
                             }
                         }, 250);
                     });
@@ -7244,6 +7528,13 @@
                     addU._wire = true;
                     addU.addEventListener('click', function() {
                         if (typeof openAdminAddUser === 'function') openAdminAddUser();
+                    });
+                }
+                var syncBtn = document.getElementById('adminSyncAuthUsersBtn');
+                if (syncBtn && !syncBtn._wire) {
+                    syncBtn._wire = true;
+                    syncBtn.addEventListener('click', function() {
+                        if (typeof syncAdminUsersFromAuth === 'function') syncAdminUsersFromAuth();
                     });
                 }
                 var ex = document.getElementById('adminExportReportBtn');
@@ -7463,13 +7754,18 @@
         // Set current year in footer
         document.getElementById('currentYear').textContent = new Date().getFullYear();
 
-        // Mobile menu toggle (landing nav)
+        // Mobile menu toggle (landing nav) — skip if early init already bound
         var mobileMenuBtn = document.getElementById('mobileMenuBtn');
-        if (mobileMenuBtn) {
-            mobileMenuBtn.addEventListener('click', function() {
-                this.classList.toggle('active');
+        if (mobileMenuBtn && !mobileMenuBtn._kotapalMenuBound) {
+            mobileMenuBtn._kotapalMenuBound = true;
+            mobileMenuBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                var isOpen = this.classList.toggle('active');
+                this.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
                 var navLinks = document.querySelector('#landing-page-view .nav-links');
-                if (navLinks) navLinks.classList.toggle('active');
+                if (navLinks) navLinks.classList.toggle('active', isOpen);
+                var navEl = document.querySelector('#landing-page-view > nav');
+                if (navEl) navEl.classList.toggle('menu-open', isOpen);
             });
         }
 
@@ -7575,8 +7871,9 @@
                         if (adminToggle && adminToggle.checked) {
                             const email = document.getElementById('loginEmail').value.trim();
                             const password = document.getElementById('loginPassword').value;
+                            const loginSubmitBtn = loginForm.querySelector('button[type="submit"]');
                             if (typeof window.performAdminLogin === 'function') {
-                                await window.performAdminLogin(email, password, { fromAuthModal: true });
+                                await window.performAdminLogin(email, password, { fromAuthModal: true, submitBtn: loginSubmitBtn });
                             } else if (typeof window.goToAdmin === 'function') {
                                 window.goToAdmin();
                             }
@@ -7677,62 +7974,59 @@
             setupAuthFormHandlers();
         }
         
-        // Mobile Optimizations
+        // Mobile Optimizations (single instance — duplicate touchend handlers break iOS/Safari taps)
         (function() {
-            // Prevent double-tap zoom on buttons and links
-            let lastTouchEnd = 0;
-            document.addEventListener('touchend', function(event) {
-                const now = Date.now();
-                if (now - lastTouchEnd <= 300) {
-                    event.preventDefault();
-                }
-                lastTouchEnd = now;
-            }, false);
-            
-            // Improve touch scrolling
-            if ('ontouchstart' in window) {
-                document.body.style.cursor = 'pointer';
-            }
-            
-            // Handle orientation changes
             window.addEventListener('orientationchange', function() {
                 setTimeout(function() {
-                    // Force a repaint to fix layout issues
                     window.dispatchEvent(new Event('resize'));
+                    var sidebar = document.getElementById('sidebar');
+                    if (sidebar && window.innerWidth > 1024) {
+                        sidebar.classList.remove('active');
+                        var overlay = document.getElementById('sidebarOverlay');
+                        if (overlay) overlay.classList.remove('active');
+                    }
                 }, 100);
             });
-            
-            // Prevent iOS bounce scrolling on modals
+
             document.addEventListener('touchmove', function(e) {
-                const modal = e.target.closest('.modal-content');
-                if (modal) {
-                    const scrollTop = modal.scrollTop;
-                    const scrollHeight = modal.scrollHeight;
-                    const height = modal.clientHeight;
-                    const isScrolling = scrollHeight > height;
-                    const isAtTop = scrollTop === 0;
-                    const isAtBottom = scrollTop + height >= scrollHeight - 1;
-                    
-                    if (!isScrolling || (isAtTop && e.touches[0].clientY > e.touches[0].clientY) || 
-                        (isAtBottom && e.touches[0].clientY < e.touches[0].clientY)) {
-                        e.preventDefault();
-                    }
+                var modalBackdrop = e.target.closest('.modal, .plan-detail-modal, #authModal, #resetPasswordModal');
+                var modalContent = e.target.closest('.modal-content, .plan-modal-content, .auth-modal-content');
+                if (modalBackdrop && !modalContent) {
+                    e.preventDefault();
                 }
             }, { passive: false });
-            
-            // Add mobile class to body for CSS targeting
-            if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
-                document.body.classList.add('mobile-device');
+
+            function applyMobileClasses() {
+                if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+                    document.body.classList.add('mobile-device');
+                }
+                if (/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream) {
+                    document.body.classList.add('ios-device');
+                }
+                if (/Android/.test(navigator.userAgent)) {
+                    document.body.classList.add('android-device');
+                }
             }
-            
-            // Detect iOS specifically
-            if (/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream) {
-                document.body.classList.add('ios-device');
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', applyMobileClasses);
+            } else {
+                applyMobileClasses();
             }
-            
-            // Detect Android specifically
-            if (/Android/.test(navigator.userAgent)) {
-                document.body.classList.add('android-device');
+
+            function improveTouchTargets() {
+                if (window.innerWidth <= 1024) {
+                    document.querySelectorAll('.btn, button, .nav-link, .mobile-menu-btn').forEach(function(el) {
+                        if (el.offsetHeight < 44 || el.offsetWidth < 44) {
+                            el.style.minHeight = '44px';
+                            el.style.minWidth = '44px';
+                        }
+                    });
+                }
+            }
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', improveTouchTargets);
+            } else {
+                improveTouchTargets();
             }
         })();
 
@@ -7769,85 +8063,6 @@
             });
         }, 10000);
         
-        // ============================================
-        // Mobile Optimizations
-        // ============================================
-        (function() {
-            // Prevent double-tap zoom on buttons and links
-            let lastTouchEnd = 0;
-            document.addEventListener('touchend', function(event) {
-                const now = Date.now();
-                if (now - lastTouchEnd <= 300) {
-                    event.preventDefault();
-                }
-                lastTouchEnd = now;
-            }, false);
-            
-            // Improve touch scrolling
-            if ('ontouchstart' in window) {
-                document.body.style.cursor = 'pointer';
-            }
-            
-            // Handle orientation changes
-            window.addEventListener('orientationchange', function() {
-                setTimeout(function() {
-                    // Force a repaint to fix layout issues
-                    window.dispatchEvent(new Event('resize'));
-                    // Close sidebar on orientation change for better UX
-                    const sidebar = document.getElementById('sidebar');
-                    if (sidebar && window.innerWidth > 1024) {
-                        sidebar.classList.remove('active');
-                        const overlay = document.getElementById('sidebarOverlay');
-                        if (overlay) overlay.classList.remove('active');
-                    }
-                }, 100);
-            });
-            
-            // Prevent iOS bounce scrolling on modals
-            document.addEventListener('touchmove', function(e) {
-                const modal = e.target.closest('.modal-content');
-                if (modal) {
-                    const scrollTop = modal.scrollTop;
-                    const scrollHeight = modal.scrollHeight;
-                    const height = modal.clientHeight;
-                    const isScrolling = scrollHeight > height;
-                    const isAtTop = scrollTop === 0;
-                    const isAtBottom = scrollTop + height >= scrollHeight - 1;
-                    
-                    if (!isScrolling || (isAtTop && e.touches[0].clientY > e.touches[0].clientY) || 
-                        (isAtBottom && e.touches[0].clientY < e.touches[0].clientY)) {
-                        e.preventDefault();
-                    }
-                }
-            }, { passive: false });
-            
-            // Add mobile class to body for CSS targeting
-            if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
-                document.body.classList.add('mobile-device');
-            }
-            
-            // Detect iOS specifically
-            if (/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream) {
-                document.body.classList.add('ios-device');
-            }
-            
-            // Detect Android specifically
-            if (/Android/.test(navigator.userAgent)) {
-                document.body.classList.add('android-device');
-            }
-            
-            // Improve touch targets on mobile
-            if (window.innerWidth <= 1024) {
-                document.querySelectorAll('.btn, button, .nav-link').forEach(el => {
-                    if (el.offsetHeight < 44 || el.offsetWidth < 44) {
-                        el.style.minHeight = '44px';
-                        el.style.minWidth = '44px';
-                        el.style.padding = '12px 16px';
-                    }
-                });
-            }
-        })();
-
         // Carousel scroll functions (landing page)
         function scrollFeatures(direction) {
             const el = document.getElementById('featuresWrapper');
@@ -8007,6 +8222,17 @@
         }
 
         // Landing page navigation (unique name so dashboard showPage does not overwrite)
+        function closeLandingMobileMenu() {
+            var mbtn = document.getElementById('mobileMenuBtn');
+            var nl = document.querySelector('.nav-links');
+            var navEl = document.querySelector('#landing-page-view > nav');
+            if (nl) nl.classList.remove('active');
+            if (mbtn) {
+                mbtn.classList.remove('active');
+                mbtn.setAttribute('aria-expanded', 'false');
+            }
+            if (navEl) navEl.classList.remove('menu-open');
+        }
         function showLandingPage(pageId) {
             var landingView = document.getElementById('landing-page-view');
             if (landingView) landingView.classList.remove('theme-dark');
@@ -8019,10 +8245,7 @@
             if (contact) contact.style.display = (pageId === 'contact-page') ? 'block' : 'none';
             if (el) el.style.display = 'block';
             window.scrollTo(0, 0);
-            var nl = document.querySelector('.nav-links');
-            if (nl) nl.classList.remove('active');
-            var mbtn = document.getElementById('mobileMenuBtn');
-            if (mbtn) mbtn.classList.remove('active');
+            closeLandingMobileMenu();
         }
 
         function getDocumentScrollTop() {
@@ -8042,10 +8265,7 @@
                 document.querySelectorAll('.nav-links a[data-section]').forEach(function(a) { a.classList.remove('active'); });
                 clickedEl.classList.add('active');
             }
-            var nl = document.querySelector('.nav-links');
-            if (nl) nl.classList.remove('active');
-            var mbtn = document.getElementById('mobileMenuBtn');
-            if (mbtn) mbtn.classList.remove('active');
+            closeLandingMobileMenu();
             showLandingPage('home-page');
             var section = document.getElementById(sectionId);
             if (section) {
@@ -8057,10 +8277,7 @@
                 document.querySelectorAll('.nav-links a[data-section]').forEach(function(a) { a.classList.remove('active'); });
                 clickedEl.classList.add('active');
             }
-            var nl = document.querySelector('.nav-links');
-            if (nl) nl.classList.remove('active');
-            var mbtn = document.getElementById('mobileMenuBtn');
-            if (mbtn) mbtn.classList.remove('active');
+            closeLandingMobileMenu();
             var landing = document.getElementById('landing-page-view');
             var dashboard = document.getElementById('dashboard-view');
             var nav = document.querySelector('nav');
