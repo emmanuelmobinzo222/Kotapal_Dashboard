@@ -65,6 +65,7 @@
             var setupScreen = document.getElementById('admin-setup-screen');
             var authModal = document.getElementById('authModal');
             if (landing) landing.style.display = 'none';
+            document.documentElement.classList.remove('landing-page-active');
             if (nav) nav.style.display = 'none';
             if (footer) footer.style.display = 'none';
             if (dash) dash.style.display = 'none';
@@ -105,6 +106,8 @@
             } else {
                 showAdminPage();
             }
+        } else {
+            document.documentElement.classList.add('landing-page-active');
         }
         document.addEventListener('DOMContentLoaded', function() {
             if (window.location.hash === '#admin') setTimeout(showAdminPage, 0);
@@ -141,100 +144,44 @@
         }
 
         /*
-         * Landing page scroll: single root on `html` only (full page up/down).
-         * body overflow-y: clip avoids a second vertical scrollport.
-         * Native scrollbar hidden on landing via .landing-page-active + scroll arrow UI.
+         * Landing: one vertical scrollport (.scroll-box) below nav.
+         * Universal scrollbar styling — .scroll-box only (no other landing scrollbar rules).
          */
         html {
             overflow-x: hidden;
             overflow-y: auto;
             scroll-behavior: auto;
-            scroll-padding-top: 100px;
             min-height: 100%;
             min-height: 100dvh;
-            overscroll-behavior-y: auto;
         }
-        html.landing-page-active {
-            scrollbar-width: none;
-            -ms-overflow-style: none;
+        html.landing-page-active,
+        html.landing-page-active body {
+            overflow: hidden;
+            height: 100%;
+            height: 100dvh;
         }
-        html.landing-page-active::-webkit-scrollbar {
-            display: none;
-            width: 0;
-            height: 0;
+
+        /* Universal scrollbar — use only on .scroll-box */
+        .scroll-box {
+            scrollbar-width: thin;
+            scrollbar-color: #888 #f1f1f1;
         }
-        .landing-scroll-arrow {
-            position: fixed;
-            right: max(20px, env(safe-area-inset-right, 0px));
-            bottom: max(28px, env(safe-area-inset-bottom, 0px));
-            z-index: 999;
-            width: 52px;
-            height: 52px;
-            border: none;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: rgba(255, 255, 255, 0.95);
-            color: var(--primary);
-            box-shadow: 0 4px 24px rgba(15, 23, 42, 0.14), 0 0 0 1px rgba(0, 0, 0, 0.06);
-            backdrop-filter: blur(12px);
-            cursor: pointer;
-            opacity: 0;
-            visibility: hidden;
-            pointer-events: none;
-            transform: translateY(12px) scale(0.92);
-            transition: opacity 0.35s ease, visibility 0.35s ease, transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), color 0.2s ease, box-shadow 0.2s ease;
+        .scroll-box::-webkit-scrollbar {
+            width: 12px;
         }
-        .landing-scroll-arrow.is-visible {
-            opacity: 1;
-            visibility: visible;
-            pointer-events: auto;
-            transform: translateY(0) scale(1);
+        .scroll-box::-webkit-scrollbar-track {
+            background: #f1f1f1;
         }
-        .landing-scroll-arrow:hover {
-            color: var(--primary-dark);
-            box-shadow: 0 8px 28px rgba(37, 99, 235, 0.22), 0 0 0 1px rgba(59, 130, 246, 0.25);
+        .scroll-box::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 6px;
         }
-        .landing-scroll-arrow:active {
-            transform: translateY(0) scale(0.94);
-        }
-        .landing-scroll-arrow-icon {
-            font-size: 1.35rem;
-            line-height: 1;
-            display: block;
-            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .landing-scroll-arrow.is-down .landing-scroll-arrow-icon {
-            animation: landingScrollArrowBounce 1.8s ease-in-out infinite;
-        }
-        .landing-scroll-arrow.is-up .landing-scroll-arrow-icon {
-            animation: landingScrollArrowBounceUp 1.8s ease-in-out infinite;
-        }
-        @keyframes landingScrollArrowBounce {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(7px); }
-        }
-        @keyframes landingScrollArrowBounceUp {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-7px); }
-        }
-        @media (max-width: 768px) {
-            .landing-scroll-arrow {
-                right: auto;
-                left: 50%;
-                transform: translateX(-50%) translateY(12px) scale(0.92);
-            }
-            .landing-scroll-arrow.is-visible {
-                transform: translateX(-50%) translateY(0) scale(1);
-            }
-            .landing-scroll-arrow:active {
-                transform: translateX(-50%) translateY(0) scale(0.94);
-            }
+        .scroll-box::-webkit-scrollbar-thumb:hover {
+            background: #555;
         }
         body {
             overflow-x: hidden;
-            overflow-y: clip;
+            overflow-y: visible;
             min-height: 100%;
             min-height: 100dvh;
             min-height: -webkit-fill-available;
@@ -266,8 +213,20 @@
 
         #landing-page-view {
             max-width: 100%;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            height: 100dvh;
+            overflow: hidden;
+        }
+        #landing-page-view > .scroll-box {
+            flex: 1;
+            min-height: 0;
             overflow-x: hidden;
-            overflow-y: visible;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            scroll-behavior: smooth;
+            scroll-padding-top: 16px;
         }
         /* Landing page, nav, footer: never receive theme-dark; dark mode applies only to #dashboard-view */
 
@@ -367,10 +326,8 @@
 
         /* Navigation — ONLY the marketing header (do not use bare `nav` or it breaks #admin-view sidebar <nav>) */
         #landing-page-view > nav {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
+            position: relative;
+            flex-shrink: 0;
             width: 100%;
             z-index: 1000;
             background: rgba(255, 255, 255, 0.95);
@@ -492,9 +449,9 @@
 
         /* Hero Section */
         .hero {
-            padding-top: 120px;
-            min-height: 100vh;
-            min-height: 100dvh;
+            padding-top: 48px;
+            min-height: 85vh;
+            min-height: 85dvh;
             background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('images/kotapal\ landing01.jpg') no-repeat center center/cover;
             color: white;
             display: flex;
@@ -714,7 +671,7 @@
 
         .scrollable-wrapper {
             position: relative;
-            overflow-x: auto;
+            overflow-x: hidden;
             overflow-y: hidden;
             padding: 30px 0;
             scroll-behavior: smooth;
@@ -734,7 +691,20 @@
         .animate-reveal { opacity: 0; transform: translateY(18px); }
         .animate-reveal.is-visible { opacity: 1; transform: translateY(0); }
 
-        /* Section Reveal Animation */
+        /* Section Reveal Animation — landing sections stay visible (scroll must not gate content) */
+        #landing-page-view .section-reveal {
+            opacity: 1;
+            transform: none;
+        }
+        #landing-page-view .section-reveal.reveal-animate {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1), transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        #landing-page-view .section-reveal.reveal-animate.revealed {
+            opacity: 1;
+            transform: translateY(0);
+        }
         .section-reveal {
             opacity: 0;
             transform: translateY(30px);
@@ -774,16 +744,6 @@
         }
         @keyframes spin {
             to { transform: rotate(360deg); }
-        }
-
-        /* Hide native scrollbars */
-        .scrollable-wrapper::-webkit-scrollbar {
-            display: none;
-        }
-
-        .scrollable-wrapper {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
         }
 
         /* Core Features Section - Horizontal Scrollable Cards */
@@ -2916,6 +2876,8 @@
         </div>
     </nav>
 
+    <div class="scroll-box" id="landingScrollBox">
+
     <!-- Home Page Content -->
     <div id="home-page">
         <!-- Hero Section -->
@@ -3640,6 +3602,8 @@
         </div>
     </footer>
 
+    </div><!-- end .scroll-box #landingScrollBox -->
+
     <!-- Content Modals -->
     <div id="guidesModal" class="modal content-modal">
         <div class="modal-content">
@@ -3715,10 +3679,6 @@
             </div>
         </div>
     </div>
-
-    <button type="button" class="landing-scroll-arrow is-down" id="landingScrollArrow" aria-label="Scroll down" title="Scroll down">
-        <i class="fas fa-chevron-down landing-scroll-arrow-icon" aria-hidden="true"></i>
-    </button>
 
     </div> <!-- end landing-page-view -->
 
@@ -5375,7 +5335,7 @@
                                 <span class="toggle-slider" aria-hidden="true"></span>
                             </label>
                         </div>
-                        <p class="auth-admin-login-hint">When this is on, Login opens the admin sign-in screen (use your admin email and password there).</p>
+                        <p class="auth-admin-login-hint">When this is on, Login signs you into the admin dashboard with the email and password above.</p>
                     </div>
                     <div style="text-align: center; margin-top: 16px; padding-top: 16px; border-top: 1px solid #e5e7eb;">
                         <a href="#" class="btn btn-secondary" id="backToHomepageFromLogin" style="display: block; text-align: center; text-decoration: none;">Back to Homepage</a>
@@ -5756,6 +5716,7 @@
                     const dashboardView = document.getElementById('dashboard-view');
                     
                     if (landingView) landingView.style.display = 'none';
+                    document.documentElement.classList.remove('landing-page-active');
                     if (nav) nav.style.display = 'none';
                     if (footer) footer.style.display = 'none';
                     if (dashboardView) {
@@ -5906,6 +5867,7 @@
                     const dashboardView = document.getElementById('dashboard-view');
                     
                     if (landingView) landingView.style.display = 'none';
+                    document.documentElement.classList.remove('landing-page-active');
                     if (nav) nav.style.display = 'none';
                     if (footer) footer.style.display = 'none';
                     if (dashboardView) {
@@ -6101,6 +6063,7 @@
                 dashboardView.classList.remove('active');
             }
             if (landingView) { landingView.style.display = 'block'; landingView.classList.remove('theme-dark'); }
+            document.documentElement.classList.add('landing-page-active');
             if (nav) nav.style.display = 'flex';
             if (footer) footer.style.display = 'block';
             /* Dark mode only on dashboard; never on body so landing page always stays original */
@@ -6123,20 +6086,30 @@
             window.addEventListener('load', function() { setTimeout(hidePageLoader, 300); });
             setTimeout(hidePageLoader, 4000);
             
-            // Nav scroll highlight — one update per frame (avoids layout thrash / scrollbar flicker)
+            // Nav scroll highlight — tracks #landingScrollBox scroll (below fixed nav layout)
             var activeMenuScrollPending = false;
+            var landingScrollBox = document.getElementById('landingScrollBox');
             function updateActiveMenu() {
                 if (activeMenuScrollPending) return;
                 activeMenuScrollPending = true;
                 requestAnimationFrame(function() {
                     activeMenuScrollPending = false;
-                    var y = window.scrollY || document.documentElement.scrollTop || 0;
-                    var sections = document.querySelectorAll('section[id]');
+                    var box = document.getElementById('landingScrollBox');
+                    var y = box ? box.scrollTop : (window.scrollY || document.documentElement.scrollTop || 0);
+                    var navOffset = 100;
+                    var sections = document.querySelectorAll('#landingScrollBox section[id]');
                     var navLinks = document.querySelectorAll('.nav-links a[data-section]');
                     var currentSection = '';
                     sections.forEach(function(section) {
-                        var sectionTop = section.offsetTop - 100;
-                        var sectionHeight = section.clientHeight;
+                        var sectionTop;
+                        if (box) {
+                            var boxRect = box.getBoundingClientRect();
+                            var sectionRect = section.getBoundingClientRect();
+                            sectionTop = sectionRect.top - boxRect.top + box.scrollTop - navOffset;
+                        } else {
+                            sectionTop = section.offsetTop - navOffset;
+                        }
+                        var sectionHeight = section.offsetHeight;
                         if (y >= sectionTop && y < sectionTop + sectionHeight) {
                             currentSection = section.getAttribute('id');
                         }
@@ -6147,18 +6120,24 @@
                     });
                 });
             }
+            if (landingScrollBox) {
+                landingScrollBox.addEventListener('scroll', updateActiveMenu, { passive: true });
+            }
             window.addEventListener('scroll', updateActiveMenu, { passive: true });
             window.addEventListener('load', updateActiveMenu);
             
-            // Section reveal animation
+            // Section reveal animation (landing: optional polish only — content always visible)
             function initSectionReveal() {
-                var sections = document.querySelectorAll('.section-reveal');
+                var landingSections = document.querySelectorAll('#landing-page-view .section-reveal');
+                landingSections.forEach(function(section) {
+                    section.classList.add('reveal-animate', 'revealed');
+                });
                 var observer = new IntersectionObserver(function(entries) {
                     entries.forEach(function(entry) {
                         if (entry.isIntersecting) entry.target.classList.add('revealed');
                     });
-                }, { threshold: 0.1 });
-                sections.forEach(function(section) { observer.observe(section); });
+                }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+                landingSections.forEach(function(section) { observer.observe(section); });
             }
             initSectionReveal();
             
@@ -6202,6 +6181,12 @@
                     return '<tr><td>' + html(tid) + '</td><td>' + html(t.subject || '-') + '</td><td>' + html(t.userEmail || t.userName || '-') + '</td><td>' + priHtml + '</td><td>' + statusBadge + '</td><td>' + html(d) + '</td><td><div class="action-btns"><button type="button" class="btn btn-secondary btn-sm" onclick="adminTicketDetailById(\'' + idAttr + '\')">View</button><button type="button" class="btn btn-primary btn-sm" onclick="adminResolveTicketById(\'' + idAttr + '\')">Resolve</button></div></td></tr>';
                 }).join('');
             }
+            function hideAuthModalForAdmin() {
+                var authModal = document.getElementById('authModal');
+                if (authModal) authModal.style.display = 'none';
+                document.documentElement.style.overflow = '';
+                document.body.style.overflow = '';
+            }
             function showAdminUI(show) {
                 var landing = document.getElementById('landing-page-view');
                 var nav = document.querySelector('nav');
@@ -6210,7 +6195,9 @@
                 var adminLogin = document.getElementById('admin-login-screen');
                 var adminView = document.getElementById('admin-view');
                 if (show) {
+                    hideAuthModalForAdmin();
                     if (landing) landing.style.display = 'none';
+                    document.documentElement.classList.remove('landing-page-active');
                     if (nav) nav.style.display = 'none';
                     if (footer) footer.style.display = 'none';
                     if (dash) dash.style.display = 'none';
@@ -6220,6 +6207,7 @@
                     if (adminLogin) adminLogin.classList.remove('active');
                     if (adminView) adminView.classList.remove('active');
                     if (landing) landing.style.display = 'block';
+                    document.documentElement.classList.add('landing-page-active');
                     if (nav) nav.style.display = 'flex';
                     if (footer) footer.style.display = 'block';
                 }
@@ -6228,6 +6216,7 @@
                 var pl = document.getElementById('pageLoader');
                 if (pl) pl.classList.add('hidden');
                 document.body.classList.add('loaded');
+                hideAuthModalForAdmin();
                 var adminLogin = document.getElementById('admin-login-screen');
                 var adminView = document.getElementById('admin-view');
                 if (adminLogin) adminLogin.classList.remove('active');
@@ -6245,6 +6234,7 @@
                     var plSetup = document.getElementById('pageLoader');
                     if (plSetup) plSetup.classList.add('hidden');
                     if (landing) landing.style.display = 'none';
+                    document.documentElement.classList.remove('landing-page-active');
                     if (nav) nav.style.display = 'none';
                     if (footer) footer.style.display = 'none';
                     if (document.getElementById('dashboard-view')) document.getElementById('dashboard-view').style.display = 'none';
@@ -6287,12 +6277,76 @@
                         if (typeof loadAdminUsers === 'function') {
                             loadAdminUsers().then(function() { if (typeof updateDashboardPage === 'function') updateDashboardPage(); }).catch(function() { if (typeof updateDashboardPage === 'function') updateDashboardPage(); });
                         }
-                    } else {
+                    } else if (!user || !isAdminUser(user.email)) {
                         showAdminUI(true);
                         if (user && !isAdminUser(user.email)) auth.signOut();
                     }
                 });
             }
+            window.performAdminLogin = async function(email, password, options) {
+                options = options || {};
+                var statusEl = document.getElementById('adminLoginStatus');
+                var submitBtn = options.submitBtn || document.querySelector('#adminLoginForm button[type="submit"]');
+                var fromAuthModal = !!options.fromAuthModal;
+                function showAdminLoginError(msg) {
+                    if (statusEl && !fromAuthModal) {
+                        statusEl.textContent = msg;
+                        statusEl.className = 'admin-status show error';
+                    }
+                    if (fromAuthModal && typeof showAuthMessage === 'function') {
+                        showAuthMessage('authMessage', msg, 'error');
+                    }
+                }
+                if (!email || !String(email).trim()) {
+                    showAdminLoginError('Please enter your admin email.');
+                    return false;
+                }
+                if (!password) {
+                    showAdminLoginError('Please enter your password.');
+                    return false;
+                }
+                email = String(email).trim();
+                if (!isAdminUser(email)) {
+                    showAdminLoginError('Admin access required.');
+                    return false;
+                }
+                if (!auth) {
+                    showAdminLoginError('Firebase Auth is not available. Check firebase-config.js and network.');
+                    return false;
+                }
+                sessionStorage.removeItem('admin_logged_in');
+                if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Signing in...'; }
+                if (statusEl && !fromAuthModal) {
+                    statusEl.textContent = '';
+                    statusEl.className = 'admin-status';
+                }
+                window.location.hash = '#admin';
+                showAdminUI(true);
+                try {
+                    sessionStorage.setItem('admin_logged_in', '1');
+                    await auth.signInWithEmailAndPassword(email, password);
+                    if (fromAuthModal) hideAuthModalForAdmin();
+                    if (statusEl && !fromAuthModal) {
+                        statusEl.textContent = 'Login successful!';
+                        statusEl.className = 'admin-status show success';
+                    }
+                    showAdminDashboard();
+                    var emailEl = document.getElementById('adminEmailDisplay');
+                    if (emailEl) emailEl.textContent = email;
+                    var avatarEl = document.getElementById('adminUserAvatar');
+                    if (avatarEl && email) avatarEl.textContent = (email.charAt(0) || 'A').toUpperCase();
+                    if (typeof loadAdminUsers === 'function') {
+                        loadAdminUsers().then(function() { if (typeof updateDashboardPage === 'function') updateDashboardPage(); }).catch(function() { if (typeof updateDashboardPage === 'function') updateDashboardPage(); });
+                    }
+                    return true;
+                } catch (err) {
+                    sessionStorage.removeItem('admin_logged_in');
+                    showAdminLoginError((err && err.message) ? err.message : 'Login failed.');
+                    return false;
+                } finally {
+                    if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Sign In'; }
+                }
+            };
             document.getElementById('adminBackToHome') && document.getElementById('adminBackToHome').addEventListener('click', function(e) { e.preventDefault(); window.location.hash = ''; window.location.reload(); });
             document.getElementById('adminSetupCreateBtn') && document.getElementById('adminSetupCreateBtn').addEventListener('click', async function() {
                 var btn = this;
@@ -6347,38 +6401,8 @@
                 e.preventDefault();
                 var email = document.getElementById('adminEmail').value.trim();
                 var password = document.getElementById('adminPassword').value;
-                var statusEl = document.getElementById('adminLoginStatus');
                 var submitBtn = this.querySelector('button[type="submit"]');
-                if (!isAdminUser(email)) { statusEl.textContent = 'Admin access required.'; statusEl.className = 'admin-status show error'; return; }
-                if (!auth) {
-                    statusEl.textContent = 'Firebase Auth is not available. Check firebase-config.js and network.';
-                    statusEl.className = 'admin-status show error';
-                    return;
-                }
-                sessionStorage.removeItem('admin_logged_in');
-                if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Signing in...'; }
-                statusEl.textContent = '';
-                statusEl.className = 'admin-status';
-                try {
-                    await auth.signInWithEmailAndPassword(email, password);
-                    sessionStorage.setItem('admin_logged_in', '1');
-                    statusEl.textContent = 'Login successful!';
-                    statusEl.className = 'admin-status show success';
-                    showAdminDashboard();
-                    var emailEl = document.getElementById('adminEmailDisplay');
-                    if (emailEl) emailEl.textContent = email;
-                    var avatarEl = document.getElementById('adminUserAvatar');
-                    if (avatarEl && email) avatarEl.textContent = (email.charAt(0) || 'A').toUpperCase();
-                    if (typeof loadAdminUsers === 'function') {
-                        loadAdminUsers().then(function() { if (typeof updateDashboardPage === 'function') updateDashboardPage(); }).catch(function() { if (typeof updateDashboardPage === 'function') updateDashboardPage(); });
-                    }
-                } catch (err) {
-                    sessionStorage.removeItem('admin_logged_in');
-                    statusEl.textContent = (err && err.message) ? err.message : 'Login failed.';
-                    statusEl.className = 'admin-status show error';
-                } finally {
-                    if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Sign In'; }
-                }
+                await window.performAdminLogin(email, password, { submitBtn: submitBtn });
             });
             function toDateStr(val) { if (!val || val === '-') return '-'; if (val && typeof val.toDate === 'function') return val.toDate().toISOString(); if (typeof val === 'string' || typeof val === 'number') return String(val); return '-'; }
             function mapFirestoreDocToUser(d) {
@@ -7409,6 +7433,7 @@
                     const dashboardView = document.getElementById('dashboard-view');
                     
                     if (landingView) landingView.style.display = 'none';
+                    document.documentElement.classList.remove('landing-page-active');
                     if (nav) nav.style.display = 'none';
                     if (footer) footer.style.display = 'none';
                     if (dashboardView) {
@@ -7446,6 +7471,7 @@
                     if (landingView) {
                         landingView.style.display = 'block';
                         landingView.classList.remove('theme-dark'); /* Landing never uses dark mode */
+                        document.documentElement.classList.add('landing-page-active');
                     }
                     if (nav) nav.style.display = 'flex';
                     if (footer) footer.style.display = 'block';
@@ -7577,10 +7603,13 @@
                     try {
                         const adminToggle = document.getElementById('authAdminLoginToggle');
                         if (adminToggle && adminToggle.checked) {
-                            if (typeof closeAuthModal === 'function') closeAuthModal();
-                            adminToggle.checked = false;
-                            if (typeof window.goToAdmin === 'function') window.goToAdmin();
-                            else { window.location.hash = '#admin'; if (typeof window.applyAdminView === 'function') window.applyAdminView(); }
+                            const email = document.getElementById('loginEmail').value.trim();
+                            const password = document.getElementById('loginPassword').value;
+                            if (typeof window.performAdminLogin === 'function') {
+                                await window.performAdminLogin(email, password, { fromAuthModal: true });
+                            } else if (typeof window.goToAdmin === 'function') {
+                                window.goToAdmin();
+                            }
                             return;
                         }
                         const email = document.getElementById('loginEmail').value;
@@ -8019,134 +8048,40 @@
             if (blog) blog.style.display = (pageId === 'blog-page') ? 'block' : 'none';
             if (contact) contact.style.display = (pageId === 'contact-page') ? 'block' : 'none';
             if (el) el.style.display = 'block';
-            window.scrollTo(0, 0);
+            var scrollBox = document.getElementById('landingScrollBox');
+            if (scrollBox) scrollBox.scrollTop = 0;
+            else window.scrollTo(0, 0);
             var nl = document.querySelector('.nav-links');
             if (nl) nl.classList.remove('active');
             var mbtn = document.getElementById('mobileMenuBtn');
             if (mbtn) mbtn.classList.remove('active');
         }
 
-        function getDocumentScrollTop() {
-            return window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+        function getLandingScrollBox() {
+            return document.getElementById('landingScrollBox');
         }
 
-        (function initLandingScrollArrow() {
-            var arrow = document.getElementById('landingScrollArrow');
+        function getDocumentScrollTop() {
+            var box = getLandingScrollBox();
             var landing = document.getElementById('landing-page-view');
-            var dashboard = document.getElementById('dashboard-view');
-            if (!arrow || !landing) return;
-
-            var EDGE = 56;
-            var lastScrollY = getDocumentScrollTop();
-            var scrollIntent = 'down';
-            var arrowTickPending = false;
-
-            function isLandingVisible() {
-                if (!landing) return false;
-                if (landing.style.display === 'none' || getComputedStyle(landing).display === 'none') return false;
-                if (dashboard && dashboard.style.display !== 'none' && getComputedStyle(dashboard).display !== 'none') return false;
-                var adminView = document.getElementById('admin-view');
-                if (adminView && adminView.classList.contains('active')) return false;
-                return true;
+            if (box && landing && getComputedStyle(landing).display !== 'none') {
+                return box.scrollTop;
             }
-
-            function getScrollMetrics() {
-                var el = document.documentElement;
-                var top = getDocumentScrollTop();
-                var max = Math.max(0, el.scrollHeight - window.innerHeight);
-                return {
-                    top: top,
-                    max: max,
-                    canUp: top > EDGE,
-                    canDown: top < max - EDGE
-                };
-            }
-
-            function resolveArrowDirection(metrics) {
-                if (!metrics.canDown && metrics.canUp) return 'up';
-                if (!metrics.canUp && metrics.canDown) return 'down';
-                if (scrollIntent === 'up' && metrics.canUp) return 'up';
-                if (scrollIntent === 'down' && metrics.canDown) return 'down';
-                return metrics.canDown ? 'down' : 'up';
-            }
-
-            function applyArrowDirection(dir) {
-                var isDown = dir === 'down';
-                arrow.classList.toggle('is-down', isDown);
-                arrow.classList.toggle('is-up', !isDown);
-                var label = isDown ? 'Scroll down' : 'Scroll up';
-                arrow.setAttribute('aria-label', label);
-                arrow.setAttribute('title', label);
-                var icon = arrow.querySelector('.landing-scroll-arrow-icon');
-                if (icon) {
-                    icon.className = (isDown ? 'fas fa-chevron-down' : 'fas fa-chevron-up') + ' landing-scroll-arrow-icon';
-                }
-            }
-
-            function updateLandingScrollArrow() {
-                var root = document.documentElement;
-                if (!isLandingVisible()) {
-                    root.classList.remove('landing-page-active');
-                    arrow.classList.remove('is-visible');
-                    return;
-                }
-                root.classList.add('landing-page-active');
-                var metrics = getScrollMetrics();
-                if (metrics.max < 80) {
-                    arrow.classList.remove('is-visible');
-                    return;
-                }
-                if (!metrics.canUp && !metrics.canDown) {
-                    arrow.classList.remove('is-visible');
-                    return;
-                }
-                applyArrowDirection(resolveArrowDirection(metrics));
-                arrow.classList.add('is-visible');
-            }
-
-            function scheduleArrowUpdate() {
-                if (arrowTickPending) return;
-                arrowTickPending = true;
-                requestAnimationFrame(function() {
-                    arrowTickPending = false;
-                    updateLandingScrollArrow();
-                });
-            }
-
-            window.addEventListener('scroll', function() {
-                var y = getDocumentScrollTop();
-                if (y > lastScrollY + 3) scrollIntent = 'down';
-                else if (y < lastScrollY - 3) scrollIntent = 'up';
-                lastScrollY = y;
-                scheduleArrowUpdate();
-            }, { passive: true });
-
-            window.addEventListener('resize', scheduleArrowUpdate, { passive: true });
-
-            arrow.addEventListener('click', function() {
-                var metrics = getScrollMetrics();
-                var dir = resolveArrowDirection(metrics);
-                var step = Math.round(window.innerHeight * 0.82);
-                window.scrollBy({ top: dir === 'down' ? step : -step, behavior: 'smooth' });
-            });
-
-            var landingObserver = new MutationObserver(scheduleArrowUpdate);
-            landingObserver.observe(landing, { attributes: true, attributeFilter: ['style', 'class'] });
-            if (dashboard) {
-                landingObserver.observe(dashboard, { attributes: true, attributeFilter: ['style', 'class'] });
-            }
-
-            if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', scheduleArrowUpdate);
-            } else {
-                scheduleArrowUpdate();
-            }
-            window.addEventListener('load', scheduleArrowUpdate);
-        })();
+            return window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+        }
 
         function scrollDocumentToElement(el, offsetPx, smooth) {
             if (!el) return;
             var off = typeof offsetPx === 'number' ? offsetPx : 100;
+            var box = getLandingScrollBox();
+            var landing = document.getElementById('landing-page-view');
+            if (box && landing && getComputedStyle(landing).display !== 'none') {
+                var boxRect = box.getBoundingClientRect();
+                var elRect = el.getBoundingClientRect();
+                var top = elRect.top - boxRect.top + box.scrollTop - off;
+                box.scrollTo({ top: Math.max(0, top), behavior: smooth ? 'smooth' : 'auto' });
+                return;
+            }
             var top = el.getBoundingClientRect().top + getDocumentScrollTop() - off;
             window.scrollTo({ top: Math.max(0, top), behavior: smooth ? 'smooth' : 'auto' });
         }
@@ -8185,6 +8120,7 @@
             var contact = document.getElementById('contact-page');
             if (dashboard) dashboard.style.display = 'none';
             if (landing) landing.style.display = 'block';
+            document.documentElement.classList.add('landing-page-active');
             if (nav) nav.style.display = 'flex';
             if (footer) footer.style.display = 'block';
             if (home) home.style.display = 'none';
@@ -8644,6 +8580,7 @@
                 const footer = document.querySelector('footer');
                 if (dashboardView) { dashboardView.style.display = 'none'; }
                 if (landingView) { landingView.style.display = 'block'; landingView.classList.remove('theme-dark'); }
+                document.documentElement.classList.add('landing-page-active');
                 if (nav) nav.style.display = 'flex';
                 if (footer) footer.style.display = 'block';
                 var homePage = document.getElementById('home-page');
