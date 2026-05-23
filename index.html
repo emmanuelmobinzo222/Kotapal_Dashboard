@@ -3,7 +3,8 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+    <meta name="format-detection" content="telephone=no">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="msapplication-config" content="none">
     <meta name="mobile-web-app-capable" content="yes">
@@ -142,6 +143,7 @@
         /*
          * Landing page scroll: single root on `html` only (full page up/down).
          * body overflow-y: clip avoids a second vertical scrollport.
+         * Native scrollbar hidden on landing via .landing-page-active + scroll arrow UI.
          */
         html {
             overflow-x: hidden;
@@ -151,9 +153,84 @@
             min-height: 100%;
             min-height: 100dvh;
             overscroll-behavior-y: auto;
-            /* scrollbar-color: [thumb-color] [track-color] */
-            scrollbar-color: #888888 #f1f1f1;
-            scrollbar-width: thin; /* Optional: Makes scrollbar thinner */
+        }
+        html.landing-page-active {
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        html.landing-page-active::-webkit-scrollbar {
+            display: none;
+            width: 0;
+            height: 0;
+        }
+        .landing-scroll-arrow {
+            position: fixed;
+            right: max(20px, env(safe-area-inset-right, 0px));
+            bottom: max(28px, env(safe-area-inset-bottom, 0px));
+            z-index: 999;
+            width: 52px;
+            height: 52px;
+            border: none;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.95);
+            color: var(--primary);
+            box-shadow: 0 4px 24px rgba(15, 23, 42, 0.14), 0 0 0 1px rgba(0, 0, 0, 0.06);
+            backdrop-filter: blur(12px);
+            cursor: pointer;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transform: translateY(12px) scale(0.92);
+            transition: opacity 0.35s ease, visibility 0.35s ease, transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), color 0.2s ease, box-shadow 0.2s ease;
+        }
+        .landing-scroll-arrow.is-visible {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+            transform: translateY(0) scale(1);
+        }
+        .landing-scroll-arrow:hover {
+            color: var(--primary-dark);
+            box-shadow: 0 8px 28px rgba(37, 99, 235, 0.22), 0 0 0 1px rgba(59, 130, 246, 0.25);
+        }
+        .landing-scroll-arrow:active {
+            transform: translateY(0) scale(0.94);
+        }
+        .landing-scroll-arrow-icon {
+            font-size: 1.35rem;
+            line-height: 1;
+            display: block;
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .landing-scroll-arrow.is-down .landing-scroll-arrow-icon {
+            animation: landingScrollArrowBounce 1.8s ease-in-out infinite;
+        }
+        .landing-scroll-arrow.is-up .landing-scroll-arrow-icon {
+            animation: landingScrollArrowBounceUp 1.8s ease-in-out infinite;
+        }
+        @keyframes landingScrollArrowBounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(7px); }
+        }
+        @keyframes landingScrollArrowBounceUp {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-7px); }
+        }
+        @media (max-width: 768px) {
+            .landing-scroll-arrow {
+                right: auto;
+                left: 50%;
+                transform: translateX(-50%) translateY(12px) scale(0.92);
+            }
+            .landing-scroll-arrow.is-visible {
+                transform: translateX(-50%) translateY(0) scale(1);
+            }
+            .landing-scroll-arrow:active {
+                transform: translateX(-50%) translateY(0) scale(0.94);
+            }
         }
         body {
             overflow-x: hidden;
@@ -460,74 +537,6 @@
             justify-content: center;
         }
 
-        /* UPDATED: Scroll Control - Horizontal Scrollbar */
-        .scroll-control {
-            position: absolute;
-            bottom: -50px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 10;
-            display: flex;
-            gap: 15px;
-            align-items: center;
-            justify-content: center;
-            background: rgba(255, 255, 255, 0.9);
-            padding: 8px 20px;
-            border-radius: 50px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-            border: 1px solid rgba(0, 0, 0, 0.08);
-            backdrop-filter: blur(10px);
-        }
-
-        .scroll-toggle {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            background: #f3f4f6;
-            border-radius: 50px;
-            padding: 4px;
-            position: relative;
-            transition: all 0.3s ease;
-        }
-
-        .toggle-label {
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: var(--gray);
-            padding: 0 10px;
-            white-space: nowrap;
-        }
-
-        .toggle-switch {
-            width: 48px;
-            height: 24px;
-            background: var(--gray);
-            border-radius: 50px;
-            position: relative;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .toggle-switch.active {
-            background: var(--primary);
-        }
-
-        .toggle-switch::after {
-            content: '';
-            position: absolute;
-            top: 2px;
-            left: 2px;
-            width: 20px;
-            height: 20px;
-            background: white;
-            border-radius: 50%;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-        }
-
-        .toggle-switch.active::after {
-            transform: translateX(24px);
-        }
         /* Stylish checkbox-based toggles (Geo redirect, Dark mode) */
         .toggle-wrap {
             display: inline-flex;
@@ -686,35 +695,6 @@
         }
 
         /* Dark mode applies only to #dashboard-view; landing page is never changed by theme */
-
-        .toggle-switch .toggle-text {
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
-            font-size: 0.7rem;
-            font-weight: 700;
-            color: white;
-            pointer-events: none;
-            transition: all 0.3s ease;
-        }
-
-        .toggle-switch .toggle-text.on {
-            left: 6px;
-            opacity: 0;
-        }
-
-        .toggle-switch .toggle-text.off {
-            right: 6px;
-            opacity: 1;
-        }
-
-        .toggle-switch.active .toggle-text.on {
-            opacity: 1;
-        }
-
-        .toggle-switch.active .toggle-text.off {
-            opacity: 0;
-        }
 
         /* Scrollable Container - single scroll area, no double scrollbars */
         .scrollable-container {
@@ -2816,28 +2796,53 @@
                 font-size: 1.3rem;
             }
 
-            .toggle-label {
+            .toggle-wrap .toggle-label .toggle-text {
                 display: none;
-            }
-
-            .toggle-switch {
-                width: 40px;
-                height: 20px;
-            }
-
-            .toggle-switch::after {
-                width: 16px;
-                height: 16px;
-            }
-
-            .toggle-switch.active::after {
-                transform: translateX(20px);
             }
 
             .scrollable-content {
                 gap: 12px;
                 padding: 0 15px;
             }
+        }
+
+        /* Cross-platform mobile (iOS Safari, Android Chrome, tablets) */
+        img, video, canvas, svg { max-width: 100%; height: auto; }
+        button, .btn, a, input, select, textarea, .nav-link, .mobile-menu-btn {
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+        @media (max-width: 768px) {
+            .feature-card-scroll { min-width: min(88vw, 340px); }
+            input, select, textarea,
+            .auth-form input, #authModal input,
+            .admin-form-group input, #admin-view .form-control {
+                font-size: 16px !important;
+            }
+            #landing-page-view > nav {
+                padding-top: env(safe-area-inset-top, 0px);
+            }
+            footer {
+                padding-bottom: max(24px, env(safe-area-inset-bottom, 0px));
+            }
+        }
+        @media (hover: none) and (pointer: coarse) {
+            .feature-card-scroll:hover,
+            .pricing-card-scroll:hover,
+            .product-card:hover,
+            #dashboard-view .card:hover,
+            #dashboard-view .stat-card:hover,
+            .admin-stat-card:hover {
+                transform: none;
+            }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+            html { scroll-behavior: auto; }
         }
     </style>
 
@@ -2900,7 +2905,6 @@
                 <li><a href="#dashboard-preview" class="nav-link" data-section="dashboard-preview" onclick="scrollToSection('dashboard-preview', this); return false;">Dashboard</a></li>
                 <li><a href="#about" class="nav-link" data-section="about" onclick="scrollToSection('about', this); return false;">About</a></li>
                 <li><a href="#" class="nav-link" data-section="contact" onclick="goToContactForm(this); return false;">Contact</a></li>
-                <li><a href="#admin" id="adminNavLink" onclick="if(typeof goToAdmin==='function'){goToAdmin();return false;}">Admin</a></li>
                 <li><a href="#" id="loginBtn">Login</a></li>
             </ul>
 
@@ -3712,15 +3716,19 @@
         </div>
     </div>
 
+    <button type="button" class="landing-scroll-arrow is-down" id="landingScrollArrow" aria-label="Scroll down" title="Scroll down">
+        <i class="fas fa-chevron-down landing-scroll-arrow-icon" aria-hidden="true"></i>
+    </button>
+
     </div> <!-- end landing-page-view -->
 
     <!-- Dashboard styles matching KotaPal simple copy design -->
     <style id="dashboard-light-theme">
-        #dashboard-view { background: #f8fafc; min-height: 100vh; }
-        #dashboard-view .dashboard { display: flex; min-height: 100vh; width: 100%; }
+        #dashboard-view { background: #f8fafc; min-height: 100vh; min-height: 100dvh; }
+        #dashboard-view .dashboard { display: flex; min-height: 100vh; min-height: 100dvh; width: 100%; }
         #dashboard-view .sidebar {
             width: 260px; background: white; box-shadow: 2px 0 8px rgba(0,0,0,0.04);
-            padding: 0 0 16px 0; position: fixed; left: 0; top: 0; height: 100vh; overflow-x: hidden; z-index: 1000;
+            padding: 0 0 16px 0; position: fixed; left: 0; top: 0; height: 100vh; height: 100dvh; overflow-x: hidden; z-index: 1000;
             border-right: 1px solid #e5e7eb; transition: transform 0.3s ease;
             scrollbar-width: none; -ms-overflow-style: none;
             display: flex; flex-direction: column;
@@ -3940,18 +3948,26 @@
         @media (max-width: 1024px) {
             #dashboard-view .sidebar { transform: translateX(-100%); width: min(320px, 85vw); z-index: 1002; }
             #dashboard-view .sidebar.active { transform: translateX(0); }
-            #dashboard-view .main-content { margin-left: 0; padding-top: 60px; padding-left: 16px; padding-right: 16px; }
+            #dashboard-view .main-content { margin-left: 0; width: 100%; max-width: 100%; padding-top: 60px; padding-left: 16px; padding-right: 16px; }
             #dashboard-view .sidebar-toggle { display: flex; min-height: 44px; min-width: 44px; padding: 12px; }
         }
         @media (max-width: 768px) {
-            #dashboard-view .main-content { padding: 16px 12px; }
+            #dashboard-view .main-content { padding: 16px 12px; padding-top: max(60px, calc(52px + env(safe-area-inset-top, 0px))); }
             #dashboard-view .page-content { padding: 16px 12px; }
             #dashboard-view .page-title { font-size: 1.5rem; }
             #dashboard-view .card { padding: 16px; }
             #dashboard-view .nav-link { padding: 12px 20px; min-height: 44px; }
             #dashboard-view .stats-grid { grid-template-columns: 1fr; gap: 12px; }
-            #dashboard-view .blocks-grid { grid-template-columns: 1fr; }
+            #dashboard-view .blocks-grid { grid-template-columns: 1fr; justify-content: stretch; }
+            #dashboard-view .block-card { width: 100%; max-width: 100%; }
             #dashboard-view .table-container { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+            #dashboard-view .sidebar-toggle {
+                top: max(12px, env(safe-area-inset-top, 0px));
+                left: max(12px, env(safe-area-inset-left, 0px));
+            }
+            #blockImageLightbox .lightbox-prev { left: 8px; }
+            #blockImageLightbox .lightbox-next { right: 8px; }
+            #blockImageLightbox .lightbox-close { top: 8px; right: 8px; }
         }
         @media (max-width: 480px) {
             #dashboard-view .main-content { padding: 12px 10px; }
@@ -3979,8 +3995,19 @@
         .admin-status.show { display: block; }
         .admin-status.error { background: rgba(239,68,68,0.1); color: #b91c1c; }
         .admin-status.success { background: rgba(16,185,129,0.1); color: #065f46; }
-        #admin-view.active { flex-direction: row !important; font-family: 'Inter', sans-serif; align-items: stretch; height: 100vh; max-height: 100vh; min-height: 0; overflow: hidden; }
-        .admin-sidebar { width: var(--admin-sidebar-width); min-width: var(--admin-sidebar-width); background: #fff; box-shadow: none; padding: 0; position: fixed; left: 0; top: 0; height: 100vh; max-height: 100vh; overflow: hidden; z-index: 1000; border-right: 1px solid var(--admin-gray-200); display: flex; flex-direction: column; }
+        #admin-view.active { flex-direction: row !important; font-family: 'Inter', sans-serif; align-items: stretch; height: 100vh; height: 100dvh; max-height: 100vh; max-height: 100dvh; min-height: 0; overflow: hidden; }
+        .admin-sidebar { width: var(--admin-sidebar-width); min-width: var(--admin-sidebar-width); background: #fff; box-shadow: none; padding: 0; position: fixed; left: 0; top: 0; height: 100vh; height: 100dvh; max-height: 100vh; max-height: 100dvh; overflow: hidden; z-index: 1002; border-right: 1px solid var(--admin-gray-200); display: flex; flex-direction: column; transition: transform 0.3s ease; padding-bottom: env(safe-area-inset-bottom, 0px); }
+        .admin-sidebar-toggle {
+            display: none; position: fixed; top: max(14px, env(safe-area-inset-top, 0px)); left: max(14px, env(safe-area-inset-left, 0px));
+            z-index: 1003; background: white; border: 1px solid var(--admin-gray-200); border-radius: 10px;
+            min-width: 44px; min-height: 44px; padding: 10px 12px; cursor: pointer; align-items: center; justify-content: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .admin-sidebar-toggle i { font-size: 1.15rem; color: var(--admin-gray-700); }
+        .admin-sidebar-overlay {
+            display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 1001;
+        }
+        .admin-sidebar-overlay.active { display: block; }
         .admin-sidebar .sidebar-header { padding: 20px; border-bottom: 1px solid var(--admin-gray-200); display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
         .admin-sidebar .logo { padding: 0; border: none; display: flex; align-items: center; gap: 12px; }
         .admin-sidebar .logo-img { width: 40px; height: 40px; background: #3b82f6; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 20px; }
@@ -4021,7 +4048,7 @@
         .admin-sidebar .nav-link:hover { background: var(--admin-gray-100); color: var(--admin-primary); }
         .admin-sidebar .nav-link.active { background: #eef2ff; color: #4f46e5; border-left-color: #4f46e5; font-weight: 600; }
         .admin-sidebar .nav-link i { margin-right: 12px; width: 20px; text-align: center; font-size: 17px; }
-        .admin-main { flex: 1; margin-left: var(--admin-sidebar-width); min-height: 0; max-height: 100vh; height: 100vh; background: var(--admin-gray-50); min-width: 0; display: flex; flex-direction: column; overflow-x: hidden; overflow-y: auto; -webkit-overflow-scrolling: touch; scrollbar-width: thin; scrollbar-color: #64748b #f1f5f9; }
+        .admin-main { flex: 1; margin-left: var(--admin-sidebar-width); min-height: 0; max-height: 100vh; max-height: 100dvh; height: 100vh; height: 100dvh; width: 100%; max-width: 100%; background: var(--admin-gray-50); min-width: 0; display: flex; flex-direction: column; overflow-x: hidden; overflow-y: auto; -webkit-overflow-scrolling: touch; scrollbar-width: thin; scrollbar-color: #64748b #f1f5f9; }
         .admin-main::-webkit-scrollbar { width: 10px; }
         .admin-main::-webkit-scrollbar-track { background: #f1f5f9; }
         .admin-main::-webkit-scrollbar-thumb { background-color: #94a3b8; border-radius: 5px; }
@@ -4172,8 +4199,35 @@
         #admin-view .btn-sm { padding: 6px 12px; font-size: 12px; }
         #admin-view .page-title { font-size: 28px; font-weight: 700; color: var(--admin-gray-800); margin-bottom: 25px; }
         #admin-view .user-avatar { width: 35px; height: 35px; border-radius: 50%; background: linear-gradient(135deg, var(--admin-primary) 0%, var(--admin-secondary) 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; }
-        @media (max-width: 1024px) { #admin-view .grid-2 { grid-template-columns: 1fr; } }
-        @media (max-width: 768px) { .admin-sidebar { transform: translateX(-100%); } .admin-main { margin-left: 0; } #admin-view .admin-stats-grid, #admin-view .stats-grid { grid-template-columns: 1fr; } }
+        @media (max-width: 1024px) {
+            #admin-view .grid-2 { grid-template-columns: 1fr; }
+            .admin-sidebar { transform: translateX(-100%); width: min(280px, 88vw); min-width: 0; }
+            .admin-sidebar.active { transform: translateX(0); }
+            .admin-sidebar-toggle { display: flex; }
+            .admin-main { margin-left: 0; }
+        }
+        @media (max-width: 768px) {
+            #admin-view .admin-stats-grid, #admin-view .stats-grid { grid-template-columns: 1fr; }
+            .admin-header-bar {
+                height: auto; min-height: 60px; padding: 10px 12px 10px 56px;
+                padding-top: max(10px, env(safe-area-inset-top, 0px));
+                flex-wrap: wrap; gap: 10px;
+            }
+            .admin-search-bar { max-width: 100%; flex: 1 1 100%; order: 3; }
+            .admin-header-actions { gap: 10px; margin-left: auto; }
+            .admin-user-menu .user-name { display: none; }
+            .admin-main-content { padding: 16px 12px; padding-bottom: max(16px, env(safe-area-inset-bottom, 0px)); }
+            .admin-header h1, #admin-view .page-title { font-size: 1.35rem; }
+            .admin-chart-container { height: 260px; }
+            .admin-sidebar .nav-link { min-height: 44px; padding-top: 12px; padding-bottom: 12px; }
+            #admin-toast-host { bottom: max(16px, env(safe-area-inset-bottom, 0px)); right: 12px; left: 12px; }
+        }
+        @media (max-width: 480px) {
+            .admin-login-card { padding: 24px 20px; margin: env(safe-area-inset-top, 0px) 0 env(safe-area-inset-bottom, 0px); }
+            .admin-search-bar { display: none; }
+            .admin-header-bar { padding-left: 52px; }
+            #admin-view .action-btns { flex-wrap: wrap; }
+        }
         #admin-toast-host { position: fixed; bottom: 22px; right: 22px; z-index: 100000; display: flex; flex-direction: column; gap: 8px; pointer-events: none; font-family: 'Inter', sans-serif; }
         .admin-toast { pointer-events: auto; padding: 12px 16px; border-radius: 10px; font-size: 13px; font-weight: 600; max-width: min(360px, 92vw); box-shadow: 0 10px 28px rgba(0,0,0,0.14); border: 1px solid transparent; animation: adminToastIn 0.22s ease; }
         .admin-toast.info { background: #eff6ff; color: #1e40af; border-color: #93c5fd; }
@@ -4813,7 +4867,9 @@
         </div>
     </div>
     <div id="admin-view">
-        <aside class="admin-sidebar">
+        <button type="button" class="admin-sidebar-toggle" id="adminSidebarToggle" aria-label="Open admin menu"><i class="fas fa-bars" aria-hidden="true"></i></button>
+        <div class="admin-sidebar-overlay" id="adminSidebarOverlay" aria-hidden="true"></div>
+        <aside class="admin-sidebar" id="adminSidebar">
             <div class="sidebar-header">
                 <div class="logo">
                     <div class="logo-img">K</div>
@@ -4999,7 +5055,7 @@
                         </div>
                         <div class="filter-group" style="display:flex;align-items:center;gap:10px;">
                             <span class="filter-label" style="font-size:14px;color:var(--admin-gray-600);font-weight:500;">Plan:</span>
-                            <select class="form-control" id="adminUserPlanFilter" style="width:150px;"><option>All</option><option>starter</option><option>pro</option><option>creatorplus</option><option>agency</option></select>
+                            <select class="form-control" id="adminUserPlanFilter" style="width:150px;"><option>All</option><option>free</option><option>starter</option><option>pro</option><option>creatorplus</option><option>agency</option></select>
                         </div>
                     </div>
                     <div class="table-container">
@@ -5043,7 +5099,7 @@
                 </div>
                 <div class="admin-card">
                     <div class="admin-card-header">Active Subscriptions</div>
-                    <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;"><table class="admin-table"><thead><tr><th>User</th><th>Plan</th><th>Started</th><th>Renews</th><th>Amount</th><th>Status</th><th>Actions</th></tr></thead><tbody><tr><td>John Doe</td><td><span class="badge-tag pro" style="background:rgba(239,68,68,0.12);">Pro Monthly</span></td><td>Jan 15, 2026</td><td>Feb 15, 2026</td><td>$29.99/mo</td><td><span class="status-badge completed">Active</span></td><td><div class="action-btns"><button type="button" class="btn btn-secondary btn-sm" data-admin-demo="Modify subscription (demo — use Payments/Creator billing flows in production).">Modify</button><button type="button" class="btn btn-primary btn-sm" data-admin-demo="Sample subscription row for John Doe.">View</button></div></td></tr></tbody></table></div>
+                    <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;"><table class="admin-table"><thead><tr><th>User</th><th>Plan</th><th>Started</th><th>Renews</th><th>Amount</th><th>Status</th><th>Actions</th></tr></thead><tbody><tr><td>John Doe</td><td><span class="badge-tag pro" style="background:rgba(239,68,68,0.12);">Pro</span></td><td>Jan 15, 2026</td><td>Feb 15, 2026</td><td>$49/mo</td><td><span class="status-badge completed">Active</span></td><td><div class="action-btns"><button type="button" class="btn btn-secondary btn-sm" data-admin-demo="Modify subscription (demo — use Payments/Creator billing flows in production).">Modify</button><button type="button" class="btn btn-primary btn-sm" data-admin-demo="Sample subscription row for John Doe.">View</button></div></td></tr></tbody></table></div>
                     <div style="padding:16px 24px 24px;font-size:13px;color:var(--admin-gray-500);">Live subscription rows below mirror your billing overview when you click Payments and refresh.</div>
                     <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;padding:0 24px 24px;"><table class="admin-table"><thead><tr><th>Plan</th><th>Active Users</th><th>MRR</th></tr></thead><tbody id="adminSubscriptionsTableBodyMirror"></tbody></table></div>
                 </div>
@@ -5055,11 +5111,7 @@
                         <h2 style="font-size:1.125rem;font-weight:700;color:var(--admin-gray-800);margin:0;">Subscription Plans</h2>
                         <button type="button" class="admin-btn admin-btn-sm" data-admin-demo="New billing plans require Stripe / payment integration in production. Settings saved locally for preview." style="width:auto;background:var(--admin-primary);color:#fff;"><i class="fas fa-plus"></i> Create Plan</button>
                     </div>
-                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px;">
-                        <div class="admin-card" style="margin:0;"><div style="padding:24px;"><div style="font-weight:700;font-size:1.1rem;margin-bottom:8px;">Basic</div><div style="font-size:1.75rem;font-weight:700;color:var(--admin-primary);margin-bottom:16px;">$9.99<span style="font-size:0.9rem;font-weight:500;color:var(--admin-gray-500);">/mo</span></div><ul style="list-style:none;padding:0;margin:0 0 20px;font-size:14px;color:var(--admin-gray-700);"><li style="margin-bottom:10px;"><i class="fas fa-check" style="color:var(--admin-success);margin-right:8px;"></i>Up to 10 products</li><li style="margin-bottom:10px;"><i class="fas fa-check" style="color:var(--admin-success);margin-right:8px;"></i>Basic analytics</li><li style="margin-bottom:10px;"><i class="fas fa-check" style="color:var(--admin-success);margin-right:8px;"></i>Email support</li></ul><button type="button" class="btn btn-secondary" style="width:100%;" data-admin-demo="Editing Basic plan (preview — connect billing in production).">Edit Plan</button></div></div>
-                        <div class="admin-card" style="margin:0;border:2px solid var(--admin-primary);position:relative;"><div style="position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--admin-primary);color:#fff;font-size:11px;font-weight:700;padding:4px 14px;border-radius:20px;">POPULAR</div><div style="padding:24px;"><div style="font-weight:700;font-size:1.1rem;margin-bottom:8px;">Pro</div><div style="font-size:1.75rem;font-weight:700;color:var(--admin-primary);margin-bottom:16px;">$29.99<span style="font-size:0.9rem;font-weight:500;color:var(--admin-gray-500);">/mo</span></div><ul style="list-style:none;padding:0;margin:0 0 20px;font-size:14px;color:var(--admin-gray-700);"><li style="margin-bottom:10px;"><i class="fas fa-check" style="color:var(--admin-success);margin-right:8px;"></i>Up to 100 products</li><li style="margin-bottom:10px;"><i class="fas fa-check" style="color:var(--admin-success);margin-right:8px;"></i>Advanced analytics</li><li style="margin-bottom:10px;"><i class="fas fa-check" style="color:var(--admin-success);margin-right:8px;"></i>Priority support</li><li style="margin-bottom:10px;"><i class="fas fa-check" style="color:var(--admin-success);margin-right:8px;"></i>API access</li></ul><button type="button" class="btn btn-primary" style="width:100%;background:var(--admin-primary);" data-admin-demo="Editing Pro plan (popular tier — preview).">Edit Plan</button></div></div>
-                        <div class="admin-card" style="margin:0;"><div style="padding:24px;"><div style="font-weight:700;font-size:1.1rem;margin-bottom:8px;">Premium</div><div style="font-size:1.75rem;font-weight:700;color:var(--admin-primary);margin-bottom:16px;">$99.99<span style="font-size:0.9rem;font-weight:500;color:var(--admin-gray-500);">/mo</span></div><ul style="list-style:none;padding:0;margin:0 0 20px;font-size:14px;color:var(--admin-gray-700);"><li style="margin-bottom:10px;"><i class="fas fa-check" style="color:var(--admin-success);margin-right:8px;"></i>Unlimited products</li><li style="margin-bottom:10px;"><i class="fas fa-check" style="color:var(--admin-success);margin-right:8px;"></i>Custom analytics</li><li style="margin-bottom:10px;"><i class="fas fa-check" style="color:var(--admin-success);margin-right:8px;"></i>24/7 phone support</li><li style="margin-bottom:10px;"><i class="fas fa-check" style="color:var(--admin-success);margin-right:8px;"></i>Full API access</li></ul><button type="button" class="btn btn-secondary" style="width:100%;" data-admin-demo="Editing Premium plan (preview).">Edit Plan</button></div></div>
-                    </div>
+                    <div id="adminPlansGrid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px;"></div>
                 </div>
             </div>
             <div id="admin-page-stats" class="admin-page">
@@ -5453,6 +5505,91 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
      <script>
+        // ============================================
+        // KotaPal Plans — single source of truth (landing, admin, billing, limits)
+        // ============================================
+        const KOTAPAL_PLAN_ORDER = ['free', 'starter', 'pro', 'creatorplus', 'agency'];
+        const KOTAPAL_PLANS = {
+            free: {
+                id: 'free', name: 'Free', title: 'Free Plan',
+                price: 0, priceLabel: '$0', priceMonthly: '$0', pricePeriod: '/free',
+                description: 'Perfect for getting started with KotaPal. Includes basic features to test the platform.',
+                features: ['1 Shopify store', 'Amazon or Walmart only', 'Limited blocks', 'Watermarked embed', 'Basic analytics'],
+                limits: { maxBlocks: 2, maxProducts: 1 },
+                badgeClass: 'basic', popular: false, topTier: false
+            },
+            starter: {
+                id: 'starter', name: 'Starter', title: 'Starter Plan',
+                price: 19, priceLabel: '$19', priceMonthly: '$19/month', pricePeriod: '/mo',
+                description: 'Ideal for individual creators and small blogs. Start monetizing your content effectively.',
+                features: ['Unlimited blocks', 'Shopify + 1 Affiliate Network', 'Basic analytics', 'Email support', '10,000 monthly views'],
+                limits: { maxBlocks: 5, maxProducts: 3 },
+                badgeClass: 'basic', popular: false, topTier: false
+            },
+            pro: {
+                id: 'pro', name: 'Pro', title: 'Pro Plan',
+                price: 49, priceLabel: '$49', priceMonthly: '$49/month', pricePeriod: '/mo',
+                description: 'For professional creators who need advanced features and multi-platform integration.',
+                features: ['Shopify + Amazon + Walmart', 'AI Writer & Optimizer', 'Smart Geo Redirect', 'Email-friendly exports', '50,000 monthly views'],
+                limits: { maxBlocks: 50, maxProducts: 10 },
+                badgeClass: 'pro', popular: true, topTier: false
+            },
+            creatorplus: {
+                id: 'creatorplus', name: 'Creator+', title: 'Creator+ Plan',
+                price: 99, priceLabel: '$99', priceMonthly: '$99/month', pricePeriod: '/mo',
+                description: 'Everything for serious creators including YouTube integration and advanced analytics.',
+                features: ['YouTube Overlay Blocks', 'Conversion tracking', 'Newsletter block formats', 'Heatmaps & CTR insights', '200,000 monthly views'],
+                limits: { maxBlocks: Infinity, maxProducts: 20 },
+                badgeClass: 'pro', popular: false, topTier: false
+            },
+            agency: {
+                id: 'agency', name: 'Agency', title: 'Agency Plan',
+                price: 199, priceLabel: '$199', priceMonthly: '$199/month', pricePeriod: '/mo',
+                description: 'For agencies and businesses managing multiple clients with white-label solutions.',
+                features: ['Whitelabel embeds', 'Multiple client management', 'Custom domains & branding', 'Priority support', 'Unlimited monthly views'],
+                limits: { maxBlocks: Infinity, maxProducts: Infinity },
+                badgeClass: 'pro', popular: false, topTier: true
+            }
+        };
+        function getKotaPlan(planId) {
+            return KOTAPAL_PLANS[String(planId || 'starter').toLowerCase()] || KOTAPAL_PLANS.starter;
+        }
+        function getKotaPlanPrice(planId) {
+            return getKotaPlan(planId).price;
+        }
+        function getKotaPlanLabel(planId) {
+            var p = getKotaPlan(planId);
+            return p.price === 0 ? p.name + ' Plan (Free)' : p.name + ' Plan ($' + p.price + '/mo)';
+        }
+        function getKotaPlanLimits(planId) {
+            return getKotaPlan(planId).limits;
+        }
+        function getKotaPlanBadgeClass(planId) {
+            return getKotaPlan(planId).badgeClass;
+        }
+        function getKotaPaidPlanIds() {
+            return KOTAPAL_PLAN_ORDER.filter(function(id) { return KOTAPAL_PLANS[id].price > 0; });
+        }
+        function getKotaPlanPricesMap() {
+            var m = {};
+            KOTAPAL_PLAN_ORDER.forEach(function(id) { m[id] = KOTAPAL_PLANS[id].price; });
+            return m;
+        }
+        function renderAdminPlansGrid() {
+            var grid = document.getElementById('adminPlansGrid');
+            if (!grid) return;
+            grid.innerHTML = KOTAPAL_PLAN_ORDER.map(function(id) {
+                var plan = KOTAPAL_PLANS[id];
+                var border = plan.popular ? 'border:2px solid var(--admin-primary);position:relative;' : '';
+                var tag = plan.popular ? '<div style="position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--admin-primary);color:#fff;font-size:11px;font-weight:700;padding:4px 14px;border-radius:20px;">MOST POPULAR</div>' : (plan.topTier ? '<div style="position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--admin-gray-700);color:#fff;font-size:11px;font-weight:700;padding:4px 14px;border-radius:20px;">TOP TIER</div>' : '');
+                var priceHtml = plan.price === 0 ? '$0<span style="font-size:0.9rem;font-weight:500;color:var(--admin-gray-500);">/free</span>' : '$' + plan.price + '<span style="font-size:0.9rem;font-weight:500;color:var(--admin-gray-500);">/mo</span>';
+                var featuresHtml = plan.features.map(function(f) { return '<li style="margin-bottom:10px;"><i class="fas fa-check" style="color:var(--admin-success);margin-right:8px;"></i>' + f + '</li>'; }).join('');
+                var btnClass = plan.popular ? 'btn btn-primary' : 'btn btn-secondary';
+                var btnStyle = plan.popular ? 'width:100%;background:var(--admin-primary);' : 'width:100%;';
+                return '<div class="admin-card" style="margin:0;' + border + '">' + tag + '<div style="padding:24px;"><div style="font-weight:700;font-size:1.1rem;margin-bottom:8px;">' + plan.name + '</div><div style="font-size:1.75rem;font-weight:700;color:var(--admin-primary);margin-bottom:16px;">' + priceHtml + '</div><ul style="list-style:none;padding:0;margin:0 0 20px;font-size:14px;color:var(--admin-gray-700);">' + featuresHtml + '</ul><button type="button" class="' + btnClass + '" style="' + btnStyle + '" data-admin-demo="Editing ' + plan.name + ' plan (preview — connect billing in production).">Edit Plan</button></div></div>';
+            }).join('');
+        }
+
         // ============================================
         // Firebase Configuration
         // ============================================
@@ -6269,6 +6406,8 @@
                 }
                 if (pageName === 'support' && typeof loadAdminSupport === 'function') loadAdminSupport();
                 if (pageName === 'activity' && typeof loadAdminActivity === 'function') loadAdminActivity();
+                if (pageName === 'plans' && typeof renderAdminPlansGrid === 'function') renderAdminPlansGrid();
+                if (window.innerWidth <= 1024 && typeof closeAdminSidebar === 'function') closeAdminSidebar();
             };
             window.initAdminRevenueChart = function() {
                 var canvas = document.getElementById('adminRevenueChart');
@@ -6492,7 +6631,8 @@
                         var planRaw = String(u.plan || 'starter').toLowerCase();
                         var fe = String(u.email || '').toLowerCase();
                         var fn = String(u.name || '').toLowerCase();
-                        var planBadge = '<span class="badge-tag ' + (plan === 'pro' ? 'pro' : 'basic') + '">' + html(plan) + '</span>';
+                        var planInfo = getKotaPlan(planRaw);
+                        var planBadge = '<span class="badge-tag ' + planInfo.badgeClass + '">' + html(planInfo.name) + '</span>';
                         var emEsc = esc(String(u.email || ''));
                         var nmEsc = esc(String(u.name || ''));
                         var actions = '<div class="action-btns"><button type="button" class="btn btn-primary btn-sm" onclick="openAdminManageUser(\'' + uid + '\',\'' + emEsc + '\',\'' + nmEsc + '\',\'' + plan + '\',\'' + status + '\')"><i class="fas fa-cog"></i> Manage</button><button type="button" class="btn btn-secondary btn-sm" onclick="openChangePlan(\'' + uid + '\',\'' + plan + '\')"><i class="fas fa-edit"></i> Plan</button><button type="button" class="btn btn-primary btn-sm" onclick="toggleSuspend(\'' + uid + '\',\'' + status + '\')"><i class="fas fa-' + (status === 'suspended' ? 'user-check' : 'user-slash') + '"></i> ' + (status === 'suspended' ? 'Unsuspend' : 'Suspend') + '</button><button type="button" class="btn btn-secondary btn-sm" style="background:rgba(239,68,68,0.1);color:#b91c1c;" onclick="deleteUserDoc(\'' + uid + '\')"><i class="fas fa-trash"></i> Delete</button></div>';
@@ -6531,7 +6671,8 @@
                     else recentList.innerHTML = recent.map(function(u) {
                         var joined = (u.joined && u.joined !== '-') ? new Date(u.joined).toLocaleDateString() : (u.joined || '-');
                         var plan = (u.plan || 'starter').toLowerCase();
-                        var tag = '<span class="badge-tag ' + (plan === 'pro' ? 'pro' : 'basic') + '">' + (plan === 'pro' ? 'Pro' : 'Basic') + '</span>';
+                        var planInfo = getKotaPlan(plan);
+                        var tag = '<span class="badge-tag ' + planInfo.badgeClass + '">' + planInfo.name + '</span>';
                         return '<div class="user-item"><div class="user-avatar" style="width:45px;height:45px;font-size:16px;">' + html(initials(u.name)) + '</div><div class="user-info"><div class="user-name-text">' + html(u.name || '-') + '</div><div class="user-email">' + html(u.email || '-') + '</div></div><div class="user-meta"><div class="user-date">' + html(joined) + '</div>' + tag + '</div></div>';
                     }).join('');
                 }
@@ -6562,11 +6703,11 @@
             window.loadAdminBilling = function() {
                 var users = window.adminUsers || [];
                 var payments = JSON.parse(localStorage.getItem('kota_payment_history') || '[]');
-                var planPrices = { starter: 19, pro: 49, creatorplus: 99, agency: 199 };
+                var planPrices = getKotaPlanPricesMap();
                 var byPlan = {};
                 users.forEach(function(u) { var p = u.plan || 'starter'; byPlan[p] = (byPlan[p] || 0) + 1; });
                 if (payments.length === 0 && users.length > 0) {
-                    payments = users.slice(0, 10).map(function(u, i) { return { date: new Date(Date.now() - i * 86400000 * 30).toISOString(), user: u.email, plan: u.plan || 'starter', amount: planPrices[u.plan] || 19, status: 'paid' }; });
+                    payments = users.slice(0, 10).map(function(u, i) { return { date: new Date(Date.now() - i * 86400000 * 30).toISOString(), user: u.email, plan: u.plan || 'starter', amount: getKotaPlanPrice(u.plan), status: 'paid' }; });
                 }
                 var totalRev = payments.reduce(function(s, p) { return s + (p.amount || 0); }, 0);
                 var el = document.getElementById('admin-billing-total');
@@ -6586,7 +6727,11 @@
                 }
                 var subTbody = document.getElementById('adminSubscriptionsTableBody');
                 if (subTbody) {
-                    var rows = Object.keys(planPrices).map(function(plan) { var cnt = byPlan[plan] || 0; return '<tr><td>' + plan + '</td><td>' + cnt + '</td><td>$' + (cnt * (planPrices[plan] || 0)).toLocaleString() + '</td></tr>'; });
+                    var rows = KOTAPAL_PLAN_ORDER.map(function(plan) {
+                        var cnt = byPlan[plan] || 0;
+                        var planInfo = getKotaPlan(plan);
+                        return '<tr><td>' + planInfo.name + '</td><td>' + cnt + '</td><td>$' + (cnt * (planPrices[plan] || 0)).toLocaleString() + '</td></tr>';
+                    });
                     subTbody.innerHTML = rows.length ? rows.join('') : '<tr><td colspan="3" style="padding:24px;color:#6b7280;text-align:center;">No subscription data.</td></tr>';
                 }
                 var subMir = document.getElementById('adminSubscriptionsTableBodyMirror');
@@ -7322,11 +7467,15 @@
         // Set current year in footer
         document.getElementById('currentYear').textContent = new Date().getFullYear();
 
-        // Mobile menu toggle
-        document.getElementById('mobileMenuBtn').addEventListener('click', function() {
-            this.classList.toggle('active');
-            document.querySelector('.nav-links').classList.toggle('active');
-        });
+        // Mobile menu toggle (landing nav)
+        var mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        if (mobileMenuBtn) {
+            mobileMenuBtn.addEventListener('click', function() {
+                this.classList.toggle('active');
+                var navLinks = document.querySelector('#landing-page-view .nav-links');
+                if (navLinks) navLinks.classList.toggle('active');
+            });
+        }
 
         // Auth Modal Functions
         const authModal = document.getElementById('authModal');
@@ -7734,13 +7883,10 @@
         }
 
         // Plan Detail Modal
-        const planDetails = {
-            free: { title: 'Free Plan', price: '$0', description: 'Perfect for getting started with KotaPal. Includes basic features to test the platform.', features: ['1 Shopify store', 'Amazon or Walmart only', 'Limited blocks', 'Watermarked embed', 'Basic analytics'] },
-            starter: { title: 'Starter Plan', price: '$19/month', description: 'Ideal for individual creators and small blogs. Start monetizing your content effectively.', features: ['Unlimited blocks', 'Shopify + 1 Affiliate Network', 'Basic analytics', 'Email support', '10,000 monthly views'] },
-            pro: { title: 'Pro Plan', price: '$49/month', description: 'For professional creators who need advanced features and multi-platform integration.', features: ['Shopify + Amazon + Walmart', 'AI Writer & Optimizer', 'Smart Geo Redirect', 'Email-friendly exports', '50,000 monthly views'] },
-            creatorplus: { title: 'Creator+ Plan', price: '$99/month', description: 'Everything for serious creators including YouTube integration and advanced analytics.', features: ['YouTube Overlay Blocks', 'Conversion tracking', 'Newsletter block formats', 'Heatmaps & CTR insights', '200,000 monthly views'] },
-            agency: { title: 'Agency Plan', price: '$199/month', description: 'For agencies and businesses managing multiple clients with white-label solutions.', features: ['Whitelabel embeds', 'Multiple client management', 'Custom domains & branding', 'Priority support', 'Unlimited monthly views'] }
-        };
+        const planDetails = Object.fromEntries(KOTAPAL_PLAN_ORDER.map(function(id) {
+            var p = KOTAPAL_PLANS[id];
+            return [id, { title: p.title, price: p.priceMonthly, description: p.description, features: p.features.slice() }];
+        }));
         function showPlanDetails(planId) {
             const plan = planDetails[planId];
             if (!plan) return;
@@ -7883,6 +8029,121 @@
         function getDocumentScrollTop() {
             return window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
         }
+
+        (function initLandingScrollArrow() {
+            var arrow = document.getElementById('landingScrollArrow');
+            var landing = document.getElementById('landing-page-view');
+            var dashboard = document.getElementById('dashboard-view');
+            if (!arrow || !landing) return;
+
+            var EDGE = 56;
+            var lastScrollY = getDocumentScrollTop();
+            var scrollIntent = 'down';
+            var arrowTickPending = false;
+
+            function isLandingVisible() {
+                if (!landing) return false;
+                if (landing.style.display === 'none' || getComputedStyle(landing).display === 'none') return false;
+                if (dashboard && dashboard.style.display !== 'none' && getComputedStyle(dashboard).display !== 'none') return false;
+                var adminView = document.getElementById('admin-view');
+                if (adminView && adminView.classList.contains('active')) return false;
+                return true;
+            }
+
+            function getScrollMetrics() {
+                var el = document.documentElement;
+                var top = getDocumentScrollTop();
+                var max = Math.max(0, el.scrollHeight - window.innerHeight);
+                return {
+                    top: top,
+                    max: max,
+                    canUp: top > EDGE,
+                    canDown: top < max - EDGE
+                };
+            }
+
+            function resolveArrowDirection(metrics) {
+                if (!metrics.canDown && metrics.canUp) return 'up';
+                if (!metrics.canUp && metrics.canDown) return 'down';
+                if (scrollIntent === 'up' && metrics.canUp) return 'up';
+                if (scrollIntent === 'down' && metrics.canDown) return 'down';
+                return metrics.canDown ? 'down' : 'up';
+            }
+
+            function applyArrowDirection(dir) {
+                var isDown = dir === 'down';
+                arrow.classList.toggle('is-down', isDown);
+                arrow.classList.toggle('is-up', !isDown);
+                var label = isDown ? 'Scroll down' : 'Scroll up';
+                arrow.setAttribute('aria-label', label);
+                arrow.setAttribute('title', label);
+                var icon = arrow.querySelector('.landing-scroll-arrow-icon');
+                if (icon) {
+                    icon.className = (isDown ? 'fas fa-chevron-down' : 'fas fa-chevron-up') + ' landing-scroll-arrow-icon';
+                }
+            }
+
+            function updateLandingScrollArrow() {
+                var root = document.documentElement;
+                if (!isLandingVisible()) {
+                    root.classList.remove('landing-page-active');
+                    arrow.classList.remove('is-visible');
+                    return;
+                }
+                root.classList.add('landing-page-active');
+                var metrics = getScrollMetrics();
+                if (metrics.max < 80) {
+                    arrow.classList.remove('is-visible');
+                    return;
+                }
+                if (!metrics.canUp && !metrics.canDown) {
+                    arrow.classList.remove('is-visible');
+                    return;
+                }
+                applyArrowDirection(resolveArrowDirection(metrics));
+                arrow.classList.add('is-visible');
+            }
+
+            function scheduleArrowUpdate() {
+                if (arrowTickPending) return;
+                arrowTickPending = true;
+                requestAnimationFrame(function() {
+                    arrowTickPending = false;
+                    updateLandingScrollArrow();
+                });
+            }
+
+            window.addEventListener('scroll', function() {
+                var y = getDocumentScrollTop();
+                if (y > lastScrollY + 3) scrollIntent = 'down';
+                else if (y < lastScrollY - 3) scrollIntent = 'up';
+                lastScrollY = y;
+                scheduleArrowUpdate();
+            }, { passive: true });
+
+            window.addEventListener('resize', scheduleArrowUpdate, { passive: true });
+
+            arrow.addEventListener('click', function() {
+                var metrics = getScrollMetrics();
+                var dir = resolveArrowDirection(metrics);
+                var step = Math.round(window.innerHeight * 0.82);
+                window.scrollBy({ top: dir === 'down' ? step : -step, behavior: 'smooth' });
+            });
+
+            var landingObserver = new MutationObserver(scheduleArrowUpdate);
+            landingObserver.observe(landing, { attributes: true, attributeFilter: ['style', 'class'] });
+            if (dashboard) {
+                landingObserver.observe(dashboard, { attributes: true, attributeFilter: ['style', 'class'] });
+            }
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', scheduleArrowUpdate);
+            } else {
+                scheduleArrowUpdate();
+            }
+            window.addEventListener('load', scheduleArrowUpdate);
+        })();
+
         function scrollDocumentToElement(el, offsetPx, smooth) {
             if (!el) return;
             var off = typeof offsetPx === 'number' ? offsetPx : 100;
@@ -9049,12 +9310,7 @@
                 }
                 
                 if (userPlanEl) {
-                    const plan = currentUser.plan || 'starter';
-                    userPlanEl.textContent = 
-                        plan === 'starter' ? 'Starter Plan ($19/mo)' : 
-                        plan === 'pro' ? 'Pro Plan ($49/mo)' : 
-                        plan === 'creatorplus' ? 'Creator+ Plan ($99/mo)' : 
-                        plan === 'agency' ? 'Agency Plan ($199+/mo)' : 'Starter Plan ($19/mo)';
+                    userPlanEl.textContent = getKotaPlanLabel(currentUser.plan || 'starter');
                 }
                 
                 const profileNameInput = document.getElementById('userName');
@@ -10155,11 +10411,11 @@
                         if (isSelected) {
                             selectedProductsList = selectedProductsList.filter(p => p.id !== product.id);
                         } else {
-                            const maxProducts = currentUser?.plan === 'starter' ? 3 : 
-                                               currentUser?.plan === 'pro' ? 10 : 20;
+                            const maxProducts = getKotaPlanLimits(currentUser?.plan).maxProducts;
+                            const maxProductsCap = maxProducts === Infinity ? 999 : maxProducts;
                             
-                            if (selectedProductsList.length >= maxProducts) {
-                                showNotification(`Maximum ${maxProducts} products allowed per block in your plan.`, 'warning', 'Create Block');
+                            if (selectedProductsList.length >= maxProductsCap) {
+                                showNotification(`Maximum ${maxProducts === Infinity ? 'unlimited' : maxProducts} products allowed per block in your plan.`, 'warning', 'Create Block');
                                 return;
                             }
                             
@@ -10449,6 +10705,36 @@
                 });
             }, 0);
         }
+
+        // ============================================
+        // Admin panel mobile sidebar
+        // ============================================
+        var adminSidebar = document.getElementById('adminSidebar');
+        var adminSidebarToggle = document.getElementById('adminSidebarToggle');
+        var adminSidebarOverlay = document.getElementById('adminSidebarOverlay');
+
+        function toggleAdminSidebar() {
+            if (!adminSidebar) return;
+            adminSidebar.classList.toggle('active');
+            if (adminSidebarOverlay) adminSidebarOverlay.classList.toggle('active');
+        }
+
+        function closeAdminSidebar() {
+            if (!adminSidebar) return;
+            adminSidebar.classList.remove('active');
+            if (adminSidebarOverlay) adminSidebarOverlay.classList.remove('active');
+        }
+
+        if (adminSidebarToggle) adminSidebarToggle.addEventListener('click', toggleAdminSidebar);
+        if (adminSidebarOverlay) adminSidebarOverlay.addEventListener('click', closeAdminSidebar);
+        document.querySelectorAll('.admin-sidebar .nav-link').forEach(function(link) {
+            link.addEventListener('click', function() {
+                if (window.innerWidth <= 1024) closeAdminSidebar();
+            });
+        });
+        window.addEventListener('resize', function() {
+            if (window.innerWidth > 1024) closeAdminSidebar();
+        });
 
         // ============================================
         // Dashboard Responsive Features
@@ -10833,14 +11119,12 @@
             if (!container) return;
             
             const userPlan = currentUser?.plan || 'starter';
-            const planNames = {
-                'starter': { name: 'Starter', price: '$19', period: 'month' },
-                'pro': { name: 'Pro', price: '$49', period: 'month' },
-                'creatorplus': { name: 'Creator+', price: '$99', period: 'month' },
-                'agency': { name: 'Agency', price: '$199+', period: 'month' }
+            const planInfo = getKotaPlan(userPlan);
+            const plan = {
+                name: planInfo.name,
+                price: planInfo.price === 0 ? '$0' : planInfo.priceLabel,
+                period: planInfo.price === 0 ? 'free' : 'month'
             };
-            
-            const plan = planNames[userPlan] || planNames['starter'];
             const signupDate = new Date(currentUser?.signupDate || Date.now() - 90*24*60*60*1000);
             const nextBillingDate = new Date(signupDate);
             nextBillingDate.setMonth(nextBillingDate.getMonth() + 1);
@@ -11381,58 +11665,16 @@
             
             const userPlan = currentUser?.plan || 'starter';
             
-            const plans = [
-                {
-                    id: 'starter',
-                    name: 'Starter',
-                    price: '$19',
-                    features: [
-                        '1 Shopify store',
-                        'Amazon or Walmart only',
-                        'Limited blocks',
-                        'Watermarked embed'
-                    ],
-                    isCurrent: userPlan === 'starter'
-                },
-                {
-                    id: 'pro',
-                    name: 'Pro',
-                    price: '$49',
-                    features: [
-                        'Unlimited blocks',
-                        'Shopify + 1 Affiliate Network',
-                        'Basic analytics'
-                    ],
-                    isCurrent: userPlan === 'pro'
-                },
-                {
-                    id: 'creatorplus',
-                    name: 'Creator+',
-                    price: '$99',
-                    features: [
-                        'Shopify + Amazon + Walmart',
-                        'AI Writer & Optimizer',
-                        'Smart Geo Redirect',
-                        'Email-friendly exports'
-                    ],
-                    isCurrent: userPlan === 'creatorplus'
-                },
-                {
-                    id: 'agency',
-                    name: 'Agency',
-                    price: '$199+',
-                    features: [
-                        'YouTube Overlay Blocks',
-                        'Conversion tracking',
-                        'Newsletter block formats',
-                        'Heatmaps & CTR insights',
-                        'Whitelabel embeds',
-                        'Multiple client management',
-                        'Custom domains & branding'
-                    ],
-                    isCurrent: userPlan === 'agency'
-                }
-            ];
+            const plans = KOTAPAL_PLAN_ORDER.map(function(id) {
+                var p = KOTAPAL_PLANS[id];
+                return {
+                    id: id,
+                    name: p.name,
+                    price: p.price === 0 ? '$0' : p.priceLabel,
+                    features: p.features.slice(),
+                    isCurrent: userPlan === id
+                };
+            });
             
             container.innerHTML = plans.map(plan => `
                 <div class="card" style="border: ${plan.isCurrent ? '2px solid var(--primary)' : '1px solid #e5e7eb'}; position: relative;">
@@ -11612,14 +11854,7 @@
                 sidebarName.textContent = userData.displayName || currentUser?.displayName || 'User';
             }
             if (sidebarPlan) {
-                const planNames = {
-                    'starter': 'Starter',
-                    'pro': 'Pro',
-                    'creatorplus': 'Creator+',
-                    'agency': 'Agency'
-                };
-                const plan = userData.plan || currentUser?.plan || 'starter';
-                sidebarPlan.textContent = `${planNames[plan] || 'Starter'} Plan`;
+                sidebarPlan.textContent = getKotaPlan(userData.plan || currentUser?.plan).name + ' Plan';
             }
         }
         
@@ -11645,12 +11880,10 @@
             
             const userPlan = currentUser?.plan || 'starter';
             
-            const plans = [
-                { id: 'starter', name: 'Starter', price: '$19', monthly: 19 },
-                { id: 'pro', name: 'Pro', price: '$49', monthly: 49 },
-                { id: 'creatorplus', name: 'Creator+', price: '$99', monthly: 99 },
-                { id: 'agency', name: 'Agency', price: '$199+', monthly: 199 }
-            ];
+            const plans = KOTAPAL_PLAN_ORDER.map(function(id) {
+                var p = KOTAPAL_PLANS[id];
+                return { id: id, name: p.name, price: p.price === 0 ? '$0' : p.priceLabel, monthly: p.price };
+            });
             
             container.innerHTML = plans.map(plan => `
                 <div class="card" style="border: ${plan.id === userPlan ? '2px solid var(--primary)' : '1px solid #e5e7eb'}; cursor: pointer; transition: all 0.2s;" onclick="changePlan('${plan.id}')">
@@ -11670,22 +11903,11 @@
                 return;
             }
             
-            const planNames = {
-                'starter': 'Starter',
-                'pro': 'Pro',
-                'creatorplus': 'Creator+',
-                'agency': 'Agency'
-            };
+            const planNames = Object.fromEntries(KOTAPAL_PLAN_ORDER.map(function(id) { return [id, KOTAPAL_PLANS[id].name]; }));
+            const planPrices = getKotaPlanPricesMap();
             
-            const planPrices = {
-                'starter': 19,
-                'pro': 49,
-                'creatorplus': 99,
-                'agency': 199
-            };
-            
-            const currentPlanPrice = planPrices[currentUser.plan] || 0;
-            const newPlanPrice = planPrices[planId] || 0;
+            const currentPlanPrice = getKotaPlanPrice(currentUser.plan);
+            const newPlanPrice = getKotaPlanPrice(planId);
             
             if (planId === currentUser.plan) {
                 showNotification('You are already on this plan', 'info', 'Plan');
@@ -11710,7 +11932,7 @@
             // Update sidebar
             const userPlanDisplay = document.querySelector('.user-plan');
             if (userPlanDisplay) {
-                userPlanDisplay.textContent = `${planNames[planId]} Plan`;
+                userPlanDisplay.textContent = getKotaPlanLabel(planId);
             }
             hidePlanChangeModal();
             renderBillingPlans();
@@ -11741,6 +11963,7 @@
         // Setup product search functionality
         document.addEventListener('DOMContentLoaded', () => {
             initGlobalAnimations();
+            if (typeof renderAdminPlansGrid === 'function') renderAdminPlansGrid();
             const productSearchInput = document.getElementById('productSearch');
             const retailerSelect = document.getElementById('retailerSelect');
             

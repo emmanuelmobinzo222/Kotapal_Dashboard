@@ -271,6 +271,10 @@ app.post('/api/blocks', authenticateToken, (req, res) => {
     
     let maxBlocks, maxProducts;
     switch (user.plan) {
+      case 'free':
+        maxBlocks = 2;
+        maxProducts = 1;
+        break;
       case 'starter':
         maxBlocks = 5;
         maxProducts = 3;
@@ -282,6 +286,10 @@ app.post('/api/blocks', authenticateToken, (req, res) => {
       case 'creatorplus':
         maxBlocks = Infinity;
         maxProducts = 20;
+        break;
+      case 'agency':
+        maxBlocks = Infinity;
+        maxProducts = Infinity;
         break;
       default:
         maxBlocks = 5;
