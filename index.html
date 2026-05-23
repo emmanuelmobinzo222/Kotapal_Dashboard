@@ -144,8 +144,8 @@
         }
 
         /*
-         * Landing: one vertical scrollport (.scroll-box) below nav.
-         * Universal scrollbar styling — .scroll-box only (no other landing scrollbar rules).
+         * Universal scrollbar: .scroll-box only (landing html, admin main, dashboard main).
+         * Landing: fixed nav + document scroll — scrollbar runs full viewport height beside nav.
          */
         html {
             overflow-x: hidden;
@@ -154,30 +154,35 @@
             min-height: 100%;
             min-height: 100dvh;
         }
-        html.landing-page-active,
-        html.landing-page-active body {
-            overflow: hidden;
-            height: 100%;
-            height: 100dvh;
+        html.landing-page-active {
+            overflow-x: hidden;
+            overflow-y: auto;
+            scroll-padding-top: 100px;
         }
 
-        /* Universal scrollbar — use only on .scroll-box */
-        .scroll-box {
+        /* Universal scrollbar — single definition for all scroll areas */
+        .scroll-box,
+        html.landing-page-active {
             scrollbar-width: thin;
-            scrollbar-color: #888 #f1f1f1;
+            scrollbar-color: #94a3b8 #f1f5f9;
+            -webkit-overflow-scrolling: touch;
         }
-        .scroll-box::-webkit-scrollbar {
-            width: 12px;
+        .scroll-box::-webkit-scrollbar,
+        html.landing-page-active::-webkit-scrollbar {
+            width: 10px;
         }
-        .scroll-box::-webkit-scrollbar-track {
-            background: #f1f1f1;
+        .scroll-box::-webkit-scrollbar-track,
+        html.landing-page-active::-webkit-scrollbar-track {
+            background: #f1f5f9;
         }
-        .scroll-box::-webkit-scrollbar-thumb {
-            background: #888;
-            border-radius: 6px;
+        .scroll-box::-webkit-scrollbar-thumb,
+        html.landing-page-active::-webkit-scrollbar-thumb {
+            background-color: #94a3b8;
+            border-radius: 5px;
         }
-        .scroll-box::-webkit-scrollbar-thumb:hover {
-            background: #555;
+        .scroll-box::-webkit-scrollbar-thumb:hover,
+        html.landing-page-active::-webkit-scrollbar-thumb:hover {
+            background-color: #64748b;
         }
         body {
             overflow-x: hidden;
@@ -213,20 +218,8 @@
 
         #landing-page-view {
             max-width: 100%;
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            height: 100dvh;
-            overflow: hidden;
-        }
-        #landing-page-view > .scroll-box {
-            flex: 1;
-            min-height: 0;
             overflow-x: hidden;
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
-            scroll-behavior: smooth;
-            scroll-padding-top: 16px;
+            overflow-y: visible;
         }
         /* Landing page, nav, footer: never receive theme-dark; dark mode applies only to #dashboard-view */
 
@@ -326,8 +319,10 @@
 
         /* Navigation — ONLY the marketing header (do not use bare `nav` or it breaks #admin-view sidebar <nav>) */
         #landing-page-view > nav {
-            position: relative;
-            flex-shrink: 0;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
             width: 100%;
             z-index: 1000;
             background: rgba(255, 255, 255, 0.95);
@@ -449,9 +444,9 @@
 
         /* Hero Section */
         .hero {
-            padding-top: 48px;
-            min-height: 85vh;
-            min-height: 85dvh;
+            padding-top: 120px;
+            min-height: 100vh;
+            min-height: 100dvh;
             background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('images/kotapal\ landing01.jpg') no-repeat center center/cover;
             color: white;
             display: flex;
@@ -2862,7 +2857,7 @@
                 <li><a href="#pricing" class="nav-link" data-section="pricing" onclick="scrollToSection('pricing', this); return false;">Pricing</a></li>
                 <li><a href="#trending-products" class="nav-link" data-section="trending-products" onclick="scrollToSection('trending-products', this); return false;">Trending</a></li>
                 <li><a href="#testimonials" class="nav-link" data-section="testimonials" onclick="scrollToSection('testimonials', this); return false;">Testimonials</a></li>
-                <li><a href="#dashboard-preview" class="nav-link" data-section="dashboard-preview" onclick="scrollToSection('dashboard-preview', this); return false;">Dashboard</a></li>
+                <li><a href="#dashboard-preview" class="nav-link" data-section="dashboard-preview" onclick="scrollToSection('dashboard-preview', this); return false;" title="See a preview of the KotaPal creator dashboard">Dashboard Preview</a></li>
                 <li><a href="#about" class="nav-link" data-section="about" onclick="scrollToSection('about', this); return false;">About</a></li>
                 <li><a href="#" class="nav-link" data-section="contact" onclick="goToContactForm(this); return false;">Contact</a></li>
                 <li><a href="#" id="loginBtn">Login</a></li>
@@ -2875,8 +2870,6 @@
             </div>
         </div>
     </nav>
-
-    <div class="scroll-box" id="landingScrollBox">
 
     <!-- Home Page Content -->
     <div id="home-page">
@@ -3399,31 +3392,6 @@
         </section>
     </div>
 
-    <!-- Plan Detail Modal -->
-    <div id="planDetailModal" class="plan-detail-modal">
-        <div class="plan-modal-content">
-            <div class="plan-modal-header">
-                <h2 id="planModalTitle">Plan Details</h2>
-                <button class="plan-modal-close">&times;</button>
-            </div>
-            <div id="planModalContent">
-                <!-- Content will be populated by JavaScript -->
-            </div>
-        </div>
-    </div>
-
-    <!-- Carousel Item Lightbox (enlarge on click) -->
-    <div id="carouselItemLightbox" class="plan-detail-modal" style="display: none;">
-        <div class="plan-modal-content" id="carouselItemLightboxContent" style="max-width: 500px;">
-            <div class="plan-modal-header">
-                <h2 id="carouselItemLightboxTitle">Item Details</h2>
-                <button class="plan-modal-close" id="carouselItemLightboxClose">&times;</button>
-            </div>
-            <div id="carouselItemLightboxBody"></div>
-        </div>
-    </div>
-
-    <!-- Rest of the HTML remains the same (Blog, Contact, Footer, Modals) -->
     <!-- Blog Page Content (Hidden by default) -->
     <div id="blog-page" style="display: none;">
         <section class="page-content blog">
@@ -3602,7 +3570,29 @@
         </div>
     </footer>
 
-    </div><!-- end .scroll-box #landingScrollBox -->
+    <!-- Plan Detail Modal -->
+    <div id="planDetailModal" class="plan-detail-modal">
+        <div class="plan-modal-content">
+            <div class="plan-modal-header">
+                <h2 id="planModalTitle">Plan Details</h2>
+                <button class="plan-modal-close">&times;</button>
+            </div>
+            <div id="planModalContent">
+                <!-- Content will be populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Carousel Item Lightbox (enlarge on click) -->
+    <div id="carouselItemLightbox" class="plan-detail-modal" style="display: none;">
+        <div class="plan-modal-content" id="carouselItemLightboxContent" style="max-width: 500px;">
+            <div class="plan-modal-header">
+                <h2 id="carouselItemLightboxTitle">Item Details</h2>
+                <button class="plan-modal-close" id="carouselItemLightboxClose">&times;</button>
+            </div>
+            <div id="carouselItemLightboxBody"></div>
+        </div>
+    </div>
 
     <!-- Content Modals -->
     <div id="guidesModal" class="modal content-modal">
@@ -3684,8 +3674,8 @@
 
     <!-- Dashboard styles matching KotaPal simple copy design -->
     <style id="dashboard-light-theme">
-        #dashboard-view { background: #f8fafc; min-height: 100vh; min-height: 100dvh; }
-        #dashboard-view .dashboard { display: flex; min-height: 100vh; min-height: 100dvh; width: 100%; }
+        #dashboard-view { background: #f8fafc; height: 100vh; height: 100dvh; overflow: hidden; }
+        #dashboard-view .dashboard { display: flex; height: 100%; min-height: 0; width: 100%; }
         #dashboard-view .sidebar {
             width: 260px; background: white; box-shadow: 2px 0 8px rgba(0,0,0,0.04);
             padding: 0 0 16px 0; position: fixed; left: 0; top: 0; height: 100vh; height: 100dvh; overflow-x: hidden; z-index: 1000;
@@ -3721,8 +3711,8 @@
         }
         #dashboard-view .nav-link i { margin-right: 10px; width: 20px; text-align: center; }
         #dashboard-view .main-content {
-            flex: 1; margin-left: 260px; padding: 32px 40px; width: calc(100% - 260px); box-sizing: border-box;
-            background: #f8fafc; min-height: 100vh; transition: margin-left 0.3s ease;
+            flex: 1; min-height: 0; margin-left: 260px; padding: 32px 40px; width: calc(100% - 260px); box-sizing: border-box;
+            background: #f8fafc; overflow-x: hidden; overflow-y: auto; transition: margin-left 0.3s ease;
         }
         #dashboard-view .main-content.sidebar-hidden { margin-left: 0; }
         #dashboard-view .page-content { padding: 24px; max-width: 1400px; width: 100%; margin: 0 auto; }
@@ -3976,11 +3966,7 @@
         .admin-sidebar .admin-info { padding: 14px 20px; border-bottom: 1px solid var(--admin-gray-200); flex-shrink: 0; }
         .admin-sidebar .admin-info .label { font-size: 0.75rem; color: var(--admin-gray-400); text-transform: uppercase; margin-bottom: 4px; letter-spacing: 0.5px; }
         .admin-sidebar .admin-info .email { font-size: 0.875rem; font-weight: 500; word-break: break-all; color: var(--admin-gray-700); }
-        .admin-sidebar .nav-menu { list-style: none; padding: 8px 0 20px; margin: 0; flex: 1; min-height: 0; overflow-x: hidden; overflow-y: auto; -webkit-overflow-scrolling: touch; scrollbar-width: thin; scrollbar-color: #64748b #eef2f7; }
-        .admin-sidebar .nav-menu::-webkit-scrollbar { width: 8px; }
-        .admin-sidebar .nav-menu::-webkit-scrollbar-track { background: #eef2f7; }
-        .admin-sidebar .nav-menu::-webkit-scrollbar-thumb { background-color: #94a3b8; border-radius: 4px; }
-        .admin-sidebar .nav-menu::-webkit-scrollbar-thumb:hover { background-color: #64748b; }
+        .admin-sidebar .nav-menu { list-style: none; padding: 8px 0 20px; margin: 0; flex: 1; min-height: 0; overflow-x: hidden; overflow-y: auto; }
         .admin-sidebar .nav-item.nav-logout { margin-top: 8px; padding-top: 12px; border-top: 1px solid var(--admin-gray-200); }
         .admin-sidebar .nav-link.nav-link-logout { color: var(--admin-danger); }
         .admin-sidebar .nav-link.nav-link-logout:hover { background: rgba(239, 68, 68, 0.08); color: #b91c1c; }
@@ -4008,11 +3994,7 @@
         .admin-sidebar .nav-link:hover { background: var(--admin-gray-100); color: var(--admin-primary); }
         .admin-sidebar .nav-link.active { background: #eef2ff; color: #4f46e5; border-left-color: #4f46e5; font-weight: 600; }
         .admin-sidebar .nav-link i { margin-right: 12px; width: 20px; text-align: center; font-size: 17px; }
-        .admin-main { flex: 1; margin-left: var(--admin-sidebar-width); min-height: 0; max-height: 100vh; max-height: 100dvh; height: 100vh; height: 100dvh; width: 100%; max-width: 100%; background: var(--admin-gray-50); min-width: 0; display: flex; flex-direction: column; overflow-x: hidden; overflow-y: auto; -webkit-overflow-scrolling: touch; scrollbar-width: thin; scrollbar-color: #64748b #f1f5f9; }
-        .admin-main::-webkit-scrollbar { width: 10px; }
-        .admin-main::-webkit-scrollbar-track { background: #f1f5f9; }
-        .admin-main::-webkit-scrollbar-thumb { background-color: #94a3b8; border-radius: 5px; }
-        .admin-main::-webkit-scrollbar-thumb:hover { background-color: #64748b; }
+        .admin-main { flex: 1; margin-left: var(--admin-sidebar-width); min-height: 0; max-height: 100vh; max-height: 100dvh; height: 100vh; height: 100dvh; width: 100%; max-width: 100%; background: var(--admin-gray-50); min-width: 0; display: flex; flex-direction: column; overflow-x: hidden; overflow-y: auto; }
         .admin-header-bar { height: 70px; background: white; border-bottom: 1px solid var(--admin-gray-200); display: flex; align-items: center; justify-content: space-between; padding: 0 30px; flex-shrink: 0; position: sticky; top: 0; z-index: 20; }
         .admin-search-bar { flex: 1; max-width: 500px; position: relative; }
         .admin-search-bar input { width: 100%; padding: 10px 15px 10px 40px; border: 1px solid var(--admin-gray-200); border-radius: 10px; font-size: 14px; transition: all 0.3s ease; }
@@ -4231,7 +4213,7 @@
                 </ul>
             </div>
             <button type="button" class="nav-toggle-float" id="navToggleFloat" aria-label="Toggle navigation" title="Hide Nav"><i class="fas fa-compress-arrows-alt"></i></button>
-            <div class="main-content">
+            <div class="main-content scroll-box">
                 <div id="dashboard-page" class="page-content">
                     <div class="header">
                         <h1 class="page-title">Dashboard</h1>
@@ -4840,7 +4822,7 @@
                 <div class="label">Signed in as</div>
                 <div class="email" id="adminEmailDisplay"></div>
             </div>
-            <nav class="nav-menu">
+            <nav class="nav-menu scroll-box">
                 <div class="nav-item"><a href="javascript:void(0)" class="nav-link active" data-page="dashboard" onclick="showAdminPage('dashboard'); return false;"><i class="fas fa-home"></i> Dashboard</a></div>
                 <div class="nav-section-label">Management</div>
                 <div class="nav-item"><a href="javascript:void(0)" class="nav-link" data-page="users" onclick="showAdminPage('users'); return false;"><i class="fas fa-users"></i> Users</a></div>
@@ -4865,7 +4847,7 @@
                 <div class="nav-item nav-logout"><a href="javascript:void(0)" class="nav-link nav-link-logout" onclick="handleAdminLogout(); return false;"><i class="fas fa-sign-out-alt"></i> Log out</a></div>
             </nav>
         </aside>
-        <main class="admin-main">
+        <main class="admin-main scroll-box">
             <header class="admin-header-bar">
                 <div style="display:flex;align-items:center;flex:1;">
                     <div class="admin-search-bar">
@@ -6086,29 +6068,20 @@
             window.addEventListener('load', function() { setTimeout(hidePageLoader, 300); });
             setTimeout(hidePageLoader, 4000);
             
-            // Nav scroll highlight — tracks #landingScrollBox scroll (below fixed nav layout)
+            // Nav scroll highlight — window scroll with fixed landing nav
             var activeMenuScrollPending = false;
-            var landingScrollBox = document.getElementById('landingScrollBox');
             function updateActiveMenu() {
                 if (activeMenuScrollPending) return;
                 activeMenuScrollPending = true;
                 requestAnimationFrame(function() {
                     activeMenuScrollPending = false;
-                    var box = document.getElementById('landingScrollBox');
-                    var y = box ? box.scrollTop : (window.scrollY || document.documentElement.scrollTop || 0);
+                    var y = window.scrollY || document.documentElement.scrollTop || 0;
                     var navOffset = 100;
-                    var sections = document.querySelectorAll('#landingScrollBox section[id]');
+                    var sections = document.querySelectorAll('#landing-page-view section[id]');
                     var navLinks = document.querySelectorAll('.nav-links a[data-section]');
                     var currentSection = '';
                     sections.forEach(function(section) {
-                        var sectionTop;
-                        if (box) {
-                            var boxRect = box.getBoundingClientRect();
-                            var sectionRect = section.getBoundingClientRect();
-                            sectionTop = sectionRect.top - boxRect.top + box.scrollTop - navOffset;
-                        } else {
-                            sectionTop = section.offsetTop - navOffset;
-                        }
+                        var sectionTop = section.offsetTop - navOffset;
                         var sectionHeight = section.offsetHeight;
                         if (y >= sectionTop && y < sectionTop + sectionHeight) {
                             currentSection = section.getAttribute('id');
@@ -6119,9 +6092,6 @@
                         if (link.getAttribute('data-section') === currentSection) link.classList.add('active');
                     });
                 });
-            }
-            if (landingScrollBox) {
-                landingScrollBox.addEventListener('scroll', updateActiveMenu, { passive: true });
             }
             window.addEventListener('scroll', updateActiveMenu, { passive: true });
             window.addEventListener('load', updateActiveMenu);
@@ -8048,40 +8018,20 @@
             if (blog) blog.style.display = (pageId === 'blog-page') ? 'block' : 'none';
             if (contact) contact.style.display = (pageId === 'contact-page') ? 'block' : 'none';
             if (el) el.style.display = 'block';
-            var scrollBox = document.getElementById('landingScrollBox');
-            if (scrollBox) scrollBox.scrollTop = 0;
-            else window.scrollTo(0, 0);
+            window.scrollTo(0, 0);
             var nl = document.querySelector('.nav-links');
             if (nl) nl.classList.remove('active');
             var mbtn = document.getElementById('mobileMenuBtn');
             if (mbtn) mbtn.classList.remove('active');
         }
 
-        function getLandingScrollBox() {
-            return document.getElementById('landingScrollBox');
-        }
-
         function getDocumentScrollTop() {
-            var box = getLandingScrollBox();
-            var landing = document.getElementById('landing-page-view');
-            if (box && landing && getComputedStyle(landing).display !== 'none') {
-                return box.scrollTop;
-            }
             return window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
         }
 
         function scrollDocumentToElement(el, offsetPx, smooth) {
             if (!el) return;
             var off = typeof offsetPx === 'number' ? offsetPx : 100;
-            var box = getLandingScrollBox();
-            var landing = document.getElementById('landing-page-view');
-            if (box && landing && getComputedStyle(landing).display !== 'none') {
-                var boxRect = box.getBoundingClientRect();
-                var elRect = el.getBoundingClientRect();
-                var top = elRect.top - boxRect.top + box.scrollTop - off;
-                box.scrollTo({ top: Math.max(0, top), behavior: smooth ? 'smooth' : 'auto' });
-                return;
-            }
             var top = el.getBoundingClientRect().top + getDocumentScrollTop() - off;
             window.scrollTo({ top: Math.max(0, top), behavior: smooth ? 'smooth' : 'auto' });
         }
