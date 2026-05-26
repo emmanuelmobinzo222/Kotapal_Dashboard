@@ -4372,11 +4372,26 @@
                         <button class="btn btn-primary" id="newBlockBtn">Create New Block</button>
                     </div>
                     <div id="blocksContainer" class="blocks-grid"></div>
+                    <div class="card" style="margin-top:20px;">
+                        <div class="card-header"><h3 class="card-title">Embed Anywhere</h3></div>
+                        <div class="card-body">
+                            <div class="form-group">
+                                <label for="embedBlockSelect">Select block</label>
+                                <select id="embedBlockSelect" class="form-control" style="max-width:320px;"></select>
+                            </div>
+                            <div class="form-group">
+                                <label>Embed code</label>
+                                <textarea id="embedCodeTextarea" class="form-control" rows="3" readonly></textarea>
+                            </div>
+                            <button type="button" class="btn btn-secondary" id="copyEmbedCodeBtn">Copy embed code</button>
+                            <p id="embedDragBlockTitle" style="margin-top:12px;font-size:0.9rem;color:var(--gray);"></p>
+                        </div>
+                    </div>
                 </div>
 
                 <div id="new-block-page" class="page-content" style="display:none;">
                     <div class="header">
-                        <h1 class="page-title">Create New SmartBlock</h1>
+                        <h1 class="page-title" id="newBlockPageTitle">Create New SmartBlock</h1>
                         <button class="btn btn-secondary" id="backToBlocksBtn">Back to Blocks</button>
                     </div>
                     <div class="card">
@@ -4419,7 +4434,7 @@
                             </div>
                             <div style="display: flex; justify-content: space-between; margin-top: 30px;">
                                 <button type="button" class="btn btn-secondary" id="cancelNewBlock">Cancel</button>
-                                <button type="submit" class="btn btn-primary">Create Block</button>
+                                <button type="submit" class="btn btn-primary" id="newBlockSubmitBtn">Create Block</button>
                             </div>
                         </form>
                     </div>
@@ -4628,6 +4643,16 @@
                     <div class="header"><h1 class="page-title">Product Library</h1></div>
                     <div class="card">
                         <div class="card-body">
+                            <div style="display:flex; gap:12px; margin-bottom:12px; flex-wrap:wrap; align-items:flex-end;">
+                                <select id="productLibraryRetailer" class="form-control" style="max-width:160px;">
+                                    <option value="amazon">Amazon</option>
+                                    <option value="walmart">Walmart</option>
+                                </select>
+                                <input id="productLibraryRetailerQuery" class="form-control" placeholder="Search retailers..." style="max-width:240px;">
+                                <button type="button" class="btn btn-secondary" id="productLibrarySearchRetailersBtn">Search retailers</button>
+                                <span id="productLibrarySearchStatus" style="font-size:0.9rem;color:var(--gray);"></span>
+                            </div>
+                            <div id="productLibrarySearchResults" style="margin-bottom:16px;"></div>
                             <div style="display:flex; gap:12px; margin-bottom:12px; flex-wrap:wrap;">
                                 <input id="productLibrarySearch" class="form-control" placeholder="Search products..." style="max-width:300px;">
                                 <select id="productLibraryFilter" class="form-control" style="max-width:180px;">
@@ -4788,6 +4813,17 @@
                             </div>
                             <button type="submit" class="btn btn-primary">Save Changes</button>
                         </form>
+                    </div>
+                    <div class="card" style="margin-top:20px;">
+                        <div class="card-header"><h3 class="card-title">Product search API</h3></div>
+                        <div class="card-body">
+                            <div class="form-group">
+                                <label for="amazonApiKey">SearchAPI.io key (Amazon product search)</label>
+                                <input type="password" id="amazonApiKey" class="form-control" placeholder="Enter your SearchAPI key">
+                                <p id="amazonApiKeyStatus" style="margin-top:8px;font-size:0.85rem;color:var(--gray);"></p>
+                            </div>
+                            <button type="button" class="btn btn-primary" id="saveAmazonApiKey">Save API key</button>
+                        </div>
                     </div>
                     </div>
                 </div>
@@ -5100,13 +5136,13 @@
             <div id="admin-page-blocks" class="admin-page">
                 <h1 class="page-title">Product Management</h1>
                 <div class="admin-card">
-                    <div class="admin-card-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;"><span>All Products</span><button type="button" class="admin-btn admin-btn-sm" data-admin-action="open-users-manage" style="width:auto;background:var(--admin-primary);color:#fff;"><i class="fas fa-plus"></i> Add Product</button></div>
+                    <div class="admin-card-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;"><span>All Products</span><button type="button" class="admin-btn admin-btn-sm" data-admin-action="open-add-product" style="width:auto;background:var(--admin-primary);color:#fff;"><i class="fas fa-plus"></i> Add Product</button></div>
                     <div style="padding:0 24px 16px;display:flex;gap:16px;flex-wrap:wrap;align-items:center;">
                         <div style="display:flex;align-items:center;gap:8px;"><span style="font-size:14px;color:var(--admin-gray-600);">Category:</span><select class="form-control" style="width:auto;min-width:160px;"><option>All Categories</option></select></div>
                         <div style="display:flex;align-items:center;gap:8px;"><span style="font-size:14px;color:var(--admin-gray-600);">Status:</span><select class="form-control" style="width:auto;min-width:120px;"><option>All</option></select></div>
                     </div>
                     <div style="padding:0 24px 24px;color:#6b7280;font-size:14px;border-top:1px solid var(--admin-gray-200);padding-top:16px;">Product blocks and catalog entries are stored per user in Firestore. Use the user dashboard to manage live blocks.</div>
-                    <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;padding:0 24px 24px;"><table class="admin-table"><thead><tr><th>Product</th><th>Category</th><th>Price</th><th>Stock</th><th>Sales</th><th>Status</th><th>Actions</th></tr></thead><tbody><tr><td>Wireless Headphones</td><td>Electronics</td><td>$99.00</td><td>120</td><td>342</td><td><span class="status-badge completed">Active</span></td><td><div class="action-btns"><button type="button" class="admin-btn-sm admin-btn-secondary" data-admin-nav="users" data-admin-demo="Product blocks are managed per user in User Management.">Edit</button><button type="button" class="admin-btn-sm admin-btn-primary" data-admin-nav="users" data-admin-demo="Open Users to view this creator's live product blocks.">View</button></div></td></tr><tr><td>Smart Watch Pro</td><td>Wearables</td><td>$249.00</td><td>45</td><td>189</td><td><span class="status-badge completed">Active</span></td><td><div class="action-btns"><button type="button" class="admin-btn-sm admin-btn-secondary" data-admin-nav="users" data-admin-demo="Product blocks are managed per user in User Management.">Edit</button><button type="button" class="admin-btn-sm admin-btn-primary" data-admin-nav="users">View</button></div></td></tr></tbody></table></div>
+                    <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;padding:0 24px 24px;"><table class="admin-table"><thead><tr><th>Product</th><th>Category</th><th>Price</th><th>Stock</th><th>Sales</th><th>Status</th><th>Actions</th></tr></thead><tbody id="adminProductsTableBody"></tbody></table></div>
                 </div>
             </div>
             <div id="admin-page-subscriptions" class="admin-page">
@@ -5128,7 +5164,7 @@
                 <div class="admin-card" style="box-shadow:none;background:transparent;border:none;padding:0;">
                     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px;">
                         <h2 style="font-size:1.125rem;font-weight:700;color:var(--admin-gray-800);margin:0;">Subscription Plans</h2>
-                        <button type="button" class="admin-btn admin-btn-sm" data-admin-demo="New billing plans require Stripe / payment integration in production. Settings saved locally for preview." style="width:auto;background:var(--admin-primary);color:#fff;"><i class="fas fa-plus"></i> Create Plan</button>
+                        <button type="button" class="admin-btn admin-btn-sm" data-admin-action="create-plan" style="width:auto;background:var(--admin-primary);color:#fff;"><i class="fas fa-plus"></i> Create Plan</button>
                     </div>
                     <div id="adminPlansGrid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px;"></div>
                 </div>
@@ -5226,7 +5262,7 @@
                 <div class="grid-2">
                     <div class="admin-card" style="margin:0;">
                         <div class="admin-card-header">Admin Roles &amp; Permissions</div>
-                        <div style="overflow-x:auto;"><table class="admin-table"><thead><tr><th>Role</th><th>Admin</th><th>Permissions</th><th>Actions</th></tr></thead><tbody><tr><td>Super Admin</td><td>admin@kotapal.com</td><td>Full Access</td><td><button type="button" class="admin-btn-sm admin-btn-secondary" data-admin-nav="settings" data-admin-demo="Role permissions are configured in Platform Settings and Firestore rules.">Edit</button></td></tr><tr><td>Support Admin</td><td>support@kotapal.com</td><td>Limited Access</td><td><button type="button" class="admin-btn-sm admin-btn-secondary" data-admin-nav="settings" data-admin-demo="Support admin roles are preview-only until IAM is connected.">Edit</button></td></tr></tbody></table></div>
+                        <div style="overflow-x:auto;"><table class="admin-table"><thead><tr><th>Role</th><th>Admin</th><th>Permissions</th><th>Actions</th></tr></thead><tbody><tr><td>Super Admin</td><td>admin@kotapal.com</td><td>Full Access</td><td><button type="button" class="admin-btn-sm admin-btn-secondary" data-admin-action="edit-role" data-role-key="super">Edit</button></td></tr><tr><td>Support Admin</td><td>support@kotapal.com</td><td>Limited Access</td><td><button type="button" class="admin-btn-sm admin-btn-secondary" data-admin-action="edit-role" data-role-key="support">Edit</button></td></tr></tbody></table></div>
                     </div>
                     <div class="admin-card" style="margin:0;">
                         <div class="admin-card-header">Security Settings</div>
@@ -5341,11 +5377,65 @@
             <div class="admin-form-group"><label>Plan</label><select id="adminUserManagePlan" style="width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:8px;"><option value="free">Free</option><option value="starter">Starter</option><option value="pro">Pro</option><option value="creatorplus">Creator+</option><option value="agency">Agency</option></select></div>
             <div class="admin-form-group"><label>Account status</label><select id="adminUserManageStatus" style="width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:8px;"><option value="active">Active</option><option value="suspended">Suspended (disabled)</option></select></div>
             <div class="admin-form-group" id="adminUserManageBlocksGroup"><label>Dashboard blocks (JSON array)</label><textarea id="adminUserManageBlocksJson" style="width:100%;min-height:180px;padding:10px;border:1px solid #e5e7eb;border-radius:8px;font-family:ui-monospace,monospace;font-size:12px;" placeholder="[]"></textarea><div style="font-size:0.8rem;color:#6b7280;margin-top:6px;">Saved to Firestore and updates the user’s dashboard in real time.</div></div>
-            <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:20px;">
-                <button type="button" class="admin-btn" onclick="adminUserManageSaveProfile()">Save profile</button>
-                <button type="button" class="admin-btn" onclick="adminUserManageSaveBlocks()">Save blocks</button>
-                <button type="button" class="admin-btn" style="background:rgba(239,68,68,0.12);color:#b91c1c;" onclick="adminUserManageDeleteFirestore()">Remove Firestore user</button>
+            <div id="adminUserManageActions" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:20px;">
+                <button type="button" class="admin-btn" id="adminUserManageSaveProfileBtn" onclick="adminUserManageSaveProfile()">Save profile</button>
+                <button type="button" class="admin-btn" id="adminUserManageSaveBlocksBtn" onclick="adminUserManageSaveBlocks()">Save blocks</button>
+                <button type="button" class="admin-btn" id="adminUserManageDeleteBtn" style="background:rgba(239,68,68,0.12);color:#b91c1c;" onclick="adminUserManageDeleteFirestore()">Remove Firestore user</button>
                 <button type="button" class="admin-btn admin-btn-secondary" onclick="closeAdminUserManageModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="adminDetailModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:2200;align-items:center;justify-content:center;padding:20px;">
+        <div style="background:white;padding:24px;border-radius:12px;max-width:560px;width:100%;max-height:90vh;overflow-y:auto;">
+            <h3 id="adminDetailModalTitle" style="margin-bottom:12px;">Details</h3>
+            <div id="adminDetailModalBody" style="font-size:14px;color:#374151;line-height:1.6;white-space:pre-wrap;"></div>
+            <div style="display:flex;gap:10px;margin-top:20px;justify-content:flex-end;">
+                <button type="button" class="admin-btn admin-btn-secondary" onclick="closeAdminDetailModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="adminProductEditModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:2200;align-items:center;justify-content:center;padding:20px;">
+        <div style="background:white;padding:24px;border-radius:12px;max-width:480px;width:100%;">
+            <h3 id="adminProductEditTitle" style="margin-bottom:16px;">Edit Product</h3>
+            <input type="hidden" id="adminProductEditId">
+            <div class="admin-form-group"><label>Name</label><input type="text" id="adminProductEditName" style="width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:8px;"></div>
+            <div class="admin-form-group"><label>Category</label><input type="text" id="adminProductEditCategory" style="width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:8px;"></div>
+            <div class="admin-form-group"><label>Price ($)</label><input type="number" step="0.01" id="adminProductEditPrice" style="width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:8px;"></div>
+            <div class="admin-form-group"><label>Stock</label><input type="number" id="adminProductEditStock" style="width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:8px;"></div>
+            <div class="admin-form-group"><label>Status</label><select id="adminProductEditStatus" style="width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:8px;"><option value="Active">Active</option><option value="Draft">Draft</option><option value="Archived">Archived</option></select></div>
+            <div style="display:flex;gap:10px;margin-top:20px;">
+                <button type="button" class="admin-btn" onclick="saveAdminProductEdit()">Save</button>
+                <button type="button" class="admin-btn admin-btn-secondary" onclick="closeAdminProductEditModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="adminPlanEditModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:2200;align-items:center;justify-content:center;padding:20px;">
+        <div style="background:white;padding:24px;border-radius:12px;max-width:480px;width:100%;">
+            <h3 id="adminPlanEditTitle" style="margin-bottom:16px;">Edit Plan</h3>
+            <input type="hidden" id="adminPlanEditId">
+            <div class="admin-form-group"><label>Plan name</label><input type="text" id="adminPlanEditName" style="width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:8px;"></div>
+            <div class="admin-form-group"><label>Monthly price ($)</label><input type="number" step="1" id="adminPlanEditPrice" style="width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:8px;"></div>
+            <div class="admin-form-group"><label>Features (one per line)</label><textarea id="adminPlanEditFeatures" rows="5" style="width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:8px;"></textarea></div>
+            <div style="display:flex;gap:10px;margin-top:20px;">
+                <button type="button" class="admin-btn" onclick="saveAdminPlanEdit()">Save</button>
+                <button type="button" class="admin-btn admin-btn-secondary" onclick="closeAdminPlanEditModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="adminRoleEditModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:2200;align-items:center;justify-content:center;padding:20px;">
+        <div style="background:white;padding:24px;border-radius:12px;max-width:480px;width:100%;">
+            <h3 id="adminRoleEditTitle" style="margin-bottom:16px;">Edit Role</h3>
+            <input type="hidden" id="adminRoleEditKey">
+            <div class="admin-form-group"><label>Role name</label><input type="text" id="adminRoleEditName" style="width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:8px;"></div>
+            <div class="admin-form-group"><label>Admin email</label><input type="email" id="adminRoleEditEmail" style="width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:8px;"></div>
+            <div class="admin-form-group"><label>Permissions</label><select id="adminRoleEditPermissions" style="width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:8px;"><option value="Full Access">Full Access</option><option value="Limited Access">Limited Access</option><option value="Read Only">Read Only</option></select></div>
+            <div style="display:flex;gap:10px;margin-top:20px;">
+                <button type="button" class="admin-btn" onclick="saveAdminRoleEdit()">Save</button>
+                <button type="button" class="admin-btn admin-btn-secondary" onclick="closeAdminRoleEditModal()">Cancel</button>
             </div>
         </div>
     </div>
@@ -5571,7 +5661,15 @@
             }
         };
         function getKotaPlan(planId) {
-            return KOTAPAL_PLANS[String(planId || 'starter').toLowerCase()] || KOTAPAL_PLANS.starter;
+            var base = KOTAPAL_PLANS[String(planId || 'starter').toLowerCase()] || KOTAPAL_PLANS.starter;
+            var ov = {};
+            try { ov = JSON.parse(localStorage.getItem('admin_plan_overrides') || '{}')[base.id] || {}; } catch (e) {}
+            if (!ov || !Object.keys(ov).length) return base;
+            var merged = Object.assign({}, base);
+            if (ov.name) merged.name = ov.name;
+            if (ov.price != null) merged.price = Number(ov.price);
+            if (ov.features) merged.features = ov.features.slice();
+            return merged;
         }
         function getKotaPlanPrice(planId) {
             return getKotaPlan(planId).price;
@@ -6915,7 +7013,7 @@
                     var emEsc = esc(String(u.email || ''));
                     var nmEsc = esc(String(u.name || ''));
                     var plan = esc(u.plan || 'starter');
-                    return '<tr><td>' + html(u.name || '-') + '</td><td>' + html(u.email || '-') + '</td><td>' + planBadge + '</td><td>' + html(joined) + '</td><td>' + statusBadge + '</td><td><div class="action-btns"><button type="button" class="admin-btn-sm admin-btn-secondary" onclick="openAdminManageUser(\'' + uid + '\',\'' + emEsc + '\',\'' + nmEsc + '\',\'' + plan + '\',\'' + status + '\')">View</button><button type="button" class="admin-btn-sm admin-btn-primary" onclick="openAdminManageUser(\'' + uid + '\',\'' + emEsc + '\',\'' + nmEsc + '\',\'' + plan + '\',\'' + status + '\')">Manage</button></div></td></tr>';
+                    return '<tr><td>' + html(u.name || '-') + '</td><td>' + html(u.email || '-') + '</td><td>' + planBadge + '</td><td>' + html(joined) + '</td><td>' + statusBadge + '</td><td><div class="action-btns"><button type="button" class="admin-btn-sm admin-btn-secondary" onclick="openAdminManageUser(\'' + uid + '\',\'' + emEsc + '\',\'' + nmEsc + '\',\'' + plan + '\',\'' + status + '\',\'view\')">View</button><button type="button" class="admin-btn-sm admin-btn-primary" onclick="openAdminManageUser(\'' + uid + '\',\'' + emEsc + '\',\'' + nmEsc + '\',\'' + plan + '\',\'' + status + '\',\'manage\')">Manage</button></motion></td></tr>';
                 }).join('');
             };
             window.renderAdminSubscriptionUsers = function() {
@@ -7163,14 +7261,15 @@
                 document.getElementById('adminUserManageBlocksJson').value = '[]';
                 m.style.display = 'flex';
             };
-            window.openAdminManageUser = function(uid, email, name, plan, status) {
+            window.openAdminManageUser = function(uid, email, name, plan, status, mode) {
                 var m = document.getElementById('adminUserManageModal');
                 if (!m) return;
                 var t = document.getElementById('adminUserManageTitle');
                 var h = document.getElementById('adminUserManageHelp');
-                if (t) t.textContent = 'Manage user';
-                if (h) h.textContent = 'Update profile, suspension, and dashboard blocks. Blocks sync to the user dashboard in real time.';
-                document.getElementById('adminUserManageMode').value = 'manage';
+                mode = mode || 'manage';
+                if (t) t.textContent = mode === 'view' ? 'View user' : 'Manage user';
+                if (h) h.textContent = mode === 'view' ? 'Read-only profile and dashboard blocks for this user.' : 'Update profile, suspension, and dashboard blocks. Blocks sync to the user dashboard in real time.';
+                document.getElementById('adminUserManageMode').value = mode === 'view' ? 'view' : 'manage';
                 document.getElementById('adminUserManageUid').value = uid || '';
                 document.getElementById('adminUserManageUid').readOnly = true;
                 document.getElementById('adminUserManageEmail').value = email || '';
@@ -7291,13 +7390,283 @@
                     tr.style.display = ok ? '' : 'none';
                 });
             };
+            
+        // --- Action button handlers (registration, admin modals, block edit, auth) ---
+        function showAuthSubForm(formId) {
+            document.querySelectorAll('#authModal .auth-form').forEach(function(f) {
+                f.classList.remove('active');
+                f.style.display = 'none';
+            });
+            var form = document.getElementById(formId);
+            if (form) { form.style.display = 'block'; form.classList.add('active'); }
+            document.querySelectorAll('.auth-tab').forEach(function(t) { t.classList.remove('active'); });
+        }
+        function showAuthLoginForm() {
+            showAuthSubForm('loginForm');
+            var tab = document.querySelector('.auth-tab[data-tab="login"]');
+            if (tab) tab.classList.add('active');
+        }
+        function setResetStatus(message, type) {
+            var ids = ['forgotPasswordStatus', 'resetPasswordStatus', 'resetMessage', 'authMessage'];
+            for (var i = 0; i < ids.length; i++) {
+                var el = document.getElementById(ids[i]);
+                if (el) {
+                    el.style.display = 'block';
+                    el.textContent = message;
+                    el.style.color = type === 'error' ? '#dc2626' : type === 'success' ? '#16a34a' : 'var(--gray)';
+                    return;
+                }
+            }
+            if (typeof showNotification === 'function') showNotification(message, type === 'error' ? 'error' : type === 'success' ? 'success' : 'info', 'Password Reset');
+        }
+        async function handleNewPasswordSubmit(e) {
+            if (e) e.preventDefault();
+            var oobCode = (document.getElementById('resetToken') && document.getElementById('resetToken').value) || '';
+            var newPass = document.getElementById('resetNewPassword') ? document.getElementById('resetNewPassword').value : '';
+            var confirmPass = document.getElementById('resetConfirmPassword') ? document.getElementById('resetConfirmPassword').value : '';
+            if (newPass !== confirmPass) { setResetStatus('Passwords do not match.', 'error'); return; }
+            if (!newPass || newPass.length < 6) { setResetStatus('Password must be at least 6 characters.', 'error'); return; }
+            if (!auth) { setResetStatus('Firebase is not configured.', 'error'); return; }
+            try {
+                if (oobCode) {
+                    await auth.confirmPasswordReset(oobCode, newPass);
+                } else if (auth.currentUser) {
+                    await auth.currentUser.updatePassword(newPass);
+                } else {
+                    setResetStatus('Open the reset link from your email or sign in first.', 'error');
+                    return;
+                }
+                setResetStatus('Password updated. You can log in with your new password.', 'success');
+                setTimeout(showAuthLoginForm, 1500);
+            } catch (err) {
+                setResetStatus(err.message || 'Failed to reset password.', 'error');
+            }
+        }
+        function checkPasswordResetLink() {
+            var params = new URLSearchParams(window.location.search);
+            if (params.get('mode') === 'resetPassword' && params.get('oobCode')) {
+                if (typeof showAuthModal === 'function') showAuthModal();
+                showAuthSubForm('resetPasswordForm');
+                var token = document.getElementById('resetToken');
+                if (token) token.value = params.get('oobCode');
+            }
+        }
+        window.closeAdminDetailModal = function() {
+            var m = document.getElementById('adminDetailModal');
+            if (m) m.style.display = 'none';
+        };
+        window.openAdminDetailModal = function(title, body) {
+            var m = document.getElementById('adminDetailModal');
+            var t = document.getElementById('adminDetailModalTitle');
+            var b = document.getElementById('adminDetailModalBody');
+            if (t) t.textContent = title || 'Details';
+            if (b) b.textContent = body || '';
+            if (m) m.style.display = 'flex';
+        };
+        function getDefaultAdminProducts() {
+            return [
+                { id: 'prod_1', name: 'Wireless Headphones', category: 'Electronics', price: 99, stock: 120, sales: 342, status: 'Active' },
+                { id: 'prod_2', name: 'Smart Watch Pro', category: 'Wearables', price: 249, stock: 45, sales: 189, status: 'Active' }
+            ];
+        }
+        function loadAdminProducts() {
+            try {
+                var list = JSON.parse(localStorage.getItem('admin_products_catalog') || 'null');
+                if (!list || !list.length) list = getDefaultAdminProducts();
+                return list;
+            } catch (e) { return getDefaultAdminProducts(); }
+        }
+        function saveAdminProducts(list) {
+            localStorage.setItem('admin_products_catalog', JSON.stringify(list));
+        }
+        window.renderAdminProductsTable = function() {
+            var tbody = document.getElementById('adminProductsTableBody');
+            if (!tbody) return;
+            var products = loadAdminProducts();
+            function esc(s) { return String(s || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
+            tbody.innerHTML = products.map(function(p) {
+                var badge = p.status === 'Active' ? 'completed' : 'pending';
+                return '<tr><td>' + esc(p.name) + '</td><td>' + esc(p.category) + '</td><td>$' + Number(p.price || 0).toFixed(2) + '</td><td>' + esc(p.stock) + '</td><td>' + esc(p.sales) + '</td><td><span class="status-badge ' + badge + '">' + esc(p.status) + '</span></td><td><div class="action-btns"><button type="button" class="admin-btn-sm admin-btn-secondary" data-admin-action="edit-product" data-product-id="' + esc(p.id) + '">Edit</button><button type="button" class="admin-btn-sm admin-btn-primary" data-admin-action="view-product" data-product-id="' + esc(p.id) + '">View</button></div></td></tr>';
+            }).join('');
+        };
+        window.openAdminProductEdit = function(id) {
+            var p = loadAdminProducts().find(function(x) { return x.id === id; });
+            if (!p) { adminToast('Product not found.', 'warn'); return; }
+            document.getElementById('adminProductEditId').value = p.id;
+            document.getElementById('adminProductEditName').value = p.name || '';
+            document.getElementById('adminProductEditCategory').value = p.category || '';
+            document.getElementById('adminProductEditPrice').value = p.price || 0;
+            document.getElementById('adminProductEditStock').value = p.stock || 0;
+            document.getElementById('adminProductEditStatus').value = p.status || 'Active';
+            document.getElementById('adminProductEditTitle').textContent = 'Edit Product';
+            document.getElementById('adminProductEditModal').style.display = 'flex';
+        };
+        window.openAdminProductCreate = function() {
+            document.getElementById('adminProductEditId').value = '';
+            document.getElementById('adminProductEditName').value = '';
+            document.getElementById('adminProductEditCategory').value = '';
+            document.getElementById('adminProductEditPrice').value = '';
+            document.getElementById('adminProductEditStock').value = '';
+            document.getElementById('adminProductEditStatus').value = 'Active';
+            document.getElementById('adminProductEditTitle').textContent = 'Add Product';
+            document.getElementById('adminProductEditModal').style.display = 'flex';
+        };
+        window.closeAdminProductEditModal = function() {
+            var m = document.getElementById('adminProductEditModal');
+            if (m) m.style.display = 'none';
+        };
+        window.saveAdminProductEdit = function() {
+            var id = document.getElementById('adminProductEditId').value || ('prod_' + Date.now());
+            var item = {
+                id: id,
+                name: document.getElementById('adminProductEditName').value.trim(),
+                category: document.getElementById('adminProductEditCategory').value.trim(),
+                price: parseFloat(document.getElementById('adminProductEditPrice').value) || 0,
+                stock: parseInt(document.getElementById('adminProductEditStock').value, 10) || 0,
+                sales: 0,
+                status: document.getElementById('adminProductEditStatus').value
+            };
+            if (!item.name) { adminToast('Product name is required.', 'warn'); return; }
+            var list = loadAdminProducts();
+            var idx = list.findIndex(function(x) { return x.id === id; });
+            if (idx >= 0) { item.sales = list[idx].sales || 0; list[idx] = item; } else list.push(item);
+            saveAdminProducts(list);
+            renderAdminProductsTable();
+            closeAdminProductEditModal();
+            adminToast('Product saved.', 'success');
+        };
+        window.viewAdminProduct = function(id) {
+            var p = loadAdminProducts().find(function(x) { return x.id === id; });
+            if (!p) { adminToast('Product not found.', 'warn'); return; }
+            openAdminDetailModal(p.name, 'Category: ' + p.category + '\nPrice: $' + Number(p.price).toFixed(2) + '\nStock: ' + p.stock + '\nSales: ' + p.sales + '\nStatus: ' + p.status);
+        };
+        function getDefaultAdminRoles() {
+            return {
+                super: { name: 'Super Admin', email: 'admin@kotapal.com', permissions: 'Full Access' },
+                support: { name: 'Support Admin', email: 'support@kotapal.com', permissions: 'Limited Access' }
+            };
+        }
+        function loadAdminRoles() {
+            try {
+                var r = JSON.parse(localStorage.getItem('admin_roles') || 'null');
+                if (!r) r = getDefaultAdminRoles();
+                return r;
+            } catch (e) { return getDefaultAdminRoles(); }
+        }
+        window.openAdminRoleEdit = function(key) {
+            var roles = loadAdminRoles();
+            var r = roles[key] || { name: '', email: '', permissions: 'Full Access' };
+            document.getElementById('adminRoleEditKey').value = key;
+            document.getElementById('adminRoleEditName').value = r.name || '';
+            document.getElementById('adminRoleEditEmail').value = r.email || '';
+            document.getElementById('adminRoleEditPermissions').value = r.permissions || 'Full Access';
+            document.getElementById('adminRoleEditModal').style.display = 'flex';
+        };
+        window.closeAdminRoleEditModal = function() {
+            var m = document.getElementById('adminRoleEditModal');
+            if (m) m.style.display = 'none';
+        };
+        window.saveAdminRoleEdit = function() {
+            var key = document.getElementById('adminRoleEditKey').value;
+            var roles = loadAdminRoles();
+            roles[key] = {
+                name: document.getElementById('adminRoleEditName').value.trim(),
+                email: document.getElementById('adminRoleEditEmail').value.trim(),
+                permissions: document.getElementById('adminRoleEditPermissions').value
+            };
+            localStorage.setItem('admin_roles', JSON.stringify(roles));
+            closeAdminRoleEditModal();
+            adminToast('Role updated.', 'success');
+        };
+        window.openAdminPlanEdit = function(planId) {
+            var plan = getKotaPlan(planId);
+            document.getElementById('adminPlanEditId').value = plan.id;
+            document.getElementById('adminPlanEditName').value = plan.name;
+            document.getElementById('adminPlanEditPrice').value = plan.price;
+            document.getElementById('adminPlanEditFeatures').value = (plan.features || []).join('\n');
+            document.getElementById('adminPlanEditTitle').textContent = planId ? 'Edit Plan' : 'Create Plan';
+            document.getElementById('adminPlanEditModal').style.display = 'flex';
+        };
+        window.closeAdminPlanEditModal = function() {
+            var m = document.getElementById('adminPlanEditModal');
+            if (m) m.style.display = 'none';
+        };
+        window.saveAdminPlanEdit = function() {
+            var id = document.getElementById('adminPlanEditId').value || ('custom_' + Date.now());
+            var overrides = {};
+            try { overrides = JSON.parse(localStorage.getItem('admin_plan_overrides') || '{}'); } catch (e) {}
+            overrides[id] = {
+                name: document.getElementById('adminPlanEditName').value.trim(),
+                price: parseFloat(document.getElementById('adminPlanEditPrice').value) || 0,
+                features: document.getElementById('adminPlanEditFeatures').value.split('\n').map(function(s) { return s.trim(); }).filter(Boolean)
+            };
+            localStorage.setItem('admin_plan_overrides', JSON.stringify(overrides));
+            closeAdminPlanEditModal();
+            if (typeof renderAdminPlansGrid === 'function') renderAdminPlansGrid();
+            adminToast('Plan saved locally.', 'success');
+        };
+        window.setAdminUserManageMode = function(mode) {
+            var isView = mode === 'view';
+            ['adminUserManageUid', 'adminUserManageEmail', 'adminUserManageName', 'adminUserManageBlocksJson'].forEach(function(id) {
+                var el = document.getElementById(id);
+                if (el) el.readOnly = isView;
+            });
+            var planEl = document.getElementById('adminUserManagePlan');
+            var statusEl = document.getElementById('adminUserManageStatus');
+            if (planEl) planEl.disabled = isView;
+            if (statusEl) statusEl.disabled = isView;
+            var uidEl = document.getElementById('adminUserManageUid');
+            if (uidEl && document.getElementById('adminUserManageMode').value !== 'add') uidEl.readOnly = true;
+            var actions = document.getElementById('adminUserManageActions');
+            if (actions) actions.style.display = isView ? 'none' : 'flex';
+        };
+        window.openBlockEditor = function(blockId) {
+            var block = (currentBlocks || []).find(function(b) { return b.id === blockId; });
+            if (!block) return;
+            window._editingBlockId = blockId;
+            selectedProductsList = (block.productsList || []).slice();
+            currentLayout = block.layout || 'grid';
+            var titleEl = document.getElementById('blockTitle');
+            var ctaEl = document.getElementById('ctaText');
+            if (titleEl) titleEl.value = block.title || '';
+            if (ctaEl) ctaEl.value = block.ctaText || 'Buy Now';
+            document.querySelectorAll('.layout-btn').forEach(function(btn) {
+                btn.classList.toggle('active', btn.getAttribute('data-layout') === currentLayout);
+            });
+            var pageTitle = document.getElementById('newBlockPageTitle');
+            var submitBtn = document.getElementById('newBlockSubmitBtn');
+            if (pageTitle) pageTitle.textContent = 'Edit SmartBlock';
+            if (submitBtn) submitBtn.textContent = 'Save Changes';
+            if (typeof updateSelectedProducts === 'function') updateSelectedProducts();
+            showDashboardPage('new-block');
+        };
+        function resetBlockEditorForm() {
+            window._editingBlockId = null;
+            selectedProductsList = [];
+            currentLayout = 'grid';
+            var titleEl = document.getElementById('blockTitle');
+            var ctaEl = document.getElementById('ctaText');
+            if (titleEl) titleEl.value = '';
+            if (ctaEl) ctaEl.value = 'Buy Now';
+            var pageTitle = document.getElementById('newBlockPageTitle');
+            var submitBtn = document.getElementById('newBlockSubmitBtn');
+            if (pageTitle) pageTitle.textContent = 'Create New SmartBlock';
+            if (submitBtn) submitBtn.textContent = 'Create Block';
+            if (typeof updateSelectedProducts === 'function') updateSelectedProducts();
+        }
+
             window.adminBillingInvoice = function(user, amount) {
                 var line = 'Invoice — ' + user + ' — $' + amount;
                 if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(line).catch(function() {});
                 adminToast('Invoice summary copied: ' + line, 'success');
             };
-            window.adminBillingDetail = function(user) {
-                adminToast('Payment record: ' + user + ' (see table above for amounts & dates).', 'info');
+            window.adminBillingDetail = function(userOrIdx) {
+                var p = null;
+                if (window.adminPaymentsByIndex && window.adminPaymentsByIndex[userOrIdx] != null) p = window.adminPaymentsByIndex[userOrIdx];
+                else if (window.adminPaymentsByUser) p = window.adminPaymentsByUser[userOrIdx];
+                if (!p) { adminToast('Payment record not found.', 'warn'); return; }
+                var body = 'User: ' + (p.user || '-') + '\nAmount: $' + (p.amount || 0) + '\nPlan: ' + (p.plan || '-') + '\nStatus: ' + (p.status || 'paid') + '\nDate: ' + (p.date ? new Date(p.date).toLocaleString() : '-');
+                if (typeof openAdminDetailModal === 'function') openAdminDetailModal('Payment details', body);
             };
             window.adminExportUsersCsv = function() {
                 var users = window.adminUsers || [];
@@ -7367,9 +7736,28 @@
                                 openAdminAddUser();
                                 return;
                             }
-                            if (act === 'open-users-manage' && typeof showAdminPage === 'function') {
-                                showAdminPage('users');
-                                adminToast('Pick a user → Manage to add or edit product blocks live (syncs to their dashboard).', 'info');
+                            if (act === 'open-add-product' && typeof openAdminProductCreate === 'function') {
+                                openAdminProductCreate();
+                                return;
+                            }
+                            if (act === 'edit-product' && typeof openAdminProductEdit === 'function') {
+                                openAdminProductEdit(actEl.getAttribute('data-product-id'));
+                                return;
+                            }
+                            if (act === 'view-product' && typeof viewAdminProduct === 'function') {
+                                viewAdminProduct(actEl.getAttribute('data-product-id'));
+                                return;
+                            }
+                            if (act === 'create-plan' && typeof openAdminPlanEdit === 'function') {
+                                openAdminPlanEdit('');
+                                return;
+                            }
+                            if (act === 'edit-plan' && typeof openAdminPlanEdit === 'function') {
+                                openAdminPlanEdit(actEl.getAttribute('data-plan-id'));
+                                return;
+                            }
+                            if (act === 'edit-role' && typeof openAdminRoleEdit === 'function') {
+                                openAdminRoleEdit(actEl.getAttribute('data-role-key'));
                                 return;
                             }
                         }
