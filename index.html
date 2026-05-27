@@ -6389,7 +6389,7 @@
                 if (!tbody) return;
                 if (tickets.length === 0) { tbody.innerHTML = '<tr><td colspan="7" style="padding:24px;color:#6b7280;text-align:center;">No support tickets yet.</td></tr>'; return; }
                 function html(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
-                function escId(id) { return String(id || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'"); }
+                function encAttr(s) { return encodeURIComponent(String(s == null ? '' : s)); }
                 tbody.innerHTML = tickets.slice(0, 100).map(function(t, idx) {
                     var d = ticketDateDisplayForAdmin(t);
                     var status = (t.status || 'pending').toLowerCase();
@@ -6397,8 +6397,8 @@
                     var pri = (t.priority || 'medium').toLowerCase();
                     var priHtml = pri === 'high' ? '<span class="status-badge refunded">High</span>' : pri === 'low' ? '<span class="status-badge" style="background:rgba(59,130,246,0.12);color:#1d4ed8;">Low</span>' : '<span class="status-badge pending">Medium</span>';
                     var tid = t.id ? String(t.id).slice(0, 10) : 'TKT-' + String(idx + 1).padStart(4, '0');
-                    var idAttr = escId(t.id);
-                    return '<tr><td>' + html(tid) + '</td><td>' + html(t.subject || '-') + '</td><td>' + html(t.userEmail || t.userName || '-') + '</td><td>' + priHtml + '</td><td>' + statusBadge + '</td><td>' + html(d) + '</td><td><div class="action-btns"><button type="button" class="admin-btn-sm admin-btn-secondary" onclick="adminTicketDetailById(\'' + idAttr + '\')">View</button><button type="button" class="admin-btn-sm admin-btn-primary" onclick="adminResolveTicketById(\'' + idAttr + '\')">Resolve</button></div></td></tr>';
+                    var idEnc = encAttr(t.id);
+                    return '<tr><td>' + html(tid) + '</td><td>' + html(t.subject || '-') + '</td><td>' + html(t.userEmail || t.userName || '-') + '</td><td>' + priHtml + '</td><td>' + statusBadge + '</td><td>' + html(d) + '</td><td><div class="action-btns"><button type="button" class="admin-btn-sm admin-btn-secondary" data-admin-action="support-ticket-view" data-ticket-id="' + idEnc + '">View</button><button type="button" class="admin-btn-sm admin-btn-primary" data-admin-action="support-ticket-resolve" data-ticket-id="' + idEnc + '">Resolve</button></div></td></tr>';
                 }).join('');
             }
             function hideAuthModalForAdmin() {
@@ -6943,7 +6943,7 @@
                 if (users.length === 0) {
                     tbody.innerHTML = '<tr><td colspan="6" class="text-center" style="padding:32px;color:#6b7280;">No users found. Users appear when they sign up via the main app.</td></tr>';
                 } else {
-                    function esc(s) { return String(s || '').replace(/'/g, "\\'"); }
+                    function encAttr(s) { return encodeURIComponent(String(s == null ? '' : s)); }
                     function html(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
                     function escAttr(s) { return String(s || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;'); }
                     function initials(n) { if (!n || n === '-') return '-'; var p = n.trim().split(/\s+/); return (p[0][0] || '') + (p[1] ? p[1][0] : '') || n[0] || '-'; }
@@ -6951,16 +6951,22 @@
                         var joined = (u.joined && u.joined !== '-') ? new Date(u.joined).toLocaleDateString() : (u.joined || '-');
                         var status = (u.status || 'active').toLowerCase();
                         var statusBadge = '<span class="status-badge ' + (status === 'suspended' ? 'refunded' : 'completed') + '">' + (status === 'suspended' ? 'Suspended' : 'Active') + '</span>';
-                        var uid = esc(u.id || u.email);
-                        var plan = esc(u.plan || 'starter');
                         var planRaw = String(u.plan || 'starter').toLowerCase();
                         var fe = String(u.email || '').toLowerCase();
                         var fn = String(u.name || '').toLowerCase();
                         var planInfo = getKotaPlan(planRaw);
                         var planBadge = '<span class="badge-tag ' + planInfo.badgeClass + '">' + html(planInfo.name) + '</span>';
-                        var emEsc = esc(String(u.email || ''));
-                        var nmEsc = esc(String(u.name || ''));
-                        var actions = '<div class="action-btns"><button type="button" class="admin-btn-sm admin-btn-primary" onclick="openAdminManageUser(\'' + uid + '\',\'' + emEsc + '\',\'' + nmEsc + '\',\'' + plan + '\',\'' + status + '\')"><i class="fas fa-cog"></i> Manage</button><button type="button" class="admin-btn-sm admin-btn-secondary" onclick="openChangePlan(\'' + uid + '\',\'' + plan + '\')"><i class="fas fa-edit"></i> Plan</button><button type="button" class="admin-btn-sm admin-btn-primary" onclick="toggleSuspend(\'' + uid + '\',\'' + status + '\')"><i class="fas fa-' + (status === 'suspended' ? 'user-check' : 'user-slash') + '"></i> ' + (status === 'suspended' ? 'Unsuspend' : 'Suspend') + '</button><button type="button" class="admin-btn-sm admin-btn-danger" onclick="deleteUserDoc(\'' + uid + '\')"><i class="fas fa-trash"></i> Delete</button></div>';
+                        var idEnc = encAttr(u.id || u.email);
+                        var emEnc = encAttr(u.email || '');
+                        var nmEnc = encAttr(u.name || '');
+                        var plEnc = encAttr(planRaw);
+                        var stEnc = encAttr(status);
+                        var actions = '<div class="action-btns">' +
+                            '<button type="button" class="admin-btn-sm admin-btn-secondary" data-admin-action="user-view" data-user-id="' + idEnc + '" data-user-email="' + emEnc + '" data-user-name="' + nmEnc + '" data-user-plan="' + plEnc + '" data-user-status="' + stEnc + '"><i class="fas fa-eye"></i> View</button>' +
+                            '<button type="button" class="admin-btn-sm admin-btn-primary" data-admin-action="user-edit" data-user-id="' + idEnc + '" data-user-email="' + emEnc + '" data-user-name="' + nmEnc + '" data-user-plan="' + plEnc + '" data-user-status="' + stEnc + '"><i class="fas fa-edit"></i> Edit</button>' +
+                            '<button type="button" class="admin-btn-sm admin-btn-secondary" data-admin-action="user-plan" data-user-id="' + idEnc + '" data-user-plan="' + plEnc + '"><i class="fas fa-layer-group"></i> Plan</button>' +
+                            '<button type="button" class="admin-btn-sm admin-btn-primary" data-admin-action="user-suspend" data-user-id="' + idEnc + '" data-user-status="' + stEnc + '"><i class="fas fa-' + (status === 'suspended' ? 'user-check' : 'user-slash') + '"></i> ' + (status === 'suspended' ? 'Unsuspend' : 'Suspend') + '</button>' +
+                            '<button type="button" class="admin-btn-sm admin-btn-danger" data-admin-action="user-delete" data-user-id="' + idEnc + '"><i class="fas fa-trash"></i> Delete</button></div>';
                         var userCell = '<div style="display:flex;align-items:center;gap:10px;"><div class="user-avatar" style="width:35px;height:35px;font-size:14px;">' + html(initials(u.name)) + '</div><span>' + html(u.name || '-') + '</span></div>';
                         return '<tr data-filter-email="' + escAttr(fe) + '" data-filter-name="' + escAttr(fn) + '" data-filter-status="' + escAttr(status) + '" data-filter-plan="' + escAttr(planRaw) + '"><td>' + userCell + '</td><td>' + html(u.email || '-') + '</td><td>' + planBadge + '</td><td>' + statusBadge + '</td><td>' + html(joined) + '</td><td>' + actions + '</td></tr>';
                     }).join('');
@@ -7066,7 +7072,7 @@
                     tbody.innerHTML = '<tr><td colspan="6" style="padding:24px;color:#6b7280;text-align:center;">No creators yet. Users appear when they sign up.</td></tr>';
                     return;
                 }
-                function esc(s) { return String(s || '').replace(/'/g, "\\'"); }
+                function encAttr(s) { return encodeURIComponent(String(s == null ? '' : s)); }
                 function html(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
                 tbody.innerHTML = users.slice(0, 50).map(function(u) {
                     var status = (u.status || 'active').toLowerCase();
@@ -7074,11 +7080,13 @@
                     var joined = (u.joined && u.joined !== '-') ? new Date(u.joined).toLocaleDateString() : (u.joined || '-');
                     var planInfo = getKotaPlan(String(u.plan || 'starter').toLowerCase());
                     var planBadge = '<span class="badge-tag ' + planInfo.badgeClass + '">' + html(planInfo.name) + '</span>';
-                    var uid = esc(u.id || u.email);
-                    var emEsc = esc(String(u.email || ''));
-                    var nmEsc = esc(String(u.name || ''));
-                    var plan = esc(u.plan || 'starter');
-                    return '<tr><td>' + html(u.name || '-') + '</td><td>' + html(u.email || '-') + '</td><td>' + planBadge + '</td><td>' + html(joined) + '</td><td>' + statusBadge + '</td><td><div class="action-btns"><button type="button" class="admin-btn-sm admin-btn-secondary" onclick="openAdminManageUser(\'' + uid + '\',\'' + emEsc + '\',\'' + nmEsc + '\',\'' + plan + '\',\'' + status + '\',\'view\')">View</button><button type="button" class="admin-btn-sm admin-btn-primary" onclick="openAdminManageUser(\'' + uid + '\',\'' + emEsc + '\',\'' + nmEsc + '\',\'' + plan + '\',\'' + status + '\',\'manage\')">Manage</button></div></td></tr>';
+                    var planRaw = String(u.plan || 'starter').toLowerCase();
+                    var idEnc = encAttr(u.id || u.email);
+                    var emEnc = encAttr(u.email || '');
+                    var nmEnc = encAttr(u.name || '');
+                    var plEnc = encAttr(planRaw);
+                    var stEnc = encAttr(status);
+                    return '<tr><td>' + html(u.name || '-') + '</td><td>' + html(u.email || '-') + '</td><td>' + planBadge + '</td><td>' + html(joined) + '</td><td>' + statusBadge + '</td><td><div class="action-btns"><button type="button" class="admin-btn-sm admin-btn-secondary" data-admin-action="user-view" data-user-id="' + idEnc + '" data-user-email="' + emEnc + '" data-user-name="' + nmEnc + '" data-user-plan="' + plEnc + '" data-user-status="' + stEnc + '">View</button><button type="button" class="admin-btn-sm admin-btn-primary" data-admin-action="user-edit" data-user-id="' + idEnc + '" data-user-email="' + emEnc + '" data-user-name="' + nmEnc + '" data-user-plan="' + plEnc + '" data-user-status="' + stEnc + '">Manage</button></div></td></tr>';
                 }).join('');
             };
             window.renderAdminSubscriptionUsers = function() {
@@ -7089,7 +7097,7 @@
                     tbody.innerHTML = '<tr><td colspan="6" style="padding:24px;color:#6b7280;text-align:center;">No subscriptions yet.</td></tr>';
                     return;
                 }
-                function esc(s) { return String(s || '').replace(/'/g, "\\'"); }
+                function encAttr(s) { return encodeURIComponent(String(s == null ? '' : s)); }
                 function html(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
                 tbody.innerHTML = users.slice(0, 50).map(function(u) {
                     var status = (u.status || 'active').toLowerCase();
@@ -7098,10 +7106,13 @@
                     var planRaw = String(u.plan || 'starter').toLowerCase();
                     var planInfo = getKotaPlan(planRaw);
                     var planBadge = '<span class="badge-tag ' + planInfo.badgeClass + '">' + html(planInfo.name) + '</span>';
-                    var uid = esc(u.id || u.email);
-                    var plan = esc(u.plan || 'starter');
+                    var idEnc = encAttr(u.id || u.email);
+                    var emEnc = encAttr(u.email || '');
+                    var nmEnc = encAttr(u.name || '');
+                    var plEnc = encAttr(planRaw);
+                    var stEnc = encAttr(status);
                     var price = '$' + getKotaPlanPrice(planRaw) + '/mo';
-                    return '<tr><td>' + html(u.name || u.email || '-') + '</td><td>' + planBadge + '</td><td>' + html(joined) + '</td><td>' + html(price) + '</td><td>' + statusBadge + '</td><td><div class="action-btns"><button type="button" class="admin-btn-sm admin-btn-secondary" onclick="openChangePlan(\'' + uid + '\',\'' + plan + '\')">Modify</button><button type="button" class="admin-btn-sm admin-btn-primary" onclick="openAdminManageUser(\'' + uid + '\',\'' + esc(String(u.email || '')) + '\',\'' + esc(String(u.name || '')) + '\',\'' + plan + '\',\'' + status + '\',\'view\')">View</button></div></td></tr>';
+                    return '<tr><td>' + html(u.name || u.email || '-') + '</td><td>' + planBadge + '</td><td>' + html(joined) + '</td><td>' + html(price) + '</td><td>' + statusBadge + '</td><td><div class="action-btns"><button type="button" class="admin-btn-sm admin-btn-secondary" data-admin-action="user-plan" data-user-id="' + idEnc + '" data-user-plan="' + plEnc + '">Modify plan</button><button type="button" class="admin-btn-sm admin-btn-primary" data-admin-action="user-view" data-user-id="' + idEnc + '" data-user-email="' + emEnc + '" data-user-name="' + nmEnc + '" data-user-plan="' + plEnc + '" data-user-status="' + stEnc + '">View</button></div></td></tr>';
                 }).join('');
             };
             window.loadAdminBilling = function() {
@@ -7132,7 +7143,7 @@
                         var st = (p.status || 'paid').toLowerCase();
                         var badge = st === 'refund' || st === 'refunded' ? 'refunded' : st === 'pending' ? 'pending' : 'completed';
                         var stLabel = badge === 'refunded' ? 'Refunded' : badge === 'pending' ? 'Pending' : 'Completed';
-                        return '<tr><td>' + html(p.id || ('TX-' + String(idx + 1).padStart(4, '0'))) + '</td><td>' + html(p.user || '-') + '</td><td>$' + html(p.amount || 0) + '</td><td>Subscription</td><td><span class="status-badge ' + badge + '">' + stLabel + '</span></td><td>' + html(d) + '</td><td><div class="action-btns"><button type="button" class="admin-btn-sm admin-btn-secondary" onclick="adminBillingInvoice(' + idx + ')">Invoice</button><button type="button" class="admin-btn-sm admin-btn-primary" onclick="adminBillingDetail(' + idx + ')">View</button></div></td></tr>';
+                        return '<tr><td>' + html(p.id || ('TX-' + String(idx + 1).padStart(4, '0'))) + '</td><td>' + html(p.user || '-') + '</td><td>$' + html(p.amount || 0) + '</td><td>Subscription</td><td><span class="status-badge ' + badge + '">' + stLabel + '</span></td><td>' + html(d) + '</td><td><div class="action-btns"><button type="button" class="admin-btn-sm admin-btn-secondary" data-admin-action="billing-invoice" data-payment-idx="' + idx + '">Invoice</button><button type="button" class="admin-btn-sm admin-btn-primary" data-admin-action="billing-detail" data-payment-idx="' + idx + '">View</button></div></td></tr>';
                     }).join('');
                     }
                 }
@@ -7234,18 +7245,33 @@
                 tbody.innerHTML = logs.slice(0, 100).map(function(l) { var t = l.time ? new Date(l.time).toLocaleString() : '-'; return '<tr><td>' + html(t) + '</td><td>' + html(l.user || '-') + '</td><td>' + html(l.action || '-') + '</td><td>' + html(l.details || '-') + '</td></tr>'; }).join('');
             };
             window.openChangePlan = function(uid, currentPlan) {
-                document.getElementById('changePlanUserId').value = uid;
-                syncAdminPlanSelectOptions(document.getElementById('changePlanSelect'), currentPlan || 'starter');
-                document.getElementById('changePlanModal').style.display = 'flex';
+                var uidInp = document.getElementById('changePlanUserId');
+                var sel = document.getElementById('changePlanSelect');
+                var modal = document.getElementById('changePlanModal');
+                if (!uidInp || !sel || !modal) {
+                    if (typeof window.adminToast === 'function') window.adminToast('Plan change dialog is not available.', 'warn');
+                    return;
+                }
+                uidInp.value = uid || '';
+                syncAdminPlanSelectOptions(sel, currentPlan || 'starter');
+                modal.style.display = 'flex';
             };
             window.closeChangePlanModal = function() {
-                document.getElementById('changePlanModal').style.display = 'none';
+                var m = document.getElementById('changePlanModal');
+                if (m) m.style.display = 'none';
             };
             window.savePlanChange = async function() {
-                var uid = document.getElementById('changePlanUserId').value;
-                var plan = document.getElementById('changePlanSelect').value;
+                var uid = document.getElementById('changePlanUserId') && document.getElementById('changePlanUserId').value;
+                var plan = document.getElementById('changePlanSelect') && document.getElementById('changePlanSelect').value;
                 var dbUse = db || window.firebaseDb;
-                if (!uid || !dbUse) return;
+                if (!uid) {
+                    if (typeof window.adminToast === 'function') window.adminToast('No user selected for plan change.', 'warn');
+                    return;
+                }
+                if (!dbUse) {
+                    if (typeof window.adminToast === 'function') window.adminToast('Connect Firebase to update plans in Firestore.', 'warn');
+                    return;
+                }
                 try {
                     await dbUse.collection('users').doc(uid).set({ plan: plan }, { merge: true });
                 } catch (err1) {
@@ -7262,7 +7288,14 @@
             };
             window.toggleSuspend = async function(uid, currentStatus) {
                 var dbUse = db || window.firebaseDb;
-                if (!uid || !dbUse) return;
+                if (!uid) {
+                    if (typeof window.adminToast === 'function') window.adminToast('No user selected.', 'warn');
+                    return;
+                }
+                if (!dbUse) {
+                    if (typeof window.adminToast === 'function') window.adminToast('Connect Firebase to change account status.', 'warn');
+                    return;
+                }
                 var newStatus = currentStatus === 'suspended' ? 'active' : 'suspended';
                 var usedCloudFn = false;
                 try {
@@ -7299,7 +7332,15 @@
             };
             window.deleteUserDoc = async function(uid) {
                 var dbUse = db || window.firebaseDb;
-                if (!uid || !dbUse || !confirm('Delete this user from Firebase Auth when available, and remove Firestore profiles?')) return;
+                if (!uid) {
+                    if (typeof window.adminToast === 'function') window.adminToast('No user selected.', 'warn');
+                    return;
+                }
+                if (!dbUse) {
+                    if (typeof window.adminToast === 'function') window.adminToast('Connect Firebase to delete user profiles.', 'warn');
+                    return;
+                }
+                if (!confirm('Delete this user from Firebase Auth when available, and remove Firestore profiles?')) return;
                 var deletedAuth = false;
                 try {
                     var deleteFn = getAdminCallable('adminDeleteUser');
@@ -7874,7 +7915,10 @@
                             return;
                         }
                         var openU = e.target.closest('[data-admin-open-users]');
-                        if (openU) showAdminPage('users');
+                        if (openU) {
+                            if (typeof showAdminPage === 'function') showAdminPage('users');
+                            return;
+                        }
                         var navEl = e.target.closest('[data-admin-nav]');
                         if (navEl) {
                             var navPage = navEl.getAttribute('data-admin-nav');
@@ -7886,6 +7930,59 @@
                         var actEl = e.target.closest('[data-admin-action]');
                         if (actEl) {
                             var act = actEl.getAttribute('data-admin-action');
+                            function adminDecodeAttr(name) {
+                                try { return decodeURIComponent(actEl.getAttribute(name) || ''); } catch (err) { return ''; }
+                            }
+                            if (act === 'user-view' && typeof openAdminManageUser === 'function') {
+                                openAdminManageUser(
+                                    adminDecodeAttr('data-user-id'),
+                                    adminDecodeAttr('data-user-email'),
+                                    adminDecodeAttr('data-user-name'),
+                                    adminDecodeAttr('data-user-plan'),
+                                    adminDecodeAttr('data-user-status'),
+                                    'view'
+                                );
+                                return;
+                            }
+                            if (act === 'user-edit' && typeof openAdminManageUser === 'function') {
+                                openAdminManageUser(
+                                    adminDecodeAttr('data-user-id'),
+                                    adminDecodeAttr('data-user-email'),
+                                    adminDecodeAttr('data-user-name'),
+                                    adminDecodeAttr('data-user-plan'),
+                                    adminDecodeAttr('data-user-status'),
+                                    'manage'
+                                );
+                                return;
+                            }
+                            if (act === 'user-plan' && typeof openChangePlan === 'function') {
+                                openChangePlan(adminDecodeAttr('data-user-id'), adminDecodeAttr('data-user-plan'));
+                                return;
+                            }
+                            if (act === 'user-suspend' && typeof toggleSuspend === 'function') {
+                                toggleSuspend(adminDecodeAttr('data-user-id'), adminDecodeAttr('data-user-status'));
+                                return;
+                            }
+                            if (act === 'user-delete' && typeof deleteUserDoc === 'function') {
+                                deleteUserDoc(adminDecodeAttr('data-user-id'));
+                                return;
+                            }
+                            if (act === 'support-ticket-view' && typeof adminTicketDetailById === 'function') {
+                                adminTicketDetailById(adminDecodeAttr('data-ticket-id'));
+                                return;
+                            }
+                            if (act === 'support-ticket-resolve' && typeof adminResolveTicketById === 'function') {
+                                adminResolveTicketById(adminDecodeAttr('data-ticket-id'));
+                                return;
+                            }
+                            if (act === 'billing-invoice' && typeof adminBillingInvoice === 'function') {
+                                adminBillingInvoice(parseInt(actEl.getAttribute('data-payment-idx'), 10));
+                                return;
+                            }
+                            if (act === 'billing-detail' && typeof adminBillingDetail === 'function') {
+                                adminBillingDetail(parseInt(actEl.getAttribute('data-payment-idx'), 10));
+                                return;
+                            }
                             if (act === 'open-add-user' && typeof openAdminAddUser === 'function') {
                                 openAdminAddUser();
                                 return;
