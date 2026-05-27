@@ -31,8 +31,16 @@ let users = [
     affiliateIds: {
       amazon: 'john-20',
       walmart: 'walmart-123',
+      ebay: 'ebay-789',
       shopify: 'shopify-store',
       skimlinks: 'skim-456'
+    },
+    providerApiKeys: {
+      amazon: '',
+      walmart: '',
+      ebay: '',
+      shopify: '',
+      skimlinks: ''
     }
   }
 ];
@@ -78,10 +86,11 @@ let blocks = [
 ];
 
 let integrations = [
-  { id: 'amazon', userId: 'user_123', name: 'Amazon Associates', status: 'connected', lastSync: '2 hours ago', affiliateId: 'john-20' },
-  { id: 'walmart', userId: 'user_123', name: 'Walmart Affiliate', status: 'connected', lastSync: '1 day ago', affiliateId: 'walmart-123' },
-  { id: 'shopify', userId: 'user_123', name: 'Shopify Partner', status: 'disconnected', lastSync: 'Never', affiliateId: '' },
-  { id: 'skimlinks', userId: 'user_123', name: 'Skimlinks', status: 'connected', lastSync: '3 hours ago', affiliateId: 'skim-456' }
+  { id: 'amazon', userId: 'user_123', name: 'Amazon Associates', status: 'connected', lastSync: '2 hours ago', affiliateId: 'john-20', apiKey: '' },
+  { id: 'walmart', userId: 'user_123', name: 'Walmart Affiliate', status: 'connected', lastSync: '1 day ago', affiliateId: 'walmart-123', apiKey: '' },
+  { id: 'ebay', userId: 'user_123', name: 'eBay Partner Network', status: 'connected', lastSync: '1 day ago', affiliateId: 'ebay-789', apiKey: '' },
+  { id: 'shopify', userId: 'user_123', name: 'Shopify Partner', status: 'disconnected', lastSync: 'Never', affiliateId: '', apiKey: '' },
+  { id: 'skimlinks', userId: 'user_123', name: 'Skimlinks', status: 'connected', lastSync: '3 hours ago', affiliateId: 'skim-456', apiKey: '' }
 ];
 
 let clicks = [];
@@ -138,7 +147,8 @@ app.post('/api/auth/register', async (req, res) => {
       password: hashedPassword,
       plan,
       createdAt: new Date().toISOString().split('T')[0],
-      affiliateIds: {}
+      affiliateIds: {},
+      providerApiKeys: {}
     };
 
     users.push(newUser);
@@ -391,11 +401,19 @@ app.get('/api/integrations', authenticateToken, (req, res) => {
 // Create/update integration
 app.post('/api/integrations', authenticateToken, (req, res) => {
   try {
-    const { id, name, affiliateId } = req.body;
+    const { id, name, affiliateId, apiKey } = req.body;
 
     // Validate input
     if (!id || !name) {
       return res.status(400).json({ error: 'Integration ID and name are required' });
+    }
+
+    const user = users.find(u => u.id === req.user.id);
+    if (user) {
+      user.affiliateIds = user.affiliateIds || {};
+      user.providerApiKeys = user.providerApiKeys || {};
+      if (affiliateId !== undefined) user.affiliateIds[id] = affiliateId;
+      if (apiKey !== undefined) user.providerApiKeys[id] = apiKey;
     }
 
     const integrationIndex = integrations.findIndex(i => i.id === id && i.userId === req.user.id);
@@ -407,8 +425,9 @@ app.post('/api/integrations', authenticateToken, (req, res) => {
         userId: req.user.id,
         name,
         affiliateId: affiliateId || '',
-        status: affiliateId ? 'connected' : 'disconnected',
-        lastSync: affiliateId ? 'Just now' : 'Never'
+        apiKey: apiKey || '',
+        status: (affiliateId || apiKey) ? 'connected' : 'disconnected',
+        lastSync: (affiliateId || apiKey) ? 'Just now' : 'Never'
       };
       integrations.push(newIntegration);
       res.status(201).json(newIntegration);
@@ -416,7 +435,12 @@ app.post('/api/integrations', authenticateToken, (req, res) => {
       // Update existing integration
       if (affiliateId !== undefined) {
         integrations[integrationIndex].affiliateId = affiliateId;
-        integrations[integrationIndex].status = affiliateId ? 'connected' : 'disconnected';
+        integrations[integrationIndex].status = (affiliateId || integrations[integrationIndex].apiKey) ? 'connected' : 'disconnected';
+        integrations[integrationIndex].lastSync = 'Just now';
+      }
+      if (apiKey !== undefined) {
+        integrations[integrationIndex].apiKey = apiKey;
+        integrations[integrationIndex].status = (apiKey || integrations[integrationIndex].affiliateId) ? 'connected' : 'disconnected';
         integrations[integrationIndex].lastSync = 'Just now';
       }
       res.json(integrations[integrationIndex]);
@@ -431,7 +455,7 @@ app.post('/api/integrations', authenticateToken, (req, res) => {
 app.post('/api/integrations/:id/connect', authenticateToken, (req, res) => {
   try {
     const { id } = req.params;
-    const { affiliateId } = req.body;
+    const { affiliateId, apiKey } = req.body;
 
     const integrationIndex = integrations.findIndex(i => i.id === id && i.userId === req.user.id);
     if (integrationIndex === -1) {
@@ -441,6 +465,16 @@ app.post('/api/integrations/:id/connect', authenticateToken, (req, res) => {
     integrations[integrationIndex].status = 'connected';
     if (affiliateId) {
       integrations[integrationIndex].affiliateId = affiliateId;
+    }
+    if (apiKey) {
+      integrations[integrationIndex].apiKey = apiKey;
+    }
+    const user = users.find(u => u.id === req.user.id);
+    if (user) {
+      user.affiliateIds = user.affiliateIds || {};
+      user.providerApiKeys = user.providerApiKeys || {};
+      if (affiliateId) user.affiliateIds[id] = affiliateId;
+      if (apiKey) user.providerApiKeys[id] = apiKey;
     }
     integrations[integrationIndex].lastSync = 'Just now';
 

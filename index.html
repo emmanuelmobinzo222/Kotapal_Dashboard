@@ -4418,6 +4418,7 @@
                                     <option value="">Select a retailer</option>
                                     <option value="amazon">Amazon</option>
                                     <option value="walmart">Walmart</option>
+                                    <option value="ebay">eBay</option>
                                     <option value="shopify">Shopify</option>
                                     <option value="skimlinks">Skimlinks</option>
                                 </select>
@@ -4454,7 +4455,8 @@
                         <div class="form-group">
                             <label>API Key</label>
                             <div style="display:flex;gap:8px;align-items:center;">
-                                <input type="password" id="integrationsApiKey" class="form-control" value="sk_live_••••••••" readonly style="max-width:320px;">
+                                <input type="password" id="integrationsApiKey" class="form-control" placeholder="Paste or enter your KotaPal API key" autocomplete="off" spellcheck="false" style="max-width:320px;">
+                                <button type="button" class="btn btn-primary" id="saveIntegrationsApiKey">Save</button>
                                 <button type="button" class="btn btn-secondary" id="copyApiKey">Copy</button>
                             </div>
                         </div>
@@ -4480,6 +4482,7 @@
                                         <option value="all">All Retailers</option>
                                         <option value="amazon">Amazon</option>
                                         <option value="walmart">Walmart</option>
+                                        <option value="ebay">eBay</option>
                                         <option value="shopify">Shopify</option>
                                         <option value="skimlinks">Skimlinks</option>
                                     </select>
@@ -4647,6 +4650,9 @@
                                 <select id="productLibraryRetailer" class="form-control" style="max-width:160px;">
                                     <option value="amazon">Amazon</option>
                                     <option value="walmart">Walmart</option>
+                                    <option value="ebay">eBay</option>
+                                    <option value="shopify">Shopify</option>
+                                    <option value="skimlinks">Skimlinks</option>
                                 </select>
                                 <input id="productLibraryRetailerQuery" class="form-control" placeholder="Search retailers..." style="max-width:240px;">
                                 <button type="button" class="btn btn-secondary" id="productLibrarySearchRetailersBtn">Search retailers</button>
@@ -4815,14 +4821,34 @@
                         </form>
                     </div>
                     <div class="card" style="margin-top:20px;">
-                        <div class="card-header"><h3 class="card-title">Product search API</h3></div>
+                        <div class="card-header"><h3 class="card-title">Provider API keys</h3></div>
                         <div class="card-body">
                             <div class="form-group">
                                 <label for="amazonApiKey">SearchAPI.io key (Amazon product search)</label>
-                                <input type="password" id="amazonApiKey" class="form-control" placeholder="Enter your SearchAPI key">
+                                <input type="password" id="amazonApiKey" class="form-control provider-api-key-input" data-provider="amazon" placeholder="Paste your Amazon/SearchAPI key" autocomplete="off" spellcheck="false">
                                 <p id="amazonApiKeyStatus" style="margin-top:8px;font-size:0.85rem;color:var(--gray);"></p>
                             </div>
-                            <button type="button" class="btn btn-primary" id="saveAmazonApiKey">Save API key</button>
+                            <div class="form-group">
+                                <label for="walmartApiKey">SearchAPI.io key (Walmart product search)</label>
+                                <input type="password" id="walmartApiKey" class="form-control provider-api-key-input" data-provider="walmart" placeholder="Paste your Walmart/SearchAPI key" autocomplete="off" spellcheck="false">
+                                <p id="walmartApiKeyStatus" style="margin-top:8px;font-size:0.85rem;color:var(--gray);"></p>
+                            </div>
+                            <div class="form-group">
+                                <label for="ebayApiKey">SearchAPI.io key (eBay product search)</label>
+                                <input type="password" id="ebayApiKey" class="form-control provider-api-key-input" data-provider="ebay" placeholder="Paste your eBay/SearchAPI key" autocomplete="off" spellcheck="false">
+                                <p id="ebayApiKeyStatus" style="margin-top:8px;font-size:0.85rem;color:var(--gray);"></p>
+                            </div>
+                            <div class="form-group">
+                                <label for="shopifyApiKey">Shopify API key / access token</label>
+                                <input type="password" id="shopifyApiKey" class="form-control provider-api-key-input" data-provider="shopify" placeholder="Paste your Shopify API key or token" autocomplete="off" spellcheck="false">
+                                <p id="shopifyApiKeyStatus" style="margin-top:8px;font-size:0.85rem;color:var(--gray);"></p>
+                            </div>
+                            <div class="form-group">
+                                <label for="skimlinksApiKey">Skimlinks API key</label>
+                                <input type="password" id="skimlinksApiKey" class="form-control provider-api-key-input" data-provider="skimlinks" placeholder="Paste your Skimlinks API key" autocomplete="off" spellcheck="false">
+                                <p id="skimlinksApiKeyStatus" style="margin-top:8px;font-size:0.85rem;color:var(--gray);"></p>
+                            </div>
+                            <button type="button" class="btn btn-primary" id="saveAmazonApiKey">Save API keys</button>
                         </div>
                     </div>
                     </div>
@@ -5138,8 +5164,8 @@
                 <div class="admin-card">
                     <div class="admin-card-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;"><span>All Products</span><button type="button" class="admin-btn admin-btn-sm" data-admin-action="open-add-product" style="width:auto;background:var(--admin-primary);color:#fff;"><i class="fas fa-plus"></i> Add Product</button></div>
                     <div style="padding:0 24px 16px;display:flex;gap:16px;flex-wrap:wrap;align-items:center;">
-                        <div style="display:flex;align-items:center;gap:8px;"><span style="font-size:14px;color:var(--admin-gray-600);">Category:</span><select class="form-control" style="width:auto;min-width:160px;"><option>All Categories</option></select></div>
-                        <div style="display:flex;align-items:center;gap:8px;"><span style="font-size:14px;color:var(--admin-gray-600);">Status:</span><select class="form-control" style="width:auto;min-width:120px;"><option>All</option></select></div>
+                        <div style="display:flex;align-items:center;gap:8px;"><span style="font-size:14px;color:var(--admin-gray-600);">Category:</span><select class="form-control" id="adminProductCategoryFilter" style="width:auto;min-width:160px;"><option>All Categories</option></select></div>
+                        <div style="display:flex;align-items:center;gap:8px;"><span style="font-size:14px;color:var(--admin-gray-600);">Status:</span><select class="form-control" id="adminProductStatusFilter" style="width:auto;min-width:120px;"><option>All</option></select></div>
                     </div>
                     <div style="padding:0 24px 24px;color:#6b7280;font-size:14px;border-top:1px solid var(--admin-gray-200);padding-top:16px;">Product blocks and catalog entries are stored per user in Firestore. Use the user dashboard to manage live blocks.</div>
                     <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;padding:0 24px 24px;"><table class="admin-table"><thead><tr><th>Product</th><th>Category</th><th>Price</th><th>Stock</th><th>Sales</th><th>Status</th><th>Actions</th></tr></thead><tbody id="adminProductsTableBody"></tbody></table></div>
@@ -5262,7 +5288,7 @@
                 <div class="grid-2">
                     <div class="admin-card" style="margin:0;">
                         <div class="admin-card-header">Admin Roles &amp; Permissions</div>
-                        <div style="overflow-x:auto;"><table class="admin-table"><thead><tr><th>Role</th><th>Admin</th><th>Permissions</th><th>Actions</th></tr></thead><tbody><tr><td>Super Admin</td><td>admin@kotapal.com</td><td>Full Access</td><td><button type="button" class="admin-btn-sm admin-btn-secondary" data-admin-action="edit-role" data-role-key="super">Edit</button></td></tr><tr><td>Support Admin</td><td>support@kotapal.com</td><td>Limited Access</td><td><button type="button" class="admin-btn-sm admin-btn-secondary" data-admin-action="edit-role" data-role-key="support">Edit</button></td></tr></tbody></table></div>
+                        <div style="overflow-x:auto;"><table class="admin-table"><thead><tr><th>Role</th><th>Admin</th><th>Permissions</th><th>Actions</th></tr></thead><tbody id="adminRolesTableBody"><tr><td>Super Admin</td><td>admin@kotapal.com</td><td>Full Access</td><td><button type="button" class="admin-btn-sm admin-btn-secondary" data-admin-action="edit-role" data-role-key="super">Edit</button></td></tr><tr><td>Support Admin</td><td>support@kotapal.com</td><td>Limited Access</td><td><button type="button" class="admin-btn-sm admin-btn-secondary" data-admin-action="edit-role" data-role-key="support">Edit</button></td></tr></tbody></table></div>
                     </div>
                     <div class="admin-card" style="margin:0;">
                         <div class="admin-card-header">Security Settings</div>
@@ -5660,10 +5686,36 @@
                 badgeClass: 'pro', popular: false, topTier: true
             }
         };
+        function getAdminPlanOverrides() {
+            try { return JSON.parse(localStorage.getItem('admin_plan_overrides') || '{}') || {}; } catch (e) { return {}; }
+        }
+        function getAdminPlanIds() {
+            var overrides = getAdminPlanOverrides();
+            var ids = KOTAPAL_PLAN_ORDER.slice();
+            Object.keys(overrides).forEach(function(id) {
+                if (ids.indexOf(id) === -1) ids.push(id);
+            });
+            return ids;
+        }
         function getKotaPlan(planId) {
-            var base = KOTAPAL_PLANS[String(planId || 'starter').toLowerCase()] || KOTAPAL_PLANS.starter;
-            var ov = {};
-            try { ov = JSON.parse(localStorage.getItem('admin_plan_overrides') || '{}')[base.id] || {}; } catch (e) {}
+            var id = String(planId || 'starter').toLowerCase();
+            var overrides = getAdminPlanOverrides();
+            var base = KOTAPAL_PLANS[id] || null;
+            var ov = overrides[id] || {};
+            if (!base && Object.keys(ov).length) {
+                return {
+                    id: id,
+                    name: ov.name || id,
+                    title: (ov.name || id) + ' Plan',
+                    price: Number(ov.price || 0),
+                    features: Array.isArray(ov.features) ? ov.features.slice() : [],
+                    limits: { maxBlocks: Infinity, maxProducts: Infinity },
+                    badgeClass: 'pro',
+                    popular: false,
+                    topTier: false
+                };
+            }
+            base = base || KOTAPAL_PLANS.starter;
             if (!ov || !Object.keys(ov).length) return base;
             var merged = Object.assign({}, base);
             if (ov.name) merged.name = ov.name;
@@ -5678,6 +5730,16 @@
             var p = getKotaPlan(planId);
             return p.price === 0 ? p.name + ' Plan (Free)' : p.name + ' Plan ($' + p.price + '/mo)';
         }
+        function syncAdminPlanSelectOptions(selectEl, selectedPlan) {
+            if (!selectEl) return;
+            var selected = String(selectedPlan || selectEl.value || 'starter').toLowerCase();
+            function html(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+            selectEl.innerHTML = getAdminPlanIds().map(function(id) {
+                var p = getKotaPlan(id);
+                return '<option value="' + html(id) + '"' + (id === selected ? ' selected' : '') + '>' + html(p.name) + '</option>';
+            }).join('');
+            selectEl.value = selected;
+        }
         function getKotaPlanLimits(planId) {
             return getKotaPlan(planId).limits;
         }
@@ -5685,25 +5747,26 @@
             return getKotaPlan(planId).badgeClass;
         }
         function getKotaPaidPlanIds() {
-            return KOTAPAL_PLAN_ORDER.filter(function(id) { return KOTAPAL_PLANS[id].price > 0; });
+            return getAdminPlanIds().filter(function(id) { return getKotaPlan(id).price > 0; });
         }
         function getKotaPlanPricesMap() {
             var m = {};
-            KOTAPAL_PLAN_ORDER.forEach(function(id) { m[id] = KOTAPAL_PLANS[id].price; });
+            getAdminPlanIds().forEach(function(id) { m[id] = getKotaPlan(id).price; });
             return m;
         }
         function renderAdminPlansGrid() {
             var grid = document.getElementById('adminPlansGrid');
             if (!grid) return;
-            grid.innerHTML = KOTAPAL_PLAN_ORDER.map(function(id) {
-                var plan = KOTAPAL_PLANS[id];
+            grid.innerHTML = getAdminPlanIds().map(function(id) {
+                var plan = getKotaPlan(id);
+                function html(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
                 var border = plan.popular ? 'border:2px solid var(--admin-primary);position:relative;' : '';
                 var tag = plan.popular ? '<div style="position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--admin-primary);color:#fff;font-size:11px;font-weight:700;padding:4px 14px;border-radius:20px;">MOST POPULAR</div>' : (plan.topTier ? '<div style="position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--admin-gray-700);color:#fff;font-size:11px;font-weight:700;padding:4px 14px;border-radius:20px;">TOP TIER</div>' : '');
                 var priceHtml = plan.price === 0 ? '$0<span style="font-size:0.9rem;font-weight:500;color:var(--admin-gray-500);">/free</span>' : '$' + plan.price + '<span style="font-size:0.9rem;font-weight:500;color:var(--admin-gray-500);">/mo</span>';
-                var featuresHtml = plan.features.map(function(f) { return '<li style="margin-bottom:10px;"><i class="fas fa-check" style="color:var(--admin-success);margin-right:8px;"></i>' + f + '</li>'; }).join('');
+                var featuresHtml = plan.features.map(function(f) { return '<li style="margin-bottom:10px;"><i class="fas fa-check" style="color:var(--admin-success);margin-right:8px;"></i>' + html(f) + '</li>'; }).join('');
                 var btnClass = plan.popular ? 'btn btn-primary' : 'btn btn-secondary';
                 var btnStyle = plan.popular ? 'width:100%;background:var(--admin-primary);' : 'width:100%;';
-                return '<div class="admin-card" style="margin:0;' + border + '">' + tag + '<div style="padding:24px;"><div style="font-weight:700;font-size:1.1rem;margin-bottom:8px;">' + plan.name + '</div><div style="font-size:1.75rem;font-weight:700;color:var(--admin-primary);margin-bottom:16px;">' + priceHtml + '</div><ul style="list-style:none;padding:0;margin:0 0 20px;font-size:14px;color:var(--admin-gray-700);">' + featuresHtml + '</ul><button type="button" class="' + btnClass + '" style="' + btnStyle + '" data-admin-demo="Editing ' + plan.name + ' plan (preview — connect billing in production).">Edit Plan</button></div></div>';
+                return '<div class="admin-card" style="margin:0;' + border + '">' + tag + '<div style="padding:24px;"><div style="font-weight:700;font-size:1.1rem;margin-bottom:8px;">' + html(plan.name) + '</div><div style="font-size:1.75rem;font-weight:700;color:var(--admin-primary);margin-bottom:16px;">' + priceHtml + '</div><ul style="list-style:none;padding:0;margin:0 0 20px;font-size:14px;color:var(--admin-gray-700);">' + featuresHtml + '</ul><button type="button" class="' + btnClass + '" style="' + btnStyle + '" data-admin-action="edit-plan" data-plan-id="' + html(id) + '">Edit Plan</button></div></div>';
             }).join('');
         }
 
@@ -6650,6 +6713,8 @@
                 if (pageName === 'support' && typeof loadAdminSupport === 'function') loadAdminSupport();
                 if (pageName === 'activity' && typeof loadAdminActivity === 'function') loadAdminActivity();
                 if (pageName === 'plans' && typeof renderAdminPlansGrid === 'function') renderAdminPlansGrid();
+                if (pageName === 'blocks' && typeof renderAdminProductsTable === 'function') renderAdminProductsTable();
+                if (pageName === 'security' && typeof renderAdminRolesTable === 'function') renderAdminRolesTable();
                 if (pageName === 'creators' && typeof renderAdminCreatorsTable === 'function') renderAdminCreatorsTable();
                 if (pageName === 'subscriptions' && typeof renderAdminSubscriptionUsers === 'function') renderAdminSubscriptionUsers();
                 if (window.innerWidth <= 1024 && typeof closeAdminSidebar === 'function') closeAdminSidebar();
@@ -7013,7 +7078,7 @@
                     var emEsc = esc(String(u.email || ''));
                     var nmEsc = esc(String(u.name || ''));
                     var plan = esc(u.plan || 'starter');
-                    return '<tr><td>' + html(u.name || '-') + '</td><td>' + html(u.email || '-') + '</td><td>' + planBadge + '</td><td>' + html(joined) + '</td><td>' + statusBadge + '</td><td><div class="action-btns"><button type="button" class="admin-btn-sm admin-btn-secondary" onclick="openAdminManageUser(\'' + uid + '\',\'' + emEsc + '\',\'' + nmEsc + '\',\'' + plan + '\',\'' + status + '\',\'view\')">View</button><button type="button" class="admin-btn-sm admin-btn-primary" onclick="openAdminManageUser(\'' + uid + '\',\'' + emEsc + '\',\'' + nmEsc + '\',\'' + plan + '\',\'' + status + '\',\'manage\')">Manage</button></motion></td></tr>';
+                    return '<tr><td>' + html(u.name || '-') + '</td><td>' + html(u.email || '-') + '</td><td>' + planBadge + '</td><td>' + html(joined) + '</td><td>' + statusBadge + '</td><td><div class="action-btns"><button type="button" class="admin-btn-sm admin-btn-secondary" onclick="openAdminManageUser(\'' + uid + '\',\'' + emEsc + '\',\'' + nmEsc + '\',\'' + plan + '\',\'' + status + '\',\'view\')">View</button><button type="button" class="admin-btn-sm admin-btn-primary" onclick="openAdminManageUser(\'' + uid + '\',\'' + emEsc + '\',\'' + nmEsc + '\',\'' + plan + '\',\'' + status + '\',\'manage\')">Manage</button></div></td></tr>';
                 }).join('');
             };
             window.renderAdminSubscriptionUsers = function() {
@@ -7036,7 +7101,7 @@
                     var uid = esc(u.id || u.email);
                     var plan = esc(u.plan || 'starter');
                     var price = '$' + getKotaPlanPrice(planRaw) + '/mo';
-                    return '<tr><td>' + html(u.name || u.email || '-') + '</td><td>' + planBadge + '</td><td>' + html(joined) + '</td><td>' + html(price) + '</td><td>' + statusBadge + '</td><td><div class="action-btns"><button type="button" class="admin-btn-sm admin-btn-secondary" onclick="openChangePlan(\'' + uid + '\',\'' + plan + '\')">Modify</button><button type="button" class="admin-btn-sm admin-btn-primary" onclick="openAdminManageUser(\'' + uid + '\',\'' + esc(String(u.email || '')) + '\',\'' + esc(String(u.name || '')) + '\',\'' + plan + '\',\'' + status + '\')">View</button></div></td></tr>';
+                    return '<tr><td>' + html(u.name || u.email || '-') + '</td><td>' + planBadge + '</td><td>' + html(joined) + '</td><td>' + html(price) + '</td><td>' + statusBadge + '</td><td><div class="action-btns"><button type="button" class="admin-btn-sm admin-btn-secondary" onclick="openChangePlan(\'' + uid + '\',\'' + plan + '\')">Modify</button><button type="button" class="admin-btn-sm admin-btn-primary" onclick="openAdminManageUser(\'' + uid + '\',\'' + esc(String(u.email || '')) + '\',\'' + esc(String(u.name || '')) + '\',\'' + plan + '\',\'' + status + '\',\'view\')">View</button></div></td></tr>';
                 }).join('');
             };
             window.loadAdminBilling = function() {
@@ -7056,17 +7121,24 @@
                 var tbody = document.getElementById('adminBillingTableBody');
                 if (tbody) {
                     if (payments.length === 0) tbody.innerHTML = '<tr><td colspan="7" style="padding:24px;color:#6b7280;text-align:center;">No payment records yet.</td></tr>';
-                    else tbody.innerHTML = payments.slice(0, 50).map(function(p) {
+                    else {
+                    window.adminPaymentsByIndex = {};
+                    window.adminPaymentsByUser = {};
+                    function html(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+                    tbody.innerHTML = payments.slice(0, 50).map(function(p, idx) {
+                        window.adminPaymentsByIndex[idx] = p;
+                        if (p.user) window.adminPaymentsByUser[String(p.user)] = p;
                         var d = p.date ? new Date(p.date).toLocaleDateString() : '-';
                         var st = (p.status || 'paid').toLowerCase();
                         var badge = st === 'refund' || st === 'refunded' ? 'refunded' : st === 'pending' ? 'pending' : 'completed';
                         var stLabel = badge === 'refunded' ? 'Refunded' : badge === 'pending' ? 'Pending' : 'Completed';
-                        return '<tr><td>—</td><td>' + (p.user || '-') + '</td><td>$' + (p.amount || 0) + '</td><td>Subscription</td><td><span class="status-badge ' + badge + '">' + stLabel + '</span></td><td>' + d + '</td><td><div class="action-btns"><button type="button" class="admin-btn-sm admin-btn-secondary" onclick="adminBillingInvoice(' + JSON.stringify(String(p.user || '')) + ',' + Number(p.amount || 0) + ')">Invoice</button><button type="button" class="admin-btn-sm admin-btn-primary" onclick="adminBillingDetail(' + JSON.stringify(String(p.user || '')) + ')">View</button></div></td></tr>';
+                        return '<tr><td>' + html(p.id || ('TX-' + String(idx + 1).padStart(4, '0'))) + '</td><td>' + html(p.user || '-') + '</td><td>$' + html(p.amount || 0) + '</td><td>Subscription</td><td><span class="status-badge ' + badge + '">' + stLabel + '</span></td><td>' + html(d) + '</td><td><div class="action-btns"><button type="button" class="admin-btn-sm admin-btn-secondary" onclick="adminBillingInvoice(' + idx + ')">Invoice</button><button type="button" class="admin-btn-sm admin-btn-primary" onclick="adminBillingDetail(' + idx + ')">View</button></div></td></tr>';
                     }).join('');
+                    }
                 }
                 var subTbody = document.getElementById('adminSubscriptionsTableBody');
                 if (subTbody) {
-                    var rows = KOTAPAL_PLAN_ORDER.map(function(plan) {
+                    var rows = getAdminPlanIds().map(function(plan) {
                         var cnt = byPlan[plan] || 0;
                         var planInfo = getKotaPlan(plan);
                         return '<tr><td>' + planInfo.name + '</td><td>' + cnt + '</td><td>$' + (cnt * (planPrices[plan] || 0)).toLocaleString() + '</td></tr>';
@@ -7114,8 +7186,9 @@
             window.adminTicketDetailById = function(id) {
                 var t = window.adminTicketsById && window.adminTicketsById[id];
                 if (!t) { if (typeof window.adminToast === 'function') window.adminToast('Ticket not found yet.', 'warn'); return; }
-                var msg = (t.message || '').slice(0, 400);
-                if (typeof window.adminToast === 'function') window.adminToast((t.subject || 'Ticket') + ' — ' + (t.userEmail || t.userName || '') + (msg ? '. ' + msg : ''), 'info');
+                var body = 'From: ' + (t.userEmail || t.userName || '-') + '\nPriority: ' + (t.priority || 'medium') + '\nStatus: ' + (t.status || 'pending') + '\nCreated: ' + ticketDateDisplayForAdmin(t) + '\n\n' + (t.message || 'No message provided.');
+                if (typeof openAdminDetailModal === 'function') openAdminDetailModal(t.subject || 'Support ticket', body);
+                else if (typeof window.adminToast === 'function') window.adminToast((t.subject || 'Ticket') + ' - ' + (t.userEmail || t.userName || ''), 'info');
             };
             window.adminResolveTicketById = async function(id) {
                 if (!id) return;
@@ -7162,7 +7235,7 @@
             };
             window.openChangePlan = function(uid, currentPlan) {
                 document.getElementById('changePlanUserId').value = uid;
-                document.getElementById('changePlanSelect').value = currentPlan || 'starter';
+                syncAdminPlanSelectOptions(document.getElementById('changePlanSelect'), currentPlan || 'starter');
                 document.getElementById('changePlanModal').style.display = 'flex';
             };
             window.closeChangePlanModal = function() {
@@ -7226,19 +7299,30 @@
             };
             window.deleteUserDoc = async function(uid) {
                 var dbUse = db || window.firebaseDb;
-                if (!uid || !dbUse || !confirm('Delete Firestore document for this user?')) return;
+                if (!uid || !dbUse || !confirm('Delete this user from Firebase Auth when available, and remove Firestore profiles?')) return;
+                var deletedAuth = false;
                 try {
-                    await dbUse.collection('users').doc(uid).delete();
-                } catch (err) {
+                    var deleteFn = getAdminCallable('adminDeleteUser');
+                    if (deleteFn && auth && auth.currentUser) {
+                        await deleteFn({ uid: uid });
+                        deletedAuth = true;
+                    }
+                } catch (cloudErr) {
+                    console.warn('adminDeleteUser:', cloudErr);
+                }
+                if (!deletedAuth) {
                     try {
+                        await dbUse.collection('users').doc(uid).delete();
                         await dbUse.collection('user').doc(uid).delete();
-                    } catch (err2) {
-                        alert('Failed to delete: ' + (err2.message || err.message));
-                        return;
+                    } catch (err) {
+                        try { await dbUse.collection('user').doc(uid).delete(); } catch (err2) {
+                            alert('Failed to delete: ' + (err2.message || err.message));
+                            return;
+                        }
                     }
                 }
                 loadAdminUsers();
-                if (typeof window.adminToast === 'function') window.adminToast('User document removed from Firestore.', 'success');
+                if (typeof window.adminToast === 'function') window.adminToast(deletedAuth ? 'User deleted from Firebase Auth and Firestore.' : 'Firestore user profile removed. Deploy Functions for Auth deletion.', 'success');
             };
             window.closeAdminUserManageModal = function() {
                 var m = document.getElementById('adminUserManageModal');
@@ -7256,9 +7340,10 @@
                 document.getElementById('adminUserManageUid').readOnly = false;
                 document.getElementById('adminUserManageEmail').value = '';
                 document.getElementById('adminUserManageName').value = '';
-                document.getElementById('adminUserManagePlan').value = 'starter';
+                syncAdminPlanSelectOptions(document.getElementById('adminUserManagePlan'), 'starter');
                 document.getElementById('adminUserManageStatus').value = 'active';
                 document.getElementById('adminUserManageBlocksJson').value = '[]';
+                if (typeof setAdminUserManageMode === 'function') setAdminUserManageMode('add');
                 m.style.display = 'flex';
             };
             window.openAdminManageUser = function(uid, email, name, plan, status, mode) {
@@ -7274,8 +7359,9 @@
                 document.getElementById('adminUserManageUid').readOnly = true;
                 document.getElementById('adminUserManageEmail').value = email || '';
                 document.getElementById('adminUserManageName').value = name || '';
-                document.getElementById('adminUserManagePlan').value = String(plan || 'starter').toLowerCase();
+                syncAdminPlanSelectOptions(document.getElementById('adminUserManagePlan'), String(plan || 'starter').toLowerCase());
                 document.getElementById('adminUserManageStatus').value = (String(status || '').toLowerCase() === 'suspended') ? 'suspended' : 'active';
+                if (typeof setAdminUserManageMode === 'function') setAdminUserManageMode(mode === 'view' ? 'view' : 'manage');
                 m.style.display = 'flex';
                 var dbUse = db || window.firebaseDb;
                 var ta = document.getElementById('adminUserManageBlocksJson');
@@ -7299,6 +7385,22 @@
                 var status = document.getElementById('adminUserManageStatus') && document.getElementById('adminUserManageStatus').value;
                 var dbUse = db || window.firebaseDb;
                 if (!uid || !dbUse) { window.adminToast('Enter a Firebase Auth UID and ensure Firebase is connected.', 'warn'); return; }
+                var existing = (window.adminUsers || []).find(function(u) { return u.id === uid; });
+                var priorStatus = existing ? String(existing.status || 'active').toLowerCase() : '';
+                var statusChanged = priorStatus && priorStatus !== String(status || 'active').toLowerCase();
+                var usedCloudFn = false;
+                if (statusChanged) {
+                    try {
+                        var fnName = status === 'suspended' ? 'adminSuspendUser' : 'adminUnsuspendUser';
+                        var statusFn = getAdminCallable(fnName);
+                        if (statusFn && auth && auth.currentUser) {
+                            await statusFn({ uid: uid });
+                            usedCloudFn = true;
+                        }
+                    } catch (cloudErr) {
+                        console.warn('admin profile status cloud:', cloudErr);
+                    }
+                }
                 try {
                     await dbUse.collection('users').doc(uid).set({
                         email: email,
@@ -7319,7 +7421,7 @@
                         status: status
                     }, { merge: true });
                 } catch (e2) {}
-                window.adminToast('Profile saved to Firestore.', 'success');
+                window.adminToast(usedCloudFn ? 'Profile saved and Firebase Auth status updated.' : 'Profile saved to Firestore.', 'success');
                 loadAdminUsers();
             };
             window.adminUserManageSaveBlocks = async function() {
@@ -7484,7 +7586,38 @@
             if (!tbody) return;
             var products = loadAdminProducts();
             function esc(s) { return String(s || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
-            tbody.innerHTML = products.map(function(p) {
+            var categoryFilter = document.getElementById('adminProductCategoryFilter');
+            var statusFilter = document.getElementById('adminProductStatusFilter');
+            if (categoryFilter) {
+                var currentCat = categoryFilter.value || 'All Categories';
+                var categories = ['All Categories'];
+                products.forEach(function(p) {
+                    var c = p.category || 'Uncategorized';
+                    if (categories.indexOf(c) === -1) categories.push(c);
+                });
+                categoryFilter.innerHTML = categories.map(function(c) { return '<option' + (c === currentCat ? ' selected' : '') + '>' + esc(c) + '</option>'; }).join('');
+            }
+            if (statusFilter) {
+                var currentStatus = statusFilter.value || 'All';
+                var statuses = ['All'];
+                products.forEach(function(p) {
+                    var s = p.status || 'Active';
+                    if (statuses.indexOf(s) === -1) statuses.push(s);
+                });
+                statusFilter.innerHTML = statuses.map(function(s) { return '<option' + (s === currentStatus ? ' selected' : '') + '>' + esc(s) + '</option>'; }).join('');
+            }
+            var cat = categoryFilter ? categoryFilter.value : 'All Categories';
+            var stat = statusFilter ? statusFilter.value : 'All';
+            var visible = products.filter(function(p) {
+                var catOk = !cat || cat === 'All Categories' || String(p.category || 'Uncategorized') === cat;
+                var statOk = !stat || stat === 'All' || String(p.status || 'Active') === stat;
+                return catOk && statOk;
+            });
+            if (!visible.length) {
+                tbody.innerHTML = '<tr><td colspan="7" style="padding:24px;color:#6b7280;text-align:center;">No products match those filters.</td></tr>';
+                return;
+            }
+            tbody.innerHTML = visible.map(function(p) {
                 var badge = p.status === 'Active' ? 'completed' : 'pending';
                 return '<tr><td>' + esc(p.name) + '</td><td>' + esc(p.category) + '</td><td>$' + Number(p.price || 0).toFixed(2) + '</td><td>' + esc(p.stock) + '</td><td>' + esc(p.sales) + '</td><td><span class="status-badge ' + badge + '">' + esc(p.status) + '</span></td><td><div class="action-btns"><button type="button" class="admin-btn-sm admin-btn-secondary" data-admin-action="edit-product" data-product-id="' + esc(p.id) + '">Edit</button><button type="button" class="admin-btn-sm admin-btn-primary" data-admin-action="view-product" data-product-id="' + esc(p.id) + '">View</button></div></td></tr>';
             }).join('');
@@ -7553,6 +7686,16 @@
                 return r;
             } catch (e) { return getDefaultAdminRoles(); }
         }
+        window.renderAdminRolesTable = function() {
+            var tbody = document.getElementById('adminRolesTableBody');
+            if (!tbody) return;
+            var roles = loadAdminRoles();
+            function html(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+            tbody.innerHTML = Object.keys(roles).map(function(key) {
+                var r = roles[key] || {};
+                return '<tr><td>' + html(r.name || key) + '</td><td>' + html(r.email || '-') + '</td><td>' + html(r.permissions || 'Read Only') + '</td><td><button type="button" class="admin-btn-sm admin-btn-secondary" data-admin-action="edit-role" data-role-key="' + html(key) + '">Edit</button></td></tr>';
+            }).join('');
+        };
         window.openAdminRoleEdit = function(key) {
             var roles = loadAdminRoles();
             var r = roles[key] || { name: '', email: '', permissions: 'Full Access' };
@@ -7576,13 +7719,14 @@
             };
             localStorage.setItem('admin_roles', JSON.stringify(roles));
             closeAdminRoleEditModal();
+            if (typeof renderAdminRolesTable === 'function') renderAdminRolesTable();
             adminToast('Role updated.', 'success');
         };
         window.openAdminPlanEdit = function(planId) {
-            var plan = getKotaPlan(planId);
-            document.getElementById('adminPlanEditId').value = plan.id;
-            document.getElementById('adminPlanEditName').value = plan.name;
-            document.getElementById('adminPlanEditPrice').value = plan.price;
+            var plan = planId ? getKotaPlan(planId) : { id: '', name: '', price: 0, features: [] };
+            document.getElementById('adminPlanEditId').value = plan.id || '';
+            document.getElementById('adminPlanEditName').value = plan.name || '';
+            document.getElementById('adminPlanEditPrice').value = plan.price || 0;
             document.getElementById('adminPlanEditFeatures').value = (plan.features || []).join('\n');
             document.getElementById('adminPlanEditTitle').textContent = planId ? 'Edit Plan' : 'Create Plan';
             document.getElementById('adminPlanEditModal').style.display = 'flex';
@@ -7592,17 +7736,22 @@
             if (m) m.style.display = 'none';
         };
         window.saveAdminPlanEdit = function() {
-            var id = document.getElementById('adminPlanEditId').value || ('custom_' + Date.now());
+            var id = (document.getElementById('adminPlanEditId').value || '').trim().toLowerCase().replace(/[^a-z0-9_-]/g, '');
+            if (!id) id = 'custom_' + Date.now();
+            var name = document.getElementById('adminPlanEditName').value.trim();
+            if (!name) { adminToast('Plan name is required.', 'warn'); return; }
             var overrides = {};
             try { overrides = JSON.parse(localStorage.getItem('admin_plan_overrides') || '{}'); } catch (e) {}
             overrides[id] = {
-                name: document.getElementById('adminPlanEditName').value.trim(),
+                name: name,
                 price: parseFloat(document.getElementById('adminPlanEditPrice').value) || 0,
                 features: document.getElementById('adminPlanEditFeatures').value.split('\n').map(function(s) { return s.trim(); }).filter(Boolean)
             };
             localStorage.setItem('admin_plan_overrides', JSON.stringify(overrides));
             closeAdminPlanEditModal();
             if (typeof renderAdminPlansGrid === 'function') renderAdminPlansGrid();
+            syncAdminPlanSelectOptions(document.getElementById('changePlanSelect'), id);
+            syncAdminPlanSelectOptions(document.getElementById('adminUserManagePlan'), id);
             adminToast('Plan saved locally.', 'success');
         };
         window.setAdminUserManageMode = function(mode) {
@@ -7655,8 +7804,13 @@
             if (typeof updateSelectedProducts === 'function') updateSelectedProducts();
         }
 
-            window.adminBillingInvoice = function(user, amount) {
-                var line = 'Invoice — ' + user + ' — $' + amount;
+            window.adminBillingInvoice = function(recordKey, amount) {
+                var p = null;
+                if (window.adminPaymentsByIndex && window.adminPaymentsByIndex[recordKey] != null) p = window.adminPaymentsByIndex[recordKey];
+                else if (window.adminPaymentsByUser) p = window.adminPaymentsByUser[recordKey];
+                var user = p ? (p.user || '-') : recordKey;
+                var total = p ? Number(p.amount || 0) : Number(amount || 0);
+                var line = 'Invoice - ' + user + ' - $' + total.toFixed(2) + (p && p.date ? ' - ' + new Date(p.date).toLocaleDateString() : '');
                 if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(line).catch(function() {});
                 adminToast('Invoice summary copied: ' + line, 'success');
             };
@@ -7781,6 +7935,15 @@
                         el._filterWire = true;
                         el.addEventListener('change', applyAdminUserFilters);
                         el.addEventListener('input', function() { clearTimeout(el._ft); el._ft = setTimeout(applyAdminUserFilters, 200); });
+                    }
+                });
+                ['adminProductCategoryFilter','adminProductStatusFilter'].forEach(function(id) {
+                    var el = document.getElementById(id);
+                    if (el && !el._productFilterWire) {
+                        el._productFilterWire = true;
+                        el.addEventListener('change', function() {
+                            if (typeof renderAdminProductsTable === 'function') renderAdminProductsTable();
+                        });
                     }
                 });
                 var globSearch = document.getElementById('adminSearchInput');
@@ -8039,6 +8202,11 @@
                     });
                 }
                 adminRenderApiKeysTable();
+                if (typeof renderAdminProductsTable === 'function') renderAdminProductsTable();
+                if (typeof renderAdminPlansGrid === 'function') renderAdminPlansGrid();
+                if (typeof renderAdminRolesTable === 'function') renderAdminRolesTable();
+                syncAdminPlanSelectOptions(document.getElementById('changePlanSelect'), 'starter');
+                syncAdminPlanSelectOptions(document.getElementById('adminUserManagePlan'), 'starter');
                 var whInp = document.getElementById('adminWebhookUrlInput');
                 if (whInp) { var saved = localStorage.getItem('admin_webhook_url'); if (saved) whInp.value = saved; }
             })();
@@ -9018,10 +9186,70 @@
             });
         }
 
+        function getDefaultIntegrations() {
+            return [
+                { id: 'amazon', name: 'Amazon Associates', status: 'connected', lastSync: '2 hours ago', affiliateId: 'john-20' },
+                { id: 'walmart', name: 'Walmart Affiliate', status: 'connected', lastSync: '1 day ago', affiliateId: 'walmart-123' },
+                { id: 'ebay', name: 'eBay Partner Network', status: 'disconnected', lastSync: 'Never', affiliateId: '' },
+                { id: 'shopify', name: 'Shopify Partner', status: 'disconnected', lastSync: 'Never', affiliateId: '' },
+                { id: 'skimlinks', name: 'Skimlinks', status: 'connected', lastSync: '3 hours ago', affiliateId: 'skim-456' }
+            ];
+        }
+
+        function getUserScopedStorageKey(base) {
+            return base + '_' + (currentUser?.uid || 'local');
+        }
+
+        function loadSavedIntegrations() {
+            const defaults = getDefaultIntegrations();
+            let saved = [];
+            try {
+                saved = JSON.parse(localStorage.getItem(getUserScopedStorageKey('kotaIntegrations')) || '[]');
+            } catch (e) {
+                saved = [];
+            }
+            return defaults.map(function(def) {
+                const found = saved.find(function(item) { return item && item.id === def.id; }) || {};
+                const apiKey = getProviderApiKey(def.id, false);
+                const affiliateId = found.affiliateId != null ? found.affiliateId : (localStorage.getItem(getProviderAffiliateStorageKey(def.id)) || def.affiliateId || '');
+                const status = found.status || (apiKey || affiliateId ? 'connected' : def.status);
+                return Object.assign({}, def, found, {
+                    affiliateId: affiliateId,
+                    status: status,
+                    apiKeyConfigured: Boolean(apiKey)
+                });
+            });
+        }
+
+        function saveIntegrations() {
+            if (!Array.isArray(currentIntegrations)) return;
+            localStorage.setItem(getUserScopedStorageKey('kotaIntegrations'), JSON.stringify(currentIntegrations));
+            const uid = currentUser?.uid;
+            const dbUse = window.firebaseDb || (typeof firebase !== 'undefined' && firebase.firestore && firebase.firestore());
+            if (uid && dbUse) {
+                dbUse.collection('users').doc(uid).set({
+                    integrations: currentIntegrations.map(function(item) {
+                        return {
+                            id: item.id,
+                            name: item.name,
+                            status: item.status,
+                            lastSync: item.lastSync,
+                            affiliateId: item.affiliateId || '',
+                            apiKeyConfigured: Boolean(getProviderApiKey(item.id, false))
+                        };
+                    })
+                }, { merge: true }).catch(function(err) {
+                    console.error('Firestore integrations save failed:', err);
+                });
+            }
+        }
+
         // Persist user blocks to localStorage (keyed by user) and sync to Firestore for admin / multi-device
         function saveUserBlocks() {
             const uid = currentUser?.uid;
             if (uid) localStorage.setItem('kotaBlocks_' + uid, JSON.stringify(currentBlocks));
+            if (typeof updateEmbedAnywhere === 'function') updateEmbedAnywhere();
+            if (document.getElementById('productLibraryContainer') && typeof loadProductLibrary === 'function') loadProductLibrary();
             if (!uid) return;
             clearTimeout(saveBlocksFirestoreTimer);
             saveBlocksFirestoreTimer = setTimeout(function() {
@@ -9032,6 +9260,7 @@
         // Load user data: blocks from localStorage, then mock only if empty
         function loadMockData() {
             const uid = currentUser?.uid;
+            currentIntegrations = loadSavedIntegrations();
             if (uid) {
                 try {
                     const saved = localStorage.getItem('kotaBlocks_' + uid);
@@ -9094,12 +9323,7 @@
                 }
             ];
 
-            currentIntegrations = [
-                { id: 'amazon', name: 'Amazon Associates', status: 'connected', lastSync: '2 hours ago', affiliateId: 'john-20' },
-                { id: 'walmart', name: 'Walmart Affiliate', status: 'connected', lastSync: '1 day ago', affiliateId: 'walmart-123' },
-                { id: 'shopify', name: 'Shopify Partner', status: 'disconnected', lastSync: 'Never', affiliateId: '' },
-                { id: 'skimlinks', name: 'Skimlinks', status: 'connected', lastSync: '3 hours ago', affiliateId: 'skim-456' }
-            ];
+            currentIntegrations = loadSavedIntegrations();
 
             updateDashboardStats();
             renderBlocks();
@@ -9265,6 +9489,7 @@
             const profileForm = document.getElementById('profileForm');
             const newBlockForm = document.getElementById('newBlockForm');
             const copyApiKey = document.getElementById('copyApiKey');
+            const saveIntegrationsApiKey = document.getElementById('saveIntegrationsApiKey');
 
             if (profileForm) {
                 profileForm.addEventListener('submit', handleProfileUpdate);
@@ -9275,8 +9500,31 @@
                 });
             }
             if (newBlockForm) newBlockForm.addEventListener('submit', handleCreateBlock);
+            const platformApiInput = document.getElementById('integrationsApiKey');
+            if (platformApiInput) {
+                const savedPlatformKey = localStorage.getItem(getUserScopedStorageKey('kotapalApiKey')) || '';
+                if (savedPlatformKey) platformApiInput.value = savedPlatformKey;
+                if (!platformApiInput.dataset.pasteBound) {
+                    platformApiInput.dataset.pasteBound = '1';
+                    platformApiInput.addEventListener('paste', function() {
+                        setTimeout(() => { this.value = this.value.trim(); }, 0);
+                    });
+                }
+            }
+            if (saveIntegrationsApiKey) saveIntegrationsApiKey.addEventListener('click', function() {
+                const input = document.getElementById('integrationsApiKey');
+                const value = input && input.value ? input.value.trim() : '';
+                if (!value) {
+                    showNotification('Paste or enter an API key before saving.', 'warning', 'API Key');
+                    return;
+                }
+                localStorage.setItem(getUserScopedStorageKey('kotapalApiKey'), value);
+                showNotification('KotaPal API key saved.', 'success', 'API Key');
+            });
             if (copyApiKey) copyApiKey.addEventListener('click', function() {
-                navigator.clipboard.writeText('sk_live_51JQ3x8H4bK7X9cY8aB2C1dE3fG4hI5jK6lM7nO8pQ9rS0tU1vW2xY3zA4');
+                const input = document.getElementById('integrationsApiKey');
+                const key = (input && input.value) || localStorage.getItem(getUserScopedStorageKey('kotapalApiKey')) || 'sk_live_51JQ3x8H4bK7X9cY8aB2C1dE3fG4hI5jK6lM7nO8pQ9rS0tU1vW2xY3zA4';
+                navigator.clipboard.writeText(key);
                 showNotification('API key copied to clipboard!', 'success', 'Copied');
             });
 
@@ -9378,6 +9626,11 @@
                 if (page === 'analytics') renderAnalytics();
                 if (page === 'help') initHelpPage();
                 if (page === 'dashboard') refreshDashboard();
+                if (page === 'integrations') {
+                    currentIntegrations = loadSavedIntegrations();
+                    renderIntegrations();
+                }
+                if (page === 'product-library') loadProductLibrary();
                 if (page === 'reports') {
                     var fromEl = document.getElementById('reportDateFrom');
                     var toEl = document.getElementById('reportDateTo');
@@ -9552,6 +9805,7 @@
             }
             applyGeoRedirectFromStorage();
             applyDarkModeFromStorage();
+            loadProviderApiKeys();
             var darkToggle = document.getElementById('darkModeToggle');
             var geoToggle = document.getElementById('geoRedirectToggle');
             if (darkToggle && !darkToggle.dataset.bound) {
@@ -9998,34 +10252,43 @@
         function renderIntegrations() {
             const container = document.getElementById('integrationsContainer');
             if (!container) return;
-            
+
+            if (!Array.isArray(currentIntegrations) || currentIntegrations.length === 0) {
+                currentIntegrations = loadSavedIntegrations();
+            }
             container.innerHTML = '';
             
             currentIntegrations.forEach(integration => {
+                const apiKey = getProviderApiKey(integration.id, false);
+                const affiliateId = integration.affiliateId || getProviderAffiliateId(integration.id) || '';
+                const providerLabel = getProviderLabel(integration.id);
                 const integrationCard = document.createElement('div');
                 integrationCard.className = 'card';
                 integrationCard.innerHTML = `
                     <div class="card-header">
-                        <h3 class="card-title">${integration.name}</h3>
+                        <h3 class="card-title">${escapeHtml(integration.name)}</h3>
                         <span class="block-status ${integration.status === 'connected' ? 'status-active' : 'status-draft'}">
                             ${integration.status === 'connected' ? 'Connected' : 'Disconnected'}
                         </span>
                     </div>
                     <div>
-                        <p>Last synced: ${integration.lastSync}</p>
-                        ${integration.status === 'connected' ? `
-                            <div class="form-group">
-                                <label>Affiliate ID</label>
-                                <input type="text" value="${integration.affiliateId}" class="form-control integration-id" data-id="${integration.id}">
-                            </div>
-                            <div style="display: flex; gap: 10px; margin-top: 20px;">
-                                <button class="btn btn-danger disconnect-btn" data-id="${integration.id}">Disconnect</button>
-                                <button class="btn btn-secondary sync-btn" data-id="${integration.id}">Sync Now</button>
-                            </div>
-                        ` : `
-                            <p>Connect your ${integration.name} account to start creating SmartBlocks with their products.</p>
-                            <button class="btn btn-primary connect-btn" data-id="${integration.id}">Connect Account</button>
-                        `}
+                        <p>Last synced: ${escapeHtml(integration.lastSync || 'Never')}</p>
+                        <p style="color:var(--gray);font-size:0.9rem;margin-bottom:12px;">Save the ${providerLabel} credentials used for product search, SmartBlocks, and Product Library items from this provider.</p>
+                        <div class="form-group">
+                            <label>${providerLabel} affiliate / partner ID</label>
+                            <input type="text" value="${escapeHtml(affiliateId)}" class="form-control integration-id" data-id="${integration.id}" placeholder="Paste affiliate or partner ID" autocomplete="off" spellcheck="false">
+                        </div>
+                        <div class="form-group">
+                            <label>${providerLabel} API key</label>
+                            <input type="password" value="${escapeHtml(apiKey)}" class="form-control integration-api-key" data-id="${integration.id}" placeholder="Paste ${providerLabel} API key" autocomplete="off" spellcheck="false">
+                        </div>
+                        <div style="display: flex; gap: 10px; margin-top: 20px; flex-wrap:wrap;">
+                            <button class="btn btn-primary integration-save-btn" data-id="${integration.id}">Save credentials</button>
+                            ${integration.status === 'connected'
+                                ? `<button class="btn btn-danger disconnect-btn" data-id="${integration.id}">Disconnect</button>`
+                                : `<button class="btn btn-secondary connect-btn" data-id="${integration.id}">Connect Account</button>`}
+                            <button class="btn btn-secondary sync-btn" data-id="${integration.id}">Sync Now</button>
+                        </div>
                     </div>
                 `;
                 container.appendChild(integrationCard);
@@ -10033,6 +10296,37 @@
             
             // Add event listeners
             setTimeout(() => {
+                document.querySelectorAll('.integration-api-key').forEach(input => {
+                    if (input.dataset.pasteBound) return;
+                    input.dataset.pasteBound = '1';
+                    input.addEventListener('paste', function() {
+                        setTimeout(() => { this.value = this.value.trim(); }, 0);
+                    });
+                });
+                document.querySelectorAll('.integration-save-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const integrationId = this.getAttribute('data-id');
+                        const integrationIndex = currentIntegrations.findIndex(i => i.id === integrationId);
+                        const apiInput = document.querySelector('.integration-api-key[data-id="' + integrationId + '"]');
+                        const idInput = document.querySelector('.integration-id[data-id="' + integrationId + '"]');
+                        const apiValue = apiInput && apiInput.value ? apiInput.value.trim() : '';
+                        const affiliateValue = idInput && idInput.value ? idInput.value.trim() : '';
+
+                        if (apiValue) setProviderApiKey(integrationId, apiValue);
+                        setProviderAffiliateId(integrationId, affiliateValue);
+
+                        if (integrationIndex !== -1) {
+                            currentIntegrations[integrationIndex].status = (apiValue || affiliateValue) ? 'connected' : currentIntegrations[integrationIndex].status;
+                            currentIntegrations[integrationIndex].affiliateId = affiliateValue;
+                            currentIntegrations[integrationIndex].lastSync = 'Just now';
+                            currentIntegrations[integrationIndex].apiKeyConfigured = Boolean(apiValue || getProviderApiKey(integrationId, false));
+                        }
+                        saveIntegrations();
+                        loadProviderApiKeys();
+                        renderIntegrations();
+                        showNotification(getProviderLabel(integrationId) + ' credentials saved.', 'success', 'Integrations');
+                    });
+                });
                 document.querySelectorAll('.connect-btn').forEach(btn => {
                     btn.addEventListener('click', function() {
                         const integrationId = this.getAttribute('data-id');
@@ -10041,9 +10335,8 @@
                         if (integrationIndex !== -1) {
                             currentIntegrations[integrationIndex].status = 'connected';
                             currentIntegrations[integrationIndex].lastSync = 'Just now';
-                            currentIntegrations[integrationIndex].affiliateId = integrationId === 'amazon' ? 'user-20' : 
-                                                                               integrationId === 'walmart' ? 'walmart-user' : 
-                                                                               integrationId === 'shopify' ? 'shopify-store' : 'skim-user';
+                            currentIntegrations[integrationIndex].affiliateId = currentIntegrations[integrationIndex].affiliateId || getProviderAffiliateId(integrationId) || '';
+                            saveIntegrations();
                             renderIntegrations();
                             showNotification('Integration connected successfully!', 'success', 'Connected');
                         }
@@ -10059,6 +10352,8 @@
                             currentIntegrations[integrationIndex].status = 'disconnected';
                             currentIntegrations[integrationIndex].lastSync = 'Never';
                             currentIntegrations[integrationIndex].affiliateId = '';
+                            setProviderAffiliateId(integrationId, '');
+                            saveIntegrations();
                             renderIntegrations();
                             showNotification('Integration disconnected successfully!', 'info', 'Disconnected');
                         }
@@ -10072,6 +10367,7 @@
                         
                         if (integrationIndex !== -1) {
                             currentIntegrations[integrationIndex].lastSync = 'Just now';
+                            saveIntegrations();
                             renderIntegrations();
                             showNotification('Integration synced successfully!', 'success', 'Synced');
                         }
@@ -10380,83 +10676,158 @@
         }
 
         // SearchAPI.io API Configuration
-        // Default API key for Amazon product searches
+        // Default API key for product searches where the provider uses SearchAPI.io.
         const DEFAULT_AMAZON_API_KEY = 'WceNe5Tmok9RVw5Y4Qn6PnLM';
-        
+        const SEARCHAPI_PROVIDERS = ['amazon', 'walmart', 'ebay'];
+        const PROVIDER_API_KEY_INPUTS = {
+            amazon: { inputId: 'amazonApiKey', statusId: 'amazonApiKeyStatus', label: 'Amazon' },
+            walmart: { inputId: 'walmartApiKey', statusId: 'walmartApiKeyStatus', label: 'Walmart' },
+            ebay: { inputId: 'ebayApiKey', statusId: 'ebayApiKeyStatus', label: 'eBay' },
+            shopify: { inputId: 'shopifyApiKey', statusId: 'shopifyApiKeyStatus', label: 'Shopify' },
+            skimlinks: { inputId: 'skimlinksApiKey', statusId: 'skimlinksApiKeyStatus', label: 'Skimlinks' }
+        };
+
+        function getProviderLabel(provider) {
+            return (PROVIDER_API_KEY_INPUTS[provider] && PROVIDER_API_KEY_INPUTS[provider].label) || String(provider || '').replace(/^\w/, function(c) { return c.toUpperCase(); });
+        }
+
+        function getProviderApiStorageKey(provider) {
+            return getUserScopedStorageKey('providerApiKey') + '_' + provider;
+        }
+
+        function getProviderAffiliateStorageKey(provider) {
+            return getUserScopedStorageKey('providerAffiliateId') + '_' + provider;
+        }
+
+        function getProviderApiKey(provider, includeDefault = true) {
+            provider = String(provider || 'amazon').toLowerCase();
+            const scopedKey = localStorage.getItem(getProviderApiStorageKey(provider)) || '';
+            const localFallback = localStorage.getItem('providerApiKey_local_' + provider) || '';
+            const legacySearchApiKey = SEARCHAPI_PROVIDERS.includes(provider)
+                ? (localStorage.getItem('searchapi_' + provider + '_key') || localStorage.getItem('searchapi_key') || localStorage.getItem('searchapi_amazon_key') || '')
+                : '';
+            const saved = scopedKey || localFallback || legacySearchApiKey;
+            if (saved) return saved;
+            return includeDefault && SEARCHAPI_PROVIDERS.includes(provider) ? DEFAULT_AMAZON_API_KEY : '';
+        }
+
+        function setProviderApiKey(provider, key) {
+            provider = String(provider || '').toLowerCase();
+            if (!provider) return;
+            const cleaned = String(key || '').trim();
+            if (cleaned) {
+                localStorage.setItem(getProviderApiStorageKey(provider), cleaned);
+                if (SEARCHAPI_PROVIDERS.includes(provider)) {
+                    localStorage.setItem('searchapi_' + provider + '_key', cleaned);
+                    if (provider === 'amazon') {
+                        localStorage.setItem('searchapi_key', cleaned);
+                        localStorage.setItem('searchapi_amazon_key', cleaned);
+                    }
+                }
+            } else {
+                localStorage.removeItem(getProviderApiStorageKey(provider));
+            }
+        }
+
+        function getProviderAffiliateId(provider) {
+            return localStorage.getItem(getProviderAffiliateStorageKey(provider)) || '';
+        }
+
+        function setProviderAffiliateId(provider, affiliateId) {
+            provider = String(provider || '').toLowerCase();
+            if (!provider) return;
+            const cleaned = String(affiliateId || '').trim();
+            if (cleaned) localStorage.setItem(getProviderAffiliateStorageKey(provider), cleaned);
+            else localStorage.removeItem(getProviderAffiliateStorageKey(provider));
+        }
+
         // Get your API key from https://www.searchapi.io/
-        // Store it in localStorage or set it here
-        // Same API key works for both Amazon and Walmart
-        function getSearchApiKey() {
-            // Priority: 1. User-saved key, 2. Default Amazon API key
-            const key = localStorage.getItem('searchapi_key') || 
-                   localStorage.getItem('searchapi_amazon_key') || 
-                   DEFAULT_AMAZON_API_KEY;
-            
-            return key;
+        // Pass a provider to retrieve that provider's specific key.
+        function getSearchApiKey(provider) {
+            if (provider) return getProviderApiKey(provider);
+            return localStorage.getItem('searchapi_key') || getProviderApiKey('amazon');
         }
-        
-        function setSearchApiKey(key) {
-            localStorage.setItem('searchapi_key', key);
-            localStorage.setItem('searchapi_amazon_key', key); // Keep for backward compatibility
+
+        function setSearchApiKey(key, provider = 'amazon') {
+            setProviderApiKey(provider, key);
         }
-        
+
         // Backward compatibility functions
         function getAmazonApiKey() {
-            return getSearchApiKey();
+            return getProviderApiKey('amazon');
         }
-        
+
         function setAmazonApiKey(key) {
-            setSearchApiKey(key);
+            setProviderApiKey('amazon', key);
         }
-        
+
         const SEARCHAPI_URL = 'https://www.searchapi.io/api/v1/search';
         const AMAZON_API_URL = SEARCHAPI_URL;
         const WALMART_API_URL = SEARCHAPI_URL;
-        
-        // Load API key when settings page is shown
-        function loadAmazonApiKey() {
-            const apiKeyInput = document.getElementById('amazonApiKey');
-            if (apiKeyInput) {
-                const savedKey = getSearchApiKey();
-                if (savedKey) {
-                    apiKeyInput.value = savedKey;
-                    const statusEl = document.getElementById('amazonApiKeyStatus');
-                    if (statusEl) {
-                        statusEl.textContent = 'API key saved ✓ (Works for Amazon, Walmart & eBay)';
-                        statusEl.style.color = 'var(--success)';
-                    }
-                } else {
-                    apiKeyInput.value = '';
-                    const statusEl = document.getElementById('amazonApiKeyStatus');
-                    if (statusEl) {
-                        statusEl.textContent = 'No API key configured';
-                        statusEl.style.color = 'var(--gray)';
-                    }
-                }
+
+        function setProviderApiKeyStatus(provider, message, color) {
+            const cfg = PROVIDER_API_KEY_INPUTS[provider];
+            const statusEl = cfg ? document.getElementById(cfg.statusId) : null;
+            if (statusEl) {
+                statusEl.textContent = message;
+                statusEl.style.color = color || 'var(--gray)';
             }
+        }
+
+        // Load API keys when settings page is shown
+        function loadProviderApiKeys() {
+            Object.keys(PROVIDER_API_KEY_INPUTS).forEach(function(provider) {
+                const cfg = PROVIDER_API_KEY_INPUTS[provider];
+                const input = document.getElementById(cfg.inputId);
+                if (!input) return;
+                const savedKey = getProviderApiKey(provider, false);
+                input.value = savedKey || '';
+                if (!input.dataset.pasteBound) {
+                    input.dataset.pasteBound = '1';
+                    input.addEventListener('paste', function() {
+                        setTimeout(() => { this.value = this.value.trim(); }, 0);
+                    });
+                }
+                if (savedKey) {
+                    setProviderApiKeyStatus(provider, cfg.label + ' API key saved', 'var(--success)');
+                } else if (SEARCHAPI_PROVIDERS.includes(provider)) {
+                    setProviderApiKeyStatus(provider, 'No saved key. The default SearchAPI key will be used until you save one.', 'var(--gray)');
+                } else {
+                    setProviderApiKeyStatus(provider, 'No API key configured', 'var(--gray)');
+                }
+            });
+        }
+
+        function saveProviderApiKeys() {
+            let savedCount = 0;
+            Object.keys(PROVIDER_API_KEY_INPUTS).forEach(function(provider) {
+                const cfg = PROVIDER_API_KEY_INPUTS[provider];
+                const input = document.getElementById(cfg.inputId);
+                const value = input && input.value ? input.value.trim() : '';
+                if (value) {
+                    setProviderApiKey(provider, value);
+                    setProviderApiKeyStatus(provider, cfg.label + ' API key saved', 'var(--success)');
+                    savedCount++;
+                }
+            });
+            if (savedCount === 0) {
+                showNotification('Paste at least one provider API key before saving.', 'warning', 'Settings');
+                return;
+            }
+            currentIntegrations = loadSavedIntegrations();
+            saveIntegrations();
+            renderIntegrations();
+            showNotification('Provider API keys saved.', 'success', 'Settings');
+        }
+
+        function loadAmazonApiKey() {
+            loadProviderApiKeys();
         }
         
         // Save API key handler
         const saveAmazonApiKeyBtn = document.getElementById('saveAmazonApiKey');
         if (saveAmazonApiKeyBtn) {
-            saveAmazonApiKeyBtn.addEventListener('click', function() {
-                const apiKeyInput = document.getElementById('amazonApiKey');
-                const statusEl = document.getElementById('amazonApiKeyStatus');
-                
-                if (apiKeyInput && apiKeyInput.value.trim()) {
-                    setSearchApiKey(apiKeyInput.value.trim());
-                    if (statusEl) {
-                        statusEl.textContent = 'API key saved successfully! ✓ (Works for Amazon, Walmart & eBay)';
-                        statusEl.style.color = 'var(--success)';
-                    }
-                    showNotification('SearchAPI.io key saved! Works for Amazon, Walmart and eBay searches.', 'success', 'Settings');
-                } else {
-                    if (statusEl) {
-                        statusEl.textContent = 'Please enter a valid API key';
-                        statusEl.style.color = 'var(--danger)';
-                    }
-                }
-            });
+            saveAmazonApiKeyBtn.addEventListener('click', saveProviderApiKeys);
         }
         
         // Search products
@@ -10652,7 +11023,7 @@
                     // Use SearchAPI.io Walmart Search API
                     // Full API implementation with all parameters
                     // Endpoint: https://www.searchapi.io/api/v1/search?engine=walmart_search
-                    const apiKey = getSearchApiKey();
+                    const apiKey = getSearchApiKey('walmart');
                     
                     // Use default API key if user hasn't configured one
                     const finalApiKey = apiKey || DEFAULT_AMAZON_API_KEY;
@@ -10767,7 +11138,7 @@
                     }
                 } else if (retailer === 'ebay') {
                     // SearchAPI.io eBay Search API: engine=ebay_search
-                    const apiKey = getSearchApiKey() || DEFAULT_AMAZON_API_KEY;
+                    const apiKey = getSearchApiKey('ebay') || DEFAULT_AMAZON_API_KEY;
                     if (!apiKey) {
                         searchStatus.textContent = 'API key required. Please configure your SearchAPI.io API key in Settings.';
                         products = [];
@@ -10938,8 +11309,8 @@
                 resultsEl.innerHTML = '';
                 return;
             }
-            const apiKey = getSearchApiKey() || DEFAULT_AMAZON_API_KEY;
-            if (!apiKey) {
+            const apiKey = SEARCHAPI_PROVIDERS.includes(retailer) ? (getSearchApiKey(retailer) || DEFAULT_AMAZON_API_KEY) : getProviderApiKey(retailer, false);
+            if (SEARCHAPI_PROVIDERS.includes(retailer) && !apiKey) {
                 statusEl.textContent = 'API key required. Configure SearchAPI.io key in Settings.';
                 resultsEl.innerHTML = '';
                 return;
@@ -11008,6 +11379,48 @@
                             };
                         });
                     }
+                } else if (retailer === 'shopify') {
+                    products = [
+                        {
+                            id: 'shp_1',
+                            title: 'Premium Yoga Mat - Eco Friendly',
+                            image: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80',
+                            price: 49.99,
+                            retailer: 'shopify',
+                            link: '#',
+                            addedDate: new Date().toISOString()
+                        },
+                        {
+                            id: 'shp_2',
+                            title: 'Organic Cotton T-Shirt - Unisex',
+                            image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80',
+                            price: 29.99,
+                            retailer: 'shopify',
+                            link: '#',
+                            addedDate: new Date().toISOString()
+                        }
+                    ].filter(p => p.title.toLowerCase().includes(query.toLowerCase()) || query.length > 0);
+                } else if (retailer === 'skimlinks') {
+                    products = [
+                        {
+                            id: 'skm_1',
+                            title: 'Nike Air Max 270',
+                            image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80',
+                            price: 150.00,
+                            retailer: 'skimlinks',
+                            link: '#',
+                            addedDate: new Date().toISOString()
+                        },
+                        {
+                            id: 'skm_2',
+                            title: 'Instant Pot Duo 7-in-1',
+                            image: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80',
+                            price: 89.99,
+                            retailer: 'skimlinks',
+                            link: '#',
+                            addedDate: new Date().toISOString()
+                        }
+                    ].filter(p => p.title.toLowerCase().includes(query.toLowerCase()) || query.length > 0);
                 }
                 statusEl.textContent = products.length > 0 ? `Found ${products.length} ${retailer} product(s) for "${query}". Click "Add to Library" to save.` : `No ${retailer} products found for "${query}".`;
                 window._lastLibrarySearchProducts = products;

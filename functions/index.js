@@ -170,3 +170,27 @@ exports.adminUnsuspendUser = onCall({ region: 'us-central1' }, async (request) =
 
   return { success: true, message: 'User unsuspended. They can log in again.' };
 });
+
+/**
+ * Callable function: adminDeleteUser
+ * Deletes a user from Firebase Auth and removes matching Firestore profiles.
+ */
+exports.adminDeleteUser = onCall({ region: 'us-central1' }, async (request) => {
+  if (!request.auth) throw new HttpsError('unauthenticated', 'Must be signed in.');
+  const email = request.auth.token.email;
+  if (!isAdmin(email)) throw new HttpsError('permission-denied', 'Admin access required.');
+
+  const { uid } = request.data || {};
+  if (!uid) throw new HttpsError('invalid-argument', 'uid is required.');
+
+  const auth = getAuth();
+  const db = getFirestore();
+
+  await auth.deleteUser(uid);
+  await Promise.allSettled([
+    db.collection('users').doc(uid).delete(),
+    db.collection('user').doc(uid).delete()
+  ]);
+
+  return { success: true, message: 'User deleted from Firebase Auth and Firestore.' };
+});
