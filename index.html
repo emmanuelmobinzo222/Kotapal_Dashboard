@@ -4267,7 +4267,25 @@
             .admin-header-bar { padding-left: 52px; }
             #admin-view .action-btns { flex-wrap: wrap; }
         }
+        /* Admin modals must sit above #admin-view (z-index 10001) */
+        #changePlanModal,
+        #adminUserManageModal,
+        #adminDetailModal,
+        #adminProductEditModal,
+        #adminPlanEditModal,
+        #adminRoleEditModal {
+            z-index: 10050 !important;
+        }
         #admin-toast-host { position: fixed; bottom: 22px; right: 22px; z-index: 100000; display: flex; flex-direction: column; gap: 8px; pointer-events: none; font-family: 'Inter', sans-serif; }
+        .admin-users-table-wrap { position: relative; }
+        .admin-users-table-wrap.is-refreshing::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: rgba(255, 255, 255, 0.55);
+            pointer-events: none;
+            border-radius: 8px;
+        }
         .admin-toast { pointer-events: auto; padding: 12px 16px; border-radius: 10px; font-size: 13px; font-weight: 600; max-width: min(360px, 92vw); box-shadow: 0 10px 28px rgba(0,0,0,0.14); border: 1px solid transparent; animation: adminToastIn 0.22s ease; }
         .admin-toast.info { background: #eff6ff; color: #1e40af; border-color: #93c5fd; }
         .admin-toast.success { background: #ecfdf5; color: #065f46; border-color: #6ee7b7; }
@@ -5141,8 +5159,8 @@
                     <div class="card-header">
                         <h3 class="card-title">User Directory</h3>
                         <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
-                            <button type="button" class="admin-btn admin-btn-sm admin-btn-primary" id="adminAddUserBtn" style="display:inline-flex;align-items:center;gap:6px;"><i class="fas fa-plus"></i> Add User</button>
-                            <button type="button" class="admin-btn admin-btn-sm admin-btn-secondary" id="adminSyncAuthUsersBtn" title="Sync Firebase Auth users into Firestore"><i class="fas fa-cloud-download-alt"></i> Sync Auth</button>
+                            <button type="button" class="admin-btn admin-btn-sm admin-btn-primary" id="adminAddUserBtn" style="display:inline-flex;align-items:center;gap:6px;" onclick="if(window.openAdminAddUser){window.openAdminAddUser();}return false;"><i class="fas fa-plus"></i> Add User</button>
+                            <button type="button" class="admin-btn admin-btn-sm admin-btn-secondary" id="adminSyncAuthUsersBtn" title="Sync Firebase Auth users into Firestore" onclick="if(window.syncAdminUsersFromAuth){window.syncAdminUsersFromAuth();}return false;"><i class="fas fa-cloud-download-alt"></i> Sync Auth</button>
                             <button type="button" class="admin-btn admin-btn-sm admin-btn-secondary" id="adminRefreshUsersBtn"><i class="fas fa-sync-alt"></i> Refresh</button>
                         </div>
                     </div>
@@ -5160,7 +5178,7 @@
                             <select class="form-control" id="adminUserPlanFilter" style="width:150px;"><option>All</option><option>free</option><option>starter</option><option>pro</option><option>creatorplus</option><option>agency</option></select>
                         </div>
                     </div>
-                    <div class="table-container">
+                    <div class="table-container admin-users-table-wrap" id="adminUsersTableWrap">
                         <table>
                             <thead><tr><th>User</th><th>Email</th><th>Plan</th><th>Status</th><th>Joined</th><th>Actions</th></tr></thead>
                             <tbody id="adminUsersTableBody"></tbody>
@@ -6450,7 +6468,6 @@
                 if (!actEl) return;
                 if (!actEl.closest('#admin-view')) return;
                 e.preventDefault();
-                e.stopPropagation();
                 window.runAdminTableAction(actEl);
             }, true);
         };
@@ -6822,7 +6839,11 @@
                 if (pageName === 'security' && typeof renderAdminRolesTable === 'function') renderAdminRolesTable();
                 if (pageName === 'creators' && typeof renderAdminCreatorsTable === 'function') renderAdminCreatorsTable();
                 if (pageName === 'subscriptions' && typeof renderAdminSubscriptionUsers === 'function') renderAdminSubscriptionUsers();
-                if (pageName === 'users' && typeof loadAdminUsers === 'function') loadAdminUsers();
+                if (pageName === 'users' && typeof loadAdminUsers === 'function') {
+                    var utb = document.getElementById('adminUsersTableBody');
+                    var hasData = utb && utb.querySelector('tr[data-user-id]');
+                    loadAdminUsers({ showLoading: !hasData, softRefresh: !!hasData });
+                }
                 if (window.innerWidth <= 1024 && typeof closeAdminSidebar === 'function') closeAdminSidebar();
             };
             window.initAdminRevenueChart = function() {
@@ -7003,7 +7024,65 @@
                 if (typeof window.applyAdminView === 'function') window.applyAdminView();
                 else window.location.reload();
             };
-            window.loadAdminUsers = async function() {
+            window.renderAdminUsersTable = function(users) {
+                var tbody = document.getElementById('adminUsersTableBody');
+                if (!tbody) return;
+                users = users || window.adminUsers || [];
+                if (!users.length) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="text-center" style="padding:32px;color:#6b7280;">No users found. Users appear when they sign up via the main app.</td></tr>';
+                    return;
+                }
+                function encAttr(s) { return encodeURIComponent(String(s == null ? '' : s)); }
+                function html(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+                function escAttr(s) { return String(s || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;'); }
+                function initials(n) { if (!n || n === '-') return '-'; var p = n.trim().split(/\s+/); return (p[0][0] || '') + (p[1] ? p[1][0] : '') || n[0] || '-'; }
+                tbody.innerHTML = users.map(function(u) {
+                    var joined = (u.joined && u.joined !== '-') ? new Date(u.joined).toLocaleDateString() : (u.joined || '-');
+                    var status = (u.status || 'active').toLowerCase();
+                    var statusBadge = '<span class="status-badge ' + (status === 'suspended' ? 'refunded' : 'completed') + '">' + (status === 'suspended' ? 'Suspended' : 'Active') + '</span>';
+                    var planRaw = String(u.plan || 'starter').toLowerCase();
+                    var fe = String(u.email || '').toLowerCase();
+                    var fn = String(u.name || '').toLowerCase();
+                    var planInfo = getKotaPlan(planRaw);
+                    var planBadge = '<span class="badge-tag ' + planInfo.badgeClass + '">' + html(planInfo.name) + '</span>';
+                    var idEnc = encAttr(u.id || u.email);
+                    var emEnc = encAttr(u.email || '');
+                    var nmEnc = encAttr(u.name || '');
+                    var plEnc = encAttr(planRaw);
+                    var stEnc = encAttr(status);
+                    var actions = '<div class="action-btns">' +
+                        '<button type="button" class="admin-btn-sm admin-btn-secondary" data-admin-action="user-view" data-user-id="' + idEnc + '" data-user-email="' + emEnc + '" data-user-name="' + nmEnc + '" data-user-plan="' + plEnc + '" data-user-status="' + stEnc + '"><i class="fas fa-eye"></i> View</button>' +
+                        '<button type="button" class="admin-btn-sm admin-btn-primary" data-admin-action="user-edit" data-user-id="' + idEnc + '" data-user-email="' + emEnc + '" data-user-name="' + nmEnc + '" data-user-plan="' + plEnc + '" data-user-status="' + stEnc + '"><i class="fas fa-edit"></i> Edit</button>' +
+                        '<button type="button" class="admin-btn-sm admin-btn-secondary" data-admin-action="user-plan" data-user-id="' + idEnc + '" data-user-plan="' + plEnc + '"><i class="fas fa-layer-group"></i> Plan</button>' +
+                        '<button type="button" class="admin-btn-sm admin-btn-primary" data-admin-action="user-suspend" data-user-id="' + idEnc + '" data-user-status="' + stEnc + '"><i class="fas fa-' + (status === 'suspended' ? 'user-check' : 'user-slash') + '"></i> ' + (status === 'suspended' ? 'Unsuspend' : 'Suspend') + '</button>' +
+                        '<button type="button" class="admin-btn-sm admin-btn-danger" data-admin-action="user-delete" data-user-id="' + idEnc + '"><i class="fas fa-trash"></i> Delete</button></div>';
+                    var userCell = '<div style="display:flex;align-items:center;gap:10px;"><div class="user-avatar" style="width:35px;height:35px;font-size:14px;">' + html(initials(u.name)) + '</div><span>' + html(u.name || '-') + '</span></div>';
+                    return '<tr data-user-id="' + escAttr(u.id || '') + '" data-filter-email="' + escAttr(fe) + '" data-filter-name="' + escAttr(fn) + '" data-filter-status="' + escAttr(status) + '" data-filter-plan="' + escAttr(planRaw) + '"><td>' + userCell + '</td><td>' + html(u.email || '-') + '</td><td>' + planBadge + '</td><td>' + statusBadge + '</td><td>' + html(joined) + '</td><td>' + actions + '</td></tr>';
+                }).join('');
+                if (typeof window.applyAdminUserFilters === 'function') window.applyAdminUserFilters();
+            };
+            window.patchAdminUserLocal = function(uid, patch) {
+                if (!uid) return;
+                var users = window.adminUsers || [];
+                var idx = users.findIndex(function(u) { return u.id === uid; });
+                if (idx < 0) return;
+                Object.keys(patch || {}).forEach(function(k) { users[idx][k] = patch[k]; });
+                window.adminUsers = users;
+                window.renderAdminUsersTable(users);
+                if (typeof updateStatsPage === 'function') updateStatsPage();
+                if (typeof updateDashboardPage === 'function') updateDashboardPage();
+            };
+            window.removeAdminUserLocal = function(uid) {
+                if (!uid) return;
+                window.adminUsers = (window.adminUsers || []).filter(function(u) { return u.id !== uid; });
+                window.renderAdminUsersTable(window.adminUsers);
+                if (typeof updateStatsPage === 'function') updateStatsPage();
+                if (typeof updateDashboardPage === 'function') updateDashboardPage();
+            };
+            window.loadAdminUsers = async function(options) {
+                options = options || {};
+                var showLoading = options.showLoading !== false;
+                var softRefresh = options.softRefresh === true;
                 function withTimeout(promise, ms) {
                     return Promise.race([
                         promise,
@@ -7011,12 +7090,18 @@
                     ]);
                 }
                 var tbody = document.getElementById('adminUsersTableBody');
+                var tableWrap = document.getElementById('adminUsersTableWrap');
                 var dbUse = db || window.firebaseDb || (typeof firebase !== 'undefined' && firebase.firestore && firebase.firestore());
                 if (!tbody || !dbUse) {
                     if (tbody) tbody.innerHTML = '<tr><td colspan="6" class="text-center" style="padding:32px;color:#6b7280;">Unable to load users. Check Firebase connection.</td></tr>';
                     return;
                 }
-                tbody.innerHTML = '<tr><td colspan="6" class="text-center">Loading...</td></tr>';
+                var hasRows = tbody.querySelector('tr[data-user-id]');
+                if (showLoading && !hasRows) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="text-center">Loading...</td></tr>';
+                } else if (softRefresh && tableWrap) {
+                    tableWrap.classList.add('is-refreshing');
+                }
                 var users = [], byId = {};
                 var loadedFromAuth = false;
                 try {
@@ -7046,39 +7131,9 @@
                 }
                 users = Object.keys(byId).map(function(k) { return byId[k]; });
                 window.adminUsers = users;
-                if (users.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="6" class="text-center" style="padding:32px;color:#6b7280;">No users found. Users appear when they sign up via the main app.</td></tr>';
-                } else {
-                    function encAttr(s) { return encodeURIComponent(String(s == null ? '' : s)); }
-                    function html(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
-                    function escAttr(s) { return String(s || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;'); }
-                    function initials(n) { if (!n || n === '-') return '-'; var p = n.trim().split(/\s+/); return (p[0][0] || '') + (p[1] ? p[1][0] : '') || n[0] || '-'; }
-                    tbody.innerHTML = users.map(function(u) {
-                        var joined = (u.joined && u.joined !== '-') ? new Date(u.joined).toLocaleDateString() : (u.joined || '-');
-                        var status = (u.status || 'active').toLowerCase();
-                        var statusBadge = '<span class="status-badge ' + (status === 'suspended' ? 'refunded' : 'completed') + '">' + (status === 'suspended' ? 'Suspended' : 'Active') + '</span>';
-                        var planRaw = String(u.plan || 'starter').toLowerCase();
-                        var fe = String(u.email || '').toLowerCase();
-                        var fn = String(u.name || '').toLowerCase();
-                        var planInfo = getKotaPlan(planRaw);
-                        var planBadge = '<span class="badge-tag ' + planInfo.badgeClass + '">' + html(planInfo.name) + '</span>';
-                        var idEnc = encAttr(u.id || u.email);
-                        var emEnc = encAttr(u.email || '');
-                        var nmEnc = encAttr(u.name || '');
-                        var plEnc = encAttr(planRaw);
-                        var stEnc = encAttr(status);
-                        var actions = '<div class="action-btns">' +
-                            '<button type="button" class="admin-btn-sm admin-btn-secondary" data-admin-action="user-view" data-user-id="' + idEnc + '" data-user-email="' + emEnc + '" data-user-name="' + nmEnc + '" data-user-plan="' + plEnc + '" data-user-status="' + stEnc + '"><i class="fas fa-eye"></i> View</button>' +
-                            '<button type="button" class="admin-btn-sm admin-btn-primary" data-admin-action="user-edit" data-user-id="' + idEnc + '" data-user-email="' + emEnc + '" data-user-name="' + nmEnc + '" data-user-plan="' + plEnc + '" data-user-status="' + stEnc + '"><i class="fas fa-edit"></i> Edit</button>' +
-                            '<button type="button" class="admin-btn-sm admin-btn-secondary" data-admin-action="user-plan" data-user-id="' + idEnc + '" data-user-plan="' + plEnc + '"><i class="fas fa-layer-group"></i> Plan</button>' +
-                            '<button type="button" class="admin-btn-sm admin-btn-primary" data-admin-action="user-suspend" data-user-id="' + idEnc + '" data-user-status="' + stEnc + '"><i class="fas fa-' + (status === 'suspended' ? 'user-check' : 'user-slash') + '"></i> ' + (status === 'suspended' ? 'Unsuspend' : 'Suspend') + '</button>' +
-                            '<button type="button" class="admin-btn-sm admin-btn-danger" data-admin-action="user-delete" data-user-id="' + idEnc + '"><i class="fas fa-trash"></i> Delete</button></div>';
-                        var userCell = '<div style="display:flex;align-items:center;gap:10px;"><div class="user-avatar" style="width:35px;height:35px;font-size:14px;">' + html(initials(u.name)) + '</div><span>' + html(u.name || '-') + '</span></div>';
-                        return '<tr data-filter-email="' + escAttr(fe) + '" data-filter-name="' + escAttr(fn) + '" data-filter-status="' + escAttr(status) + '" data-filter-plan="' + escAttr(planRaw) + '"><td>' + userCell + '</td><td>' + html(u.email || '-') + '</td><td>' + planBadge + '</td><td>' + statusBadge + '</td><td>' + html(joined) + '</td><td>' + actions + '</td></tr>';
-                    }).join('');
-                }
+                window.renderAdminUsersTable(users);
+                if (tableWrap) tableWrap.classList.remove('is-refreshing');
                 if (typeof updateStatsPage === 'function') updateStatsPage();
-                setTimeout(function() { if (typeof applyAdminUserFilters === 'function') applyAdminUserFilters(); }, 0);
                 if (typeof updateDashboardPage === 'function') updateDashboardPage();
             };
             window.syncAdminUsersFromAuth = async function() {
@@ -7093,7 +7148,7 @@
                     var result = await syncFn();
                     var n = (result && result.data && result.data.synced) ? result.data.synced : 0;
                     if (typeof window.adminToast === 'function') window.adminToast('Synced ' + n + ' user(s) from Firebase Auth to Firestore.', 'success');
-                    await loadAdminUsers();
+                    await loadAdminUsers({ showLoading: false, softRefresh: true });
                 } catch (e) {
                     if (typeof window.adminToast === 'function') window.adminToast('Sync failed: ' + (e.message || e), 'warn');
                 } finally {
@@ -7389,7 +7444,7 @@
                     }
                 }
                 closeChangePlanModal();
-                loadAdminUsers();
+                if (typeof window.patchAdminUserLocal === 'function') window.patchAdminUserLocal(uid, { plan: plan });
                 if (typeof window.adminToast === 'function') window.adminToast('Plan updated to ' + plan + '.', 'success');
             };
             window.toggleSuspend = async function(uid, currentStatus) {
@@ -7426,7 +7481,7 @@
                         }
                     }
                 }
-                await loadAdminUsers();
+                if (typeof window.patchAdminUserLocal === 'function') window.patchAdminUserLocal(uid, { status: newStatus });
                 if (typeof window.adminToast === 'function') {
                     window.adminToast(
                         newStatus === 'suspended'
@@ -7468,7 +7523,7 @@
                         }
                     }
                 }
-                loadAdminUsers();
+                if (typeof window.removeAdminUserLocal === 'function') window.removeAdminUserLocal(uid);
                 if (typeof window.adminToast === 'function') window.adminToast(deletedAuth ? 'User deleted from Firebase Auth and Firestore.' : 'Firestore user profile removed. Deploy Functions for Auth deletion.', 'success');
             };
             window.closeAdminUserManageModal = function() {
@@ -7569,7 +7624,17 @@
                     }, { merge: true });
                 } catch (e2) {}
                 window.adminToast(usedCloudFn ? 'Profile saved and Firebase Auth status updated.' : 'Profile saved to Firestore.', 'success');
-                loadAdminUsers();
+                if (existing && typeof window.patchAdminUserLocal === 'function') {
+                    window.patchAdminUserLocal(uid, { email: email, name: name, plan: plan, status: status });
+                } else {
+                    var users = (window.adminUsers || []).slice();
+                    users.push({ id: uid, email: email || '-', name: name || '-', plan: plan || 'starter', status: status || 'active', joined: new Date().toISOString() });
+                    window.adminUsers = users;
+                    if (typeof window.renderAdminUsersTable === 'function') window.renderAdminUsersTable(users);
+                    if (typeof updateStatsPage === 'function') updateStatsPage();
+                    if (typeof updateDashboardPage === 'function') updateDashboardPage();
+                }
+                if (typeof window.closeAdminUserManageModal === 'function') window.closeAdminUserManageModal();
             };
             window.adminUserManageSaveBlocks = async function() {
                 var uid = (document.getElementById('adminUserManageUid') && document.getElementById('adminUserManageUid').value || '').trim();
@@ -7605,7 +7670,7 @@
                         return;
                     }
                 }
-                loadAdminUsers();
+                if (typeof window.removeAdminUserLocal === 'function') window.removeAdminUserLocal(uid);
                 window.adminToast('User document removed from Firestore.', 'success');
                 closeAdminUserManageModal();
             };
@@ -8041,12 +8106,12 @@
                 var aumm = document.getElementById('adminUserManageModal');
                 if (aumm && !aumm._backdropClose) {
                     aumm._backdropClose = true;
-                    aumm.addEventListener('click', function(e) { if (e.target === aumm) closeAdminUserManageModal(); });
+                    aumm.addEventListener('click', function(e) { if (e.target === aumm && typeof window.closeAdminUserManageModal === 'function') window.closeAdminUserManageModal(); });
                 }
                 var cpm = document.getElementById('changePlanModal');
                 if (cpm && !cpm._backdropClose) {
                     cpm._backdropClose = true;
-                    cpm.addEventListener('click', function(e) { if (e.target === cpm) closeChangePlanModal(); });
+                    cpm.addEventListener('click', function(e) { if (e.target === cpm && typeof window.closeChangePlanModal === 'function') window.closeChangePlanModal(); });
                 }
                 ['adminUserSearch','adminUserStatusFilter','adminUserPlanFilter'].forEach(function(id) {
                     var el = document.getElementById(id);
@@ -8067,7 +8132,7 @@
                 if (refreshUsersBtn && !refreshUsersBtn._wire) {
                     refreshUsersBtn._wire = true;
                     refreshUsersBtn.addEventListener('click', function() {
-                        if (typeof window.loadAdminUsers === 'function') window.loadAdminUsers();
+                        if (typeof window.loadAdminUsers === 'function') window.loadAdminUsers({ showLoading: false, softRefresh: true });
                     });
                 }
                 ['adminProductCategoryFilter','adminProductStatusFilter'].forEach(function(id) {
@@ -8210,15 +8275,17 @@
                 var addU = document.getElementById('adminAddUserBtn');
                 if (addU && !addU._wire) {
                     addU._wire = true;
-                    addU.addEventListener('click', function() {
-                        if (typeof openAdminAddUser === 'function') openAdminAddUser();
+                    addU.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        if (typeof window.openAdminAddUser === 'function') window.openAdminAddUser();
                     });
                 }
                 var syncBtn = document.getElementById('adminSyncAuthUsersBtn');
                 if (syncBtn && !syncBtn._wire) {
                     syncBtn._wire = true;
-                    syncBtn.addEventListener('click', function() {
-                        if (typeof syncAdminUsersFromAuth === 'function') syncAdminUsersFromAuth();
+                    syncBtn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        if (typeof window.syncAdminUsersFromAuth === 'function') window.syncAdminUsersFromAuth();
                     });
                 }
                 var ex = document.getElementById('adminExportReportBtn');
