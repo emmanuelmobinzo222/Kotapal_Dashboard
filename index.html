@@ -201,6 +201,14 @@
             overflow-y: auto;
             scroll-padding-top: 100px;
         }
+        html.dashboard-scroll-lock,
+        html.dashboard-scroll-lock body,
+        html.admin-scroll-lock,
+        html.admin-scroll-lock body {
+            overflow: hidden;
+            height: 100%;
+            overscroll-behavior: none;
+        }
 
         /* Universal scrollbar — single definition for all scroll areas */
         .scroll-box,
@@ -2114,29 +2122,14 @@
             .features-apple-intro h2 {
                 font-size: 3rem;
             }
-        }
 
-        /* Tablet & Below (max-width: 768px) */
-        @media (max-width: 768px) {
+            /* Burger menu + slide-down nav on tablets and phones */
             #landing-page-view > nav {
                 overflow: visible;
             }
             .nav-container {
                 position: relative;
             }
-
-            h1 {
-                font-size: 2.5rem;
-            }
-
-            h2 {
-                font-size: 2rem;
-            }
-
-            h3 {
-                font-size: 1.5rem;
-            }
-
             .nav-links {
                 display: flex;
                 flex-direction: column;
@@ -2151,18 +2144,18 @@
                 visibility: hidden;
                 pointer-events: none;
                 transition: opacity 0.25s ease, visibility 0.25s ease;
+                max-height: min(75vh, calc(100dvh - 100px));
+                overflow-y: auto;
+                -webkit-overflow-scrolling: touch;
             }
-
             .nav-links.active {
                 opacity: 1;
                 visibility: visible;
                 pointer-events: auto;
             }
-
             .nav-links li {
                 margin: 10px 0;
             }
-
             .nav-links a {
                 display: block;
                 padding: 14px 20px;
@@ -2170,7 +2163,6 @@
                 line-height: 1.4;
                 box-sizing: border-box;
             }
-
             .mobile-menu-btn {
                 display: flex;
                 min-width: 44px;
@@ -2178,6 +2170,21 @@
                 align-items: center;
                 justify-content: center;
                 padding: 10px;
+            }
+        }
+
+        /* Tablet & Below (max-width: 768px) */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.5rem;
+            }
+
+            h2 {
+                font-size: 2rem;
+            }
+
+            h3 {
+                font-size: 1.5rem;
             }
 
             section {
@@ -3743,6 +3750,12 @@
     <!-- Dashboard styles matching KotaPal simple copy design -->
     <style id="dashboard-light-theme">
         #dashboard-view { background: #f8fafc; height: 100vh; height: 100dvh; overflow: hidden; }
+        #dashboard-view.active {
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            z-index: 900;
+        }
         #dashboard-view .dashboard { display: flex; height: 100%; min-height: 0; width: 100%; }
         #dashboard-view .sidebar {
             width: 260px; background: white; box-shadow: 2px 0 8px rgba(0,0,0,0.04);
@@ -3781,6 +3794,9 @@
         #dashboard-view .main-content {
             flex: 1; min-height: 0; margin-left: 260px; padding: 32px 40px; width: calc(100% - 260px); box-sizing: border-box;
             background: #f8fafc; overflow-x: hidden; overflow-y: auto; transition: margin-left 0.3s ease;
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior-y: contain;
+            touch-action: pan-y;
         }
         #dashboard-view .main-content.sidebar-hidden { margin-left: 0; }
         #dashboard-view .page-content { padding: 24px; max-width: 1400px; width: 100%; margin: 0 auto; }
@@ -3942,12 +3958,16 @@
         #dashboard-view [data-sensitive="true"] { filter: blur(8px); user-select: none; transition: filter 0.3s ease; }
         #dashboard-view [data-sensitive="true"].revealed { filter: none; }
         #dashboard-view .sidebar-toggle {
-            position: fixed; top: 20px; left: 20px; z-index: 1001;
+            position: fixed; top: 20px; left: 20px; z-index: 1003;
             background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 10px 14px;
             cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: none; align-items: center; justify-content: center; transition: all 0.2s ease;
         }
         #dashboard-view .sidebar-toggle:hover { background: #f9fafb; border-color: #d1d5db; }
         #dashboard-view .sidebar-toggle i { font-size: 1.2rem; color: var(--dark); }
+        @media (min-width: 1025px) {
+            #dashboard-view .sidebar-toggle { display: none !important; }
+            #dashboard-view .nav-toggle-float { display: flex; }
+        }
         #dashboard-view .sidebar-overlay {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.5); z-index: 999;
@@ -3964,6 +3984,7 @@
         #dashboard-view .nav-toggle-float:hover { background: #f9fafb; border-color: #d1d5db; }
         #dashboard-view .nav-toggle-float i { font-size: 1.2rem; color: var(--dark); }
         @media (max-width: 1024px) {
+            #dashboard-view .nav-toggle-float { display: none !important; }
             #dashboard-view .sidebar { transform: translateX(-100%); width: min(320px, 85vw); z-index: 1002; }
             #dashboard-view .sidebar.active { transform: translateX(0); }
             #dashboard-view .main-content { margin-left: 0; width: 100%; max-width: 100%; padding-top: 60px; padding-left: 16px; padding-right: 16px; }
@@ -4062,7 +4083,7 @@
         .admin-sidebar .nav-link:hover { background: var(--admin-gray-100); color: var(--admin-primary); }
         .admin-sidebar .nav-link.active { background: #eef2ff; color: #4f46e5; border-left-color: #4f46e5; font-weight: 600; }
         .admin-sidebar .nav-link i { margin-right: 12px; width: 20px; text-align: center; font-size: 17px; }
-        .admin-main { flex: 1; margin-left: var(--admin-sidebar-width); min-height: 0; max-height: 100vh; max-height: 100dvh; height: 100vh; height: 100dvh; width: 100%; max-width: 100%; background: var(--admin-gray-50); min-width: 0; display: flex; flex-direction: column; overflow-x: hidden; overflow-y: auto; }
+        .admin-main { flex: 1; margin-left: var(--admin-sidebar-width); min-height: 0; max-height: 100vh; max-height: 100dvh; height: 100vh; height: 100dvh; width: 100%; max-width: 100%; background: var(--admin-gray-50); min-width: 0; display: flex; flex-direction: column; overflow-x: hidden; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior-y: contain; touch-action: pan-y; }
         .admin-header-bar { height: 70px; background: white; border-bottom: 1px solid var(--admin-gray-200); display: flex; align-items: center; justify-content: space-between; padding: 0 30px; flex-shrink: 0; position: sticky; top: 0; z-index: 20; }
         .admin-search-bar { flex: 1; max-width: 500px; position: relative; }
         .admin-search-bar input { width: 100%; padding: 10px 15px 10px 40px; border: 1px solid var(--admin-gray-200); border-radius: 10px; font-size: 14px; transition: all 0.3s ease; }
@@ -4257,7 +4278,7 @@
 
     <!-- Authenticated Dashboard View (KotaPal simple copy design) -->
     <div id="dashboard-view" class="dashboard-view" style="display: none;">
-        <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar"><i class="fas fa-bars"></i></button>
+        <button type="button" class="sidebar-toggle" id="sidebarToggle" aria-label="Open menu" aria-expanded="false" aria-controls="sidebar"><i class="fas fa-bars" aria-hidden="true"></i></button>
         <div class="sidebar-overlay" id="sidebarOverlay"></div>
         <div class="dashboard">
             <div class="sidebar" id="sidebar">
@@ -5937,13 +5958,13 @@
                     const dashboardView = document.getElementById('dashboard-view');
                     
                     if (landingView) landingView.style.display = 'none';
-                    document.documentElement.classList.remove('landing-page-active');
                     if (nav) nav.style.display = 'none';
                     if (footer) footer.style.display = 'none';
                     if (dashboardView) {
                         dashboardView.style.display = 'block';
                         dashboardView.classList.add('active');
                     }
+                    if (typeof setDashboardScrollLock === 'function') setDashboardScrollLock(true);
                     if (typeof updateSidebarUserInfo === 'function') updateSidebarUserInfo();
                     if (typeof showPage === 'function') showPage('dashboard');
                     if (typeof initDashboard === 'function') initDashboard();
@@ -6088,13 +6109,13 @@
                     const dashboardView = document.getElementById('dashboard-view');
                     
                     if (landingView) landingView.style.display = 'none';
-                    document.documentElement.classList.remove('landing-page-active');
                     if (nav) nav.style.display = 'none';
                     if (footer) footer.style.display = 'none';
                     if (dashboardView) {
                         dashboardView.style.display = 'block';
                         dashboardView.classList.add('active');
                     }
+                    if (typeof setDashboardScrollLock === 'function') setDashboardScrollLock(true);
                     
                     updateSidebarUserInfo();
                     showPage('dashboard');
@@ -6283,6 +6304,7 @@
                 dashboardView.style.display = 'none';
                 dashboardView.classList.remove('active');
             }
+            if (typeof setDashboardScrollLock === 'function') setDashboardScrollLock(false);
             if (landingView) { landingView.style.display = 'block'; landingView.classList.remove('theme-dark'); }
             document.documentElement.classList.add('landing-page-active');
             if (nav) nav.style.display = 'flex';
@@ -6353,8 +6375,86 @@
             isInitialLoad = false;
             initAdmin();
         });
+
+        /** Central handler for every [data-admin-action] button in the admin dashboard (ACTION columns). */
+        window.runAdminTableAction = function(actEl) {
+            if (!actEl) return;
+            var act = actEl.getAttribute('data-admin-action');
+            if (!act) return;
+            function dec(name) {
+                try { return decodeURIComponent(actEl.getAttribute(name) || ''); } catch (err) { return ''; }
+            }
+            try {
+                switch (act) {
+                    case 'user-view':
+                        if (window.openAdminManageUser) window.openAdminManageUser(dec('data-user-id'), dec('data-user-email'), dec('data-user-name'), dec('data-user-plan'), dec('data-user-status'), 'view');
+                        break;
+                    case 'user-edit':
+                        if (window.openAdminManageUser) window.openAdminManageUser(dec('data-user-id'), dec('data-user-email'), dec('data-user-name'), dec('data-user-plan'), dec('data-user-status'), 'manage');
+                        break;
+                    case 'user-plan':
+                        if (window.openChangePlan) window.openChangePlan(dec('data-user-id'), dec('data-user-plan'));
+                        break;
+                    case 'user-suspend':
+                        if (window.toggleSuspend) window.toggleSuspend(dec('data-user-id'), dec('data-user-status'));
+                        break;
+                    case 'user-delete':
+                        if (window.deleteUserDoc) window.deleteUserDoc(dec('data-user-id'));
+                        break;
+                    case 'support-ticket-view':
+                        if (window.adminTicketDetailById) window.adminTicketDetailById(dec('data-ticket-id'));
+                        break;
+                    case 'support-ticket-resolve':
+                        if (window.adminResolveTicketById) window.adminResolveTicketById(dec('data-ticket-id'));
+                        break;
+                    case 'billing-invoice':
+                        if (window.adminBillingInvoice) window.adminBillingInvoice(parseInt(actEl.getAttribute('data-payment-idx'), 10));
+                        break;
+                    case 'billing-detail':
+                        if (window.adminBillingDetail) window.adminBillingDetail(parseInt(actEl.getAttribute('data-payment-idx'), 10));
+                        break;
+                    case 'open-add-user':
+                        if (window.openAdminAddUser) window.openAdminAddUser();
+                        break;
+                    case 'open-add-product':
+                        if (window.openAdminProductCreate) window.openAdminProductCreate();
+                        break;
+                    case 'edit-product':
+                        if (window.openAdminProductEdit) window.openAdminProductEdit(actEl.getAttribute('data-product-id'));
+                        break;
+                    case 'view-product':
+                        if (window.viewAdminProduct) window.viewAdminProduct(actEl.getAttribute('data-product-id'));
+                        break;
+                    case 'create-plan':
+                        if (window.openAdminPlanEdit) window.openAdminPlanEdit('');
+                        break;
+                    case 'edit-plan':
+                        if (window.openAdminPlanEdit) window.openAdminPlanEdit(actEl.getAttribute('data-plan-id'));
+                        break;
+                    case 'edit-role':
+                        if (window.openAdminRoleEdit) window.openAdminRoleEdit(actEl.getAttribute('data-role-key'));
+                        break;
+                    default:
+                        if (typeof window.adminToast === 'function') window.adminToast('Unknown action: ' + act, 'warn');
+                }
+            } catch (err) {
+                console.error('Admin action failed:', act, err);
+                if (typeof window.adminToast === 'function') window.adminToast('Action failed: ' + (err.message || act), 'warn');
+            }
+        };
+        window.wireAdminActionButtons = function() {
+            if (window._adminActionsWired) return;
+            window._adminActionsWired = true;
+            document.addEventListener('click', function(e) {
+                var actEl = e.target && e.target.closest ? e.target.closest('#admin-view [data-admin-action]') : null;
+                if (!actEl) return;
+                e.preventDefault();
+                window.runAdminTableAction(actEl);
+            });
+        };
         
         function initAdmin() {
+            if (typeof window.wireAdminActionButtons === 'function') window.wireAdminActionButtons();
             var ADMIN_EMAILS = ['admin@kotapal.com', 'wreck@gmail.com', 'earlhugue@gmail.com', 'emmanuelmobinzo222@gmail.com', 'emmanuelmobinzo21@gmail.com'];
             window.ADMIN_EMAILS = ADMIN_EMAILS;
             function isAdminUser(email) { if (!email) return false; return ADMIN_EMAILS.indexOf(email.toLowerCase()) >= 0; }
@@ -6448,6 +6548,7 @@
                 } else {
                     if (adminLogin) adminLogin.classList.remove('active');
                     if (adminView) adminView.classList.remove('active');
+                    if (typeof setAdminScrollLock === 'function') setAdminScrollLock(false);
                     if (landing) landing.style.display = 'block';
                     document.documentElement.classList.add('landing-page-active');
                     if (nav) nav.style.display = 'flex';
@@ -6459,10 +6560,12 @@
                 if (pl) pl.classList.add('hidden');
                 document.body.classList.add('loaded');
                 hideAuthModalForAdmin();
+                if (typeof setAdminScrollLock === 'function') setAdminScrollLock(true);
                 var adminLogin = document.getElementById('admin-login-screen');
                 var adminView = document.getElementById('admin-view');
                 if (adminLogin) adminLogin.classList.remove('active');
                 if (adminView) adminView.classList.add('active');
+                if (typeof window.wireAdminActionButtons === 'function') window.wireAdminActionButtons();
                 if (typeof initAdminRevenueChart === 'function') setTimeout(initAdminRevenueChart, 100);
                 if (typeof loadAdminSupport === 'function') setTimeout(function() { loadAdminSupport(); }, 0);
             }
@@ -7927,91 +8030,6 @@
                             if (navMsg) adminToast(navMsg, 'info');
                             return;
                         }
-                        var actEl = e.target.closest('[data-admin-action]');
-                        if (actEl) {
-                            var act = actEl.getAttribute('data-admin-action');
-                            function adminDecodeAttr(name) {
-                                try { return decodeURIComponent(actEl.getAttribute(name) || ''); } catch (err) { return ''; }
-                            }
-                            if (act === 'user-view' && typeof openAdminManageUser === 'function') {
-                                openAdminManageUser(
-                                    adminDecodeAttr('data-user-id'),
-                                    adminDecodeAttr('data-user-email'),
-                                    adminDecodeAttr('data-user-name'),
-                                    adminDecodeAttr('data-user-plan'),
-                                    adminDecodeAttr('data-user-status'),
-                                    'view'
-                                );
-                                return;
-                            }
-                            if (act === 'user-edit' && typeof openAdminManageUser === 'function') {
-                                openAdminManageUser(
-                                    adminDecodeAttr('data-user-id'),
-                                    adminDecodeAttr('data-user-email'),
-                                    adminDecodeAttr('data-user-name'),
-                                    adminDecodeAttr('data-user-plan'),
-                                    adminDecodeAttr('data-user-status'),
-                                    'manage'
-                                );
-                                return;
-                            }
-                            if (act === 'user-plan' && typeof openChangePlan === 'function') {
-                                openChangePlan(adminDecodeAttr('data-user-id'), adminDecodeAttr('data-user-plan'));
-                                return;
-                            }
-                            if (act === 'user-suspend' && typeof toggleSuspend === 'function') {
-                                toggleSuspend(adminDecodeAttr('data-user-id'), adminDecodeAttr('data-user-status'));
-                                return;
-                            }
-                            if (act === 'user-delete' && typeof deleteUserDoc === 'function') {
-                                deleteUserDoc(adminDecodeAttr('data-user-id'));
-                                return;
-                            }
-                            if (act === 'support-ticket-view' && typeof adminTicketDetailById === 'function') {
-                                adminTicketDetailById(adminDecodeAttr('data-ticket-id'));
-                                return;
-                            }
-                            if (act === 'support-ticket-resolve' && typeof adminResolveTicketById === 'function') {
-                                adminResolveTicketById(adminDecodeAttr('data-ticket-id'));
-                                return;
-                            }
-                            if (act === 'billing-invoice' && typeof adminBillingInvoice === 'function') {
-                                adminBillingInvoice(parseInt(actEl.getAttribute('data-payment-idx'), 10));
-                                return;
-                            }
-                            if (act === 'billing-detail' && typeof adminBillingDetail === 'function') {
-                                adminBillingDetail(parseInt(actEl.getAttribute('data-payment-idx'), 10));
-                                return;
-                            }
-                            if (act === 'open-add-user' && typeof openAdminAddUser === 'function') {
-                                openAdminAddUser();
-                                return;
-                            }
-                            if (act === 'open-add-product' && typeof openAdminProductCreate === 'function') {
-                                openAdminProductCreate();
-                                return;
-                            }
-                            if (act === 'edit-product' && typeof openAdminProductEdit === 'function') {
-                                openAdminProductEdit(actEl.getAttribute('data-product-id'));
-                                return;
-                            }
-                            if (act === 'view-product' && typeof viewAdminProduct === 'function') {
-                                viewAdminProduct(actEl.getAttribute('data-product-id'));
-                                return;
-                            }
-                            if (act === 'create-plan' && typeof openAdminPlanEdit === 'function') {
-                                openAdminPlanEdit('');
-                                return;
-                            }
-                            if (act === 'edit-plan' && typeof openAdminPlanEdit === 'function') {
-                                openAdminPlanEdit(actEl.getAttribute('data-plan-id'));
-                                return;
-                            }
-                            if (act === 'edit-role' && typeof openAdminRoleEdit === 'function') {
-                                openAdminRoleEdit(actEl.getAttribute('data-role-key'));
-                                return;
-                            }
-                        }
                         var demo = e.target.closest('[data-admin-demo]');
                         if (demo) adminToast(demo.getAttribute('data-admin-demo'), 'info');
                     });
@@ -8307,6 +8325,7 @@
                 var whInp = document.getElementById('adminWebhookUrlInput');
                 if (whInp) { var saved = localStorage.getItem('admin_webhook_url'); if (saved) whInp.value = saved; }
             })();
+            if (typeof window.wireAdminActionButtons === 'function') window.wireAdminActionButtons();
         }
         
         // Check authentication state and show appropriate view
@@ -8347,13 +8366,13 @@
                     const dashboardView = document.getElementById('dashboard-view');
                     
                     if (landingView) landingView.style.display = 'none';
-                    document.documentElement.classList.remove('landing-page-active');
                     if (nav) nav.style.display = 'none';
                     if (footer) footer.style.display = 'none';
                     if (dashboardView) {
                         dashboardView.style.display = 'block';
                         dashboardView.classList.add('active');
                     }
+                    if (typeof setDashboardScrollLock === 'function') setDashboardScrollLock(true);
                     updateSidebarUserInfo();
                     showPage('dashboard');
                     if (typeof initDashboard === 'function') initDashboard();
@@ -8382,6 +8401,7 @@
                         dashboardView.style.display = 'none';
                         dashboardView.classList.remove('active');
                     }
+                    if (typeof setDashboardScrollLock === 'function') setDashboardScrollLock(false);
                     if (landingView) {
                         landingView.style.display = 'block';
                         landingView.classList.remove('theme-dark'); /* Landing never uses dark mode */
@@ -9119,21 +9139,7 @@
             }
             setupDashboardEventListeners();
             resetInactivityTimer();
-            if (localStorage.getItem('kota_nav_collapsed') === '1') {
-                const sidebar = document.getElementById('sidebar');
-                const main = document.querySelector('#dashboard-view .main-content');
-                const navToggleFloat = document.getElementById('navToggleFloat');
-                if (sidebar) sidebar.classList.add('nav-collapsed');
-                if (main) main.classList.add('nav-collapsed');
-                if (navToggleFloat) {
-                    navToggleFloat.innerHTML = '<i class="fas fa-expand-arrows-alt"></i>';
-                    navToggleFloat.style.left = '10px';
-                    navToggleFloat.title = 'Show Nav';
-                }
-            } else {
-                const navToggleFloat = document.getElementById('navToggleFloat');
-                if (navToggleFloat) { navToggleFloat.style.left = '270px'; navToggleFloat.title = 'Hide Nav'; }
-            }
+            syncDashboardNavForViewport();
         }
 
         function stopDashboardBlocksSync() {
@@ -9454,7 +9460,11 @@
                 const landingView = document.getElementById('landing-page-view');
                 const nav = document.querySelector('nav');
                 const footer = document.querySelector('footer');
-                if (dashboardView) { dashboardView.style.display = 'none'; }
+                if (dashboardView) {
+                    dashboardView.style.display = 'none';
+                    dashboardView.classList.remove('active');
+                }
+                if (typeof setDashboardScrollLock === 'function') setDashboardScrollLock(false);
                 if (landingView) { landingView.style.display = 'block'; landingView.classList.remove('theme-dark'); }
                 document.documentElement.classList.add('landing-page-active');
                 if (nav) nav.style.display = 'flex';
@@ -9980,7 +9990,63 @@
             }
         }
 
+        function isMobileLayout() {
+            return window.matchMedia('(max-width: 1024px)').matches;
+        }
+
+        function setDashboardScrollLock(on) {
+            document.documentElement.classList.toggle('dashboard-scroll-lock', !!on);
+            if (on) document.documentElement.classList.remove('landing-page-active');
+        }
+
+        function setAdminScrollLock(on) {
+            document.documentElement.classList.toggle('admin-scroll-lock', !!on);
+            if (on) {
+                document.documentElement.classList.remove('landing-page-active', 'dashboard-scroll-lock');
+            }
+        }
+
+        function syncDashboardNavForViewport() {
+            const sidebar = document.getElementById('sidebar');
+            const main = document.querySelector('#dashboard-view .main-content');
+            const navToggleFloat = document.getElementById('navToggleFloat');
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const overlay = document.getElementById('sidebarOverlay');
+            if (!sidebar) return;
+
+            if (isMobileLayout()) {
+                sidebar.classList.remove('nav-collapsed');
+                if (main) main.classList.remove('nav-collapsed');
+                if (navToggleFloat) {
+                    navToggleFloat.style.left = '';
+                    navToggleFloat.setAttribute('aria-hidden', 'true');
+                }
+                if (sidebarToggle) sidebarToggle.removeAttribute('aria-hidden');
+            } else {
+                sidebar.classList.remove('active');
+                if (overlay) overlay.classList.remove('active');
+                if (main) main.classList.remove('sidebar-hidden');
+                if (navToggleFloat) navToggleFloat.removeAttribute('aria-hidden');
+                if (sidebarToggle) {
+                    sidebarToggle.setAttribute('aria-hidden', 'true');
+                    sidebarToggle.setAttribute('aria-expanded', 'false');
+                }
+                const collapsed = localStorage.getItem('kota_nav_collapsed') === '1';
+                sidebar.classList.toggle('nav-collapsed', collapsed);
+                if (main) main.classList.toggle('nav-collapsed', collapsed);
+                if (navToggleFloat) {
+                    navToggleFloat.style.left = collapsed ? '10px' : '270px';
+                    navToggleFloat.innerHTML = collapsed
+                        ? '<i class="fas fa-expand-arrows-alt"></i>'
+                        : '<i class="fas fa-compress-arrows-alt"></i>';
+                    navToggleFloat.title = collapsed ? 'Show Nav' : 'Hide Nav';
+                    navToggleFloat.setAttribute('aria-label', collapsed ? 'Show Nav' : 'Hide Nav');
+                }
+            }
+        }
+
         function toggleNavVisibility() {
+            if (isMobileLayout()) return;
             const sidebar = document.getElementById('sidebar');
             const main = document.querySelector('#dashboard-view .main-content');
             const btn = document.getElementById('navToggleFloat');
@@ -11751,12 +11817,16 @@
         
         function toggleSidebar() {
             if (sidebar) {
-                sidebar.classList.toggle('active');
+                const isOpen = sidebar.classList.toggle('active');
                 if (sidebarOverlay) {
-                    sidebarOverlay.classList.toggle('active');
+                    sidebarOverlay.classList.toggle('active', isOpen);
                 }
                 if (mainContent) {
-                    mainContent.classList.toggle('sidebar-hidden');
+                    mainContent.classList.toggle('sidebar-hidden', isOpen);
+                }
+                if (sidebarToggle) {
+                    sidebarToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+                    sidebarToggle.setAttribute('aria-label', isOpen ? 'Close menu' : 'Open menu');
                 }
             }
         }
@@ -11769,6 +11839,10 @@
                 }
                 if (mainContent) {
                     mainContent.classList.remove('sidebar-hidden');
+                }
+                if (sidebarToggle) {
+                    sidebarToggle.setAttribute('aria-expanded', 'false');
+                    sidebarToggle.setAttribute('aria-label', 'Open menu');
                 }
             }
         }
@@ -11791,14 +11865,14 @@
             });
         });
         
-        // Handle window resize
+        // Handle window resize — switch burger drawer vs desktop show/hide control
         window.addEventListener('resize', () => {
+            if (typeof syncDashboardNavForViewport === 'function') syncDashboardNavForViewport();
             if (window.innerWidth > 1024) {
-                if (sidebar) sidebar.classList.remove('active');
-                if (sidebarOverlay) sidebarOverlay.classList.remove('active');
-                if (mainContent) mainContent.classList.remove('sidebar-hidden');
+                closeSidebar();
             }
         });
+        if (typeof syncDashboardNavForViewport === 'function') syncDashboardNavForViewport();
         
         // ============================================
         // Sensitive Data Toggle
