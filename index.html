@@ -5143,7 +5143,7 @@
                         <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
                             <button type="button" class="admin-btn admin-btn-sm admin-btn-primary" id="adminAddUserBtn" style="display:inline-flex;align-items:center;gap:6px;"><i class="fas fa-plus"></i> Add User</button>
                             <button type="button" class="admin-btn admin-btn-sm admin-btn-secondary" id="adminSyncAuthUsersBtn" title="Sync Firebase Auth users into Firestore"><i class="fas fa-cloud-download-alt"></i> Sync Auth</button>
-                            <button type="button" class="admin-btn admin-btn-sm admin-btn-secondary" onclick="loadAdminUsers()"><i class="fas fa-sync-alt"></i> Refresh</button>
+                            <button type="button" class="admin-btn admin-btn-sm admin-btn-secondary" id="adminRefreshUsersBtn"><i class="fas fa-sync-alt"></i> Refresh</button>
                         </div>
                     </div>
                     <div class="filters" style="display:flex;gap:15px;margin-bottom:20px;flex-wrap:wrap;">
@@ -6446,15 +6446,16 @@
             if (window._adminActionsWired) return;
             window._adminActionsWired = true;
             document.addEventListener('click', function(e) {
-                var actEl = e.target && e.target.closest ? e.target.closest('#admin-view [data-admin-action]') : null;
+                var actEl = e.target && e.target.closest ? e.target.closest('[data-admin-action]') : null;
                 if (!actEl) return;
+                if (!actEl.closest('#admin-view')) return;
                 e.preventDefault();
+                e.stopPropagation();
                 window.runAdminTableAction(actEl);
-            });
+            }, true);
         };
         
         function initAdmin() {
-            if (typeof window.wireAdminActionButtons === 'function') window.wireAdminActionButtons();
             var ADMIN_EMAILS = ['admin@kotapal.com', 'wreck@gmail.com', 'earlhugue@gmail.com', 'emmanuelmobinzo222@gmail.com', 'emmanuelmobinzo21@gmail.com'];
             window.ADMIN_EMAILS = ADMIN_EMAILS;
             function isAdminUser(email) { if (!email) return false; return ADMIN_EMAILS.indexOf(email.toLowerCase()) >= 0; }
@@ -6566,6 +6567,7 @@
                 if (adminLogin) adminLogin.classList.remove('active');
                 if (adminView) adminView.classList.add('active');
                 if (typeof window.wireAdminActionButtons === 'function') window.wireAdminActionButtons();
+                if (typeof window.applyAdminUserFilters === 'function') window.applyAdminUserFilters();
                 if (typeof initAdminRevenueChart === 'function') setTimeout(initAdminRevenueChart, 100);
                 if (typeof loadAdminSupport === 'function') setTimeout(function() { loadAdminSupport(); }, 0);
             }
@@ -6820,6 +6822,7 @@
                 if (pageName === 'security' && typeof renderAdminRolesTable === 'function') renderAdminRolesTable();
                 if (pageName === 'creators' && typeof renderAdminCreatorsTable === 'function') renderAdminCreatorsTable();
                 if (pageName === 'subscriptions' && typeof renderAdminSubscriptionUsers === 'function') renderAdminSubscriptionUsers();
+                if (pageName === 'users' && typeof loadAdminUsers === 'function') loadAdminUsers();
                 if (window.innerWidth <= 1024 && typeof closeAdminSidebar === 'function') closeAdminSidebar();
             };
             window.initAdminRevenueChart = function() {
@@ -7999,6 +8002,7 @@
                 }).join('');
             };
             (function initAdminDashboardWiring() {
+                try {
                 var av = document.getElementById('admin-view');
                 if (av && !av._adminWire) {
                     av._adminWire = true;
@@ -8048,10 +8052,24 @@
                     var el = document.getElementById(id);
                     if (el && !el._filterWire) {
                         el._filterWire = true;
-                        el.addEventListener('change', applyAdminUserFilters);
-                        el.addEventListener('input', function() { clearTimeout(el._ft); el._ft = setTimeout(applyAdminUserFilters, 200); });
+                        el.addEventListener('change', function() {
+                            if (typeof window.applyAdminUserFilters === 'function') window.applyAdminUserFilters();
+                        });
+                        el.addEventListener('input', function() {
+                            clearTimeout(el._ft);
+                            el._ft = setTimeout(function() {
+                                if (typeof window.applyAdminUserFilters === 'function') window.applyAdminUserFilters();
+                            }, 200);
+                        });
                     }
                 });
+                var refreshUsersBtn = document.getElementById('adminRefreshUsersBtn');
+                if (refreshUsersBtn && !refreshUsersBtn._wire) {
+                    refreshUsersBtn._wire = true;
+                    refreshUsersBtn.addEventListener('click', function() {
+                        if (typeof window.loadAdminUsers === 'function') window.loadAdminUsers();
+                    });
+                }
                 ['adminProductCategoryFilter','adminProductStatusFilter'].forEach(function(id) {
                     var el = document.getElementById(id);
                     if (el && !el._productFilterWire) {
@@ -8070,11 +8088,11 @@
                             var usersPage = document.getElementById('admin-page-users');
                             if (usersPage && usersPage.classList.contains('active')) {
                                 var u = document.getElementById('adminUserSearch');
-                                if (u) { u.value = globSearch.value; applyAdminUserFilters(); }
+                                if (u) { u.value = globSearch.value; if (typeof window.applyAdminUserFilters === 'function') window.applyAdminUserFilters(); }
                             } else if (globSearch.value.trim()) {
                                 if (typeof showAdminPage === 'function') showAdminPage('users');
                                 var u2 = document.getElementById('adminUserSearch');
-                                if (u2) { u2.value = globSearch.value; applyAdminUserFilters(); }
+                                if (u2) { u2.value = globSearch.value; if (typeof window.applyAdminUserFilters === 'function') window.applyAdminUserFilters(); }
                             }
                         }, 250);
                     });
@@ -8324,6 +8342,10 @@
                 syncAdminPlanSelectOptions(document.getElementById('adminUserManagePlan'), 'starter');
                 var whInp = document.getElementById('adminWebhookUrlInput');
                 if (whInp) { var saved = localStorage.getItem('admin_webhook_url'); if (saved) whInp.value = saved; }
+                } catch (wireErr) {
+                    console.error('Admin dashboard wiring failed:', wireErr);
+                    if (typeof window.adminToast === 'function') window.adminToast('Some admin controls failed to load. Refresh the page.', 'warn');
+                }
             })();
             if (typeof window.wireAdminActionButtons === 'function') window.wireAdminActionButtons();
         }
