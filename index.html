@@ -129,25 +129,17 @@
             initLandingMobileNav();
         });
         function hidePageLoaderEarly() {
-            if (typeof window.dismissBlockingOverlays === 'function') window.dismissBlockingOverlays();
-            else {
-                var pl = document.getElementById('pageLoader');
-                if (pl) pl.classList.add('hidden');
-            }
+            if (typeof window.ensureSiteInteractive === 'function') window.ensureSiteInteractive();
         }
         window.dismissBlockingOverlays = function() {
             window._adminAuthModalLoginPending = false;
-            var pl = document.getElementById('pageLoader');
-            if (pl) {
-                pl.classList.remove('admin-auth-pending');
-                pl.classList.add('hidden');
-            }
             ['sidebarOverlay', 'adminSidebarOverlay'].forEach(function(id) {
                 var ov = document.getElementById(id);
                 if (ov) ov.classList.remove('active');
             });
             var hash = window.location.hash || '';
             var onAdminRoute = hash === '#admin' || hash === '#admin-setup';
+            var explicitDashboard = sessionStorage.getItem('kotapal_explicit_login') === 'true';
             if (!onAdminRoute) {
                 var adminLogin = document.getElementById('admin-login-screen');
                 var adminView = document.getElementById('admin-view');
@@ -157,24 +149,56 @@
                 if (setupScreen) setupScreen.style.display = 'none';
                 if (typeof setAdminScrollLock === 'function') setAdminScrollLock(false);
             }
+            var dashboardView = document.getElementById('dashboard-view');
+            if (dashboardView && !explicitDashboard) {
+                dashboardView.style.display = 'none';
+                dashboardView.classList.remove('active');
+                dashboardView.removeAttribute('data-kotapal-visible');
+            }
             var adminSb = document.getElementById('adminSidebar');
             if (adminSb) adminSb.classList.remove('active');
             var dashSb = document.getElementById('sidebar');
             if (dashSb) dashSb.classList.remove('active');
             var lb = document.getElementById('blockImageLightbox');
-            if (lb) lb.classList.remove('active');
+            if (lb) {
+                lb.classList.remove('active');
+                lb.setAttribute('aria-hidden', 'true');
+            }
             ['planDetailModal', 'carouselItemLightbox', 'authModal', 'resetPasswordModal', 'inactivityWarningModal',
                 'adminProductEditModal', 'adminDetailModal', 'adminUserManageModal', 'changePlanModal',
-                'adminPlanEditModal', 'adminRoleEditModal'].forEach(function(id) {
+                'adminPlanEditModal', 'adminRoleEditModal', 'logoutConfirmModal', 'downloadReportFormatModal',
+                'guidesModal', 'privacyModal', 'tosModal'].forEach(function(id) {
                 var el = document.getElementById(id);
                 if (el) el.style.display = 'none';
             });
             var authEl = document.getElementById('authModal');
-            var authOpen = authEl && window.getComputedStyle(authEl).display !== 'none';
+            var authOpen = authEl && window.getComputedStyle(authEl).display !== 'none' && authEl.style.display !== 'none';
             if (!authOpen) {
                 document.documentElement.style.overflow = '';
                 document.body.style.overflow = '';
+                document.documentElement.classList.remove('dashboard-scroll-lock', 'admin-scroll-lock');
+                document.body.style.pointerEvents = '';
+                document.documentElement.style.pointerEvents = '';
             }
+        };
+        window.ensureSiteInteractive = function() {
+            if (typeof window.dismissBlockingOverlays === 'function') window.dismissBlockingOverlays();
+            document.body.classList.add('kotapal-interactive');
+        };
+        window.showKotapalDashboard = function() {
+            var dv = document.getElementById('dashboard-view');
+            if (!dv) return;
+            dv.setAttribute('data-kotapal-visible', 'true');
+            dv.style.display = 'block';
+            dv.classList.add('active');
+        };
+        window.hideKotapalDashboard = function() {
+            var dv = document.getElementById('dashboard-view');
+            if (!dv) return;
+            dv.removeAttribute('data-kotapal-visible');
+            dv.style.display = 'none';
+            dv.classList.remove('active');
+            if (typeof setDashboardScrollLock === 'function') setDashboardScrollLock(false);
         };
         function initLandingMobileNav() {
             hidePageLoaderEarly();
@@ -196,13 +220,21 @@
         if (document.readyState !== 'loading') initLandingMobileNav();
         window.addEventListener('load', function() { setTimeout(hidePageLoaderEarly, 200); });
         document.addEventListener('DOMContentLoaded', function() {
-            hidePageLoaderEarly();
-            if (typeof window.dismissBlockingOverlays === 'function') window.dismissBlockingOverlays();
+            if (typeof window.ensureSiteInteractive === 'function') window.ensureSiteInteractive();
+        });
+        window.addEventListener('load', function() {
+            if (typeof window.ensureSiteInteractive === 'function') window.ensureSiteInteractive();
         });
         window.addEventListener('hashchange', function() {
             if (window.location.hash !== '#admin' && window.location.hash !== '#admin-setup') {
-                if (typeof window.dismissBlockingOverlays === 'function') window.dismissBlockingOverlays();
+                if (typeof window.ensureSiteInteractive === 'function') window.ensureSiteInteractive();
             }
+        });
+        window.addEventListener('pageshow', function() {
+            if (typeof window.ensureSiteInteractive === 'function') window.ensureSiteInteractive();
+        });
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && typeof window.ensureSiteInteractive === 'function') window.ensureSiteInteractive();
         });
     })();
     </script>
@@ -819,37 +851,31 @@
             transform: translateY(0);
         }
 
-        /* Page Loader */
+        /* Full-screen shells must never block clicks when inactive */
+        #pageLoader,
         .page-loader {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: #fff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 10000;
-            transition: opacity 0.5s ease, visibility 0.5s ease;
-        }
-        .page-loader.hidden {
-            opacity: 0;
-            visibility: hidden;
-            pointer-events: none !important;
             display: none !important;
-            z-index: -1;
+            pointer-events: none !important;
+            visibility: hidden !important;
+            z-index: -9999 !important;
         }
-        .loader-spinner {
-            width: 50px;
-            height: 50px;
-            border: 3px solid #e5e7eb;
-            border-top-color: var(--primary);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
+        #admin-login-screen:not(.active),
+        #admin-view:not(.active),
+        #blockImageLightbox:not(.active) {
+            pointer-events: none !important;
         }
-        @keyframes spin {
-            to { transform: rotate(360deg); }
+        #dashboard-view:not([data-kotapal-visible="true"]) {
+            display: none !important;
+            pointer-events: none !important;
+        }
+        #dashboard-view[data-kotapal-visible="true"].active {
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            z-index: 900;
+        }
+        .section-reveal:not(.revealed) {
+            pointer-events: none;
         }
 
         /* Core Features Section - Horizontal Scrollable Cards */
@@ -2959,18 +2985,6 @@
 </head>
 
 <body>
-    <!-- Page Loader (hidden by default — shown only during explicit admin auth handoff) -->
-    <div class="page-loader hidden" id="pageLoader" aria-hidden="true">
-        <div class="loader-spinner"></div>
-    </div>
-    <script>
-    (function() {
-        var pl = document.getElementById('pageLoader');
-        if (pl) pl.classList.add('hidden');
-        if (typeof window.dismissBlockingOverlays === 'function') window.dismissBlockingOverlays();
-    })();
-    </script>
-
     <div id="landing-page-view">
     <!-- Navigation -->
     <nav>
@@ -3806,12 +3820,6 @@
     <!-- Dashboard styles matching KotaPal simple copy design -->
     <style id="dashboard-light-theme">
         #dashboard-view { background: #f8fafc; height: 100vh; height: 100dvh; overflow: hidden; }
-        #dashboard-view.active {
-            position: fixed;
-            inset: 0;
-            width: 100%;
-            z-index: 900;
-        }
         #dashboard-view .dashboard { display: flex; height: 100%; min-height: 0; width: 100%; }
         #dashboard-view .sidebar {
             width: 260px; background: white; box-shadow: 2px 0 8px rgba(0,0,0,0.04);
@@ -6075,10 +6083,7 @@
                     if (landingView) landingView.style.display = 'none';
                     if (nav) nav.style.display = 'none';
                     if (footer) footer.style.display = 'none';
-                    if (dashboardView) {
-                        dashboardView.style.display = 'block';
-                        dashboardView.classList.add('active');
-                    }
+                    if (typeof window.showKotapalDashboard === 'function') window.showKotapalDashboard();
                     if (typeof setDashboardScrollLock === 'function') setDashboardScrollLock(true);
                     if (typeof updateSidebarUserInfo === 'function') updateSidebarUserInfo();
                     if (typeof showPage === 'function') showPage('dashboard');
@@ -6226,10 +6231,7 @@
                     if (landingView) landingView.style.display = 'none';
                     if (nav) nav.style.display = 'none';
                     if (footer) footer.style.display = 'none';
-                    if (dashboardView) {
-                        dashboardView.style.display = 'block';
-                        dashboardView.classList.add('active');
-                    }
+                    if (typeof window.showKotapalDashboard === 'function') window.showKotapalDashboard();
                     if (typeof setDashboardScrollLock === 'function') setDashboardScrollLock(true);
                     
                     updateSidebarUserInfo();
@@ -6413,11 +6415,7 @@
             const dashboardView = document.getElementById('dashboard-view');
             
             if (!onAdminRoute) {
-            if (dashboardView) {
-                dashboardView.style.display = 'none';
-                dashboardView.classList.remove('active');
-            }
-            if (typeof setDashboardScrollLock === 'function') setDashboardScrollLock(false);
+            if (typeof window.hideKotapalDashboard === 'function') window.hideKotapalDashboard();
             if (landingView) { landingView.style.display = 'block'; landingView.classList.remove('theme-dark'); }
             document.documentElement.classList.add('landing-page-active');
             if (nav) nav.style.display = 'flex';
@@ -6434,14 +6432,14 @@
                 // This is a fresh page load, ensure landing page is shown
             }
             
-            // Page loader — hide after load; always clear on a timer so admin/login never sits behind it forever
-            function hidePageLoader() {
-                if (typeof window.dismissBlockingOverlays === 'function') window.dismissBlockingOverlays();
-                document.body.classList.add('loaded');
-            }
-            window.dismissBlockingOverlays();
-            window.addEventListener('load', function() { setTimeout(hidePageLoader, 300); });
-            setTimeout(hidePageLoader, 4000);
+            if (typeof window.ensureSiteInteractive === 'function') window.ensureSiteInteractive();
+            document.body.classList.add('loaded');
+            window.addEventListener('load', function() {
+                if (typeof window.ensureSiteInteractive === 'function') window.ensureSiteInteractive();
+            });
+            setTimeout(function() {
+                if (typeof window.ensureSiteInteractive === 'function') window.ensureSiteInteractive();
+            }, 500);
             
             // Nav scroll highlight — window scroll with fixed landing nav
             var activeMenuScrollPending = false;
@@ -6684,7 +6682,7 @@
                     document.documentElement.classList.remove('landing-page-active');
                     if (nav) nav.style.display = 'none';
                     if (footer) footer.style.display = 'none';
-                    if (dash) dash.style.display = 'none';
+                    if (typeof window.hideKotapalDashboard === 'function') window.hideKotapalDashboard();
                     if (adminLogin) {
                         if (skipAdminLoginScreen) adminLogin.classList.remove('active');
                         else adminLogin.classList.add('active');
@@ -6698,6 +6696,7 @@
                     document.documentElement.classList.add('landing-page-active');
                     if (nav) nav.style.display = 'flex';
                     if (footer) footer.style.display = 'block';
+                    if (typeof window.ensureSiteInteractive === 'function') window.ensureSiteInteractive();
                 }
             }
             function showAdminDashboard() {
@@ -6722,13 +6721,11 @@
                 var nav = document.querySelector('nav');
                 var footer = document.querySelector('footer');
                 if (hash === '#admin-setup') {
-                    var plSetup = document.getElementById('pageLoader');
-                    if (plSetup) plSetup.classList.add('hidden');
+                    if (typeof window.hideKotapalDashboard === 'function') window.hideKotapalDashboard();
                     if (landing) landing.style.display = 'none';
                     document.documentElement.classList.remove('landing-page-active');
                     if (nav) nav.style.display = 'none';
                     if (footer) footer.style.display = 'none';
-                    if (document.getElementById('dashboard-view')) document.getElementById('dashboard-view').style.display = 'none';
                     if (document.getElementById('admin-login-screen')) document.getElementById('admin-login-screen').classList.remove('active');
                     if (document.getElementById('admin-view')) document.getElementById('admin-view').classList.remove('active');
                     if (setupScreen) { setupScreen.style.display = 'flex'; setupScreen.style.position = 'fixed'; }
@@ -6740,8 +6737,7 @@
                     showAdminUI(true, { skipAdminLoginScreen: true });
                     return;
                 }
-                var pl0 = document.getElementById('pageLoader');
-                if (pl0) pl0.classList.add('hidden');
+                if (typeof window.ensureSiteInteractive === 'function') window.ensureSiteInteractive();
                 showAdminUI(true);
                 var adminLoggedIn = sessionStorage.getItem('admin_logged_in') === '1';
                 if (auth && auth.currentUser && isAdminUser(auth.currentUser.email) && adminLoggedIn) {
@@ -6843,8 +6839,7 @@
                     sessionStorage.removeItem('admin_logged_in');
                     if (fromAuthModal) {
                         setAdminAuthModalLoginPending(false);
-                        var plErr = document.getElementById('pageLoader');
-                        if (plErr) plErr.classList.add('hidden');
+                        if (typeof window.ensureSiteInteractive === 'function') window.ensureSiteInteractive();
                         if (window.location.hash === '#admin') {
                             history.replaceState(null, '', window.location.pathname + window.location.search);
                         }
@@ -8917,10 +8912,7 @@
                     if (landingView) landingView.style.display = 'none';
                     if (nav) nav.style.display = 'none';
                     if (footer) footer.style.display = 'none';
-                    if (dashboardView) {
-                        dashboardView.style.display = 'block';
-                        dashboardView.classList.add('active');
-                    }
+                    if (typeof window.showKotapalDashboard === 'function') window.showKotapalDashboard();
                     if (typeof setDashboardScrollLock === 'function') setDashboardScrollLock(true);
                     updateSidebarUserInfo();
                     showPage('dashboard');
@@ -8946,11 +8938,7 @@
                     const footer = document.querySelector('footer');
                     const dashboardView = document.getElementById('dashboard-view');
                     
-                    if (dashboardView) {
-                        dashboardView.style.display = 'none';
-                        dashboardView.classList.remove('active');
-                    }
-                    if (typeof setDashboardScrollLock === 'function') setDashboardScrollLock(false);
+                    if (typeof window.hideKotapalDashboard === 'function') window.hideKotapalDashboard();
                     if (landingView) {
                         landingView.style.display = 'block';
                         landingView.classList.remove('theme-dark'); /* Landing never uses dark mode */
@@ -8958,6 +8946,7 @@
                     }
                     if (nav) nav.style.display = 'flex';
                     if (footer) footer.style.display = 'block';
+                    if (typeof window.ensureSiteInteractive === 'function') window.ensureSiteInteractive();
                     
                     // Mark processing complete
                     isProcessingAuthState = false;
@@ -9507,7 +9496,7 @@
             var home = document.getElementById('home-page');
             var blog = document.getElementById('blog-page');
             var contact = document.getElementById('contact-page');
-            if (dashboard) dashboard.style.display = 'none';
+            if (typeof window.hideKotapalDashboard === 'function') window.hideKotapalDashboard();
             if (landing) landing.style.display = 'block';
             document.documentElement.classList.add('landing-page-active');
             if (nav) nav.style.display = 'flex';
@@ -10009,15 +9998,12 @@
                 const landingView = document.getElementById('landing-page-view');
                 const nav = document.querySelector('nav');
                 const footer = document.querySelector('footer');
-                if (dashboardView) {
-                    dashboardView.style.display = 'none';
-                    dashboardView.classList.remove('active');
-                }
-                if (typeof setDashboardScrollLock === 'function') setDashboardScrollLock(false);
+                if (typeof window.hideKotapalDashboard === 'function') window.hideKotapalDashboard();
                 if (landingView) { landingView.style.display = 'block'; landingView.classList.remove('theme-dark'); }
                 document.documentElement.classList.add('landing-page-active');
                 if (nav) nav.style.display = 'flex';
                 if (footer) footer.style.display = 'block';
+                if (typeof window.ensureSiteInteractive === 'function') window.ensureSiteInteractive();
                 var homePage = document.getElementById('home-page');
                 var contactPage = document.getElementById('contact-page');
                 if (homePage) homePage.style.display = 'block';
@@ -13871,6 +13857,20 @@
             aiChatContainer.appendChild(messageDiv);
             aiChatContainer.scrollTop = aiChatContainer.scrollHeight;
         }
+    </script>
+    <script>
+    (function() {
+        function unlock() {
+            if (typeof window.ensureSiteInteractive === 'function') window.ensureSiteInteractive();
+        }
+        unlock();
+        document.addEventListener('DOMContentLoaded', unlock);
+        window.addEventListener('load', unlock);
+        window.addEventListener('pageshow', unlock);
+        setTimeout(unlock, 0);
+        setTimeout(unlock, 300);
+        setTimeout(unlock, 1500);
+    })();
     </script>
 </body>
 
