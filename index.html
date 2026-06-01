@@ -131,9 +131,42 @@
             initLandingMobileNav();
         });
         function hidePageLoaderEarly() {
-            var pl = document.getElementById('pageLoader');
-            if (pl) pl.classList.add('hidden');
+            if (typeof window.dismissBlockingOverlays === 'function') window.dismissBlockingOverlays();
+            else {
+                var pl = document.getElementById('pageLoader');
+                if (pl) pl.classList.add('hidden');
+            }
         }
+        window.dismissBlockingOverlays = function() {
+            window._adminAuthModalLoginPending = false;
+            var pl = document.getElementById('pageLoader');
+            if (pl) {
+                pl.classList.remove('admin-auth-pending');
+                pl.classList.add('hidden');
+            }
+            ['sidebarOverlay', 'adminSidebarOverlay'].forEach(function(id) {
+                var ov = document.getElementById(id);
+                if (ov) ov.classList.remove('active');
+            });
+            var adminSb = document.getElementById('adminSidebar');
+            if (adminSb) adminSb.classList.remove('active');
+            var dashSb = document.getElementById('sidebar');
+            if (dashSb) dashSb.classList.remove('active');
+            var lb = document.getElementById('blockImageLightbox');
+            if (lb) lb.classList.remove('active');
+            ['planDetailModal', 'carouselItemLightbox', 'authModal', 'resetPasswordModal', 'inactivityWarningModal',
+                'adminProductEditModal', 'adminDetailModal', 'adminUserManageModal', 'changePlanModal',
+                'adminPlanEditModal', 'adminRoleEditModal'].forEach(function(id) {
+                var el = document.getElementById(id);
+                if (el) el.style.display = 'none';
+            });
+            var authEl = document.getElementById('authModal');
+            var authOpen = authEl && window.getComputedStyle(authEl).display !== 'none';
+            if (!authOpen) {
+                document.documentElement.style.overflow = '';
+                document.body.style.overflow = '';
+            }
+        };
         function initLandingMobileNav() {
             hidePageLoaderEarly();
             setTimeout(hidePageLoaderEarly, 2500);
@@ -786,6 +819,7 @@
             opacity: 0;
             visibility: hidden;
             pointer-events: none !important;
+            display: none !important;
             z-index: -1;
         }
         .page-loader.admin-auth-pending {
@@ -4045,8 +4079,15 @@
         .admin-sidebar-toggle i { font-size: 1.15rem; color: var(--admin-gray-700); }
         .admin-sidebar-overlay {
             display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 1001;
+            pointer-events: none;
         }
-        .admin-sidebar-overlay.active { display: block; }
+        .admin-sidebar-overlay.active { display: block; pointer-events: auto; }
+        #admin-view .admin-product-thumb {
+            width: 44px; height: 44px; border-radius: 8px; object-fit: cover;
+            background: var(--admin-gray-100); border: 1px solid var(--admin-gray-200); flex-shrink: 0;
+        }
+        #admin-view .admin-product-cell { display: flex; align-items: center; gap: 12px; min-width: 0; }
+        #admin-view .admin-product-cell span { font-weight: 500; color: var(--admin-gray-800); }
         .admin-sidebar .sidebar-header { padding: 20px; border-bottom: 1px solid var(--admin-gray-200); display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
         .admin-sidebar .logo { padding: 0; border: none; display: flex; align-items: center; gap: 12px; }
         .admin-sidebar .logo-img { width: 40px; height: 40px; background: #3b82f6; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 20px; }
@@ -4290,6 +4331,16 @@
         .admin-toast.info { background: #eff6ff; color: #1e40af; border-color: #93c5fd; }
         .admin-toast.success { background: #ecfdf5; color: #065f46; border-color: #6ee7b7; }
         .admin-toast.warn { background: #fffbeb; color: #92400e; border-color: #fcd34d; }
+        .admin-toast.with-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+        .admin-toast-undo-btn {
+            border: none; background: #4f46e5; color: #fff; font-size: 12px; font-weight: 700;
+            padding: 6px 12px; border-radius: 6px; cursor: pointer; white-space: nowrap;
+        }
+        .admin-toast-undo-btn:hover { background: #4338ca; }
+        .admin-recycle-badge {
+            display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600;
+            padding: 4px 10px; border-radius: 999px; background: #fef3c7; color: #92400e; margin-left: 8px;
+        }
         @keyframes adminToastIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
         #admin-view .admin-toggle-btn { cursor: pointer; border: none; background: transparent; padding: 0; }
     </style>
@@ -5003,6 +5054,7 @@
                 <div class="nav-item"><a href="javascript:void(0)" class="nav-link active" data-page="dashboard" onclick="showAdminPage('dashboard'); return false;"><i class="fas fa-home"></i> Dashboard</a></div>
                 <div class="nav-section-label">Management</div>
                 <div class="nav-item"><a href="javascript:void(0)" class="nav-link" data-page="users" onclick="showAdminPage('users'); return false;"><i class="fas fa-users"></i> Users</a></div>
+                <div class="nav-item admin-super-only-nav" id="adminRecycleBinNav" style="display:none;"><a href="javascript:void(0)" class="nav-link" data-page="recycle" onclick="showAdminPage('recycle'); return false;"><i class="fas fa-trash-restore"></i> Recycle Bin <span class="admin-recycle-count" id="adminRecycleBinCount" style="display:none;margin-left:6px;font-size:11px;background:#fef3c7;color:#92400e;padding:2px 7px;border-radius:999px;"></span></a></div>
                 <div class="nav-item"><a href="javascript:void(0)" class="nav-link" data-page="creators" onclick="showAdminPage('creators'); return false;"><i class="fas fa-store"></i> Creators / Sellers</a></div>
                 <div class="nav-item"><a href="javascript:void(0)" class="nav-link" data-page="blocks" onclick="showAdminPage('blocks'); return false;"><i class="fas fa-box-open"></i> Products</a></div>
                 <div class="nav-item"><a href="javascript:void(0)" class="nav-link" data-page="subscriptions" onclick="showAdminPage('subscriptions'); return false;"><i class="fas fa-crown"></i> Subscriptions</a></div>
@@ -5186,6 +5238,24 @@
                     </div>
                 </div>
             </div>
+            <div id="admin-page-recycle" class="admin-page">
+                <h1 class="page-title">Recycle Bin <span class="admin-recycle-badge"><i class="fas fa-shield-alt"></i> Super Admin only</span></h1>
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Deleted users</h3>
+                        <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+                            <button type="button" class="admin-btn admin-btn-sm admin-btn-secondary" id="adminRefreshRecycleBtn" onclick="if(window.loadAdminRecycleBin){window.loadAdminRecycleBin();}return false;"><i class="fas fa-sync-alt"></i> Refresh</button>
+                        </div>
+                    </div>
+                    <p style="color:var(--admin-gray-500);font-size:0.9rem;margin:0 0 16px 0;line-height:1.5;">Users removed from the directory are archived here. Restore to bring them back, or permanently delete to remove Firebase Auth and all profiles.</p>
+                    <div class="table-container" id="adminRecycleTableWrap">
+                        <table>
+                            <thead><tr><th>User</th><th>Email</th><th>Plan</th><th>Deleted</th><th>Deleted by</th><th>Actions</th></tr></thead>
+                            <tbody id="adminRecycleTableBody"><tr><td colspan="6" class="text-center" style="padding:32px;color:#6b7280;">Loading...</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
             <div id="admin-page-creators" class="admin-page">
                 <h1 class="page-title">Creator / Seller Management</h1>
                 <div class="admin-stats-grid">
@@ -5316,9 +5386,13 @@
                 <div class="admin-card">
                     <div class="admin-card-header">Webhook Configuration</div>
                     <div style="padding:24px;">
-                        <div class="admin-form-group"><label>Webhook URL</label><input type="url" id="adminWebhookUrlInput" class="form-control" value="https://your-domain.com/webhook" placeholder="https://"></div>
-                        <div class="admin-form-group"><label style="margin-bottom:10px;display:block;">Events to Listen</label><label style="display:flex;align-items:center;gap:8px;font-weight:500;margin-bottom:8px;"><input type="checkbox" checked> Payment Completed</label><label style="display:flex;align-items:center;gap:8px;font-weight:500;margin-bottom:8px;"><input type="checkbox" checked> Subscription Created</label><label style="display:flex;align-items:center;gap:8px;font-weight:500;"><input type="checkbox"> User Registered</label></div>
-                        <button type="button" class="admin-btn" id="adminSaveWebhookBtn" style="width:auto;">Save Webhook</button>
+                        <div class="admin-form-group"><label>Webhook URL</label><input type="url" id="adminWebhookUrlInput" class="form-control" value="" placeholder="https://your-domain.com/webhook"></div>
+                        <div class="admin-form-group"><label style="margin-bottom:10px;display:block;">Events to listen</label><label style="display:flex;align-items:center;gap:8px;font-weight:500;margin-bottom:8px;"><input type="checkbox" id="adminWebhookEventPayment" checked> Payment completed</label><label style="display:flex;align-items:center;gap:8px;font-weight:500;margin-bottom:8px;"><input type="checkbox" id="adminWebhookEventSubscription" checked> Subscription created</label><label style="display:flex;align-items:center;gap:8px;font-weight:500;"><input type="checkbox" id="adminWebhookEventUserRegistered"> User registered</label></div>
+                        <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;">
+                            <button type="button" class="admin-btn" id="adminSaveWebhookBtn" style="width:auto;">Save webhook</button>
+                            <button type="button" class="admin-btn admin-btn-secondary" id="adminTestWebhookBtn" style="width:auto;">Send test event</button>
+                        </div>
+                        <p id="adminWebhookStatus" style="margin-top:14px;font-size:13px;color:var(--admin-gray-500);"></p>
                     </div>
                 </div>
             </div>
@@ -5466,6 +5540,7 @@
             <h3 id="adminProductEditTitle" style="margin-bottom:16px;">Edit Product</h3>
             <input type="hidden" id="adminProductEditId">
             <div class="admin-form-group"><label>Name</label><input type="text" id="adminProductEditName" style="width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:8px;"></div>
+            <div class="admin-form-group"><label>Image URL</label><input type="url" id="adminProductEditImage" placeholder="https://..." style="width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:8px;"><img id="adminProductEditImagePreview" src="" alt="" style="display:none;width:72px;height:72px;object-fit:cover;border-radius:8px;margin-top:10px;border:1px solid #e5e7eb;"></div>
             <div class="admin-form-group"><label>Category</label><input type="text" id="adminProductEditCategory" style="width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:8px;"></div>
             <div class="admin-form-group"><label>Price ($)</label><input type="number" step="0.01" id="adminProductEditPrice" style="width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:8px;"></div>
             <div class="admin-form-group"><label>Stock</label><input type="number" id="adminProductEditStock" style="width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:8px;"></div>
@@ -6340,10 +6415,10 @@
             
             // Page loader — hide after load; always clear on a timer so admin/login never sits behind it forever
             function hidePageLoader() {
-                var loader = document.getElementById('pageLoader');
-                if (loader) loader.classList.add('hidden');
+                if (typeof window.dismissBlockingOverlays === 'function') window.dismissBlockingOverlays();
                 document.body.classList.add('loaded');
             }
+            window.dismissBlockingOverlays();
             window.addEventListener('load', function() { setTimeout(hidePageLoader, 300); });
             setTimeout(hidePageLoader, 4000);
             
@@ -6419,6 +6494,12 @@
                     case 'user-delete':
                         if (window.deleteUserDoc) window.deleteUserDoc(dec('data-user-id'));
                         break;
+                    case 'recycle-restore':
+                        if (window.restoreUserFromRecycle) window.restoreUserFromRecycle(dec('data-user-id'));
+                        break;
+                    case 'recycle-purge':
+                        if (window.permanentDeleteFromRecycle) window.permanentDeleteFromRecycle(dec('data-user-id'));
+                        break;
                     case 'support-ticket-view':
                         if (window.adminTicketDetailById) window.adminTicketDetailById(dec('data-ticket-id'));
                         break;
@@ -6476,7 +6557,37 @@
             var ADMIN_EMAILS = ['admin@kotapal.com', 'wreck@gmail.com', 'earlhugue@gmail.com', 'emmanuelmobinzo222@gmail.com', 'emmanuelmobinzo21@gmail.com'];
             window.ADMIN_EMAILS = ADMIN_EMAILS;
             function isAdminUser(email) { if (!email) return false; return ADMIN_EMAILS.indexOf(email.toLowerCase()) >= 0; }
+            function getSuperAdminEmail() {
+                try {
+                    var raw = localStorage.getItem('admin_roles');
+                    if (raw) {
+                        var roles = JSON.parse(raw);
+                        if (roles && roles.super && roles.super.email) return String(roles.super.email).toLowerCase();
+                    }
+                } catch (e) {}
+                return 'admin@kotapal.com';
+            }
+            function isSuperAdminUser(email) {
+                if (!email) return false;
+                return email.toLowerCase() === getSuperAdminEmail();
+            }
+            window.isSuperAdminUser = isSuperAdminUser;
+            window.updateAdminSuperAccessUI = function() {
+                var email = auth && auth.currentUser && auth.currentUser.email;
+                var isSuper = isSuperAdminUser(email);
+                var nav = document.getElementById('adminRecycleBinNav');
+                if (nav) nav.style.display = isSuper ? '' : 'none';
+                if (!isSuper) {
+                    var recyclePage = document.getElementById('admin-page-recycle');
+                    if (recyclePage && recyclePage.classList.contains('active') && typeof window.showAdminPage === 'function') {
+                        window.showAdminPage('dashboard');
+                    }
+                } else if (typeof window.refreshAdminRecycleCount === 'function') {
+                    window.refreshAdminRecycleCount();
+                }
+            };
             window.adminUsers = [];
+            window.adminRecycleItems = [];
             var db = window.firebaseDb || (typeof firebase !== 'undefined' && firebase.firestore && firebase.firestore());
             var auth = typeof firebase !== 'undefined' && firebase.auth && firebase.auth();
             var adminSupportFirestoreUnsub = null;
@@ -6540,6 +6651,7 @@
                     if (adminLogin) adminLogin.classList.remove('active');
                 } else if (pl) {
                     pl.classList.remove('admin-auth-pending');
+                    pl.classList.add('hidden');
                 }
             }
             function showAdminUI(show, options) {
@@ -6574,8 +6686,7 @@
                 }
             }
             function showAdminDashboard() {
-                var pl = document.getElementById('pageLoader');
-                if (pl) pl.classList.add('hidden');
+                if (typeof window.dismissBlockingOverlays === 'function') window.dismissBlockingOverlays();
                 document.body.classList.add('loaded');
                 hideAuthModalForAdmin();
                 if (typeof setAdminScrollLock === 'function') setAdminScrollLock(true);
@@ -6585,6 +6696,7 @@
                 if (adminView) adminView.classList.add('active');
                 if (typeof window.wireAdminActionButtons === 'function') window.wireAdminActionButtons();
                 if (typeof window.applyAdminUserFilters === 'function') window.applyAdminUserFilters();
+                if (typeof window.updateAdminSuperAccessUI === 'function') window.updateAdminSuperAccessUI();
                 if (typeof initAdminRevenueChart === 'function') setTimeout(initAdminRevenueChart, 100);
                 if (typeof loadAdminSupport === 'function') setTimeout(function() { loadAdminSupport(); }, 0);
             }
@@ -6814,6 +6926,13 @@
                 return { id: d.id, email: data.email || '-', name: data.displayName || data.name || data.display_name || '-', plan: data.plan || 'starter', status: data.status || 'active', joined: toDateStr(data.signupDate || data.createdAt || data.joined), lastSignIn: toDateStr(data.lastSignIn || data.lastSignInTime) };
             }
             window.showAdminPage = function(pageName) {
+                if (pageName === 'recycle') {
+                    var superEmail = auth && auth.currentUser && auth.currentUser.email;
+                    if (!isSuperAdminUser(superEmail)) {
+                        if (typeof window.adminToast === 'function') window.adminToast('Recycle Bin is restricted to Super Admin.', 'warn');
+                        pageName = 'dashboard';
+                    }
+                }
                 document.querySelectorAll('.admin-page').forEach(function(p) { p.classList.remove('active'); });
                 document.querySelectorAll('.admin-sidebar .nav-link[data-page]').forEach(function(l) { l.classList.remove('active'); });
                 var pageEl = document.getElementById('admin-page-' + pageName);
@@ -6836,6 +6955,7 @@
                 if (pageName === 'activity' && typeof loadAdminActivity === 'function') loadAdminActivity();
                 if (pageName === 'plans' && typeof renderAdminPlansGrid === 'function') renderAdminPlansGrid();
                 if (pageName === 'blocks' && typeof renderAdminProductsTable === 'function') renderAdminProductsTable();
+                if (pageName === 'api' && typeof loadAdminWebhookSettings === 'function') loadAdminWebhookSettings();
                 if (pageName === 'security' && typeof renderAdminRolesTable === 'function') renderAdminRolesTable();
                 if (pageName === 'creators' && typeof renderAdminCreatorsTable === 'function') renderAdminCreatorsTable();
                 if (pageName === 'subscriptions' && typeof renderAdminSubscriptionUsers === 'function') renderAdminSubscriptionUsers();
@@ -6844,6 +6964,7 @@
                     var hasData = utb && utb.querySelector('tr[data-user-id]');
                     loadAdminUsers({ showLoading: !hasData, softRefresh: !!hasData });
                 }
+                if (pageName === 'recycle' && typeof loadAdminRecycleBin === 'function') loadAdminRecycleBin();
                 if (window.innerWidth <= 1024 && typeof closeAdminSidebar === 'function') closeAdminSidebar();
             };
             window.initAdminRevenueChart = function() {
@@ -7491,6 +7612,30 @@
                     );
                 }
             };
+            async function softDeleteUserToRecycle(uid, dbUse) {
+                var usersSnap = await dbUse.collection('users').doc(uid).get();
+                var userSnap = await dbUse.collection('user').doc(uid).get();
+                var usersData = usersSnap.exists ? usersSnap.data() : null;
+                var userData = userSnap.exists ? userSnap.data() : null;
+                var existing = (window.adminUsers || []).find(function(u) { return u.id === uid; });
+                var archive = {
+                    uid: uid,
+                    email: (existing && existing.email) || (usersData && usersData.email) || (userData && userData.email) || '',
+                    name: (existing && existing.name) || (usersData && (usersData.displayName || usersData.name)) || (userData && userData.displayName) || '',
+                    plan: (existing && existing.plan) || (usersData && usersData.plan) || (userData && userData.plan) || 'starter',
+                    status: (existing && existing.status) || (usersData && usersData.status) || (userData && userData.status) || 'active',
+                    joined: (existing && existing.joined) || (usersData && (usersData.signupDate || usersData.createdAt)) || '',
+                    usersProfile: usersData,
+                    userProfile: userData,
+                    deletedAt: new Date().toISOString(),
+                    deletedBy: (auth && auth.currentUser && auth.currentUser.email) || 'admin',
+                    authDisabled: false
+                };
+                await dbUse.collection('usersRecycleBin').doc(uid).set(archive, { merge: true });
+                await dbUse.collection('users').doc(uid).delete().catch(function() {});
+                await dbUse.collection('user').doc(uid).delete().catch(function() {});
+                return archive;
+            }
             window.deleteUserDoc = async function(uid) {
                 var dbUse = db || window.firebaseDb;
                 if (!uid) {
@@ -7501,30 +7646,222 @@
                     if (typeof window.adminToast === 'function') window.adminToast('Connect Firebase to delete user profiles.', 'warn');
                     return;
                 }
-                if (!confirm('Delete this user from Firebase Auth when available, and remove Firestore profiles?')) return;
-                var deletedAuth = false;
+                if (!confirm('Move this user to the recycle bin? They will be removed from the directory but can be restored with Undo or from Recycle Bin (Super Admin).')) return;
+                var softDeleted = false;
                 try {
                     var deleteFn = getAdminCallable('adminDeleteUser');
                     if (deleteFn && auth && auth.currentUser) {
                         await deleteFn({ uid: uid });
-                        deletedAuth = true;
+                        softDeleted = true;
                     }
                 } catch (cloudErr) {
                     console.warn('adminDeleteUser:', cloudErr);
                 }
-                if (!deletedAuth) {
+                if (!softDeleted) {
                     try {
-                        await dbUse.collection('users').doc(uid).delete();
-                        await dbUse.collection('user').doc(uid).delete();
+                        await softDeleteUserToRecycle(uid, dbUse);
+                        softDeleted = true;
                     } catch (err) {
-                        try { await dbUse.collection('user').doc(uid).delete(); } catch (err2) {
-                            alert('Failed to delete: ' + (err2.message || err.message));
-                            return;
-                        }
+                        alert('Failed to delete: ' + (err.message || err));
+                        return;
                     }
                 }
                 if (typeof window.removeAdminUserLocal === 'function') window.removeAdminUserLocal(uid);
-                if (typeof window.adminToast === 'function') window.adminToast(deletedAuth ? 'User deleted from Firebase Auth and Firestore.' : 'Firestore user profile removed. Deploy Functions for Auth deletion.', 'success');
+                if (typeof window.refreshAdminRecycleCount === 'function') window.refreshAdminRecycleCount();
+                var label = (window.adminUsers || []).find(function(u) { return u.id === uid; });
+                var undoLabel = (label && (label.name || label.email)) || uid;
+                if (typeof window.adminToastWithUndo === 'function') {
+                    window.adminToastWithUndo('User moved to recycle bin: ' + undoLabel, uid, 30000);
+                } else if (typeof window.adminToast === 'function') {
+                    window.adminToast('User moved to recycle bin.', 'success');
+                }
+            };
+            window.restoreUserFromRecycle = async function(uid) {
+                if (!uid) return;
+                var dbUse = db || window.firebaseDb;
+                var restored = false;
+                try {
+                    var restoreFn = getAdminCallable('adminRestoreUser');
+                    if (restoreFn && auth && auth.currentUser) {
+                        await restoreFn({ uid: uid });
+                        restored = true;
+                    }
+                } catch (cloudErr) {
+                    console.warn('adminRestoreUser:', cloudErr);
+                }
+                if (!restored && dbUse) {
+                    var binSnap = await dbUse.collection('usersRecycleBin').doc(uid).get();
+                    if (!binSnap.exists) {
+                        if (typeof window.adminToast === 'function') window.adminToast('User not found in recycle bin.', 'warn');
+                        return;
+                    }
+                    var data = binSnap.data() || {};
+                    var usersPayload = data.usersProfile || { email: data.email, displayName: data.name, name: data.name, plan: data.plan, status: data.status || 'active' };
+                    var userPayload = data.userProfile || { email: data.email, displayName: data.name, plan: data.plan, status: data.status || 'active' };
+                    await dbUse.collection('users').doc(uid).set(usersPayload, { merge: true });
+                    await dbUse.collection('user').doc(uid).set(userPayload, { merge: true });
+                    await dbUse.collection('usersRecycleBin').doc(uid).delete();
+                    restored = true;
+                }
+                if (!restored) {
+                    if (typeof window.adminToast === 'function') window.adminToast('Could not restore user.', 'warn');
+                    return;
+                }
+                if (window._pendingUserUndo && window._pendingUserUndo.uid === uid) {
+                    clearTimeout(window._pendingUserUndo.timeoutId);
+                    window._pendingUserUndo = null;
+                }
+                var users = (window.adminUsers || []).slice();
+                var binItem = (window.adminRecycleItems || []).find(function(x) { return x.id === uid; });
+                if (!users.some(function(u) { return u.id === uid; })) {
+                    users.push({
+                        id: uid,
+                        email: (binItem && binItem.email) || '-',
+                        name: (binItem && binItem.name) || '-',
+                        plan: (binItem && binItem.plan) || 'starter',
+                        status: (binItem && binItem.status) || 'active',
+                        joined: (binItem && binItem.joined) || new Date().toISOString()
+                    });
+                    window.adminUsers = users;
+                    if (typeof window.renderAdminUsersTable === 'function') window.renderAdminUsersTable(users);
+                }
+                if (typeof loadAdminUsers === 'function') loadAdminUsers({ showLoading: false, softRefresh: true });
+                if (typeof loadAdminRecycleBin === 'function') loadAdminRecycleBin();
+                if (typeof window.refreshAdminRecycleCount === 'function') window.refreshAdminRecycleCount();
+                if (typeof updateStatsPage === 'function') updateStatsPage();
+                if (typeof updateDashboardPage === 'function') updateDashboardPage();
+                if (typeof window.adminToast === 'function') window.adminToast('User restored successfully.', 'success');
+            };
+            window.undoLastUserDelete = function(uid) {
+                if (uid && typeof window.restoreUserFromRecycle === 'function') window.restoreUserFromRecycle(uid);
+            };
+            window.permanentDeleteFromRecycle = async function(uid) {
+                if (!uid) return;
+                if (!isSuperAdminUser(auth && auth.currentUser && auth.currentUser.email)) {
+                    if (typeof window.adminToast === 'function') window.adminToast('Only Super Admin can permanently delete users.', 'warn');
+                    return;
+                }
+                if (!confirm('Permanently delete this user from Firebase Auth and remove the recycle bin entry? This cannot be undone.')) return;
+                var purged = false;
+                try {
+                    var purgeFn = getAdminCallable('adminPermanentDeleteUser');
+                    if (purgeFn && auth && auth.currentUser) {
+                        await purgeFn({ uid: uid });
+                        purged = true;
+                    }
+                } catch (cloudErr) {
+                    console.warn('adminPermanentDeleteUser:', cloudErr);
+                    if (cloudErr && cloudErr.message && typeof window.adminToast === 'function') {
+                        window.adminToast(cloudErr.message, 'warn');
+                    }
+                }
+                var dbUse = db || window.firebaseDb;
+                if (!purged && dbUse) {
+                    try {
+                        await dbUse.collection('usersRecycleBin').doc(uid).delete();
+                        purged = true;
+                    } catch (err) {
+                        if (typeof window.adminToast === 'function') window.adminToast('Permanent delete failed: ' + (err.message || err), 'warn');
+                        return;
+                    }
+                }
+                window.adminRecycleItems = (window.adminRecycleItems || []).filter(function(x) { return x.id !== uid; });
+                if (typeof window.renderAdminRecycleBinTable === 'function') window.renderAdminRecycleBinTable(window.adminRecycleItems);
+                if (typeof window.refreshAdminRecycleCount === 'function') window.refreshAdminRecycleCount();
+                if (typeof window.adminToast === 'function') window.adminToast('User permanently deleted.', 'success');
+            };
+            window.renderAdminRecycleBinTable = function(items) {
+                var tbody = document.getElementById('adminRecycleTableBody');
+                if (!tbody) return;
+                items = items || window.adminRecycleItems || [];
+                if (!items.length) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="text-center" style="padding:32px;color:#6b7280;">Recycle bin is empty.</td></tr>';
+                    return;
+                }
+                function encAttr(s) { return encodeURIComponent(String(s == null ? '' : s)); }
+                function html(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+                function initials(n) { if (!n || n === '-') return '-'; var p = n.trim().split(/\s+/); return (p[0][0] || '') + (p[1] ? p[1][0] : '') || n[0] || '-'; }
+                tbody.innerHTML = items.map(function(u) {
+                    var deletedAt = u.deletedAt ? new Date(u.deletedAt).toLocaleString() : '-';
+                    var idEnc = encAttr(u.id || '');
+                    var userCell = '<div style="display:flex;align-items:center;gap:10px;"><div class="user-avatar" style="width:35px;height:35px;font-size:14px;">' + html(initials(u.name)) + '</div><span>' + html(u.name || '-') + '</span></div>';
+                    var actions = '<div class="action-btns">' +
+                        '<button type="button" class="admin-btn-sm admin-btn-primary" data-admin-action="recycle-restore" data-user-id="' + idEnc + '"><i class="fas fa-undo"></i> Restore</button>' +
+                        '<button type="button" class="admin-btn-sm admin-btn-danger" data-admin-action="recycle-purge" data-user-id="' + idEnc + '"><i class="fas fa-trash"></i> Delete forever</button></div>';
+                    return '<tr data-recycle-id="' + html(u.id || '') + '"><td>' + userCell + '</td><td>' + html(u.email || '-') + '</td><td>' + html(u.plan || 'starter') + '</td><td>' + html(deletedAt) + '</td><td>' + html(u.deletedBy || '-') + '</td><td>' + actions + '</td></tr>';
+                }).join('');
+            };
+            window.loadAdminRecycleBin = async function() {
+                if (!isSuperAdminUser(auth && auth.currentUser && auth.currentUser.email)) {
+                    if (typeof window.adminToast === 'function') window.adminToast('Recycle Bin is restricted to Super Admin.', 'warn');
+                    return;
+                }
+                var tbody = document.getElementById('adminRecycleTableBody');
+                if (tbody) tbody.innerHTML = '<tr><td colspan="6" class="text-center" style="padding:32px;color:#6b7280;">Loading...</td></tr>';
+                var items = [];
+                try {
+                    var listFn = getAdminCallable('adminListRecycleBin');
+                    if (listFn && auth && auth.currentUser) {
+                        var result = await listFn();
+                        if (result && result.data && result.data.items) items = result.data.items;
+                    }
+                } catch (cloudErr) {
+                    console.warn('adminListRecycleBin:', cloudErr);
+                }
+                var dbUse = db || window.firebaseDb;
+                if (!items.length && dbUse) {
+                    try {
+                        var snap = await dbUse.collection('usersRecycleBin').orderBy('deletedAt', 'desc').limit(200).get();
+                        snap.forEach(function(doc) {
+                            var x = doc.data() || {};
+                            items.push({
+                                id: doc.id,
+                                email: x.email || '-',
+                                name: x.name || '-',
+                                plan: x.plan || 'starter',
+                                status: x.status || 'active',
+                                deletedAt: x.deletedAt || '',
+                                deletedBy: x.deletedBy || '-'
+                            });
+                        });
+                    } catch (err) {
+                        console.warn('recycle bin direct read:', err);
+                    }
+                }
+                window.adminRecycleItems = items;
+                if (typeof window.renderAdminRecycleBinTable === 'function') window.renderAdminRecycleBinTable(items);
+                if (typeof window.refreshAdminRecycleCount === 'function') window.refreshAdminRecycleCount();
+            };
+            window.refreshAdminRecycleCount = async function() {
+                if (!isSuperAdminUser(auth && auth.currentUser && auth.currentUser.email)) return;
+                var count = 0;
+                var dbUse = db || window.firebaseDb;
+                try {
+                    var listFn = getAdminCallable('adminListRecycleBin');
+                    if (listFn && auth && auth.currentUser) {
+                        var result = await listFn();
+                        if (result && result.data && result.data.items) count = result.data.items.length;
+                    } else if (dbUse) {
+                        var snap = await dbUse.collection('usersRecycleBin').limit(200).get();
+                        count = snap.size;
+                    }
+                } catch (e) {
+                    if (dbUse) {
+                        try {
+                            var snap2 = await dbUse.collection('usersRecycleBin').limit(200).get();
+                            count = snap2.size;
+                        } catch (e2) {}
+                    }
+                }
+                var badge = document.getElementById('adminRecycleBinCount');
+                if (badge) {
+                    if (count > 0) {
+                        badge.textContent = String(count);
+                        badge.style.display = 'inline';
+                    } else {
+                        badge.style.display = 'none';
+                    }
+                }
             };
             window.closeAdminUserManageModal = function() {
                 var m = document.getElementById('adminUserManageModal');
@@ -7658,21 +7995,11 @@
             };
             window.adminUserManageDeleteFirestore = async function() {
                 var uid = (document.getElementById('adminUserManageUid') && document.getElementById('adminUserManageUid').value || '').trim();
-                var dbUse = db || window.firebaseDb;
-                if (!uid || !dbUse || !confirm('Remove this user\'s Firestore profile (users / user)?')) return;
-                try {
-                    await dbUse.collection('users').doc(uid).delete();
-                } catch (err) {
-                    try {
-                        await dbUse.collection('user').doc(uid).delete();
-                    } catch (err2) {
-                        window.adminToast('Failed to delete: ' + (err2.message || err.message), 'warn');
-                        return;
-                    }
+                if (!uid) return;
+                if (typeof window.deleteUserDoc === 'function') {
+                    await window.deleteUserDoc(uid);
+                    closeAdminUserManageModal();
                 }
-                if (typeof window.removeAdminUserLocal === 'function') window.removeAdminUserLocal(uid);
-                window.adminToast('User document removed from Firestore.', 'success');
-                closeAdminUserManageModal();
             };
             window.adminToast = function(message, type) {
                 type = type || 'info';
@@ -7683,6 +8010,36 @@
                 el.textContent = message;
                 host.appendChild(el);
                 setTimeout(function() { try { el.remove(); } catch (e) {} }, 4000);
+            };
+            window.adminToastWithUndo = function(message, uid, durationMs) {
+                durationMs = durationMs || 30000;
+                if (window._pendingUserUndo && window._pendingUserUndo.timeoutId) {
+                    clearTimeout(window._pendingUserUndo.timeoutId);
+                    if (window._pendingUserUndo.el) try { window._pendingUserUndo.el.remove(); } catch (e) {}
+                }
+                var host = document.getElementById('admin-toast-host');
+                if (!host) { host = document.createElement('div'); host.id = 'admin-toast-host'; document.body.appendChild(host); }
+                var el = document.createElement('div');
+                el.className = 'admin-toast success with-actions';
+                var msgSpan = document.createElement('span');
+                msgSpan.textContent = message;
+                el.appendChild(msgSpan);
+                var undoBtn = document.createElement('button');
+                undoBtn.type = 'button';
+                undoBtn.className = 'admin-toast-undo-btn';
+                undoBtn.textContent = 'Undo';
+                undoBtn.addEventListener('click', function() {
+                    if (typeof window.undoLastUserDelete === 'function') window.undoLastUserDelete(uid);
+                    try { el.remove(); } catch (e) {}
+                    if (window._pendingUserUndo && window._pendingUserUndo.uid === uid) window._pendingUserUndo = null;
+                });
+                el.appendChild(undoBtn);
+                host.appendChild(el);
+                var timeoutId = setTimeout(function() {
+                    try { el.remove(); } catch (e) {}
+                    if (window._pendingUserUndo && window._pendingUserUndo.uid === uid) window._pendingUserUndo = null;
+                }, durationMs);
+                window._pendingUserUndo = { uid: uid, timeoutId: timeoutId, el: el };
             };
             window.applyAdminUserFilters = function() {
                 var inp = document.getElementById('adminUserSearch');
@@ -7779,14 +8136,37 @@
         };
         function getDefaultAdminProducts() {
             return [
-                { id: 'prod_1', name: 'Wireless Headphones', category: 'Electronics', price: 99, stock: 120, sales: 342, status: 'Active' },
-                { id: 'prod_2', name: 'Smart Watch Pro', category: 'Wearables', price: 249, stock: 45, sales: 189, status: 'Active' }
+                { id: 'prod_1', name: 'Wireless Headphones', category: 'Electronics', price: 99, stock: 120, sales: 342, status: 'Active', image: 'https://images.pexels.com/photos/1649771/pexels-photo-1649771.jpeg?auto=compress&cs=tinysrgb&w=200' },
+                { id: 'prod_2', name: 'Smart Watch Pro', category: 'Wearables', price: 249, stock: 45, sales: 189, status: 'Active', image: 'https://images.pexels.com/photos/437037/pexels-photo-437037.jpeg?auto=compress&cs=tinysrgb&w=200' }
             ];
+        }
+        function adminProductThumbUrl(p) {
+            var url = (p && (p.image || p.thumbnail || p.img)) ? String(p.image || p.thumbnail || p.img).trim() : '';
+            return url || 'https://via.placeholder.com/80?text=Product';
+        }
+        function syncAdminProductImagePreview(url) {
+            var prev = document.getElementById('adminProductEditImagePreview');
+            if (!prev) return;
+            var safe = (url || '').trim();
+            if (!safe) { prev.style.display = 'none'; prev.removeAttribute('src'); return; }
+            prev.src = safe;
+            prev.style.display = 'block';
+            prev.onerror = function() { this.src = 'https://via.placeholder.com/80?text=Product'; };
         }
         function loadAdminProducts() {
             try {
                 var list = JSON.parse(localStorage.getItem('admin_products_catalog') || 'null');
                 if (!list || !list.length) list = getDefaultAdminProducts();
+                var defaults = getDefaultAdminProducts();
+                var changed = false;
+                list = list.map(function(p) {
+                    if (!p.image && !p.thumbnail) {
+                        var match = defaults.find(function(d) { return d.id === p.id; });
+                        if (match && match.image) { changed = true; return Object.assign({}, p, { image: match.image }); }
+                    }
+                    return p;
+                });
+                if (changed) saveAdminProducts(list);
                 return list;
             } catch (e) { return getDefaultAdminProducts(); }
         }
@@ -7831,7 +8211,8 @@
             }
             tbody.innerHTML = visible.map(function(p) {
                 var badge = p.status === 'Active' ? 'completed' : 'pending';
-                return '<tr><td>' + esc(p.name) + '</td><td>' + esc(p.category) + '</td><td>$' + Number(p.price || 0).toFixed(2) + '</td><td>' + esc(p.stock) + '</td><td>' + esc(p.sales) + '</td><td><span class="status-badge ' + badge + '">' + esc(p.status) + '</span></td><td><div class="action-btns"><button type="button" class="admin-btn-sm admin-btn-secondary" data-admin-action="edit-product" data-product-id="' + esc(p.id) + '">Edit</button><button type="button" class="admin-btn-sm admin-btn-primary" data-admin-action="view-product" data-product-id="' + esc(p.id) + '">View</button></div></td></tr>';
+                var thumb = adminProductThumbUrl(p);
+                return '<tr><td><div class="admin-product-cell"><img src="' + esc(thumb) + '" alt="" class="admin-product-thumb" onerror="this.onerror=null;this.src=\'https://via.placeholder.com/80?text=Product\'"><span>' + esc(p.name) + '</span></div></td><td>' + esc(p.category) + '</td><td>$' + Number(p.price || 0).toFixed(2) + '</td><td>' + esc(p.stock) + '</td><td>' + esc(p.sales) + '</td><td><span class="status-badge ' + badge + '">' + esc(p.status) + '</span></td><td><div class="action-btns"><button type="button" class="admin-btn-sm admin-btn-secondary" data-admin-action="edit-product" data-product-id="' + esc(p.id) + '">Edit</button><button type="button" class="admin-btn-sm admin-btn-primary" data-admin-action="view-product" data-product-id="' + esc(p.id) + '">View</button></div></td></tr>';
             }).join('');
         };
         window.openAdminProductEdit = function(id) {
@@ -7839,6 +8220,9 @@
             if (!p) { adminToast('Product not found.', 'warn'); return; }
             document.getElementById('adminProductEditId').value = p.id;
             document.getElementById('adminProductEditName').value = p.name || '';
+            var imgInp = document.getElementById('adminProductEditImage');
+            if (imgInp) imgInp.value = p.image || p.thumbnail || '';
+            syncAdminProductImagePreview(p.image || p.thumbnail || '');
             document.getElementById('adminProductEditCategory').value = p.category || '';
             document.getElementById('adminProductEditPrice').value = p.price || 0;
             document.getElementById('adminProductEditStock').value = p.stock || 0;
@@ -7849,6 +8233,9 @@
         window.openAdminProductCreate = function() {
             document.getElementById('adminProductEditId').value = '';
             document.getElementById('adminProductEditName').value = '';
+            var imgInpNew = document.getElementById('adminProductEditImage');
+            if (imgInpNew) imgInpNew.value = '';
+            syncAdminProductImagePreview('');
             document.getElementById('adminProductEditCategory').value = '';
             document.getElementById('adminProductEditPrice').value = '';
             document.getElementById('adminProductEditStock').value = '';
@@ -7862,9 +8249,13 @@
         };
         window.saveAdminProductEdit = function() {
             var id = document.getElementById('adminProductEditId').value || ('prod_' + Date.now());
+            var imageUrl = '';
+            var imgField = document.getElementById('adminProductEditImage');
+            if (imgField) imageUrl = imgField.value.trim();
             var item = {
                 id: id,
                 name: document.getElementById('adminProductEditName').value.trim(),
+                image: imageUrl,
                 category: document.getElementById('adminProductEditCategory').value.trim(),
                 price: parseFloat(document.getElementById('adminProductEditPrice').value) || 0,
                 stock: parseInt(document.getElementById('adminProductEditStock').value, 10) || 0,
@@ -7874,7 +8265,7 @@
             if (!item.name) { adminToast('Product name is required.', 'warn'); return; }
             var list = loadAdminProducts();
             var idx = list.findIndex(function(x) { return x.id === id; });
-            if (idx >= 0) { item.sales = list[idx].sales || 0; list[idx] = item; } else list.push(item);
+            if (idx >= 0) { item.sales = list[idx].sales || 0; if (!item.image && list[idx].image) item.image = list[idx].image; list[idx] = item; } else list.push(item);
             saveAdminProducts(list);
             renderAdminProductsTable();
             closeAdminProductEditModal();
@@ -7883,7 +8274,32 @@
         window.viewAdminProduct = function(id) {
             var p = loadAdminProducts().find(function(x) { return x.id === id; });
             if (!p) { adminToast('Product not found.', 'warn'); return; }
-            openAdminDetailModal(p.name, 'Category: ' + p.category + '\nPrice: $' + Number(p.price).toFixed(2) + '\nStock: ' + p.stock + '\nSales: ' + p.sales + '\nStatus: ' + p.status);
+            var detail = 'Category: ' + p.category + '\nPrice: $' + Number(p.price).toFixed(2) + '\nStock: ' + p.stock + '\nSales: ' + p.sales + '\nStatus: ' + p.status;
+            if (p.image) detail += '\nImage: ' + p.image;
+            openAdminDetailModal(p.name, detail);
+        };
+        window.loadAdminWebhookSettings = function() {
+            var whInp = document.getElementById('adminWebhookUrlInput');
+            if (whInp) {
+                var saved = localStorage.getItem('admin_webhook_url');
+                whInp.value = saved || '';
+            }
+            var events = { paymentCompleted: true, subscriptionCreated: true, userRegistered: false };
+            try {
+                var stored = JSON.parse(localStorage.getItem('admin_webhook_events') || 'null');
+                if (stored && typeof stored === 'object') events = Object.assign(events, stored);
+            } catch (e) {}
+            var pay = document.getElementById('adminWebhookEventPayment');
+            var sub = document.getElementById('adminWebhookEventSubscription');
+            var reg = document.getElementById('adminWebhookEventUserRegistered');
+            if (pay) pay.checked = !!events.paymentCompleted;
+            if (sub) sub.checked = !!events.subscriptionCreated;
+            if (reg) reg.checked = !!events.userRegistered;
+            var statusEl = document.getElementById('adminWebhookStatus');
+            if (statusEl) {
+                var url = whInp && whInp.value.trim();
+                statusEl.textContent = url ? ('Saved endpoint: ' + url) : 'Enter a webhook URL and choose events, then save.';
+            }
         };
         function getDefaultAdminRoles() {
             return {
@@ -8113,6 +8529,11 @@
                     cpm._backdropClose = true;
                     cpm.addEventListener('click', function(e) { if (e.target === cpm && typeof window.closeChangePlanModal === 'function') window.closeChangePlanModal(); });
                 }
+                var apem = document.getElementById('adminProductEditModal');
+                if (apem && !apem._backdropClose) {
+                    apem._backdropClose = true;
+                    apem.addEventListener('click', function(e) { if (e.target === apem && typeof window.closeAdminProductEditModal === 'function') window.closeAdminProductEditModal(); });
+                }
                 ['adminUserSearch','adminUserStatusFilter','adminUserPlanFilter'].forEach(function(id) {
                     var el = document.getElementById(id);
                     if (el && !el._filterWire) {
@@ -8308,9 +8729,34 @@
                     wh._wire = true;
                     wh.addEventListener('click', function() {
                         var u = document.getElementById('adminWebhookUrlInput');
-                        localStorage.setItem('admin_webhook_url', (u && u.value) || '');
-                        adminToast('Webhook URL saved locally.', 'success');
+                        var url = (u && u.value || '').trim();
+                        if (!url) { adminToast('Enter a valid webhook URL first.', 'warn'); return; }
+                        try { new URL(url); } catch (e) { adminToast('Webhook URL must be a valid https URL.', 'warn'); return; }
+                        localStorage.setItem('admin_webhook_url', url);
+                        var events = {
+                            paymentCompleted: !!(document.getElementById('adminWebhookEventPayment') && document.getElementById('adminWebhookEventPayment').checked),
+                            subscriptionCreated: !!(document.getElementById('adminWebhookEventSubscription') && document.getElementById('adminWebhookEventSubscription').checked),
+                            userRegistered: !!(document.getElementById('adminWebhookEventUserRegistered') && document.getElementById('adminWebhookEventUserRegistered').checked)
+                        };
+                        localStorage.setItem('admin_webhook_events', JSON.stringify(events));
+                        if (typeof loadAdminWebhookSettings === 'function') loadAdminWebhookSettings();
+                        adminToast('Webhook settings saved.', 'success');
                     });
+                }
+                var whTest = document.getElementById('adminTestWebhookBtn');
+                if (whTest && !whTest._wire) {
+                    whTest._wire = true;
+                    whTest.addEventListener('click', function() {
+                        var u = document.getElementById('adminWebhookUrlInput');
+                        var url = (u && u.value || '').trim();
+                        if (!url) { adminToast('Save a webhook URL before sending a test.', 'warn'); return; }
+                        adminToast('Test payload queued for ' + url + ' (connect your backend to deliver for real).', 'info');
+                    });
+                }
+                var prodImgInp = document.getElementById('adminProductEditImage');
+                if (prodImgInp && !prodImgInp._wire) {
+                    prodImgInp._wire = true;
+                    prodImgInp.addEventListener('input', function() { syncAdminProductImagePreview(prodImgInp.value); });
                 }
                 var ag = document.getElementById('adminApiGenerateBtn');
                 if (ag && !ag._wire) {
@@ -8407,8 +8853,7 @@
                 if (typeof renderAdminRolesTable === 'function') renderAdminRolesTable();
                 syncAdminPlanSelectOptions(document.getElementById('changePlanSelect'), 'starter');
                 syncAdminPlanSelectOptions(document.getElementById('adminUserManagePlan'), 'starter');
-                var whInp = document.getElementById('adminWebhookUrlInput');
-                if (whInp) { var saved = localStorage.getItem('admin_webhook_url'); if (saved) whInp.value = saved; }
+                if (typeof loadAdminWebhookSettings === 'function') loadAdminWebhookSettings();
                 } catch (wireErr) {
                     console.error('Admin dashboard wiring failed:', wireErr);
                     if (typeof window.adminToast === 'function') window.adminToast('Some admin controls failed to load. Refresh the page.', 'warn');

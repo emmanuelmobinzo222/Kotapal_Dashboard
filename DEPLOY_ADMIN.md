@@ -55,5 +55,12 @@ Super-admins work without this; config/admins is for adding more admins later.
 After deploying, refresh the admin page and sign in with `admin@kotapal.com`, `wreck@gmail.com`, or `earlhugue@gmail.com`. You should see **all users** from Firebase Auth and be able to:
 
 - **Suspend** / **Unsuspend** users
-- **Delete** user documents from Firestore
+- **Delete** users (moved to recycle bin; **Undo** within 30 seconds)
+- **Recycle Bin** (Super Admin only: `admin@kotapal.com`) — restore or permanently delete
 - **Change plan** for any user
+
+Deploy updated functions for recycle bin cloud actions:
+
+```bash
+firebase deploy --only functions,firestore
+```

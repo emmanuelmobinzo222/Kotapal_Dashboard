@@ -78,6 +78,21 @@ function isAdmin(email) {
   return ADMIN_EMAILS.includes(e);
 }
 
+/** Super Admin only — recycle bin and permanent purge */
+function isSuperAdmin(email) {
+  if (!email) return false;
+  return email.toLowerCase() === 'admin@kotapal.com';
+}
+
+async function readUserProfiles(db, uid) {
+  const usersDoc = await db.collection('users').doc(uid).get();
+  const userDoc = await db.collection('user').doc(uid).get();
+  return {
+    users: usersDoc.exists ? usersDoc.data() : null,
+    user: userDoc.exists ? userDoc.data() : null
+  };
+}
+
 /**
  * Callable function: listAllUsers
  * Returns all Firebase Auth users + Firestore user data merged.
@@ -173,7 +188,7 @@ exports.adminUnsuspendUser = onCall({ region: 'us-central1' }, async (request) =
 
 /**
  * Callable function: adminDeleteUser
- * Deletes a user from Firebase Auth and removes matching Firestore profiles.
+ * Soft-deletes: archives Firestore profiles to usersRecycleBin and disables Auth login.
  */
 exports.adminDeleteUser = onCall({ region: 'us-central1' }, async (request) => {
   if (!request.auth) throw new HttpsError('unauthenticated', 'Must be signed in.');
@@ -185,12 +200,134 @@ exports.adminDeleteUser = onCall({ region: 'us-central1' }, async (request) => {
 
   const auth = getAuth();
   const db = getFirestore();
+  const profiles = await readUserProfiles(db, uid);
+  let authUser = null;
+  try {
+    authUser = await auth.getUser(uid);
+  } catch (e) {
+    if (e.code !== 'auth/user-not-found') throw e;
+  }
 
-  await auth.deleteUser(uid);
+  const archive = {
+    uid,
+    email: authUser?.email || profiles.users?.email || profiles.user?.email || '',
+    name: profiles.users?.displayName || profiles.users?.name || profiles.user?.displayName || '',
+    plan: profiles.users?.plan || profiles.user?.plan || 'starter',
+    status: profiles.users?.status || profiles.user?.status || 'active',
+    joined: profiles.users?.signupDate || profiles.users?.createdAt || profiles.users?.joined || '',
+    usersProfile: profiles.users,
+    userProfile: profiles.user,
+    deletedAt: new Date().toISOString(),
+    deletedBy: email,
+    authDisabled: !!authUser
+  };
+
+  await db.collection('usersRecycleBin').doc(uid).set(archive, { merge: true });
+  await Promise.allSettled([
+    db.collection('users').doc(uid).delete(),
+    db.collection('user').doc(uid).delete()
+  ]);
+  if (authUser) {
+    await auth.updateUser(uid, { disabled: true });
+  }
+
+  return { success: true, softDeleted: true, message: 'User moved to recycle bin. Use Undo or Recycle Bin to restore.' };
+});
+
+/**
+ * Callable: adminRestoreUser — Super Admin or deleting admin within undo window (client enforces UI).
+ */
+exports.adminRestoreUser = onCall({ region: 'us-central1' }, async (request) => {
+  if (!request.auth) throw new HttpsError('unauthenticated', 'Must be signed in.');
+  const email = request.auth.token.email;
+  if (!isAdmin(email)) throw new HttpsError('permission-denied', 'Admin access required.');
+
+  const { uid } = request.data || {};
+  if (!uid) throw new HttpsError('invalid-argument', 'uid is required.');
+
+  const auth = getAuth();
+  const db = getFirestore();
+  const binRef = db.collection('usersRecycleBin').doc(uid);
+  const binSnap = await binRef.get();
+  if (!binSnap.exists) throw new HttpsError('not-found', 'User not found in recycle bin.');
+
+  const data = binSnap.data();
+  const usersPayload = data.usersProfile || {
+    email: data.email,
+    displayName: data.name,
+    name: data.name,
+    plan: data.plan,
+    status: data.status === 'suspended' ? 'suspended' : 'active'
+  };
+  const userPayload = data.userProfile || {
+    email: data.email,
+    displayName: data.name,
+    plan: data.plan,
+    status: data.status === 'suspended' ? 'suspended' : 'active'
+  };
+
+  await db.collection('users').doc(uid).set(usersPayload, { merge: true });
+  await db.collection('user').doc(uid).set(userPayload, { merge: true });
+  await binRef.delete();
+
+  try {
+    await auth.updateUser(uid, { disabled: false });
+  } catch (e) {
+    if (e.code !== 'auth/user-not-found') throw e;
+  }
+
+  return { success: true, message: 'User restored from recycle bin.' };
+});
+
+/**
+ * Callable: adminListRecycleBin — Super Admin only
+ */
+exports.adminListRecycleBin = onCall({ region: 'us-central1' }, async (request) => {
+  if (!request.auth) throw new HttpsError('unauthenticated', 'Must be signed in.');
+  const email = request.auth.token.email;
+  if (!isSuperAdmin(email)) throw new HttpsError('permission-denied', 'Super Admin access required.');
+
+  const db = getFirestore();
+  const snap = await db.collection('usersRecycleBin').orderBy('deletedAt', 'desc').limit(200).get();
+  const items = snap.docs.map(d => {
+    const x = d.data();
+    return {
+      id: d.id,
+      email: x.email || '-',
+      name: x.name || '-',
+      plan: x.plan || 'starter',
+      status: x.status || 'active',
+      deletedAt: x.deletedAt || '',
+      deletedBy: x.deletedBy || '-'
+    };
+  });
+  return { items };
+});
+
+/**
+ * Callable: adminPermanentDeleteUser — Super Admin only; removes recycle entry and Auth user.
+ */
+exports.adminPermanentDeleteUser = onCall({ region: 'us-central1' }, async (request) => {
+  if (!request.auth) throw new HttpsError('unauthenticated', 'Must be signed in.');
+  const email = request.auth.token.email;
+  if (!isSuperAdmin(email)) throw new HttpsError('permission-denied', 'Super Admin access required.');
+
+  const { uid } = request.data || {};
+  if (!uid) throw new HttpsError('invalid-argument', 'uid is required.');
+
+  const auth = getAuth();
+  const db = getFirestore();
+
+  try {
+    await auth.deleteUser(uid);
+  } catch (e) {
+    if (e.code !== 'auth/user-not-found') throw e;
+  }
+  await db.collection('usersRecycleBin').doc(uid).delete();
   await Promise.allSettled([
     db.collection('users').doc(uid).delete(),
     db.collection('user').doc(uid).delete()
   ]);
 
-  return { success: true, message: 'User deleted from Firebase Auth and Firestore.' };
+  return { success: true, message: 'User permanently deleted.' };
 });
