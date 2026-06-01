@@ -57,8 +57,6 @@
     (function() {
         function showAdminLoginRoute() {
             if (window._adminAuthModalLoginPending) {
-                var plPending = document.getElementById('pageLoader');
-                if (plPending) plPending.classList.remove('hidden');
                 var adminLoginPending = document.getElementById('admin-login-screen');
                 if (adminLoginPending) adminLoginPending.classList.remove('active');
                 return;
@@ -148,6 +146,17 @@
                 var ov = document.getElementById(id);
                 if (ov) ov.classList.remove('active');
             });
+            var hash = window.location.hash || '';
+            var onAdminRoute = hash === '#admin' || hash === '#admin-setup';
+            if (!onAdminRoute) {
+                var adminLogin = document.getElementById('admin-login-screen');
+                var adminView = document.getElementById('admin-view');
+                var setupScreen = document.getElementById('admin-setup-screen');
+                if (adminLogin) adminLogin.classList.remove('active');
+                if (adminView) adminView.classList.remove('active');
+                if (setupScreen) setupScreen.style.display = 'none';
+                if (typeof setAdminScrollLock === 'function') setAdminScrollLock(false);
+            }
             var adminSb = document.getElementById('adminSidebar');
             if (adminSb) adminSb.classList.remove('active');
             var dashSb = document.getElementById('sidebar');
@@ -186,6 +195,15 @@
         }
         if (document.readyState !== 'loading') initLandingMobileNav();
         window.addEventListener('load', function() { setTimeout(hidePageLoaderEarly, 200); });
+        document.addEventListener('DOMContentLoaded', function() {
+            hidePageLoaderEarly();
+            if (typeof window.dismissBlockingOverlays === 'function') window.dismissBlockingOverlays();
+        });
+        window.addEventListener('hashchange', function() {
+            if (window.location.hash !== '#admin' && window.location.hash !== '#admin-setup') {
+                if (typeof window.dismissBlockingOverlays === 'function') window.dismissBlockingOverlays();
+            }
+        });
     })();
     </script>
 
@@ -821,9 +839,6 @@
             pointer-events: none !important;
             display: none !important;
             z-index: -1;
-        }
-        .page-loader.admin-auth-pending {
-            z-index: 10002;
         }
         .loader-spinner {
             width: 50px;
@@ -2944,10 +2959,17 @@
 </head>
 
 <body>
-    <!-- Page Loader -->
-    <div class="page-loader" id="pageLoader">
+    <!-- Page Loader (hidden by default — shown only during explicit admin auth handoff) -->
+    <div class="page-loader hidden" id="pageLoader" aria-hidden="true">
         <div class="loader-spinner"></div>
     </div>
+    <script>
+    (function() {
+        var pl = document.getElementById('pageLoader');
+        if (pl) pl.classList.add('hidden');
+        if (typeof window.dismissBlockingOverlays === 'function') window.dismissBlockingOverlays();
+    })();
+    </script>
 
     <div id="landing-page-view">
     <!-- Navigation -->
@@ -6383,16 +6405,14 @@
             // Restore scroll after modal (use defaults — no inline overflow hacks on landing)
             document.documentElement.style.overflow = '';
             document.body.style.overflow = '';
-            if (window.location.hash === '#admin' || window.location.hash === '#admin-setup') {
-                var pl = document.getElementById('pageLoader');
-                if (pl) pl.classList.add('hidden');
-            }
-            // Always show landing page first on initial load
+            var onAdminRoute = window.location.hash === '#admin' || window.location.hash === '#admin-setup';
+            if (typeof window.dismissBlockingOverlays === 'function') window.dismissBlockingOverlays();
             const landingView = document.getElementById('landing-page-view');
             const nav = document.querySelector('nav');
             const footer = document.querySelector('footer');
             const dashboardView = document.getElementById('dashboard-view');
             
+            if (!onAdminRoute) {
             if (dashboardView) {
                 dashboardView.style.display = 'none';
                 dashboardView.classList.remove('active');
@@ -6402,6 +6422,7 @@
             document.documentElement.classList.add('landing-page-active');
             if (nav) nav.style.display = 'flex';
             if (footer) footer.style.display = 'block';
+            }
             /* Dark mode only on dashboard; never on body so landing page always stays original */
             var darkOn = localStorage.getItem('kota_dark_mode') === '1';
             var dash = document.getElementById('dashboard-view');
@@ -6641,17 +6662,11 @@
             }
             function setAdminAuthModalLoginPending(pending) {
                 window._adminAuthModalLoginPending = !!pending;
-                var pl = document.getElementById('pageLoader');
                 var adminLogin = document.getElementById('admin-login-screen');
                 if (pending) {
-                    if (pl) {
-                        pl.classList.remove('hidden');
-                        pl.classList.add('admin-auth-pending');
-                    }
                     if (adminLogin) adminLogin.classList.remove('active');
-                } else if (pl) {
-                    pl.classList.remove('admin-auth-pending');
-                    pl.classList.add('hidden');
+                } else if (typeof window.dismissBlockingOverlays === 'function') {
+                    window.dismissBlockingOverlays();
                 }
             }
             function showAdminUI(show, options) {
