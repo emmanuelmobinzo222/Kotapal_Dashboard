@@ -8698,6 +8698,30 @@
             aiChatContainer.appendChild(messageDiv);
             aiChatContainer.scrollTop = aiChatContainer.scrollHeight;
         }
+
+        // Defensive: never start with a blocking overlay visible.
+        document.addEventListener('DOMContentLoaded', () => {
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+            if (sidebarOverlay) sidebarOverlay.classList.remove('active');
+
+            const adminSetupScreen = document.getElementById('admin-setup-screen');
+            const hash = String(window.location.hash || '');
+            const onAdminSetup = hash === '#admin-setup' || hash === '#admin';
+            if (adminSetupScreen && !onAdminSetup) adminSetupScreen.style.display = 'none';
+
+            // Ensure our fixed-position modals start hidden even if inline styles were mutated.
+            [
+                'changePlanModal',
+                'adminUserManageModal',
+                'adminDetailModal',
+                'adminProductEditModal',
+                'adminPlanEditModal',
+                'adminRoleEditModal',
+            ].forEach((id) => {
+                const el = document.getElementById(id);
+                if (el && !onAdminSetup) el.style.display = 'none';
+            });
+        });
     </script>
 </body>
 </html>
