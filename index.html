@@ -148,13 +148,18 @@
         };
         window.hideKotapalModal = function(el) {
             if (!el) return;
-            el.style.display = 'none';
+            el.classList.add('kotapal-modal-hidden');
             el.setAttribute('aria-hidden', 'true');
+            el.style.display = 'none';
+            el.style.pointerEvents = 'none';
+            el.style.visibility = 'hidden';
         };
         window.openKotapalModal = function(el, displayMode) {
             if (!el) return;
             el.classList.remove('kotapal-modal-hidden');
             el.removeAttribute('aria-hidden');
+            el.style.pointerEvents = '';
+            el.style.visibility = '';
             el.style.display = displayMode || 'flex';
         };
         window.clearStaleOverlays = function() {
@@ -173,12 +178,17 @@
             if (lb) {
                 lb.classList.remove('active');
                 lb.setAttribute('aria-hidden', 'true');
+                lb.style.display = 'none';
+                lb.style.pointerEvents = 'none';
             }
             (window.kotapalModalIds || []).forEach(function(id) {
                 window.hideKotapalModal(document.getElementById(id));
             });
-            document.body.style.pointerEvents = '';
-            document.documentElement.style.pointerEvents = '';
+            document.querySelectorAll('.modal, .plan-detail-modal').forEach(function(el) {
+                window.hideKotapalModal(el);
+            });
+            document.body.style.pointerEvents = 'auto';
+            document.documentElement.style.pointerEvents = 'auto';
         };
         window.dismissBlockingOverlays = function() {
             window.clearStaleOverlays();
@@ -216,6 +226,8 @@
                 window.dismissBlockingOverlays();
             }
             document.body.classList.add('kotapal-interactive');
+            document.body.style.pointerEvents = 'auto';
+            document.documentElement.style.pointerEvents = 'auto';
         };
         window.showKotapalDashboard = function() {
             var dv = document.getElementById('dashboard-view');
@@ -906,6 +918,21 @@
             visibility: hidden !important;
             z-index: -9999 !important;
         }
+        html.landing-page-active #landing-page-view {
+            position: relative;
+            z-index: 2;
+            pointer-events: auto;
+        }
+        html.landing-page-active body > #dashboard-view:not([data-kotapal-visible="true"]),
+        html.landing-page-active body > #admin-login-screen:not(.active),
+        html.landing-page-active body > #admin-view:not(.active),
+        html.landing-page-active body > #blockImageLightbox:not(.active),
+        html.landing-page-active body > #admin-setup-screen {
+            display: none !important;
+            pointer-events: none !important;
+            visibility: hidden !important;
+            z-index: -9999 !important;
+        }
         #admin-login-screen:not(.active),
         #admin-view:not(.active),
         #blockImageLightbox:not(.active) {
@@ -926,11 +953,17 @@
             min-height: 100dvh;
             width: 100%;
         }
+        .modal.kotapal-modal-hidden,
+        .plan-detail-modal.kotapal-modal-hidden,
         .modal[aria-hidden="true"],
         .plan-detail-modal[aria-hidden="true"] {
             display: none !important;
             pointer-events: none !important;
             visibility: hidden !important;
+        }
+        #landing-page-view .section-reveal,
+        #landing-page-view .section-reveal:not(.revealed) {
+            pointer-events: auto;
         }
 
         /* Core Features Section - Horizontal Scrollable Cards */
@@ -3040,6 +3073,12 @@
 </head>
 
 <body>
+    <script>
+    (function() {
+        if (typeof window.dismissBlockingOverlays === 'function') window.dismissBlockingOverlays();
+        else if (typeof window.clearStaleOverlays === 'function') window.clearStaleOverlays();
+    })();
+    </script>
     <div id="landing-page-view">
     <!-- Navigation -->
     <nav>
@@ -3771,7 +3810,7 @@
     </footer>
 
     <!-- Plan Detail Modal -->
-    <div id="planDetailModal" class="plan-detail-modal">
+    <div id="planDetailModal" class="plan-detail-modal kotapal-modal-hidden" aria-hidden="true" style="display: none;">
         <div class="plan-modal-content">
             <div class="plan-modal-header">
                 <h2 id="planModalTitle">Plan Details</h2>
@@ -3795,7 +3834,7 @@
     </div>
 
     <!-- Content Modals -->
-    <div id="guidesModal" class="modal content-modal">
+    <div id="guidesModal" class="modal content-modal kotapal-modal-hidden" aria-hidden="true" style="display: none;">
         <div class="modal-content">
             <span class="close">&times;</span>
             <h2>Guides</h2>
@@ -3823,7 +3862,7 @@
         </div>
     </div>
 
-    <div id="privacyModal" class="modal content-modal">
+    <div id="privacyModal" class="modal content-modal kotapal-modal-hidden" aria-hidden="true" style="display: none;">
         <div class="modal-content">
             <span class="close">&times;</span>
             <h2>Privacy Policy</h2>
@@ -3847,7 +3886,7 @@
         </div>
     </div>
 
-    <div id="tosModal" class="modal content-modal">
+    <div id="tosModal" class="modal content-modal kotapal-modal-hidden" aria-hidden="true" style="display: none;">
         <div class="modal-content">
             <span class="close">&times;</span>
             <h2>Terms of Service</h2>
@@ -9015,9 +9054,12 @@
 
         function showAuthModal() {
             if (authModal) {
-                authModal.classList.remove('kotapal-modal-hidden');
-                authModal.removeAttribute('aria-hidden');
-                authModal.style.display = 'flex';
+                if (typeof window.openKotapalModal === 'function') window.openKotapalModal(authModal, 'flex');
+                else {
+                    authModal.classList.remove('kotapal-modal-hidden');
+                    authModal.removeAttribute('aria-hidden');
+                    authModal.style.display = 'flex';
+                }
                 document.documentElement.style.overflow = 'hidden';
                 document.body.style.overflow = 'hidden';
             }
@@ -9352,9 +9394,12 @@
             if (!modal || !titleEl || !contentEl) return;
             titleEl.textContent = plan.title;
             contentEl.innerHTML = '<div class="plan-modal-price">' + plan.price + '</div><p class="plan-modal-description">' + plan.description + '</p><h3>Features:</h3><ul class="plan-modal-features">' + plan.features.map(function(f) { return '<li>' + f + '</li>'; }).join('') + '</ul><button class="btn btn-primary" style="width: 100%;" onclick="closePlanModal(); showAuthModal();">Get Started</button>';
-            modal.classList.remove('kotapal-modal-hidden');
-            modal.removeAttribute('aria-hidden');
-            modal.style.display = 'flex';
+            if (typeof window.openKotapalModal === 'function') window.openKotapalModal(modal, 'flex');
+            else {
+                modal.classList.remove('kotapal-modal-hidden');
+                modal.removeAttribute('aria-hidden');
+                modal.style.display = 'flex';
+            }
             document.documentElement.style.overflow = 'hidden';
             document.body.style.overflow = 'hidden';
         }
@@ -9380,13 +9425,15 @@
             if (!lb || !titleEl || !bodyEl) return;
             titleEl.textContent = title;
             bodyEl.innerHTML = bodyHtml;
-            lb.style.display = 'flex';
+            if (typeof window.openKotapalModal === 'function') window.openKotapalModal(lb, 'flex');
+            else lb.style.display = 'flex';
             document.documentElement.style.overflow = 'hidden';
             document.body.style.overflow = 'hidden';
         }
         function closeCarouselItemLightbox() {
             var lb = document.getElementById('carouselItemLightbox');
-            if (lb) { lb.style.display = 'none'; }
+            if (typeof window.hideKotapalModal === 'function') window.hideKotapalModal(lb);
+            else if (lb) lb.style.display = 'none';
             document.documentElement.style.overflow = '';
             document.body.style.overflow = '';
         }
@@ -9557,17 +9604,20 @@
                 if (text === 'Guides') {
                     link.onclick = (e) => {
                         e.preventDefault();
-                        document.getElementById('guidesModal').style.display = 'block';
+                        if (typeof window.openKotapalModal === 'function') window.openKotapalModal(document.getElementById('guidesModal'), 'block');
+                        else document.getElementById('guidesModal').style.display = 'block';
                     };
                 } else if (text === 'Privacy Policy') {
                     link.onclick = (e) => {
                         e.preventDefault();
-                        document.getElementById('privacyModal').style.display = 'block';
+                        if (typeof window.openKotapalModal === 'function') window.openKotapalModal(document.getElementById('privacyModal'), 'block');
+                        else document.getElementById('privacyModal').style.display = 'block';
                     };
                 } else if (text === 'Terms of Service') {
                     link.onclick = (e) => {
                         e.preventDefault();
-                        document.getElementById('tosModal').style.display = 'block';
+                        if (typeof window.openKotapalModal === 'function') window.openKotapalModal(document.getElementById('tosModal'), 'block');
+                        else document.getElementById('tosModal').style.display = 'block';
                     };
                 }
             });
@@ -9575,7 +9625,9 @@
             // Set up close buttons for content modals
             document.querySelectorAll('.content-modal .close').forEach(closeBtn => {
                 closeBtn.onclick = function() {
-                    this.closest('.modal').style.display = 'none';
+                    var modal = this.closest('.modal');
+                    if (typeof window.hideKotapalModal === 'function') window.hideKotapalModal(modal);
+                    else if (modal) modal.style.display = 'none';
                 };
             });
         }
@@ -10945,13 +10997,29 @@
 
         function openBlockLightbox() {
             var lb = document.getElementById('blockImageLightbox');
-            if (lb) { lb.classList.add('active'); lb.setAttribute('aria-hidden', 'false'); document.documentElement.style.overflow = 'hidden'; document.body.style.overflow = 'hidden'; }
+            if (lb) {
+                lb.classList.add('active');
+                if (typeof window.openKotapalModal === 'function') window.openKotapalModal(lb, 'flex');
+                else {
+                    lb.removeAttribute('aria-hidden');
+                    lb.style.display = 'flex';
+                }
+                document.documentElement.style.overflow = 'hidden';
+                document.body.style.overflow = 'hidden';
+            }
             updateBlockLightboxImg();
         }
 
         function closeBlockLightbox() {
             var lb = document.getElementById('blockImageLightbox');
-            if (lb) { lb.classList.remove('active'); lb.setAttribute('aria-hidden', 'true'); }
+            if (lb) {
+                lb.classList.remove('active');
+                if (typeof window.hideKotapalModal === 'function') window.hideKotapalModal(lb);
+                else {
+                    lb.setAttribute('aria-hidden', 'true');
+                    lb.style.display = 'none';
+                }
+            }
             document.documentElement.style.overflow = '';
             document.body.style.overflow = '';
         }
