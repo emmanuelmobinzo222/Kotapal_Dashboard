@@ -129,18 +129,63 @@
             initLandingMobileNav();
         });
         function hidePageLoaderEarly() {
-            if (typeof window.ensureSiteInteractive === 'function') window.ensureSiteInteractive();
+            if (typeof window.clearStaleOverlays === 'function') window.clearStaleOverlays();
         }
-        window.dismissBlockingOverlays = function() {
+        window.kotapalModalIds = [
+            'planDetailModal', 'carouselItemLightbox', 'authModal', 'resetPasswordModal', 'inactivityWarningModal',
+            'adminProductEditModal', 'adminDetailModal', 'adminUserManageModal', 'changePlanModal',
+            'adminPlanEditModal', 'adminRoleEditModal', 'logoutConfirmModal', 'downloadReportFormatModal',
+            'guidesModal', 'privacyModal', 'tosModal', 'deleteBlockConfirmModal', 'editBlockTitleModal'
+        ];
+        window.isKotapalDashboardVisible = function() {
+            var dv = document.getElementById('dashboard-view');
+            return !!(dv && dv.getAttribute('data-kotapal-visible') === 'true');
+        };
+        window.isKotapalAdminVisible = function() {
+            var av = document.getElementById('admin-view');
+            return !!(av && av.classList.contains('active'));
+        };
+        window.hideKotapalModal = function(el) {
+            if (!el) return;
+            el.style.display = 'none';
+            el.setAttribute('aria-hidden', 'true');
+        };
+        window.openKotapalModal = function(el, displayMode) {
+            if (!el) return;
+            el.classList.remove('kotapal-modal-hidden');
+            el.removeAttribute('aria-hidden');
+            el.style.display = displayMode || 'flex';
+        };
+        window.clearStaleOverlays = function() {
             window._adminAuthModalLoginPending = false;
             ['sidebarOverlay', 'adminSidebarOverlay'].forEach(function(id) {
                 var ov = document.getElementById(id);
                 if (ov) ov.classList.remove('active');
             });
+            var adminSb = document.getElementById('adminSidebar');
+            if (adminSb) adminSb.classList.remove('active');
+            var dashSb = document.getElementById('sidebar');
+            if (dashSb) dashSb.classList.remove('active');
+            var main = document.querySelector('#dashboard-view .main-content');
+            if (main) main.classList.remove('sidebar-hidden');
+            var lb = document.getElementById('blockImageLightbox');
+            if (lb) {
+                lb.classList.remove('active');
+                lb.setAttribute('aria-hidden', 'true');
+            }
+            (window.kotapalModalIds || []).forEach(function(id) {
+                window.hideKotapalModal(document.getElementById(id));
+            });
+            document.body.style.pointerEvents = '';
+            document.documentElement.style.pointerEvents = '';
+        };
+        window.dismissBlockingOverlays = function() {
+            window.clearStaleOverlays();
             var hash = window.location.hash || '';
             var onAdminRoute = hash === '#admin' || hash === '#admin-setup';
-            var explicitDashboard = sessionStorage.getItem('kotapal_explicit_login') === 'true';
-            if (!onAdminRoute) {
+            var dashboardVisible = window.isKotapalDashboardVisible();
+            var adminVisible = window.isKotapalAdminVisible();
+            if (!onAdminRoute && !adminVisible) {
                 var adminLogin = document.getElementById('admin-login-screen');
                 var adminView = document.getElementById('admin-view');
                 var setupScreen = document.getElementById('admin-setup-screen');
@@ -149,48 +194,50 @@
                 if (setupScreen) setupScreen.style.display = 'none';
                 if (typeof setAdminScrollLock === 'function') setAdminScrollLock(false);
             }
-            var dashboardView = document.getElementById('dashboard-view');
-            if (dashboardView && !explicitDashboard) {
-                dashboardView.style.display = 'none';
-                dashboardView.classList.remove('active');
-                dashboardView.removeAttribute('data-kotapal-visible');
+            if (!dashboardVisible) {
+                var dashboardView = document.getElementById('dashboard-view');
+                if (dashboardView) {
+                    dashboardView.style.display = 'none';
+                    dashboardView.classList.remove('active');
+                    dashboardView.removeAttribute('data-kotapal-visible');
+                }
             }
-            var adminSb = document.getElementById('adminSidebar');
-            if (adminSb) adminSb.classList.remove('active');
-            var dashSb = document.getElementById('sidebar');
-            if (dashSb) dashSb.classList.remove('active');
-            var lb = document.getElementById('blockImageLightbox');
-            if (lb) {
-                lb.classList.remove('active');
-                lb.setAttribute('aria-hidden', 'true');
-            }
-            ['planDetailModal', 'carouselItemLightbox', 'authModal', 'resetPasswordModal', 'inactivityWarningModal',
-                'adminProductEditModal', 'adminDetailModal', 'adminUserManageModal', 'changePlanModal',
-                'adminPlanEditModal', 'adminRoleEditModal', 'logoutConfirmModal', 'downloadReportFormatModal',
-                'guidesModal', 'privacyModal', 'tosModal'].forEach(function(id) {
-                var el = document.getElementById(id);
-                if (el) el.style.display = 'none';
-            });
-            var authEl = document.getElementById('authModal');
-            var authOpen = authEl && window.getComputedStyle(authEl).display !== 'none' && authEl.style.display !== 'none';
-            if (!authOpen) {
+            if (!dashboardVisible && !adminVisible) {
                 document.documentElement.style.overflow = '';
                 document.body.style.overflow = '';
                 document.documentElement.classList.remove('dashboard-scroll-lock', 'admin-scroll-lock');
-                document.body.style.pointerEvents = '';
-                document.documentElement.style.pointerEvents = '';
             }
         };
         window.ensureSiteInteractive = function() {
-            if (typeof window.dismissBlockingOverlays === 'function') window.dismissBlockingOverlays();
+            if (window.isKotapalDashboardVisible() || window.isKotapalAdminVisible()) {
+                window.clearStaleOverlays();
+            } else {
+                window.dismissBlockingOverlays();
+            }
             document.body.classList.add('kotapal-interactive');
         };
         window.showKotapalDashboard = function() {
             var dv = document.getElementById('dashboard-view');
             if (!dv) return;
+            window.clearStaleOverlays();
+            var landing = document.getElementById('landing-page-view');
+            var nav = document.querySelector('nav');
+            var footer = document.querySelector('footer');
+            if (landing) landing.style.display = 'none';
+            if (nav) nav.style.display = 'none';
+            if (footer) footer.style.display = 'none';
+            document.documentElement.classList.remove('landing-page-active');
             dv.setAttribute('data-kotapal-visible', 'true');
-            dv.style.display = 'block';
             dv.classList.add('active');
+            dv.style.display = 'block';
+            dv.style.pointerEvents = 'auto';
+            dv.style.visibility = 'visible';
+            document.body.style.pointerEvents = '';
+            document.documentElement.style.pointerEvents = '';
+            document.body.style.overflow = '';
+            document.documentElement.style.overflow = '';
+            if (typeof setDashboardScrollLock === 'function') setDashboardScrollLock(true);
+            if (typeof syncDashboardNavForViewport === 'function') syncDashboardNavForViewport();
         };
         window.hideKotapalDashboard = function() {
             var dv = document.getElementById('dashboard-view');
@@ -202,7 +249,6 @@
         };
         function initLandingMobileNav() {
             hidePageLoaderEarly();
-            setTimeout(hidePageLoaderEarly, 2500);
             var mbtn = document.getElementById('mobileMenuBtn');
             if (!mbtn || mbtn._kotapalMenuBound) return;
             mbtn._kotapalMenuBound = true;
@@ -867,15 +913,26 @@
         #dashboard-view:not([data-kotapal-visible="true"]) {
             display: none !important;
             pointer-events: none !important;
+            visibility: hidden !important;
         }
-        #dashboard-view[data-kotapal-visible="true"].active {
-            position: fixed;
-            inset: 0;
+        #dashboard-view[data-kotapal-visible="true"] {
+            display: block !important;
+            pointer-events: auto !important;
+            visibility: visible !important;
+            position: relative;
+            z-index: 10;
+            min-height: 100vh;
+            min-height: 100dvh;
             width: 100%;
-            z-index: 900;
         }
-        .section-reveal:not(.revealed) {
+        #landing-page-view .section-reveal:not(.revealed) {
             pointer-events: none;
+        }
+        .modal[aria-hidden="true"],
+        .plan-detail-modal[aria-hidden="true"] {
+            display: none !important;
+            pointer-events: none !important;
+            visibility: hidden !important;
         }
 
         /* Core Features Section - Horizontal Scrollable Cards */
@@ -4035,8 +4092,9 @@
         #dashboard-view .sidebar-overlay {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.5); z-index: 999;
+            pointer-events: none;
         }
-        #dashboard-view .sidebar-overlay.active { display: block; }
+        #dashboard-view .sidebar-overlay.active { display: block; pointer-events: auto; }
         #dashboard-view .sidebar.nav-collapsed { transform: translateX(-100%); width: 0; min-width: 0; overflow: hidden; padding: 0; }
         #dashboard-view .main-content.nav-collapsed { margin-left: 0; }
         #dashboard-view .nav-toggle-float {
@@ -6069,26 +6127,14 @@
                 
                 console.log('Login successful, showing dashboard...');
                 showAuthMessage('authMessage', 'Login successful! Redirecting to dashboard...', 'success');
-                
-                // Close modal after a brief delay
-                setTimeout(() => {
-                    closeAuthModal();
-                    
-                    // Force dashboard to show
-                    const landingView = document.getElementById('landing-page-view');
-                    const nav = document.querySelector('nav');
-                    const footer = document.querySelector('footer');
-                    const dashboardView = document.getElementById('dashboard-view');
-                    
-                    if (landingView) landingView.style.display = 'none';
-                    if (nav) nav.style.display = 'none';
-                    if (footer) footer.style.display = 'none';
-                    if (typeof window.showKotapalDashboard === 'function') window.showKotapalDashboard();
-                    if (typeof setDashboardScrollLock === 'function') setDashboardScrollLock(true);
+                if (typeof window.showKotapalDashboard === 'function') window.showKotapalDashboard();
+                else if (typeof window.closeAuthModal === 'function') window.closeAuthModal();
+                setTimeout(function() {
                     if (typeof updateSidebarUserInfo === 'function') updateSidebarUserInfo();
                     if (typeof showPage === 'function') showPage('dashboard');
                     if (typeof initDashboard === 'function') initDashboard();
-                }, 500);
+                    if (typeof window.clearStaleOverlays === 'function') window.clearStaleOverlays();
+                }, 50);
                 
                 // Re-enable button
                 if (submitBtn) {
@@ -6217,29 +6263,14 @@
                 
                 // Show success message before closing modal
                 showAuthMessage('signupMessage', 'Account created successfully! Redirecting to dashboard...', 'success');
-                
-                // Close modal after a brief delay
-                setTimeout(() => {
-                    closeAuthModal();
-                    
-                    // Force dashboard to show
-                    const landingView = document.getElementById('landing-page-view');
-                    const nav = document.querySelector('nav');
-                    const footer = document.querySelector('footer');
-                    const dashboardView = document.getElementById('dashboard-view');
-                    
-                    if (landingView) landingView.style.display = 'none';
-                    if (nav) nav.style.display = 'none';
-                    if (footer) footer.style.display = 'none';
-                    if (typeof window.showKotapalDashboard === 'function') window.showKotapalDashboard();
-                    if (typeof setDashboardScrollLock === 'function') setDashboardScrollLock(true);
-                    
-                    updateSidebarUserInfo();
-                    showPage('dashboard');
-                    if (typeof initDashboard === 'function') {
-                        initDashboard();
-                    }
-                }, 500);
+                if (typeof window.showKotapalDashboard === 'function') window.showKotapalDashboard();
+                else if (typeof window.closeAuthModal === 'function') window.closeAuthModal();
+                setTimeout(function() {
+                    if (typeof updateSidebarUserInfo === 'function') updateSidebarUserInfo();
+                    if (typeof showPage === 'function') showPage('dashboard');
+                    if (typeof initDashboard === 'function') initDashboard();
+                    if (typeof window.clearStaleOverlays === 'function') window.clearStaleOverlays();
+                }, 50);
                 
                 // Re-enable button
                 if (submitBtn) {
@@ -6651,7 +6682,8 @@
             }
             function hideAuthModalForAdmin() {
                 var authModal = document.getElementById('authModal');
-                if (authModal) authModal.style.display = 'none';
+                if (typeof window.hideKotapalModal === 'function') window.hideKotapalModal(authModal);
+                else if (authModal) authModal.style.display = 'none';
                 document.documentElement.style.overflow = '';
                 document.body.style.overflow = '';
             }
@@ -6663,8 +6695,8 @@
                 var adminLogin = document.getElementById('admin-login-screen');
                 if (pending) {
                     if (adminLogin) adminLogin.classList.remove('active');
-                } else if (typeof window.dismissBlockingOverlays === 'function') {
-                    window.dismissBlockingOverlays();
+                } else if (typeof window.clearStaleOverlays === 'function') {
+                    window.clearStaleOverlays();
                 }
             }
             function showAdminUI(show, options) {
@@ -6700,7 +6732,7 @@
                 }
             }
             function showAdminDashboard() {
-                if (typeof window.dismissBlockingOverlays === 'function') window.dismissBlockingOverlays();
+                if (typeof window.clearStaleOverlays === 'function') window.clearStaleOverlays();
                 document.body.classList.add('loaded');
                 hideAuthModalForAdmin();
                 if (typeof setAdminScrollLock === 'function') setAdminScrollLock(true);
@@ -6737,7 +6769,7 @@
                     showAdminUI(true, { skipAdminLoginScreen: true });
                     return;
                 }
-                if (typeof window.ensureSiteInteractive === 'function') window.ensureSiteInteractive();
+                if (typeof window.clearStaleOverlays === 'function') window.clearStaleOverlays();
                 showAdminUI(true);
                 var adminLoggedIn = sessionStorage.getItem('admin_logged_in') === '1';
                 if (auth && auth.currentUser && isAdminUser(auth.currentUser.email) && adminLoggedIn) {
@@ -8909,14 +8941,11 @@
                     const footer = document.querySelector('footer');
                     const dashboardView = document.getElementById('dashboard-view');
                     
-                    if (landingView) landingView.style.display = 'none';
-                    if (nav) nav.style.display = 'none';
-                    if (footer) footer.style.display = 'none';
                     if (typeof window.showKotapalDashboard === 'function') window.showKotapalDashboard();
-                    if (typeof setDashboardScrollLock === 'function') setDashboardScrollLock(true);
                     updateSidebarUserInfo();
                     showPage('dashboard');
                     if (typeof initDashboard === 'function') initDashboard();
+                    if (typeof window.clearStaleOverlays === 'function') window.clearStaleOverlays();
                     
                     // Mark processing complete
                     isProcessingAuthState = false;
@@ -8988,6 +9017,8 @@
 
         function showAuthModal() {
             if (authModal) {
+                authModal.classList.remove('kotapal-modal-hidden');
+                authModal.removeAttribute('aria-hidden');
                 authModal.style.display = 'flex';
                 document.documentElement.style.overflow = 'hidden';
                 document.body.style.overflow = 'hidden';
@@ -8995,12 +9026,14 @@
         }
 
         function closeAuthModal() {
-            if (authModal) {
-                authModal.style.display = 'none';
+            if (typeof window.hideKotapalModal === 'function') window.hideKotapalModal(authModal);
+            else if (authModal) authModal.style.display = 'none';
+            if (!window.isKotapalDashboardVisible || !window.isKotapalDashboardVisible()) {
+                document.documentElement.style.overflow = '';
+                document.body.style.overflow = '';
             }
-            document.documentElement.style.overflow = '';
-            document.body.style.overflow = '';
         }
+        window.closeAuthModal = closeAuthModal;
 
         // Do NOT close auth modal on overlay click - keeps form open, user closes via X or Back to Homepage
         
@@ -9321,17 +9354,20 @@
             if (!modal || !titleEl || !contentEl) return;
             titleEl.textContent = plan.title;
             contentEl.innerHTML = '<div class="plan-modal-price">' + plan.price + '</div><p class="plan-modal-description">' + plan.description + '</p><h3>Features:</h3><ul class="plan-modal-features">' + plan.features.map(function(f) { return '<li>' + f + '</li>'; }).join('') + '</ul><button class="btn btn-primary" style="width: 100%;" onclick="closePlanModal(); showAuthModal();">Get Started</button>';
+            modal.classList.remove('kotapal-modal-hidden');
+            modal.removeAttribute('aria-hidden');
             modal.style.display = 'flex';
             document.documentElement.style.overflow = 'hidden';
             document.body.style.overflow = 'hidden';
         }
         function closePlanModal() {
             const modal = document.getElementById('planDetailModal');
-            if (modal) {
-                modal.style.display = 'none';
+            if (typeof window.hideKotapalModal === 'function') window.hideKotapalModal(modal);
+            else if (modal) modal.style.display = 'none';
+            if (!window.isKotapalDashboardVisible || !window.isKotapalDashboardVisible()) {
+                document.documentElement.style.overflow = '';
+                document.body.style.overflow = '';
             }
-            document.documentElement.style.overflow = '';
-            document.body.style.overflow = '';
         }
         document.querySelector('#planDetailModal .plan-modal-close') && document.querySelector('#planDetailModal .plan-modal-close').addEventListener('click', closePlanModal);
         document.getElementById('planDetailModal') && document.getElementById('planDetailModal').addEventListener('click', function(e) {
@@ -13861,15 +13897,20 @@
     <script>
     (function() {
         function unlock() {
+            if (typeof window.isKotapalDashboardVisible === 'function' && window.isKotapalDashboardVisible()) {
+                if (typeof window.clearStaleOverlays === 'function') window.clearStaleOverlays();
+                return;
+            }
+            if (typeof window.isKotapalAdminVisible === 'function' && window.isKotapalAdminVisible()) {
+                if (typeof window.clearStaleOverlays === 'function') window.clearStaleOverlays();
+                return;
+            }
             if (typeof window.ensureSiteInteractive === 'function') window.ensureSiteInteractive();
         }
         unlock();
         document.addEventListener('DOMContentLoaded', unlock);
         window.addEventListener('load', unlock);
         window.addEventListener('pageshow', unlock);
-        setTimeout(unlock, 0);
-        setTimeout(unlock, 300);
-        setTimeout(unlock, 1500);
     })();
     </script>
 </body>
