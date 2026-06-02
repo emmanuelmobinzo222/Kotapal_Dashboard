@@ -10103,7 +10103,7 @@
         // Setup dashboard event listeners
         function setupDashboardEventListeners() {
             // Navigation
-            const navLinks = document.querySelectorAll('.nav-link[data-page]');
+            const navLinks = document.querySelectorAll('#dashboard-view .nav-link[data-page]');
             navLinks.forEach(link => {
                 link.addEventListener('click', function(e) {
                     e.preventDefault();
@@ -13415,13 +13415,13 @@
             }
             
             // Hide all pages
-            const pages = document.querySelectorAll('.page-content');
+            const pages = document.querySelectorAll('#dashboard-view .page-content');
             pages.forEach(page => {
                 page.style.display = 'none';
             });
             
             // Remove active class from all nav links
-            const navLinks = document.querySelectorAll('.nav-link');
+            const navLinks = document.querySelectorAll('#dashboard-view .nav-link[data-page]');
             navLinks.forEach(link => {
                 link.classList.remove('active');
             });
@@ -13492,7 +13492,7 @@
             }
             
             // Add active class to nav link
-            const activeLink = document.querySelector(`[data-page="${pageName}"]`);
+            const activeLink = document.querySelector(`#dashboard-view [data-page="${pageName}"]`);
             if (activeLink) {
                 activeLink.classList.add('active');
             }
@@ -13735,7 +13735,7 @@
         
         // Setup navigation links
         document.addEventListener('DOMContentLoaded', () => {
-            const navLinks = document.querySelectorAll('.nav-link[data-page]');
+            const navLinks = document.querySelectorAll('#dashboard-view .nav-link[data-page]');
             navLinks.forEach(link => {
                 link.addEventListener('click', (e) => {
                     e.preventDefault();
