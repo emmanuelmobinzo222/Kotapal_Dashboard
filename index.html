@@ -3955,6 +3955,15 @@
         #dashboard-view.theme-dark #globalSensitiveToggleAnalytics i, #dashboard-view.theme-dark #globalSensitiveToggleAnalytics span {
             color: #ffffff !important;
         }
+        /* Settings: API key inputs with eye toggle */
+        #dashboard-view .api-key-input-wrap { position: relative; display: flex; align-items: center; }
+        #dashboard-view .api-key-input-wrap input.form-control { padding-right: 44px; }
+        #dashboard-view .api-key-eye-btn {
+            position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+            border: none; background: transparent; color: var(--gray);
+            cursor: pointer; padding: 6px; border-radius: 8px;
+        }
+        #dashboard-view .api-key-eye-btn:hover { color: var(--dark); background: rgba(15, 23, 42, 0.06); }
         #dashboard-view [data-sensitive="true"] { filter: blur(8px); user-select: none; transition: filter 0.3s ease; }
         #dashboard-view [data-sensitive="true"].revealed { filter: none; }
         #dashboard-view .sidebar-toggle {
@@ -4874,27 +4883,52 @@
                         <div class="card-body">
                             <div class="form-group">
                                 <label for="amazonApiKey">SearchAPI.io key (Amazon product search)</label>
-                                <input type="password" id="amazonApiKey" class="form-control provider-api-key-input" data-provider="amazon" placeholder="Paste your Amazon/SearchAPI key" autocomplete="off" spellcheck="false">
+                                <div class="api-key-input-wrap">
+                                    <input type="password" id="amazonApiKey" class="form-control provider-api-key-input" data-provider="amazon" placeholder="Paste your Amazon/SearchAPI key" autocomplete="off" spellcheck="false">
+                                    <button type="button" class="api-key-eye-btn" data-api-key-eye="true" data-target-input="amazonApiKey" aria-label="Show/hide API key">
+                                        <i class="fas fa-eye-slash"></i>
+                                    </button>
+                                </div>
                                 <p id="amazonApiKeyStatus" style="margin-top:8px;font-size:0.85rem;color:var(--gray);"></p>
                             </div>
                             <div class="form-group">
                                 <label for="walmartApiKey">SearchAPI.io key (Walmart product search)</label>
-                                <input type="password" id="walmartApiKey" class="form-control provider-api-key-input" data-provider="walmart" placeholder="Paste your Walmart/SearchAPI key" autocomplete="off" spellcheck="false">
+                                <div class="api-key-input-wrap">
+                                    <input type="password" id="walmartApiKey" class="form-control provider-api-key-input" data-provider="walmart" placeholder="Paste your Walmart/SearchAPI key" autocomplete="off" spellcheck="false">
+                                    <button type="button" class="api-key-eye-btn" data-api-key-eye="true" data-target-input="walmartApiKey" aria-label="Show/hide API key">
+                                        <i class="fas fa-eye-slash"></i>
+                                    </button>
+                                </div>
                                 <p id="walmartApiKeyStatus" style="margin-top:8px;font-size:0.85rem;color:var(--gray);"></p>
                             </div>
                             <div class="form-group">
                                 <label for="ebayApiKey">SearchAPI.io key (eBay product search)</label>
-                                <input type="password" id="ebayApiKey" class="form-control provider-api-key-input" data-provider="ebay" placeholder="Paste your eBay/SearchAPI key" autocomplete="off" spellcheck="false">
+                                <div class="api-key-input-wrap">
+                                    <input type="password" id="ebayApiKey" class="form-control provider-api-key-input" data-provider="ebay" placeholder="Paste your eBay/SearchAPI key" autocomplete="off" spellcheck="false">
+                                    <button type="button" class="api-key-eye-btn" data-api-key-eye="true" data-target-input="ebayApiKey" aria-label="Show/hide API key">
+                                        <i class="fas fa-eye-slash"></i>
+                                    </button>
+                                </div>
                                 <p id="ebayApiKeyStatus" style="margin-top:8px;font-size:0.85rem;color:var(--gray);"></p>
                             </div>
                             <div class="form-group">
                                 <label for="shopifyApiKey">Shopify API key / access token</label>
-                                <input type="password" id="shopifyApiKey" class="form-control provider-api-key-input" data-provider="shopify" placeholder="Paste your Shopify API key or token" autocomplete="off" spellcheck="false">
+                                <div class="api-key-input-wrap">
+                                    <input type="password" id="shopifyApiKey" class="form-control provider-api-key-input" data-provider="shopify" placeholder="Paste your Shopify API key or token" autocomplete="off" spellcheck="false">
+                                    <button type="button" class="api-key-eye-btn" data-api-key-eye="true" data-target-input="shopifyApiKey" aria-label="Show/hide API key">
+                                        <i class="fas fa-eye-slash"></i>
+                                    </button>
+                                </div>
                                 <p id="shopifyApiKeyStatus" style="margin-top:8px;font-size:0.85rem;color:var(--gray);"></p>
                             </div>
                             <div class="form-group">
                                 <label for="skimlinksApiKey">Skimlinks API key</label>
-                                <input type="password" id="skimlinksApiKey" class="form-control provider-api-key-input" data-provider="skimlinks" placeholder="Paste your Skimlinks API key" autocomplete="off" spellcheck="false">
+                                <div class="api-key-input-wrap">
+                                    <input type="password" id="skimlinksApiKey" class="form-control provider-api-key-input" data-provider="skimlinks" placeholder="Paste your Skimlinks API key" autocomplete="off" spellcheck="false">
+                                    <button type="button" class="api-key-eye-btn" data-api-key-eye="true" data-target-input="skimlinksApiKey" aria-label="Show/hide API key">
+                                        <i class="fas fa-eye-slash"></i>
+                                    </button>
+                                </div>
                                 <p id="skimlinksApiKeyStatus" style="margin-top:8px;font-size:0.85rem;color:var(--gray);"></p>
                             </div>
                             <button type="button" class="btn btn-primary" id="saveAmazonApiKey">Save API keys</button>
@@ -11305,9 +11339,9 @@
 
         // Get your API key from https://www.searchapi.io/
         // Pass a provider to retrieve that provider's specific key.
-        function getSearchApiKey(provider) {
-            if (provider) return getProviderApiKey(provider);
-            return localStorage.getItem('searchapi_key') || getProviderApiKey('amazon');
+        function getSearchApiKey(provider, includeDefault = true) {
+            if (provider) return getProviderApiKey(provider, includeDefault);
+            return localStorage.getItem('searchapi_key') || getProviderApiKey('amazon', includeDefault);
         }
 
         function setSearchApiKey(key, provider = 'amazon') {
@@ -11350,6 +11384,31 @@
                         setTimeout(() => { this.value = this.value.trim(); }, 0);
                     });
                 }
+                if (!input.dataset.autoSaveBound) {
+                    input.dataset.autoSaveBound = '1';
+                    let t = null;
+                    input.addEventListener('input', function() {
+                        const el = this;
+                        const prov = String(el.dataset.provider || '').toLowerCase();
+                        if (!prov) return;
+                        if (t) window.clearTimeout(t);
+                        t = window.setTimeout(function() {
+                            const value = el.value ? el.value.trim() : '';
+                            setProviderApiKey(prov, value);
+                            if (value) setProviderApiKeyStatus(prov, getProviderLabel(prov) + ' API key saved', 'var(--success)');
+                            else setProviderApiKeyStatus(prov, SEARCHAPI_PROVIDERS.includes(prov) ? 'No saved key. The default SearchAPI key will be used until you save one.' : 'No API key configured', 'var(--gray)');
+                        }, 450);
+                    });
+                    input.addEventListener('blur', function() {
+                        // Ensure last keystroke saves immediately on blur
+                        const el = this;
+                        const prov = String(el.dataset.provider || '').toLowerCase();
+                        if (!prov) return;
+                        const value = el.value ? el.value.trim() : '';
+                        setProviderApiKey(prov, value);
+                        if (value) setProviderApiKeyStatus(prov, getProviderLabel(prov) + ' API key saved', 'var(--success)');
+                    });
+                }
                 if (savedKey) {
                     setProviderApiKeyStatus(provider, cfg.label + ' API key saved', 'var(--success)');
                 } else if (SEARCHAPI_PROVIDERS.includes(provider)) {
@@ -11358,6 +11417,26 @@
                     setProviderApiKeyStatus(provider, 'No API key configured', 'var(--gray)');
                 }
             });
+
+            // Bind eye toggles (once)
+            document.querySelectorAll('button[data-api-key-eye="true"]').forEach(function(btn) {
+                if (btn.dataset.bound) return;
+                btn.dataset.bound = '1';
+                btn.addEventListener('click', function() {
+                    const targetId = btn.getAttribute('data-target-input');
+                    const input = targetId ? document.getElementById(targetId) : null;
+                    if (!input) return;
+                    const isHidden = input.type === 'password';
+                    input.type = isHidden ? 'text' : 'password';
+                    const icon = btn.querySelector('i');
+                    if (icon) icon.className = isHidden ? 'fas fa-eye' : 'fas fa-eye-slash';
+                });
+            });
+        }
+
+        function isSearchApiQuotaError(message) {
+            const m = String(message || '');
+            return /used all of the searches|upgrade your plan|quota/i.test(m);
         }
 
         function saveProviderApiKeys() {
@@ -11585,7 +11664,7 @@
                     // Use SearchAPI.io Walmart Search API
                     // Full API implementation with all parameters
                     // Endpoint: https://www.searchapi.io/api/v1/search?engine=walmart_search
-                    const apiKey = getSearchApiKey('walmart');
+                    const apiKey = getSearchApiKey('walmart', false);
                     
                     // Use default API key if user hasn't configured one
                     const finalApiKey = apiKey || DEFAULT_AMAZON_API_KEY;
@@ -11627,7 +11706,11 @@
                         
                         if (!response.ok) {
                             const errorText = await response.text();
-                            throw new Error(`API request failed: ${response.status} ${response.statusText}. ${errorText.substring(0,100)}`);
+                            const short = (errorText || '').substring(0, 220);
+                            if (isSearchApiQuotaError(short)) {
+                                throw new Error('SearchAPI.io quota exceeded. Add your own SearchAPI.io API key in Settings (Provider API keys) or upgrade your plan on SearchAPI.io.');
+                            }
+                            throw new Error(`API request failed: ${response.status} ${response.statusText}. ${short}`);
                         }
                         
                         const data = await response.json();
@@ -11694,13 +11777,16 @@
                         }
                     } catch (apiError) {
                         console.error('Walmart API error:', apiError);
-                        searchStatus.textContent = `Error searching products: ${apiError.message}. Please check your API key and try again.`;
+                        const msg = String(apiError && apiError.message ? apiError.message : apiError);
+                        searchStatus.textContent = isSearchApiQuotaError(msg)
+                            ? msg
+                            : `Error searching products: ${msg}. Please check your API key and try again.`;
                         products = [];
                         // NO MOCK DATA FALLBACK - Show error instead
                     }
                 } else if (retailer === 'ebay') {
                     // SearchAPI.io eBay Search API: engine=ebay_search
-                    const apiKey = getSearchApiKey('ebay') || DEFAULT_AMAZON_API_KEY;
+                    const apiKey = getSearchApiKey('ebay', false) || DEFAULT_AMAZON_API_KEY;
                     if (!apiKey) {
                         searchStatus.textContent = 'API key required. Please configure your SearchAPI.io API key in Settings.';
                         products = [];
