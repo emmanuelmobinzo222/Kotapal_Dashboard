@@ -11439,6 +11439,182 @@
             return /used all of the searches|upgrade your plan|quota/i.test(m);
         }
 
+        function formatProviderSearchError(message) {
+            const m = String(message || '');
+            if (isSearchApiQuotaError(m) || /searchapi/i.test(m)) {
+                return 'Monthly search limit reached. Update Provider API keys in Settings or try again later.';
+            }
+            return 'Live search is unavailable. Check Provider API keys in Settings.';
+        }
+
+        const DEMO_PRODUCT_CATALOG = {
+            amazon: [
+                { id: 'amz_1', title: 'Sony WH-1000XM5 Wireless Noise Canceling Headphones', image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&q=80', price: 299.99, retailer: 'amazon', link: 'https://www.amazon.com/' },
+                { id: 'amz_2', title: 'Bose QuietComfort 45 Headphones', image: 'https://images.unsplash.com/photo-1572536147248-ac59a8abfa4b?w=500&q=80', price: 279.99, retailer: 'amazon', link: 'https://www.amazon.com/' },
+                { id: 'amz_3', title: 'Apple AirPods Max', image: 'https://images.unsplash.com/photo-1613040809024-b4ef7ba99bc3?w=500&q=80', price: 549.00, retailer: 'amazon', link: 'https://www.amazon.com/' }
+            ],
+            walmart: [
+                { id: 'wlm_1', title: 'Samsung 55" Class Crystal UHD Smart TV', image: 'https://images.unsplash.com/photo-1593305841991-05c297ba4575?w=500&q=80', price: 499.99, retailer: 'walmart', link: 'https://www.walmart.com/' },
+                { id: 'wlm_2', title: 'Dyson V11 Cordless Vacuum Cleaner', image: 'https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=500&q=80', price: 599.00, retailer: 'walmart', link: 'https://www.walmart.com/' }
+            ],
+            ebay: [
+                { id: 'ebay_1', title: 'Unlocked Apple iPhone SE 3rd Gen - Black 64GB', image: 'https://i.ebayimg.com/images/g/KUkAAOSw~CtoBToW/s-l500.jpg', price: 99.99, retailer: 'ebay', link: 'https://www.ebay.com/' },
+                { id: 'ebay_2', title: 'Nike Air Jordan 1 Chicago Lost & Found - Size 10.5', image: 'https://i.ebayimg.com/images/g/CJYAAOSwmtFlqsPp/s-l500.jpg', price: 449.99, retailer: 'ebay', link: 'https://www.ebay.com/' }
+            ]
+        };
+
+        function getDemoProductsForRetailer(retailer, query) {
+            const q = String(query || '').trim();
+            const ql = q.toLowerCase();
+            const catalog = (DEMO_PRODUCT_CATALOG[retailer] || []).slice();
+            let matched = catalog.filter(function(p) {
+                return !ql || p.title.toLowerCase().includes(ql);
+            });
+            if (matched.length === 0 && ql) {
+                const templates = [
+                    { suffix: 'Premium Edition', price: 49.99 },
+                    { suffix: 'Best Seller', price: 79.99 },
+                    { suffix: 'Top Rated', price: 129.99 }
+                ];
+                matched = templates.map(function(t, i) {
+                    return {
+                        id: 'demo_' + retailer + '_' + i,
+                        title: q + ' — ' + t.suffix,
+                        image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&q=80',
+                        price: t.price,
+                        retailer: retailer,
+                        link: '#'
+                    };
+                });
+            }
+            if (matched.length === 0) matched = catalog;
+            return matched.map(function(p) {
+                return Object.assign({}, p, { addedDate: new Date().toISOString() });
+            });
+        }
+
+        function mapDemoProductsForBlock(demoProducts, retailer) {
+            return demoProducts.map(function(p, index) {
+                return {
+                    id: p.id,
+                    title: p.title,
+                    image: p.image,
+                    price: p.price || 0,
+                    originalPrice: p.price || 0,
+                    rating: 4.5,
+                    reviews: 100 + index,
+                    availability: 'In Stock',
+                    link: p.link || '#',
+                    retailer: p.retailer || retailer
+                };
+            });
+        }
+
+        function getApiKeysToTry(provider) {
+            const keys = [];
+            const userKey = getProviderApiKey(provider, false);
+            if (userKey) keys.push(userKey);
+            if (SEARCHAPI_PROVIDERS.includes(provider) && DEFAULT_AMAZON_API_KEY && keys.indexOf(DEFAULT_AMAZON_API_KEY) === -1) {
+                keys.push(DEFAULT_AMAZON_API_KEY);
+            }
+            return keys;
+        }
+
+        async function fetchSearchApiProducts(retailer, query, apiKey) {
+            let products = [];
+            if (retailer === 'amazon') {
+                const url = SEARCHAPI_URL + '?engine=amazon_search&api_key=' + encodeURIComponent(apiKey) + '&q=' + encodeURIComponent(query) + '&num=20';
+                const res = await fetch(url, { method: 'GET', headers: { 'Accept': 'application/json' } });
+                const data = await res.json();
+                if (!res.ok || (data && data.error)) {
+                    const errMsg = (data && data.error && (data.error.message || data.error)) || ('HTTP ' + res.status);
+                    throw new Error(formatProviderSearchError(typeof errMsg === 'string' ? errMsg : JSON.stringify(errMsg)));
+                }
+                if (data && data.organic_results && Array.isArray(data.organic_results)) {
+                    products = data.organic_results.map(function(item, i) {
+                        return {
+                            id: item.asin || item.product_id || ('amz_' + i),
+                            title: item.title || 'Product',
+                            image: item.thumbnail || item.image || 'https://via.placeholder.com/200',
+                            price: item.extracted_price != null ? parseFloat(item.extracted_price) : (item.price ? parseFloat(String(item.price).replace(/[^0-9.]/g, '')) : 0) || 0,
+                            retailer: 'amazon',
+                            asin: item.asin,
+                            link: item.link || ('https://www.amazon.com/dp/' + (item.asin || '')),
+                            addedDate: new Date().toISOString()
+                        };
+                    });
+                }
+            } else if (retailer === 'walmart') {
+                const params = new URLSearchParams({ engine: 'walmart_search', q: query, api_key: apiKey, num: '20' });
+                const res = await fetch(SEARCHAPI_URL + '?' + params, { method: 'GET', headers: { 'Accept': 'application/json' } });
+                const data = await res.json();
+                if (!res.ok || (data && data.error)) {
+                    const errMsg = (data && data.error && (data.error.message || data.error)) || ('HTTP ' + res.status);
+                    throw new Error(formatProviderSearchError(typeof errMsg === 'string' ? errMsg : JSON.stringify(errMsg)));
+                }
+                let allResults = [];
+                if (data && data.organic_results) allResults = allResults.concat(data.organic_results);
+                if (data && data.other_options) allResults = allResults.concat(data.other_options);
+                if (allResults.length > 0) {
+                    products = allResults.map(function(item, i) {
+                        return {
+                            id: item.product_id || item.id || ('wlm_' + i),
+                            title: item.title || 'Product',
+                            image: item.thumbnail || 'https://via.placeholder.com/200',
+                            price: item.extracted_price != null ? parseFloat(item.extracted_price) : (item.price ? parseFloat(String(item.price).replace(/[^0-9.]/g, '')) : 0) || 0,
+                            retailer: 'walmart',
+                            link: item.link || ('https://www.walmart.com/ip/' + (item.product_id || item.id || '')),
+                            addedDate: new Date().toISOString()
+                        };
+                    });
+                }
+            } else if (retailer === 'ebay') {
+                const params = new URLSearchParams({ engine: 'ebay_search', q: query, api_key: apiKey, num: '20' });
+                const res = await fetch(SEARCHAPI_URL + '?' + params, { method: 'GET', headers: { 'Accept': 'application/json' } });
+                const data = await res.json();
+                if (!res.ok || (data && data.error)) {
+                    const errMsg = (data && data.error && (data.error.message || data.error)) || ('HTTP ' + res.status);
+                    throw new Error(formatProviderSearchError(typeof errMsg === 'string' ? errMsg : JSON.stringify(errMsg)));
+                }
+                let allResults = [];
+                if (data && data.organic_results) allResults = allResults.concat(data.organic_results);
+                if (data && data.sections) data.sections.forEach(function(sec) { if (sec.results) allResults = allResults.concat(sec.results); });
+                if (allResults.length > 0) {
+                    products = allResults.slice(0, 20).map(function(item, i) {
+                        var price = 0;
+                        if (item.extracted_price != null) price = parseFloat(item.extracted_price);
+                        else if (item.price) { var m = String(item.price).match(/\$?([\d,]+\.?\d*)/); if (m) price = parseFloat(m[1].replace(/,/g, '')); }
+                        return {
+                            id: item.item_id || item.id || ('ebay_' + i),
+                            title: item.title || 'Product',
+                            image: item.thumbnail || (item.images && item.images[0]) || 'https://via.placeholder.com/200',
+                            price: price || 0,
+                            retailer: 'ebay',
+                            link: item.link || ('https://www.ebay.com/itm/' + (item.item_id || item.id || '')),
+                            addedDate: new Date().toISOString()
+                        };
+                    });
+                }
+            }
+            return products;
+        }
+
+        async function searchRetailerProductsWithFallback(retailer, query) {
+            if (SEARCHAPI_PROVIDERS.includes(retailer)) {
+                const keys = getApiKeysToTry(retailer);
+                for (var ki = 0; ki < keys.length; ki++) {
+                    try {
+                        const products = await fetchSearchApiProducts(retailer, query, keys[ki]);
+                        if (products.length > 0) return { products: products, live: true };
+                    } catch (apiErr) {
+                        console.warn('Retailer API search attempt failed:', retailer, apiErr);
+                    }
+                }
+                return { products: getDemoProductsForRetailer(retailer, query), live: false };
+            }
+            return { products: getDemoProductsForRetailer(retailer, query), live: false };
+        }
+
         function saveProviderApiKeys() {
             let savedCount = 0;
             Object.keys(PROVIDER_API_KEY_INPUTS).forEach(function(provider) {
@@ -11557,7 +11733,7 @@
                             }
                         } catch (apiError) {
                             console.error('Amazon API error:', apiError);
-                            searchStatus.textContent = `API Error: ${apiError.message}. Retrying with default key...`;
+                            searchStatus.textContent = formatProviderSearchError(apiError.message) + ' Trying alternate key...';
                             // Retry with default key
                             try {
                                 const apiUrl = `${AMAZON_API_URL}?engine=amazon_search&api_key=${DEFAULT_AMAZON_API_KEY}&q=${encodeURIComponent(query)}&num=20`;
@@ -11612,8 +11788,10 @@
                                 }
                             } catch (e) {
                                 console.error('Default API key also failed:', e);
-                                searchStatus.textContent = `Unable to fetch products. Please check your API key or try again later. Error: ${e.message}`;
-                                products = [];
+                                products = mapDemoProductsForBlock(getDemoProductsForRetailer('amazon', query), 'amazon');
+                                searchStatus.textContent = products.length > 0
+                                    ? `Showing ${products.length} sample Amazon products for "${query}". Check Provider API keys in Settings for live results.`
+                                    : 'Unable to fetch products. Check Provider API keys in Settings and try again.';
                             }
                         }
                     } else {
@@ -11656,8 +11834,10 @@
                             }
                         } catch (e) {
                             console.error('Default API key also failed:', e);
-                            searchStatus.textContent = `Unable to fetch products. Please check your API key or try again later. Error: ${e.message}`;
-                            products = [];
+                            products = mapDemoProductsForBlock(getDemoProductsForRetailer('amazon', query), 'amazon');
+                            searchStatus.textContent = products.length > 0
+                                ? `Showing ${products.length} sample Amazon products for "${query}". Check Provider API keys in Settings for live results.`
+                                : 'Unable to fetch products. Check Provider API keys in Settings and try again.';
                         }
                     }
                 } else if (retailer === 'walmart') {
@@ -11670,9 +11850,11 @@
                     const finalApiKey = apiKey || DEFAULT_AMAZON_API_KEY;
                     
                     if (!finalApiKey) {
-                        searchStatus.textContent = 'API key required. Please configure your SearchAPI.io API key in Settings.';
-                        products = [];
-                        return;
+                        products = mapDemoProductsForBlock(getDemoProductsForRetailer('walmart', query), 'walmart');
+                        searchStatus.textContent = products.length > 0
+                            ? `Showing ${products.length} sample Walmart products for "${query}". Check Provider API keys in Settings for live results.`
+                            : 'API key required. Configure Provider API keys in Settings.';
+                        if (products.length === 0) return;
                     }
                     
                     // #endregion
@@ -11708,7 +11890,7 @@
                             const errorText = await response.text();
                             const short = (errorText || '').substring(0, 220);
                             if (isSearchApiQuotaError(short)) {
-                                throw new Error('SearchAPI.io quota exceeded. Add your own SearchAPI.io API key in Settings (Provider API keys) or upgrade your plan on SearchAPI.io.');
+                                throw new Error('Monthly search limit reached. Update Provider API keys in Settings or try again later.');
                             }
                             throw new Error(`API request failed: ${response.status} ${response.statusText}. ${short}`);
                         }
@@ -11717,7 +11899,8 @@
                         
                         // Check for API errors in response
                         if (data && data.error) {
-                            throw new Error(`API Error: ${data.error.message || data.error}`);
+                            const apiErrMsg = data.error.message || data.error;
+                            throw new Error(formatProviderSearchError(typeof apiErrMsg === 'string' ? apiErrMsg : JSON.stringify(apiErrMsg)));
                         }
                         
                         // Parse SearchAPI.io response format
@@ -11777,19 +11960,19 @@
                         }
                     } catch (apiError) {
                         console.error('Walmart API error:', apiError);
-                        const msg = String(apiError && apiError.message ? apiError.message : apiError);
-                        searchStatus.textContent = isSearchApiQuotaError(msg)
-                            ? msg
-                            : `Error searching products: ${msg}. Please check your API key and try again.`;
-                        products = [];
-                        // NO MOCK DATA FALLBACK - Show error instead
+                        products = mapDemoProductsForBlock(getDemoProductsForRetailer('walmart', query), 'walmart');
+                        searchStatus.textContent = products.length > 0
+                            ? `Showing ${products.length} sample Walmart products for "${query}". Check Provider API keys in Settings for live results.`
+                            : 'Error searching products. Check Provider API keys in Settings and try again.';
                     }
                 } else if (retailer === 'ebay') {
                     // SearchAPI.io eBay Search API: engine=ebay_search
                     const apiKey = getSearchApiKey('ebay', false) || DEFAULT_AMAZON_API_KEY;
                     if (!apiKey) {
-                        searchStatus.textContent = 'API key required. Please configure your SearchAPI.io API key in Settings.';
-                        products = [];
+                        products = mapDemoProductsForBlock(getDemoProductsForRetailer('ebay', query), 'ebay');
+                        searchStatus.textContent = products.length > 0
+                            ? `Showing ${products.length} sample eBay products for "${query}". Check Provider API keys in Settings for live results.`
+                            : 'API key required. Configure Provider API keys in Settings.';
                     } else {
                         try {
                             const params = new URLSearchParams({
@@ -11859,8 +12042,10 @@
                             }
                         } catch (apiError) {
                             console.error('eBay API error:', apiError);
-                            searchStatus.textContent = `Error searching eBay: ${apiError.message}. Please check your API key and try again.`;
-                            products = [];
+                            products = mapDemoProductsForBlock(getDemoProductsForRetailer('ebay', query), 'ebay');
+                            searchStatus.textContent = products.length > 0
+                                ? `Showing ${products.length} sample eBay products for "${query}". Check Provider API keys in Settings for live results.`
+                                : 'Error searching eBay. Check Provider API keys in Settings and try again.';
                         }
                     }
                 } else if (retailer === 'shopify') {
@@ -11899,6 +12084,13 @@
                     ];
                 }
                 
+                if (SEARCHAPI_PROVIDERS.includes(retailer) && products.length === 0) {
+                    products = mapDemoProductsForBlock(getDemoProductsForRetailer(retailer, query), retailer);
+                    if (products.length > 0) {
+                        searchStatus.textContent = `Showing ${products.length} sample ${retailer} products for "${query}". Check Provider API keys in Settings for live results.`;
+                    }
+                }
+
                 if (retailer === 'shopify' || retailer === 'skimlinks') {
                     searchStatus.textContent = `Found ${products.length} products for "${query}"`;
                 }
@@ -11942,8 +12134,45 @@
                 
             } catch (error) {
                 console.error('Search products error:', error);
-                searchStatus.textContent = `Error searching products: ${error.message}`;
-                productsContainer.innerHTML = '<p style="text-align: center; color: var(--danger); padding: 20px;">Error loading products. Please try again.</p>';
+                const demoProducts = SEARCHAPI_PROVIDERS.includes(retailer)
+                    ? mapDemoProductsForBlock(getDemoProductsForRetailer(retailer, query), retailer)
+                    : [];
+                if (demoProducts.length > 0) {
+                    searchStatus.textContent = `Showing ${demoProducts.length} sample ${retailer} products for "${query}". Check Provider API keys in Settings for live results.`;
+                    productsContainer.innerHTML = '';
+                    demoProducts.forEach(function(product, index) {
+                        const productCard = document.createElement('div');
+                        productCard.className = 'product-card-dashboard';
+                        productCard.dataset.productId = product.id;
+                        const isInitiallySelected = selectedProductsList.some(function(p) { return p.id === product.id; });
+                        if (isInitiallySelected) productCard.classList.add('selected');
+                        productCard.innerHTML = '<span class="product-card-check" aria-hidden="true"><i class="fas fa-check"></i></span>' +
+                            '<img src="' + product.image + '" alt="' + product.title + '" class="product-image-dashboard">' +
+                            '<div class="product-title">' + product.title + '</div>' +
+                            '<div class="product-price">$' + product.price.toFixed(2) + '</div>' +
+                            '<div class="product-retailer">' + retailer.charAt(0).toUpperCase() + retailer.slice(1) + '</div>';
+                        productCard.addEventListener('click', function() {
+                            const isSelected = selectedProductsList.some(function(p) { return p.id === product.id; });
+                            if (isSelected) {
+                                selectedProductsList = selectedProductsList.filter(function(p) { return p.id !== product.id; });
+                            } else {
+                                const maxProducts = getKotaPlanLimits(currentUser?.plan).maxProducts;
+                                const maxProductsCap = maxProducts === Infinity ? 999 : maxProducts;
+                                if (selectedProductsList.length >= maxProductsCap) {
+                                    showNotification('Maximum ' + (maxProducts === Infinity ? 'unlimited' : maxProducts) + ' products allowed per block in your plan.', 'warning', 'Create Block');
+                                    return;
+                                }
+                                selectedProductsList.push(product);
+                            }
+                            productCard.classList.toggle('selected', selectedProductsList.some(function(p) { return p.id === product.id; }));
+                            updateSelectedProducts();
+                        });
+                        productsContainer.appendChild(productCard);
+                    });
+                } else {
+                    searchStatus.textContent = 'Error searching products. Check Provider API keys in Settings and try again.';
+                    productsContainer.innerHTML = '<p style="text-align: center; color: var(--danger); padding: 20px;">Error loading products. Please try again.</p>';
+                }
             }
         }
         
@@ -11957,76 +12186,15 @@
                 resultsEl.innerHTML = '';
                 return;
             }
-            const apiKey = SEARCHAPI_PROVIDERS.includes(retailer) ? (getSearchApiKey(retailer) || DEFAULT_AMAZON_API_KEY) : getProviderApiKey(retailer, false);
-            if (SEARCHAPI_PROVIDERS.includes(retailer) && !apiKey) {
-                statusEl.textContent = 'API key required. Configure SearchAPI.io key in Settings.';
-                resultsEl.innerHTML = '';
-                return;
-            }
             statusEl.textContent = 'Searching...';
             resultsEl.innerHTML = '<div style="padding: 24px; text-align: center; color: var(--gray);"><div class="spinner" style="margin: 0 auto 12px;"></div>Loading products...</div>';
             let products = [];
+            let usedLiveSearch = true;
             try {
-                if (retailer === 'amazon') {
-                    const url = `${SEARCHAPI_URL}?engine=amazon_search&api_key=${apiKey}&q=${encodeURIComponent(query)}&num=20`;
-                    const res = await fetch(url, { method: 'GET', headers: { 'Accept': 'application/json' } });
-                    const data = await res.json();
-                    if (!res.ok || (data && data.error)) throw new Error(data?.error?.message || data?.error || `HTTP ${res.status}`);
-                    if (data && data.organic_results && Array.isArray(data.organic_results)) {
-                        products = data.organic_results.map((item, i) => ({
-                            id: item.asin || item.product_id || `amz_${i}`,
-                            title: item.title || 'Product',
-                            image: item.thumbnail || item.image || 'https://via.placeholder.com/200',
-                            price: item.extracted_price != null ? parseFloat(item.extracted_price) : (item.price ? parseFloat(String(item.price).replace(/[^0-9.]/g, '')) : 0) || 0,
-                            retailer: 'amazon',
-                            asin: item.asin,
-                            link: item.link || `https://www.amazon.com/dp/${item.asin || ''}`,
-                            addedDate: new Date().toISOString()
-                        }));
-                    }
-                } else if (retailer === 'walmart') {
-                    const params = new URLSearchParams({ engine: 'walmart_search', q: query, api_key: apiKey, num: '20' });
-                    const res = await fetch(`${SEARCHAPI_URL}?${params}`, { method: 'GET', headers: { 'Accept': 'application/json' } });
-                    const data = await res.json();
-                    if (!res.ok || (data && data.error)) throw new Error(data?.error?.message || data?.error || `HTTP ${res.status}`);
-                    let allResults = [];
-                    if (data && data.organic_results) allResults = allResults.concat(data.organic_results);
-                    if (data && data.other_options) allResults = allResults.concat(data.other_options);
-                    if (allResults.length > 0) {
-                        products = allResults.map((item, i) => ({
-                            id: item.product_id || item.id || `wlm_${i}`,
-                            title: item.title || 'Product',
-                            image: item.thumbnail || 'https://via.placeholder.com/200',
-                            price: item.extracted_price != null ? parseFloat(item.extracted_price) : (item.price ? parseFloat(String(item.price).replace(/[^0-9.]/g, '')) : 0) || 0,
-                            retailer: 'walmart',
-                            link: item.link || `https://www.walmart.com/ip/${item.product_id || item.id || ''}`,
-                            addedDate: new Date().toISOString()
-                        }));
-                    }
-                } else if (retailer === 'ebay') {
-                    const params = new URLSearchParams({ engine: 'ebay_search', q: query, api_key: apiKey, num: '20' });
-                    const res = await fetch(`${SEARCHAPI_URL}?${params}`, { method: 'GET', headers: { 'Accept': 'application/json' } });
-                    const data = await res.json();
-                    if (!res.ok || (data && data.error)) throw new Error(data?.error?.message || data?.error || `HTTP ${res.status}`);
-                    let allResults = [];
-                    if (data && data.organic_results) allResults = allResults.concat(data.organic_results);
-                    if (data && data.sections) data.sections.forEach(sec => { if (sec.results) allResults = allResults.concat(sec.results); });
-                    if (allResults.length > 0) {
-                        products = allResults.slice(0, 20).map((item, i) => {
-                            let price = 0;
-                            if (item.extracted_price != null) price = parseFloat(item.extracted_price);
-                            else if (item.price) { const m = String(item.price).match(/\$?([\d,]+\.?\d*)/); if (m) price = parseFloat(m[1].replace(/,/g, '')); }
-                            return {
-                                id: item.item_id || item.id || `ebay_${i}`,
-                                title: item.title || 'Product',
-                                image: item.thumbnail || (item.images && item.images[0]) || 'https://via.placeholder.com/200',
-                                price: price || 0,
-                                retailer: 'ebay',
-                                link: item.link || `https://www.ebay.com/itm/${item.item_id || item.id || ''}`,
-                                addedDate: new Date().toISOString()
-                            };
-                        });
-                    }
+                if (SEARCHAPI_PROVIDERS.includes(retailer)) {
+                    const searchResult = await searchRetailerProductsWithFallback(retailer, query);
+                    products = searchResult.products;
+                    usedLiveSearch = searchResult.live;
                 } else if (retailer === 'shopify') {
                     products = [
                         {
@@ -12070,7 +12238,17 @@
                         }
                     ].filter(p => p.title.toLowerCase().includes(query.toLowerCase()) || query.length > 0);
                 }
-                statusEl.textContent = products.length > 0 ? `Found ${products.length} ${retailer} product(s) for "${query}". Click "Add to Library" to save.` : `No ${retailer} products found for "${query}".`;
+                if (SEARCHAPI_PROVIDERS.includes(retailer) && products.length === 0) {
+                    products = getDemoProductsForRetailer(retailer, query);
+                    usedLiveSearch = false;
+                }
+                if (products.length > 0) {
+                    statusEl.textContent = usedLiveSearch
+                        ? `Found ${products.length} ${retailer} product(s) for "${query}". Click "Add to Library" to save.`
+                        : `Showing ${products.length} sample ${retailer} product(s) for "${query}". Live search is unavailable — check Provider API keys in Settings. Click "Add to Library" to save.`;
+                } else {
+                    statusEl.textContent = `No ${retailer} products found for "${query}".`;
+                }
                 window._lastLibrarySearchProducts = products;
                 resultsEl.innerHTML = products.length === 0 ? '<p style="text-align: center; color: var(--gray); padding: 24px;">No results. Try another search.</p>' : products.map((p, idx) => `
                     <div class="product-card-dashboard" style="position: relative;">
@@ -12085,8 +12263,24 @@
                 `).join('');
             } catch (err) {
                 console.error('Product Library search error:', err);
-                statusEl.textContent = `Error: ${err.message}. Check your API key in Settings.`;
-                resultsEl.innerHTML = '<p style="text-align: center; color: var(--danger); padding: 20px;">Search failed. Please try again.</p>';
+                products = getDemoProductsForRetailer(retailer, query);
+                window._lastLibrarySearchProducts = products;
+                statusEl.textContent = products.length > 0
+                    ? `Showing ${products.length} sample ${retailer} product(s) for "${query}". Live search is unavailable — check Provider API keys in Settings.`
+                    : 'Search failed. Please try again.';
+                resultsEl.innerHTML = products.length === 0
+                    ? '<p style="text-align: center; color: var(--danger); padding: 20px;">Search failed. Please try again.</p>'
+                    : products.map((p, idx) => `
+                    <div class="product-card-dashboard" style="position: relative;">
+                        <img src="${(p.image || 'https://via.placeholder.com/200').replace(/"/g, '&quot;')}" alt="${(p.title || '').replace(/"/g, '&quot;')}" class="product-image-dashboard" onerror="this.src='https://via.placeholder.com/200'">
+                        <div class="product-title">${(p.title || 'Product').substring(0, 60)}${(p.title || '').length > 60 ? '...' : ''}</div>
+                        <div class="product-price">$${(p.price || 0).toFixed(2)}</div>
+                        <div class="product-retailer">${(p.retailer || '').charAt(0).toUpperCase() + (p.retailer || '').slice(1)}</div>
+                        <button type="button" class="btn btn-primary btn-sm" style="margin-top: 8px; width: 100%; padding: 8px;" onclick="addProductToLibraryByIndex(${idx})">
+                            <i class="fas fa-plus"></i> Add to Library
+                        </button>
+                    </div>
+                `).join('');
             }
         }
         
