@@ -4881,6 +4881,7 @@
                     <div class="card" style="margin-top:20px;">
                         <div class="card-header"><h3 class="card-title">Provider API keys</h3></div>
                         <div class="card-body">
+                            <p style="margin:0 0 16px;font-size:0.9rem;color:var(--gray);">Amazon, Walmart, and eBay product search is live-only. Add your own <a href="https://www.searchapi.io/" target="_blank" rel="noopener noreferrer">SearchAPI.io</a> key below (sample/demo products are never shown).</p>
                             <div class="form-group">
                                 <label for="amazonApiKey">SearchAPI.io key (Amazon product search)</label>
                                 <div class="api-key-input-wrap">
@@ -11271,9 +11272,7 @@
             showNotification('Block created successfully!', 'success', 'Create Block');
         }
 
-        // SearchAPI.io API Configuration
-        // Default API key for product searches where the provider uses SearchAPI.io.
-        const DEFAULT_AMAZON_API_KEY = 'WceNe5Tmok9RVw5Y4Qn6PnLM';
+        // SearchAPI.io — live retailer search uses only keys saved in Settings (no sample/demo fallback).
         const SEARCHAPI_PROVIDERS = ['amazon', 'walmart', 'ebay'];
         const PROVIDER_API_KEY_INPUTS = {
             amazon: { inputId: 'amazonApiKey', statusId: 'amazonApiKeyStatus', label: 'Amazon' },
@@ -11304,7 +11303,7 @@
                 : '';
             const saved = scopedKey || localFallback || legacySearchApiKey;
             if (saved) return saved;
-            return includeDefault && SEARCHAPI_PROVIDERS.includes(provider) ? DEFAULT_AMAZON_API_KEY : '';
+            return '';
         }
 
         function setProviderApiKey(provider, key) {
@@ -11396,7 +11395,7 @@
                             const value = el.value ? el.value.trim() : '';
                             setProviderApiKey(prov, value);
                             if (value) setProviderApiKeyStatus(prov, getProviderLabel(prov) + ' API key saved', 'var(--success)');
-                            else setProviderApiKeyStatus(prov, SEARCHAPI_PROVIDERS.includes(prov) ? 'No saved key. The default SearchAPI key will be used until you save one.' : 'No API key configured', 'var(--gray)');
+                            else setProviderApiKeyStatus(prov, SEARCHAPI_PROVIDERS.includes(prov) ? 'No saved key. Paste your SearchAPI.io key for live product search.' : 'No API key configured', 'var(--gray)');
                         }, 450);
                     });
                     input.addEventListener('blur', function() {
@@ -11412,7 +11411,7 @@
                 if (savedKey) {
                     setProviderApiKeyStatus(provider, cfg.label + ' API key saved', 'var(--success)');
                 } else if (SEARCHAPI_PROVIDERS.includes(provider)) {
-                    setProviderApiKeyStatus(provider, 'No saved key. The default SearchAPI key will be used until you save one.', 'var(--gray)');
+                    setProviderApiKeyStatus(provider, 'No saved key. Paste your SearchAPI.io key for live product search.', 'var(--gray)');
                 } else {
                     setProviderApiKeyStatus(provider, 'No API key configured', 'var(--gray)');
                 }
@@ -11449,11 +11448,15 @@
 
         function getApiKeysToTry(provider) {
             const userKey = getProviderApiKey(provider, false);
-            if (userKey) return [userKey];
-            if (SEARCHAPI_PROVIDERS.includes(provider) && DEFAULT_AMAZON_API_KEY) {
-                return [DEFAULT_AMAZON_API_KEY];
-            }
-            return [];
+            return userKey ? [userKey] : [];
+        }
+
+        function hasLiveRetailerSearchKey(retailer) {
+            return SEARCHAPI_PROVIDERS.includes(retailer) && Boolean(getProviderApiKey(retailer, false));
+        }
+
+        function liveRetailerSearchBlockedMessage(retailer) {
+            return 'Live ' + (retailer || 'retailer') + ' search requires your SearchAPI.io key. Open Settings → Provider API keys, paste your key, and save.';
         }
 
         async function fetchSearchApiProducts(retailer, query, apiKey) {
@@ -11598,6 +11601,11 @@
                 productsContainer.innerHTML = '';
                 return;
             }
+            if (SEARCHAPI_PROVIDERS.includes(retailer) && !hasLiveRetailerSearchKey(retailer)) {
+                searchStatus.textContent = liveRetailerSearchBlockedMessage(retailer);
+                productsContainer.innerHTML = '<p style="text-align: center; color: var(--danger); padding: 20px;">Live search only — add your Provider API key in Settings.</p>';
+                return;
+            }
             
             searchStatus.innerHTML = '<div class="loading"><div class="spinner"></div> Searching...</div>';
             productsContainer.innerHTML = '';
@@ -11721,6 +11729,12 @@
             if (!query || !query.trim()) {
                 statusEl.textContent = 'Enter a search term.';
                 resultsEl.innerHTML = '';
+                return;
+            }
+            if (SEARCHAPI_PROVIDERS.includes(retailer) && !hasLiveRetailerSearchKey(retailer)) {
+                statusEl.textContent = liveRetailerSearchBlockedMessage(retailer);
+                resultsEl.innerHTML = '<p style="text-align: center; color: var(--danger); padding: 20px;">Live search only — add your Provider API key in Settings.</p>';
+                window._lastLibrarySearchProducts = [];
                 return;
             }
             statusEl.textContent = 'Searching...';
@@ -11891,36 +11905,6 @@
             }
         }
         
-        // Mock Amazon products (fallback)
-        function getMockAmazonProducts(query) {
-            return [
-                {
-                    id: 'amz_1',
-                    title: 'Sony WH-1000XM5 Wireless Noise Canceling Headphones',
-                    image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8aGVhZHBob25lc3xlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&w=500&q=80',
-                    price: 299.99,
-                    retailer: 'amazon'
-                },
-                {
-                    id: 'amz_2',
-                    title: 'Bose QuietComfort 45 Headphones',
-                    image: 'https://images.unsplash.com/photo-1572536147248-ac59a8abfa4b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTF8fGhlYWRwaG9uZXN8ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&w=500&q=80',
-                    price: 279.99,
-                    retailer: 'amazon'
-                },
-                {
-                    id: 'amz_3',
-                    title: 'Apple AirPods Max',
-                    image: 'https://images.unsplash.com/photo-1613040809024-b4ef7ba99bc3?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTd8fGhlYWRwaG9uZXN8ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&w=500&q=80',
-                    price: 549.00,
-                    retailer: 'amazon'
-                }
-            ];
-        }
-        
-        // Mock Walmart products REMOVED - Using real API only
-        // All Walmart products now come from SearchAPI.io Walmart Search API
-
         // Update selected products display and sync checkmarks on product cards
         function updateSelectedProducts() {
             const selectedCount = document.getElementById('selectedCount');
