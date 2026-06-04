@@ -3964,6 +3964,34 @@
             cursor: pointer; padding: 6px; border-radius: 8px;
         }
         #dashboard-view .api-key-eye-btn:hover { color: var(--dark); background: rgba(15, 23, 42, 0.06); }
+        #dashboard-view .settings-connections-intro {
+            margin: 0 0 20px; font-size: 0.9rem; color: var(--gray); line-height: 1.5;
+        }
+        #dashboard-view .settings-connections-grid {
+            display: grid; grid-template-columns: 1fr; gap: 20px;
+        }
+        @media (min-width: 768px) {
+            #dashboard-view .settings-connections-grid { grid-template-columns: repeat(2, 1fr); }
+            #dashboard-view .settings-connection-field--full { grid-column: 1 / -1; }
+        }
+        #dashboard-view .settings-connection-field label {
+            display: block; margin-bottom: 6px; font-weight: 600; font-size: 0.95rem; color: var(--dark);
+        }
+        #dashboard-view .settings-field-hint {
+            margin: 0 0 8px; font-size: 0.82rem; color: var(--gray); line-height: 1.45;
+        }
+        #dashboard-view .settings-field-hint a { color: var(--primary); text-decoration: none; }
+        #dashboard-view .settings-field-hint a:hover { text-decoration: underline; }
+        #dashboard-view .settings-field-status {
+            margin: 8px 0 0; font-size: 0.85rem; color: var(--gray);
+        }
+        #dashboard-view .settings-connections-divider {
+            border: none; border-top: 1px solid #e5e7eb; margin: 24px 0 20px;
+        }
+        #dashboard-view .settings-connections-subtitle {
+            margin: 0 0 8px; font-size: 1rem; font-weight: 600; color: var(--dark);
+        }
+        #dashboard-view.theme-dark .settings-connections-divider { border-top-color: #334155; }
         #dashboard-view [data-sensitive="true"] { filter: blur(8px); user-select: none; transition: filter 0.3s ease; }
         #dashboard-view [data-sensitive="true"].revealed { filter: none; }
         #dashboard-view .sidebar-toggle {
@@ -4846,22 +4874,6 @@
                                 <small style="color:var(--gray);font-size:0.85rem;margin-top:4px;display:block;">Administrators can update your profile email in Firebase; changes sync here in real time. Your sign-in email stays the same until you change it in Firebase Auth.</small>
                             </div>
                             <div class="form-group">
-                                <label for="userWebsite">Website/Blog URL</label>
-                                <input type="url" id="userWebsite" class="form-control">
-                            </div>
-                            <div class="form-group">
-                                <label>Shopify store connection</label>
-                                <input type="text" class="form-control" placeholder="Store URL or API key">
-                            </div>
-                            <div class="form-group">
-                                <label>Amazon affiliate tag</label>
-                                <input type="text" class="form-control" placeholder="your-tag-20">
-                            </div>
-                            <div class="form-group">
-                                <label>Walmart Impact ID</label>
-                                <input type="text" class="form-control" placeholder="Impact ID">
-                            </div>
-                            <div class="form-group">
                                 <label>Geo redirect</label>
                                 <div class="toggle-wrap">
                                     <input type="checkbox" id="geoRedirectToggle" class="toggle-input" checked>
@@ -4879,60 +4891,114 @@
                         </form>
                     </div>
                     <div class="card" style="margin-top:20px;">
-                        <div class="card-header"><h3 class="card-title">Provider API keys</h3></div>
+                        <div class="card-header"><h3 class="card-title">Connections &amp; API keys</h3></div>
                         <div class="card-body">
-                            <p style="margin:0 0 16px;font-size:0.9rem;color:var(--gray);">Amazon, Walmart, and eBay product search is live-only. Add your own <a href="https://www.searchapi.io/" target="_blank" rel="noopener noreferrer">SearchAPI.io</a> key below (sample/demo products are never shown).</p>
-                            <div class="form-group">
-                                <label for="amazonApiKey">SearchAPI.io key (Amazon product search)</label>
-                                <div class="api-key-input-wrap">
-                                    <input type="password" id="amazonApiKey" class="form-control provider-api-key-input" data-provider="amazon" placeholder="Paste your Amazon/SearchAPI key" autocomplete="off" spellcheck="false">
-                                    <button type="button" class="api-key-eye-btn" data-api-key-eye="true" data-target-input="amazonApiKey" aria-label="Show/hide API key">
-                                        <i class="fas fa-eye-slash"></i>
-                                    </button>
+                            <p class="settings-connections-intro">Connect your site, store, affiliate IDs, and API keys in one place. Paste each value below — most fields save automatically as you type.</p>
+                            <div class="settings-connections-grid">
+                                <div class="settings-connection-field settings-connection-field--full">
+                                    <label for="userWebsite">Website/Blog URL</label>
+                                    <p class="settings-field-hint">Your public site or blog where SmartBlocks and affiliate links appear.</p>
+                                    <input type="url" id="userWebsite" class="form-control settings-connection-input" data-connection="website" placeholder="https://yoursite.com" autocomplete="url">
+                                    <p id="userWebsiteStatus" class="settings-field-status"></p>
                                 </div>
-                                <p id="amazonApiKeyStatus" style="margin-top:8px;font-size:0.85rem;color:var(--gray);"></p>
-                            </div>
-                            <div class="form-group">
-                                <label for="walmartApiKey">SearchAPI.io key (Walmart product search)</label>
-                                <div class="api-key-input-wrap">
-                                    <input type="password" id="walmartApiKey" class="form-control provider-api-key-input" data-provider="walmart" placeholder="Paste your Walmart/SearchAPI key" autocomplete="off" spellcheck="false">
-                                    <button type="button" class="api-key-eye-btn" data-api-key-eye="true" data-target-input="walmartApiKey" aria-label="Show/hide API key">
-                                        <i class="fas fa-eye-slash"></i>
-                                    </button>
+                                <div class="settings-connection-field">
+                                    <label for="shopifyStoreUrl">Shopify store connection</label>
+                                    <p class="settings-field-hint">Your <code>*.myshopify.com</code> store URL. <a href="https://help.shopify.com/en/manual/your-account/login#store-url" target="_blank" rel="noopener noreferrer">Find your store URL</a></p>
+                                    <input type="url" id="shopifyStoreUrl" class="form-control settings-connection-input" data-connection="shopifyStore" placeholder="https://your-store.myshopify.com" autocomplete="off" spellcheck="false">
+                                    <p id="shopifyStoreUrlStatus" class="settings-field-status"></p>
                                 </div>
-                                <p id="walmartApiKeyStatus" style="margin-top:8px;font-size:0.85rem;color:var(--gray);"></p>
-                            </div>
-                            <div class="form-group">
-                                <label for="ebayApiKey">SearchAPI.io key (eBay product search)</label>
-                                <div class="api-key-input-wrap">
-                                    <input type="password" id="ebayApiKey" class="form-control provider-api-key-input" data-provider="ebay" placeholder="Paste your eBay/SearchAPI key" autocomplete="off" spellcheck="false">
-                                    <button type="button" class="api-key-eye-btn" data-api-key-eye="true" data-target-input="ebayApiKey" aria-label="Show/hide API key">
-                                        <i class="fas fa-eye-slash"></i>
-                                    </button>
+                                <div class="settings-connection-field">
+                                    <label for="amazonAffiliateTag">Amazon affiliate tag</label>
+                                    <p class="settings-field-hint">Associates tracking ID (e.g. <code>yourname-20</code>). <a href="https://affiliate-program.amazon.com/help/node/topic/GP38PJ6EUR6PFBEC" target="_blank" rel="noopener noreferrer">Get your tag</a></p>
+                                    <input type="text" id="amazonAffiliateTag" class="form-control settings-connection-input" data-connection="amazonAffiliate" placeholder="your-tag-20" autocomplete="off" spellcheck="false">
+                                    <p id="amazonAffiliateTagStatus" class="settings-field-status"></p>
                                 </div>
-                                <p id="ebayApiKeyStatus" style="margin-top:8px;font-size:0.85rem;color:var(--gray);"></p>
-                            </div>
-                            <div class="form-group">
-                                <label for="shopifyApiKey">Shopify API key / access token</label>
-                                <div class="api-key-input-wrap">
-                                    <input type="password" id="shopifyApiKey" class="form-control provider-api-key-input" data-provider="shopify" placeholder="Paste your Shopify API key or token" autocomplete="off" spellcheck="false">
-                                    <button type="button" class="api-key-eye-btn" data-api-key-eye="true" data-target-input="shopifyApiKey" aria-label="Show/hide API key">
-                                        <i class="fas fa-eye-slash"></i>
-                                    </button>
+                                <div class="settings-connection-field">
+                                    <label for="walmartImpactId">Walmart Impact ID</label>
+                                    <p class="settings-field-hint">From Walmart Creator / Impact dashboard. <a href="https://creator.walmart.com/" target="_blank" rel="noopener noreferrer">Walmart Creator</a></p>
+                                    <input type="text" id="walmartImpactId" class="form-control settings-connection-input" data-connection="walmartAffiliate" placeholder="Paste your Impact ID" autocomplete="off" spellcheck="false">
+                                    <p id="walmartImpactIdStatus" class="settings-field-status"></p>
                                 </div>
-                                <p id="shopifyApiKeyStatus" style="margin-top:8px;font-size:0.85rem;color:var(--gray);"></p>
                             </div>
-                            <div class="form-group">
-                                <label for="skimlinksApiKey">Skimlinks API key</label>
-                                <div class="api-key-input-wrap">
-                                    <input type="password" id="skimlinksApiKey" class="form-control provider-api-key-input" data-provider="skimlinks" placeholder="Paste your Skimlinks API key" autocomplete="off" spellcheck="false">
-                                    <button type="button" class="api-key-eye-btn" data-api-key-eye="true" data-target-input="skimlinksApiKey" aria-label="Show/hide API key">
-                                        <i class="fas fa-eye-slash"></i>
-                                    </button>
+                            <hr class="settings-connections-divider">
+                            <h4 class="settings-connections-subtitle">Product search API</h4>
+                            <p class="settings-field-hint settings-connection-field--full" style="margin-bottom:16px;">Paste your own product search API URL and key for each retailer (or a full URL that includes <code>api_key=</code>). Live search uses only what you save here or paste in chat — demo products are never shown.</p>
+                            <div class="settings-connections-grid">
+                                <div class="settings-connection-field">
+                                    <label for="amazonApiEndpoint">Amazon API URL</label>
+                                    <p class="settings-field-hint">Base search endpoint (e.g. <code>https://your-api.com/search</code>).</p>
+                                    <input type="url" id="amazonApiEndpoint" class="form-control provider-api-endpoint-input" data-provider="amazon" placeholder="https://your-api.com/amazon/search" autocomplete="off" spellcheck="false">
+                                    <p id="amazonApiEndpointStatus" class="settings-field-status"></p>
                                 </div>
-                                <p id="skimlinksApiKeyStatus" style="margin-top:8px;font-size:0.85rem;color:var(--gray);"></p>
+                                <div class="settings-connection-field">
+                                    <label for="amazonApiKey">Amazon API key</label>
+                                    <p class="settings-field-hint">API key for Amazon product search (or paste a full URL with the key in the query string).</p>
+                                    <div class="api-key-input-wrap">
+                                        <input type="password" id="amazonApiKey" class="form-control provider-api-key-input" data-provider="amazon" placeholder="Paste your Amazon API key" autocomplete="off" spellcheck="false">
+                                        <button type="button" class="api-key-eye-btn" data-api-key-eye="true" data-target-input="amazonApiKey" aria-label="Show/hide API key">
+                                            <i class="fas fa-eye-slash"></i>
+                                        </button>
+                                    </div>
+                                    <p id="amazonApiKeyStatus" class="settings-field-status"></p>
+                                </div>
+                                <div class="settings-connection-field">
+                                    <label for="walmartApiEndpoint">Walmart API URL</label>
+                                    <p class="settings-field-hint">Base search endpoint for Walmart products.</p>
+                                    <input type="url" id="walmartApiEndpoint" class="form-control provider-api-endpoint-input" data-provider="walmart" placeholder="https://your-api.com/walmart/search" autocomplete="off" spellcheck="false">
+                                    <p id="walmartApiEndpointStatus" class="settings-field-status"></p>
+                                </div>
+                                <div class="settings-connection-field">
+                                    <label for="walmartApiKey">Walmart API key</label>
+                                    <p class="settings-field-hint">API key for Walmart product search.</p>
+                                    <div class="api-key-input-wrap">
+                                        <input type="password" id="walmartApiKey" class="form-control provider-api-key-input" data-provider="walmart" placeholder="Paste your Walmart API key" autocomplete="off" spellcheck="false">
+                                        <button type="button" class="api-key-eye-btn" data-api-key-eye="true" data-target-input="walmartApiKey" aria-label="Show/hide API key">
+                                            <i class="fas fa-eye-slash"></i>
+                                        </button>
+                                    </div>
+                                    <p id="walmartApiKeyStatus" class="settings-field-status"></p>
+                                </div>
+                                <div class="settings-connection-field">
+                                    <label for="ebayApiEndpoint">eBay API URL</label>
+                                    <p class="settings-field-hint">Base search endpoint for eBay products.</p>
+                                    <input type="url" id="ebayApiEndpoint" class="form-control provider-api-endpoint-input" data-provider="ebay" placeholder="https://your-api.com/ebay/search" autocomplete="off" spellcheck="false">
+                                    <p id="ebayApiEndpointStatus" class="settings-field-status"></p>
+                                </div>
+                                <div class="settings-connection-field">
+                                    <label for="ebayApiKey">eBay API key</label>
+                                    <p class="settings-field-hint">API key for eBay product search.</p>
+                                    <div class="api-key-input-wrap">
+                                        <input type="password" id="ebayApiKey" class="form-control provider-api-key-input" data-provider="ebay" placeholder="Paste your eBay API key" autocomplete="off" spellcheck="false">
+                                        <button type="button" class="api-key-eye-btn" data-api-key-eye="true" data-target-input="ebayApiKey" aria-label="Show/hide API key">
+                                            <i class="fas fa-eye-slash"></i>
+                                        </button>
+                                    </div>
+                                    <p id="ebayApiKeyStatus" class="settings-field-status"></p>
+                                </div>
+                                <div class="settings-connection-field">
+                                    <label for="shopifyApiKey">Shopify API key / access token</label>
+                                    <p class="settings-field-hint">Admin API token from Shopify → Settings → Apps. <a href="https://help.shopify.com/en/manual/apps/app-types/custom-apps" target="_blank" rel="noopener noreferrer">Create a custom app</a></p>
+                                    <div class="api-key-input-wrap">
+                                        <input type="password" id="shopifyApiKey" class="form-control provider-api-key-input" data-provider="shopify" placeholder="Paste your Shopify API key or token" autocomplete="off" spellcheck="false">
+                                        <button type="button" class="api-key-eye-btn" data-api-key-eye="true" data-target-input="shopifyApiKey" aria-label="Show/hide API key">
+                                            <i class="fas fa-eye-slash"></i>
+                                        </button>
+                                    </div>
+                                    <p id="shopifyApiKeyStatus" class="settings-field-status"></p>
+                                </div>
+                                <div class="settings-connection-field">
+                                    <label for="skimlinksApiKey">Skimlinks API key</label>
+                                    <p class="settings-field-hint">Publisher API key from your Skimlinks dashboard. <a href="https://skimlinks.com/" target="_blank" rel="noopener noreferrer">Skimlinks</a></p>
+                                    <div class="api-key-input-wrap">
+                                        <input type="password" id="skimlinksApiKey" class="form-control provider-api-key-input" data-provider="skimlinks" placeholder="Paste your Skimlinks API key" autocomplete="off" spellcheck="false">
+                                        <button type="button" class="api-key-eye-btn" data-api-key-eye="true" data-target-input="skimlinksApiKey" aria-label="Show/hide API key">
+                                            <i class="fas fa-eye-slash"></i>
+                                        </button>
+                                    </div>
+                                    <p id="skimlinksApiKeyStatus" class="settings-field-status"></p>
+                                </div>
                             </div>
-                            <button type="button" class="btn btn-primary" id="saveAmazonApiKey">Save API keys</button>
+                            <button type="button" class="btn btn-primary" id="saveAmazonApiKey" style="margin-top:20px;">Save connections</button>
                         </div>
                     </div>
                     </div>
@@ -11272,12 +11338,12 @@
             showNotification('Block created successfully!', 'success', 'Create Block');
         }
 
-        // SearchAPI.io — live retailer search uses only keys saved in Settings (no sample/demo fallback).
-        const SEARCHAPI_PROVIDERS = ['amazon', 'walmart', 'ebay'];
+        // Live retailer search — uses API URL + key from Settings, Integrations, or chat paste (no third-party proxy).
+        const LIVE_RETAILER_PROVIDERS = ['amazon', 'walmart', 'ebay'];
         const PROVIDER_API_KEY_INPUTS = {
-            amazon: { inputId: 'amazonApiKey', statusId: 'amazonApiKeyStatus', label: 'Amazon' },
-            walmart: { inputId: 'walmartApiKey', statusId: 'walmartApiKeyStatus', label: 'Walmart' },
-            ebay: { inputId: 'ebayApiKey', statusId: 'ebayApiKeyStatus', label: 'eBay' },
+            amazon: { inputId: 'amazonApiKey', endpointId: 'amazonApiEndpoint', statusId: 'amazonApiKeyStatus', endpointStatusId: 'amazonApiEndpointStatus', label: 'Amazon', liveSearch: true },
+            walmart: { inputId: 'walmartApiKey', endpointId: 'walmartApiEndpoint', statusId: 'walmartApiKeyStatus', endpointStatusId: 'walmartApiEndpointStatus', label: 'Walmart', liveSearch: true },
+            ebay: { inputId: 'ebayApiKey', endpointId: 'ebayApiEndpoint', statusId: 'ebayApiKeyStatus', endpointStatusId: 'ebayApiEndpointStatus', label: 'eBay', liveSearch: true },
             shopify: { inputId: 'shopifyApiKey', statusId: 'shopifyApiKeyStatus', label: 'Shopify' },
             skimlinks: { inputId: 'skimlinksApiKey', statusId: 'skimlinksApiKeyStatus', label: 'Skimlinks' }
         };
@@ -11290,18 +11356,71 @@
             return getUserScopedStorageKey('providerApiKey') + '_' + provider;
         }
 
+        function getProviderApiEndpointStorageKey(provider) {
+            return getUserScopedStorageKey('providerApiEndpoint') + '_' + provider;
+        }
+
         function getProviderAffiliateStorageKey(provider) {
             return getUserScopedStorageKey('providerAffiliateId') + '_' + provider;
+        }
+
+        function getPlatformApiKey() {
+            return localStorage.getItem(getUserScopedStorageKey('kotapalApiKey')) || '';
+        }
+
+        function parseProviderCredential(raw) {
+            const value = String(raw || '').trim();
+            if (!value) return { apiKey: '', endpoint: '' };
+            if (!/^https?:\/\//i.test(value)) return { apiKey: value, endpoint: '' };
+            try {
+                const parsed = new URL(value);
+                const apiKey = parsed.searchParams.get('api_key')
+                    || parsed.searchParams.get('key')
+                    || parsed.searchParams.get('apikey')
+                    || parsed.searchParams.get('token')
+                    || '';
+                ['api_key', 'key', 'apikey', 'token'].forEach(function(name) {
+                    parsed.searchParams.delete(name);
+                });
+                const qs = parsed.searchParams.toString();
+                const endpoint = parsed.origin + parsed.pathname + (qs ? '?' + qs : '');
+                return { apiKey: apiKey, endpoint: endpoint };
+            } catch (e) {
+                return { apiKey: '', endpoint: value };
+            }
+        }
+
+        function applyProviderCredential(provider, raw) {
+            const parsed = parseProviderCredential(raw);
+            if (parsed.endpoint) setProviderApiEndpoint(provider, parsed.endpoint);
+            if (parsed.apiKey) setProviderApiKey(provider, parsed.apiKey);
+            else if (!parsed.endpoint && raw) setProviderApiKey(provider, raw);
+        }
+
+        function getProviderApiEndpoint(provider) {
+            provider = String(provider || '').toLowerCase();
+            return localStorage.getItem(getProviderApiEndpointStorageKey(provider)) || '';
+        }
+
+        function setProviderApiEndpoint(provider, endpoint) {
+            provider = String(provider || '').toLowerCase();
+            if (!provider) return;
+            const cleaned = String(endpoint || '').trim();
+            if (cleaned) localStorage.setItem(getProviderApiEndpointStorageKey(provider), cleaned);
+            else localStorage.removeItem(getProviderApiEndpointStorageKey(provider));
         }
 
         function getProviderApiKey(provider, includeDefault = true) {
             provider = String(provider || 'amazon').toLowerCase();
             const scopedKey = localStorage.getItem(getProviderApiStorageKey(provider)) || '';
             const localFallback = localStorage.getItem('providerApiKey_local_' + provider) || '';
-            const legacySearchApiKey = SEARCHAPI_PROVIDERS.includes(provider)
-                ? (localStorage.getItem('searchapi_' + provider + '_key') || localStorage.getItem('searchapi_key') || localStorage.getItem('searchapi_amazon_key') || '')
+            const legacyKey = LIVE_RETAILER_PROVIDERS.includes(provider)
+                ? (localStorage.getItem('searchapi_' + provider + '_key') || localStorage.getItem('searchapi_key') || '')
                 : '';
-            const saved = scopedKey || localFallback || legacySearchApiKey;
+            const saved = scopedKey || localFallback || legacyKey;
+            if (saved && /^https?:\/\//i.test(saved)) {
+                return parseProviderCredential(saved).apiKey || '';
+            }
             if (saved) return saved;
             return '';
         }
@@ -11310,18 +11429,15 @@
             provider = String(provider || '').toLowerCase();
             if (!provider) return;
             const cleaned = String(key || '').trim();
-            if (cleaned) {
-                localStorage.setItem(getProviderApiStorageKey(provider), cleaned);
-                if (SEARCHAPI_PROVIDERS.includes(provider)) {
-                    localStorage.setItem('searchapi_' + provider + '_key', cleaned);
-                    if (provider === 'amazon') {
-                        localStorage.setItem('searchapi_key', cleaned);
-                        localStorage.setItem('searchapi_amazon_key', cleaned);
-                    }
-                }
-            } else {
+            if (!cleaned) {
                 localStorage.removeItem(getProviderApiStorageKey(provider));
+                return;
             }
+            if (/^https?:\/\//i.test(cleaned)) {
+                applyProviderCredential(provider, cleaned);
+                return;
+            }
+            localStorage.setItem(getProviderApiStorageKey(provider), cleaned);
         }
 
         function getProviderAffiliateId(provider) {
@@ -11336,18 +11452,12 @@
             else localStorage.removeItem(getProviderAffiliateStorageKey(provider));
         }
 
-        // Get your API key from https://www.searchapi.io/
-        // Pass a provider to retrieve that provider's specific key.
-        function getSearchApiKey(provider, includeDefault = true) {
-            if (provider) return getProviderApiKey(provider, includeDefault);
-            return localStorage.getItem('searchapi_key') || getProviderApiKey('amazon', includeDefault);
+        function getActiveProductApiKey(provider) {
+            provider = String(provider || 'amazon').toLowerCase();
+            return getProviderApiKey(provider, false) || getPlatformApiKey() || '';
         }
 
-        function setSearchApiKey(key, provider = 'amazon') {
-            setProviderApiKey(provider, key);
-        }
-
-        // Backward compatibility functions
+        // Backward compatibility
         function getAmazonApiKey() {
             return getProviderApiKey('amazon');
         }
@@ -11356,21 +11466,114 @@
             setProviderApiKey('amazon', key);
         }
 
-        const SEARCHAPI_URL = 'https://www.searchapi.io/api/v1/search';
-        const AMAZON_API_URL = SEARCHAPI_URL;
-        const WALMART_API_URL = SEARCHAPI_URL;
+        const API_KEY_STATUS_CONFIGURED = 'API key configured';
+        const API_KEY_STATUS_NOT_CONFIGURED = 'No API key configured';
+        const CONNECTION_STATUS_CONFIGURED = 'Configured';
+        const CONNECTION_STATUS_NOT_CONFIGURED = 'Not configured';
 
-        function setProviderApiKeyStatus(provider, message, color) {
+        function setSettingsFieldStatus(statusId, configured, isApiKey) {
+            const statusEl = statusId ? document.getElementById(statusId) : null;
+            if (!statusEl) return;
+            statusEl.textContent = configured
+                ? (isApiKey ? API_KEY_STATUS_CONFIGURED : CONNECTION_STATUS_CONFIGURED)
+                : (isApiKey ? API_KEY_STATUS_NOT_CONFIGURED : CONNECTION_STATUS_NOT_CONFIGURED);
+            statusEl.style.color = configured ? 'var(--success)' : 'var(--gray)';
+        }
+
+        function setProviderApiKeyStatus(provider, configured) {
             const cfg = PROVIDER_API_KEY_INPUTS[provider];
-            const statusEl = cfg ? document.getElementById(cfg.statusId) : null;
-            if (statusEl) {
-                statusEl.textContent = message;
-                statusEl.style.color = color || 'var(--gray)';
+            if (cfg) setSettingsFieldStatus(cfg.statusId, Boolean(configured), true);
+        }
+
+        function getShopifyStoreStorageKey() {
+            return getUserScopedStorageKey('shopifyStoreUrl');
+        }
+
+        function getShopifyStoreUrl() {
+            return localStorage.getItem(getShopifyStoreStorageKey()) || '';
+        }
+
+        function setShopifyStoreUrl(url) {
+            const cleaned = String(url || '').trim();
+            if (cleaned) localStorage.setItem(getShopifyStoreStorageKey(), cleaned);
+            else localStorage.removeItem(getShopifyStoreStorageKey());
+        }
+
+        function saveSettingsWebsite(website) {
+            const cleaned = String(website || '').trim();
+            const userData = JSON.parse(localStorage.getItem('kotaUser') || '{}');
+            userData.website = cleaned;
+            localStorage.setItem('kotaUser', JSON.stringify(userData));
+            if (currentUser) {
+                currentUser.website = cleaned;
+                localStorage.setItem('kotaUser', JSON.stringify(currentUser));
             }
+            setSettingsFieldStatus('userWebsiteStatus', Boolean(cleaned), false);
+        }
+
+        function persistSettingsConnection(connectionType, value) {
+            const cleaned = String(value || '').trim();
+            if (connectionType === 'website') {
+                saveSettingsWebsite(cleaned);
+                return;
+            }
+            if (connectionType === 'shopifyStore') {
+                setShopifyStoreUrl(cleaned);
+                setSettingsFieldStatus('shopifyStoreUrlStatus', Boolean(cleaned), false);
+                return;
+            }
+            if (connectionType === 'amazonAffiliate') {
+                setProviderAffiliateId('amazon', cleaned);
+                setSettingsFieldStatus('amazonAffiliateTagStatus', Boolean(cleaned), false);
+                return;
+            }
+            if (connectionType === 'walmartAffiliate') {
+                setProviderAffiliateId('walmart', cleaned);
+                setSettingsFieldStatus('walmartImpactIdStatus', Boolean(cleaned), false);
+            }
+        }
+
+        function loadSettingsConnections() {
+            const userData = JSON.parse(localStorage.getItem('kotaUser') || '{}');
+            const websiteEl = document.getElementById('userWebsite');
+            if (websiteEl) websiteEl.value = userData.website || currentUser?.website || '';
+            setSettingsFieldStatus('userWebsiteStatus', Boolean(websiteEl && websiteEl.value.trim()), false);
+
+            const shopifyStoreEl = document.getElementById('shopifyStoreUrl');
+            if (shopifyStoreEl) shopifyStoreEl.value = getShopifyStoreUrl();
+            setSettingsFieldStatus('shopifyStoreUrlStatus', Boolean(shopifyStoreEl && shopifyStoreEl.value.trim()), false);
+
+            const amazonAffEl = document.getElementById('amazonAffiliateTag');
+            if (amazonAffEl) amazonAffEl.value = getProviderAffiliateId('amazon');
+            setSettingsFieldStatus('amazonAffiliateTagStatus', Boolean(amazonAffEl && amazonAffEl.value.trim()), false);
+
+            const walmartImpactEl = document.getElementById('walmartImpactId');
+            if (walmartImpactEl) walmartImpactEl.value = getProviderAffiliateId('walmart');
+            setSettingsFieldStatus('walmartImpactIdStatus', Boolean(walmartImpactEl && walmartImpactEl.value.trim()), false);
+
+            document.querySelectorAll('.settings-connection-input').forEach(function(input) {
+                if (input.dataset.connectionBound) return;
+                input.dataset.connectionBound = '1';
+                let t = null;
+                const connectionType = input.dataset.connection || '';
+                const runSave = function() {
+                    if (!connectionType) return;
+                    persistSettingsConnection(connectionType, input.value);
+                };
+                input.addEventListener('input', function() {
+                    if (t) window.clearTimeout(t);
+                    t = window.setTimeout(runSave, 450);
+                });
+                input.addEventListener('blur', runSave);
+                input.addEventListener('paste', function() {
+                    setTimeout(runSave, 0);
+                });
+            });
         }
 
         // Load API keys when settings page is shown
         function loadProviderApiKeys() {
+            loadSettingsConnections();
             Object.keys(PROVIDER_API_KEY_INPUTS).forEach(function(provider) {
                 const cfg = PROVIDER_API_KEY_INPUTS[provider];
                 const input = document.getElementById(cfg.inputId);
@@ -11394,8 +11597,7 @@
                         t = window.setTimeout(function() {
                             const value = el.value ? el.value.trim() : '';
                             setProviderApiKey(prov, value);
-                            if (value) setProviderApiKeyStatus(prov, getProviderLabel(prov) + ' API key saved', 'var(--success)');
-                            else setProviderApiKeyStatus(prov, SEARCHAPI_PROVIDERS.includes(prov) ? 'No saved key. Paste your SearchAPI.io key for live product search.' : 'No API key configured', 'var(--gray)');
+                            setProviderApiKeyStatus(prov, Boolean(value));
                         }, 450);
                     });
                     input.addEventListener('blur', function() {
@@ -11405,16 +11607,10 @@
                         if (!prov) return;
                         const value = el.value ? el.value.trim() : '';
                         setProviderApiKey(prov, value);
-                        if (value) setProviderApiKeyStatus(prov, getProviderLabel(prov) + ' API key saved', 'var(--success)');
+                        setProviderApiKeyStatus(prov, Boolean(value));
                     });
                 }
-                if (savedKey) {
-                    setProviderApiKeyStatus(provider, cfg.label + ' API key saved', 'var(--success)');
-                } else if (SEARCHAPI_PROVIDERS.includes(provider)) {
-                    setProviderApiKeyStatus(provider, 'No saved key. Paste your SearchAPI.io key for live product search.', 'var(--gray)');
-                } else {
-                    setProviderApiKeyStatus(provider, 'No API key configured', 'var(--gray)');
-                }
+                setProviderApiKeyStatus(provider, Boolean(savedKey));
             });
 
             // Bind eye toggles (once)
@@ -11441,9 +11637,9 @@
         function formatProviderSearchError(message) {
             const m = String(message || '');
             if (isSearchApiQuotaError(m) || /searchapi/i.test(m)) {
-                return 'Monthly search limit reached. Update Provider API keys in Settings or try again later.';
+                return 'Monthly search limit reached. Update API keys in Settings → Connections & API keys or try again later.';
             }
-            return 'Live search is unavailable. Check Provider API keys in Settings.';
+            return 'Live search is unavailable. Check Connections & API keys in Settings.';
         }
 
         function getApiKeysToTry(provider) {
@@ -11456,7 +11652,7 @@
         }
 
         function liveRetailerSearchBlockedMessage(retailer) {
-            return 'Live ' + (retailer || 'retailer') + ' search requires your SearchAPI.io key. Open Settings → Provider API keys, paste your key, and save.';
+            return 'Live ' + (retailer || 'retailer') + ' search requires an API key. Open Settings → Connections & API keys, paste your key, and save.';
         }
 
         async function fetchSearchApiProducts(retailer, query, apiKey) {
@@ -11541,7 +11737,7 @@
         async function searchRetailerProductsLive(retailer, query) {
             const keys = getApiKeysToTry(retailer);
             if (!keys.length) {
-                throw new Error('Add a Provider API key in Settings to search live retailer products.');
+                throw new Error('Add an API key in Settings → Connections & API keys to search live retailer products.');
             }
             let lastError = null;
             for (var ki = 0; ki < keys.length; ki++) {
@@ -11559,24 +11755,36 @@
 
         function saveProviderApiKeys() {
             let savedCount = 0;
+            const websiteEl = document.getElementById('userWebsite');
+            if (websiteEl) {
+                saveSettingsWebsite(websiteEl.value);
+                if (websiteEl.value.trim()) savedCount++;
+            }
+            document.querySelectorAll('.settings-connection-input').forEach(function(input) {
+                const connectionType = input.dataset.connection || '';
+                if (!connectionType) return;
+                const value = input.value ? input.value.trim() : '';
+                if (value) {
+                    persistSettingsConnection(connectionType, value);
+                    savedCount++;
+                }
+            });
             Object.keys(PROVIDER_API_KEY_INPUTS).forEach(function(provider) {
                 const cfg = PROVIDER_API_KEY_INPUTS[provider];
                 const input = document.getElementById(cfg.inputId);
                 const value = input && input.value ? input.value.trim() : '';
-                if (value) {
-                    setProviderApiKey(provider, value);
-                    setProviderApiKeyStatus(provider, cfg.label + ' API key saved', 'var(--success)');
-                    savedCount++;
-                }
+                setProviderApiKey(provider, value);
+                setProviderApiKeyStatus(provider, Boolean(value));
+                if (value) savedCount++;
             });
             if (savedCount === 0) {
-                showNotification('Paste at least one provider API key before saving.', 'warning', 'Settings');
+                showNotification('Paste at least one connection value or API key before saving.', 'warning', 'Settings');
                 return;
             }
             currentIntegrations = loadSavedIntegrations();
             saveIntegrations();
             renderIntegrations();
-            showNotification('Provider API keys saved.', 'success', 'Settings');
+            showNotification('Connections saved.', 'success', 'Settings');
         }
 
         function loadAmazonApiKey() {
@@ -11717,7 +11925,7 @@
             } catch (error) {
                 console.error('Search products error:', error);
                 searchStatus.textContent = formatProviderSearchError(error.message);
-                productsContainer.innerHTML = '<p style="text-align: center; color: var(--danger); padding: 20px;">Live search failed. Check Provider API keys in Settings and try again.</p>';
+                productsContainer.innerHTML = '<p style="text-align: center; color: var(--danger); padding: 20px;">Live search failed. Check Connections &amp; API keys in Settings and try again.</p>';
             }
         }
         
@@ -11789,7 +11997,7 @@
                 if (products.length > 0) {
                     statusEl.textContent = `Found ${products.length} live ${retailer} product(s) for "${query}". Click "Add to Library" to save.`;
                 } else if (SEARCHAPI_PROVIDERS.includes(retailer)) {
-                    statusEl.textContent = formatProviderSearchError('No live products returned. Check Provider API keys in Settings.');
+                    statusEl.textContent = formatProviderSearchError('No live products returned. Check Connections & API keys in Settings.');
                 } else {
                     statusEl.textContent = `No ${retailer} products found for "${query}".`;
                 }
@@ -11809,7 +12017,7 @@
                 console.error('Product Library search error:', err);
                 window._lastLibrarySearchProducts = [];
                 statusEl.textContent = formatProviderSearchError(err.message);
-                resultsEl.innerHTML = '<p style="text-align: center; color: var(--danger); padding: 20px;">Live search failed. Check Provider API keys in Settings and try again.</p>';
+                resultsEl.innerHTML = '<p style="text-align: center; color: var(--danger); padding: 20px;">Live search failed. Check Connections &amp; API keys in Settings and try again.</p>';
             }
         }
         
