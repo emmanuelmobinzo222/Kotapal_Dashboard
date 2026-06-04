@@ -38,8 +38,8 @@
 
 
 
-    <!-- Favicon -->
-    <link rel="icon" href="images/IMG_4258.png">
+    <!-- Favicon: purple iconic K only (not full KotaPal wordmark) -->
+    <link rel="icon" type="image/svg+xml" href="images/kotapal-k.svg">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -3811,6 +3811,8 @@
         }
         #dashboard-view .card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
         #dashboard-view .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid #f3f4f6; }
+        #dashboard-view .integration-status-wrap { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+        #dashboard-view .integration-status-label { font-size: 0.75rem; font-weight: 600; color: var(--gray); margin: 0; }
         #dashboard-view .card-title { font-size: 1.25rem; font-weight: 600; color: var(--dark); margin: 0; letter-spacing: -0.3px; }
         #dashboard-view .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-bottom: 32px; }
         #dashboard-view .stat-card {
@@ -4532,16 +4534,22 @@
                     <p style="margin-bottom:20px;color:var(--gray);">Connect your stores and affiliate accounts to pull products and track performance in one place.</p>
                     <div class="card">
                         <div class="card-header"><h3 class="card-title">Retailer & store connections</h3></div>
-                        <p style="margin-bottom:16px;">Link Shopify, Amazon Associates, and Walmart Affiliate to sync products and commissions.</p>
+                        <p style="margin-bottom:16px;">Paste each retailer’s <strong>product-search API URL and key</strong> below (Amazon, Walmart, eBay, Shopify, Skimlinks). These credentials power <strong>live product fetch</strong> in New Block, Product Library, and chat — not your main KotaPal key.</p>
                         <div id="integrationsContainer"></div>
                     </div>
                     <div class="card">
                         <div class="card-header"><h3 class="card-title">API & webhooks</h3></div>
-                        <p style="margin-bottom:12px;">Use your API key for custom integrations. Webhooks notify your server when blocks are updated.</p>
+                        <p style="margin-bottom:12px;">Paste your <strong>KotaPal API key</strong> here for custom integrations and webhooks. Webhooks notify your server when blocks are updated. Do not use this key for retailer product search — add retailer keys in the section above.</p>
                         <div class="form-group">
-                            <label>API Key</label>
-                            <div style="display:flex;gap:8px;align-items:center;">
-                                <input type="password" id="integrationsApiKey" class="form-control" placeholder="Paste or enter your KotaPal API key" autocomplete="off" spellcheck="false" style="max-width:320px;">
+                            <label for="integrationsApiKey">KotaPal API key</label>
+                            <p class="settings-field-hint" style="margin-bottom:8px;">Example format: a short token like <code>GdCvM3NbHRcCPV4mGj8yx8Xy</code>. Save, then use Copy when wiring external tools.</p>
+                            <div class="api-key-input-wrap" style="max-width:420px;">
+                                <input type="password" id="integrationsApiKey" class="form-control" placeholder="Paste or enter your KotaPal API key" autocomplete="off" spellcheck="false">
+                                <button type="button" class="api-key-eye-btn" data-api-key-eye="true" data-target-input="integrationsApiKey" aria-label="Show/hide KotaPal API key">
+                                    <i class="fas fa-eye-slash"></i>
+                                </button>
+                            </div>
+                            <div style="display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap;">
                                 <button type="button" class="btn btn-primary" id="saveIntegrationsApiKey">Save</button>
                                 <button type="button" class="btn btn-secondary" id="copyApiKey">Copy</button>
                             </div>
@@ -4921,8 +4929,8 @@
                                 </div>
                             </div>
                             <hr class="settings-connections-divider">
-                            <h4 class="settings-connections-subtitle">Product search API</h4>
-                            <p class="settings-field-hint settings-connection-field--full" style="margin-bottom:16px;">Paste your own product search API URL and key for each retailer (or a full URL that includes <code>api_key=</code>). Live search uses only what you save here or paste in chat — demo products are never shown.</p>
+                            <h4 class="settings-connections-subtitle">Product search API (live fetch)</h4>
+                            <p class="settings-field-hint settings-connection-field--full" style="margin-bottom:16px;">Paste each retailer’s product-search API URL and key here (or the same values under <strong>Integrations → Retailer &amp; store connections</strong>). Live search uses only these retailer keys — not your KotaPal API key under API &amp; webhooks. Demo products are never shown.</p>
                             <div class="settings-connections-grid">
                                 <div class="settings-connection-field">
                                     <label for="amazonApiEndpoint">Amazon API URL</label>
@@ -9791,12 +9799,21 @@
 
         function getDefaultIntegrations() {
             return [
-                { id: 'amazon', name: 'Amazon Associates', status: 'connected', lastSync: '2 hours ago', affiliateId: 'john-20' },
-                { id: 'walmart', name: 'Walmart Affiliate', status: 'connected', lastSync: '1 day ago', affiliateId: 'walmart-123' },
+                { id: 'amazon', name: 'Amazon Associates', status: 'disconnected', lastSync: 'Never', affiliateId: '' },
+                { id: 'walmart', name: 'Walmart Affiliate', status: 'disconnected', lastSync: 'Never', affiliateId: '' },
                 { id: 'ebay', name: 'eBay Partner Network', status: 'disconnected', lastSync: 'Never', affiliateId: '' },
                 { id: 'shopify', name: 'Shopify Partner', status: 'disconnected', lastSync: 'Never', affiliateId: '' },
-                { id: 'skimlinks', name: 'Skimlinks', status: 'connected', lastSync: '3 hours ago', affiliateId: 'skim-456' }
+                { id: 'skimlinks', name: 'Skimlinks', status: 'disconnected', lastSync: 'Never', affiliateId: '' }
             ];
+        }
+
+        function getIntegrationConnectionStatus(integration) {
+            if (!integration) return 'disconnected';
+            const id = integration.id;
+            const apiKey = getProviderApiKey(id, false);
+            const affiliateId = String(integration.affiliateId || getProviderAffiliateId(id) || '').trim();
+            const hasCredentials = Boolean(apiKey || affiliateId);
+            return integration.status === 'connected' && hasCredentials ? 'connected' : 'disconnected';
         }
 
         function getUserScopedStorageKey(base) {
@@ -9814,18 +9831,22 @@
             return defaults.map(function(def) {
                 const found = saved.find(function(item) { return item && item.id === def.id; }) || {};
                 const apiKey = getProviderApiKey(def.id, false);
-                const affiliateId = found.affiliateId != null ? found.affiliateId : (localStorage.getItem(getProviderAffiliateStorageKey(def.id)) || def.affiliateId || '');
-                const status = found.status || (apiKey || affiliateId ? 'connected' : def.status);
-                return Object.assign({}, def, found, {
+                const affiliateId = found.affiliateId != null ? found.affiliateId : (localStorage.getItem(getProviderAffiliateStorageKey(def.id)) || '');
+                const merged = Object.assign({}, def, found, {
                     affiliateId: affiliateId,
-                    status: status,
                     apiKeyConfigured: Boolean(apiKey)
                 });
+                merged.status = getIntegrationConnectionStatus(merged);
+                if (merged.status === 'disconnected') merged.lastSync = 'Never';
+                return merged;
             });
         }
 
         function saveIntegrations() {
             if (!Array.isArray(currentIntegrations)) return;
+            currentIntegrations = currentIntegrations.map(function(item) {
+                return Object.assign({}, item, { status: getIntegrationConnectionStatus(item) });
+            });
             localStorage.setItem(getUserScopedStorageKey('kotaIntegrations'), JSON.stringify(currentIntegrations));
             const uid = currentUser?.uid;
             const dbUse = window.firebaseDb || (typeof firebase !== 'undefined' && firebase.firestore && firebase.firestore());
@@ -10130,9 +10151,13 @@
             });
             if (copyApiKey) copyApiKey.addEventListener('click', function() {
                 const input = document.getElementById('integrationsApiKey');
-                const key = (input && input.value) || localStorage.getItem(getUserScopedStorageKey('kotapalApiKey')) || 'sk_live_51JQ3x8H4bK7X9cY8aB2C1dE3fG4hI5jK6lM7nO8pQ9rS0tU1vW2xY3zA4';
+                const key = (input && input.value.trim()) || localStorage.getItem(getUserScopedStorageKey('kotapalApiKey')) || '';
+                if (!key) {
+                    showNotification('Save your KotaPal API key first, then copy.', 'warning', 'API Key');
+                    return;
+                }
                 navigator.clipboard.writeText(key);
-                showNotification('API key copied to clipboard!', 'success', 'Copied');
+                showNotification('KotaPal API key copied to clipboard!', 'success', 'Copied');
             });
 
             // Layout selection
@@ -10924,30 +10949,39 @@
             currentIntegrations.forEach(integration => {
                 const apiKey = getProviderApiKey(integration.id, false);
                 const affiliateId = integration.affiliateId || getProviderAffiliateId(integration.id) || '';
+                const connectionStatus = getIntegrationConnectionStatus(integration);
+                const isConnected = connectionStatus === 'connected';
                 const providerLabel = getProviderLabel(integration.id);
                 const integrationCard = document.createElement('div');
                 integrationCard.className = 'card';
                 integrationCard.innerHTML = `
                     <div class="card-header">
                         <h3 class="card-title">${escapeHtml(integration.name)}</h3>
-                        <span class="block-status ${integration.status === 'connected' ? 'status-active' : 'status-draft'}">
-                            ${integration.status === 'connected' ? 'Connected' : 'Disconnected'}
-                        </span>
+                        <div class="integration-status-wrap">
+                            <span class="integration-status-label">Status</span>
+                            <span class="block-status ${isConnected ? 'status-active' : 'status-draft'}">
+                                ${isConnected ? 'Connected' : 'Disconnected'}
+                            </span>
+                        </div>
                     </div>
                     <div>
                         <p>Last synced: ${escapeHtml(integration.lastSync || 'Never')}</p>
-                        <p style="color:var(--gray);font-size:0.9rem;margin-bottom:12px;">Save the ${providerLabel} credentials used for product search, SmartBlocks, and Product Library items from this provider.</p>
+                        <p style="color:var(--gray);font-size:0.9rem;margin-bottom:12px;">Paste your ${providerLabel} API URL and key here to <strong>fetch products LIVE</strong> (New Block, Product Library). Separate from your KotaPal API key in API &amp; webhooks below.</p>
                         <div class="form-group">
                             <label>${providerLabel} affiliate / partner ID</label>
                             <input type="text" value="${escapeHtml(affiliateId)}" class="form-control integration-id" data-id="${integration.id}" placeholder="Paste affiliate or partner ID" autocomplete="off" spellcheck="false">
                         </div>
                         <div class="form-group">
+                            <label>${providerLabel} API URL</label>
+                            <input type="url" value="${escapeHtml(getProviderApiEndpoint(integration.id))}" class="form-control integration-api-endpoint" data-id="${integration.id}" placeholder="https://your-api.com/${integration.id}/search" autocomplete="off" spellcheck="false">
+                        </div>
+                        <div class="form-group">
                             <label>${providerLabel} API key</label>
-                            <input type="password" value="${escapeHtml(apiKey)}" class="form-control integration-api-key" data-id="${integration.id}" placeholder="Paste ${providerLabel} API key" autocomplete="off" spellcheck="false">
+                            <input type="password" value="${escapeHtml(apiKey)}" class="form-control integration-api-key" data-id="${integration.id}" placeholder="Paste ${providerLabel} API key or full URL" autocomplete="off" spellcheck="false">
                         </div>
                         <div style="display: flex; gap: 10px; margin-top: 20px; flex-wrap:wrap;">
                             <button class="btn btn-primary integration-save-btn" data-id="${integration.id}">Save credentials</button>
-                            ${integration.status === 'connected'
+                            ${isConnected
                                 ? `<button class="btn btn-danger disconnect-btn" data-id="${integration.id}">Disconnect</button>`
                                 : `<button class="btn btn-secondary connect-btn" data-id="${integration.id}">Connect Account</button>`}
                             <button class="btn btn-secondary sync-btn" data-id="${integration.id}">Sync Now</button>
@@ -10971,18 +11005,27 @@
                         const integrationId = this.getAttribute('data-id');
                         const integrationIndex = currentIntegrations.findIndex(i => i.id === integrationId);
                         const apiInput = document.querySelector('.integration-api-key[data-id="' + integrationId + '"]');
+                        const endpointInput = document.querySelector('.integration-api-endpoint[data-id="' + integrationId + '"]');
                         const idInput = document.querySelector('.integration-id[data-id="' + integrationId + '"]');
                         const apiValue = apiInput && apiInput.value ? apiInput.value.trim() : '';
+                        const endpointValue = endpointInput && endpointInput.value ? endpointInput.value.trim() : '';
                         const affiliateValue = idInput && idInput.value ? idInput.value.trim() : '';
 
-                        if (apiValue) setProviderApiKey(integrationId, apiValue);
+                        if (endpointValue) setProviderApiEndpoint(integrationId, endpointValue);
+                        if (apiValue) applyProviderCredential(integrationId, apiValue);
                         setProviderAffiliateId(integrationId, affiliateValue);
 
                         if (integrationIndex !== -1) {
-                            currentIntegrations[integrationIndex].status = (apiValue || affiliateValue) ? 'connected' : currentIntegrations[integrationIndex].status;
                             currentIntegrations[integrationIndex].affiliateId = affiliateValue;
-                            currentIntegrations[integrationIndex].lastSync = 'Just now';
                             currentIntegrations[integrationIndex].apiKeyConfigured = Boolean(apiValue || getProviderApiKey(integrationId, false));
+                            const hasCredentials = Boolean(currentIntegrations[integrationIndex].apiKeyConfigured || affiliateValue);
+                            if (!hasCredentials) {
+                                currentIntegrations[integrationIndex].status = 'disconnected';
+                                currentIntegrations[integrationIndex].lastSync = 'Never';
+                            } else if (currentIntegrations[integrationIndex].status === 'connected') {
+                                currentIntegrations[integrationIndex].lastSync = 'Just now';
+                            }
+                            currentIntegrations[integrationIndex].status = getIntegrationConnectionStatus(currentIntegrations[integrationIndex]);
                         }
                         saveIntegrations();
                         loadProviderApiKeys();
@@ -10996,12 +11039,27 @@
                         const integrationIndex = currentIntegrations.findIndex(i => i.id === integrationId);
                         
                         if (integrationIndex !== -1) {
+                            const apiInput = document.querySelector('.integration-api-key[data-id="' + integrationId + '"]');
+                            const idInput = document.querySelector('.integration-id[data-id="' + integrationId + '"]');
+                            const apiValue = apiInput && apiInput.value ? apiInput.value.trim() : '';
+                            const affiliateValue = idInput && idInput.value ? idInput.value.trim() : '';
+                            const storedApiKey = getProviderApiKey(integrationId, false);
+                            const storedAffiliate = currentIntegrations[integrationIndex].affiliateId || getProviderAffiliateId(integrationId) || '';
+                            if (!(apiValue || affiliateValue || storedApiKey || storedAffiliate)) {
+                                showNotification('Save an API key or affiliate ID before connecting.', 'warn', 'Integrations');
+                                return;
+                            }
                             currentIntegrations[integrationIndex].status = 'connected';
                             currentIntegrations[integrationIndex].lastSync = 'Just now';
-                            currentIntegrations[integrationIndex].affiliateId = currentIntegrations[integrationIndex].affiliateId || getProviderAffiliateId(integrationId) || '';
+                            currentIntegrations[integrationIndex].affiliateId = affiliateValue || storedAffiliate;
+                            currentIntegrations[integrationIndex].status = getIntegrationConnectionStatus(currentIntegrations[integrationIndex]);
                             saveIntegrations();
                             renderIntegrations();
-                            showNotification('Integration connected successfully!', 'success', 'Connected');
+                            if (currentIntegrations[integrationIndex].status === 'connected') {
+                                showNotification('Integration connected successfully!', 'success', 'Connected');
+                            } else {
+                                showNotification('Could not connect. Add credentials and try again.', 'warn', 'Integrations');
+                            }
                         }
                     });
                 });
@@ -11338,7 +11396,7 @@
             showNotification('Block created successfully!', 'success', 'Create Block');
         }
 
-        // Live retailer search — uses API URL + key from Settings, Integrations, or chat paste (no third-party proxy).
+        // Live retailer search — uses per-retailer API URL + key from Integrations or Settings (not the KotaPal platform key).
         const LIVE_RETAILER_PROVIDERS = ['amazon', 'walmart', 'ebay'];
         const PROVIDER_API_KEY_INPUTS = {
             amazon: { inputId: 'amazonApiKey', endpointId: 'amazonApiEndpoint', statusId: 'amazonApiKeyStatus', endpointStatusId: 'amazonApiEndpointStatus', label: 'Amazon', liveSearch: true },
@@ -11454,7 +11512,7 @@
 
         function getActiveProductApiKey(provider) {
             provider = String(provider || 'amazon').toLowerCase();
-            return getProviderApiKey(provider, false) || getPlatformApiKey() || '';
+            return getProviderApiKey(provider, false) || '';
         }
 
         // Backward compatibility
@@ -11580,6 +11638,35 @@
                 if (!input) return;
                 const savedKey = getProviderApiKey(provider, false);
                 input.value = savedKey || '';
+                if (cfg.endpointId) {
+                    const endpointInput = document.getElementById(cfg.endpointId);
+                    if (endpointInput) {
+                        endpointInput.value = getProviderApiEndpoint(provider) || '';
+                        if (!endpointInput.dataset.autoSaveBound) {
+                            endpointInput.dataset.autoSaveBound = '1';
+                            let endpointTimer = null;
+                            const saveEndpoint = function() {
+                                const prov = String(endpointInput.dataset.provider || '').toLowerCase();
+                                const value = endpointInput.value ? endpointInput.value.trim() : '';
+                                setProviderApiEndpoint(prov, value);
+                                if (cfg.endpointStatusId) {
+                                    setSettingsFieldStatus(cfg.endpointStatusId, Boolean(value), false);
+                                }
+                            };
+                            endpointInput.addEventListener('input', function() {
+                                if (endpointTimer) window.clearTimeout(endpointTimer);
+                                endpointTimer = window.setTimeout(saveEndpoint, 450);
+                            });
+                            endpointInput.addEventListener('blur', saveEndpoint);
+                            endpointInput.addEventListener('paste', function() {
+                                setTimeout(saveEndpoint, 0);
+                            });
+                        }
+                        if (cfg.endpointStatusId) {
+                            setSettingsFieldStatus(cfg.endpointStatusId, Boolean(endpointInput.value.trim()), false);
+                        }
+                    }
+                }
                 if (!input.dataset.pasteBound) {
                     input.dataset.pasteBound = '1';
                     input.addEventListener('paste', function() {
@@ -11596,21 +11683,26 @@
                         if (t) window.clearTimeout(t);
                         t = window.setTimeout(function() {
                             const value = el.value ? el.value.trim() : '';
-                            setProviderApiKey(prov, value);
-                            setProviderApiKeyStatus(prov, Boolean(value));
+                            applyProviderCredential(prov, value);
+                            setProviderApiKeyStatus(prov, Boolean(getProviderApiKey(prov, false)));
+                            if (cfg.endpointStatusId) {
+                                setSettingsFieldStatus(cfg.endpointStatusId, Boolean(getProviderApiEndpoint(prov)), false);
+                            }
                         }, 450);
                     });
                     input.addEventListener('blur', function() {
-                        // Ensure last keystroke saves immediately on blur
                         const el = this;
                         const prov = String(el.dataset.provider || '').toLowerCase();
                         if (!prov) return;
                         const value = el.value ? el.value.trim() : '';
-                        setProviderApiKey(prov, value);
-                        setProviderApiKeyStatus(prov, Boolean(value));
+                        applyProviderCredential(prov, value);
+                        setProviderApiKeyStatus(prov, Boolean(getProviderApiKey(prov, false)));
+                        if (cfg.endpointStatusId) {
+                            setSettingsFieldStatus(cfg.endpointStatusId, Boolean(getProviderApiEndpoint(prov)), false);
+                        }
                     });
                 }
-                setProviderApiKeyStatus(provider, Boolean(savedKey));
+                setProviderApiKeyStatus(provider, Boolean(savedKey || getProviderApiEndpoint(provider)));
             });
 
             // Bind eye toggles (once)
@@ -11629,17 +11721,55 @@
             });
         }
 
-        function isSearchApiQuotaError(message) {
-            const m = String(message || '');
-            return /used all of the searches|upgrade your plan|quota/i.test(m);
-        }
-
         function formatProviderSearchError(message) {
             const m = String(message || '');
-            if (isSearchApiQuotaError(m) || /searchapi/i.test(m)) {
-                return 'Monthly search limit reached. Update API keys in Settings → Connections & API keys or try again later.';
+            if (/quota|rate limit|429/i.test(m)) {
+                return 'API rate limit reached. Check your provider plan or try again later.';
             }
-            return 'Live search is unavailable. Check Connections & API keys in Settings.';
+            if (/failed to fetch|network|cors/i.test(m)) {
+                return 'Could not reach your API. Confirm the URL allows browser requests (CORS) or use a proxy.';
+            }
+            return m || 'Live search is unavailable. Check your API URL and key in Settings.';
+        }
+
+        function tryExtractApiKeyFromText(text) {
+            const raw = String(text || '').trim();
+            if (!raw) return null;
+            const urlMatch = raw.match(/https?:\/\/[^\s]+/i);
+            if (urlMatch) return urlMatch[0];
+            const paramMatch = raw.match(/(?:api[_-]?key|access[_-]?token|token)\s*[=:]\s*([^\s&]+)/i);
+            if (paramMatch) return paramMatch[1];
+            if (/^[A-Za-z0-9_\-\.]{16,}$/.test(raw) && raw.split(/\s+/).length === 1) return raw;
+            return null;
+        }
+
+        function saveApiKeyFromChatPaste(text) {
+            const extracted = tryExtractApiKeyFromText(text);
+            if (!extracted) return false;
+            if (/^https?:\/\//i.test(extracted)) {
+                ['amazon', 'walmart', 'ebay'].forEach(function(p) {
+                    if (!getProviderApiKey(p, false) && !getProviderApiEndpoint(p)) {
+                        applyProviderCredential(p, extracted);
+                    }
+                });
+            } else {
+                var retailerTarget = null;
+                var chatRetailer = document.getElementById('retailerSelect');
+                if (chatRetailer && chatRetailer.value) retailerTarget = chatRetailer.value;
+                if (!retailerTarget) {
+                    var libRetailer = document.getElementById('productLibraryRetailer');
+                    if (libRetailer && libRetailer.value && libRetailer.value !== 'all') retailerTarget = libRetailer.value;
+                }
+                if (retailerTarget && LIVE_RETAILER_PROVIDERS.includes(retailerTarget)) {
+                    applyProviderCredential(retailerTarget, extracted);
+                } else if (!getPlatformApiKey()) {
+                    localStorage.setItem(getUserScopedStorageKey('kotapalApiKey'), extracted);
+                    var integrationsInput = document.getElementById('integrationsApiKey');
+                    if (integrationsInput) integrationsInput.value = extracted;
+                }
+            }
+            loadProviderApiKeys();
+            return true;
         }
 
         function getApiKeysToTry(provider) {
@@ -11647,102 +11777,120 @@
             return userKey ? [userKey] : [];
         }
 
-        function hasLiveRetailerSearchKey(retailer) {
-            return SEARCHAPI_PROVIDERS.includes(retailer) && Boolean(getProviderApiKey(retailer, false));
+        function hasLiveRetailerSearchConfig(retailer) {
+            if (!LIVE_RETAILER_PROVIDERS.includes(retailer)) return false;
+            const endpoint = getProviderApiEndpoint(retailer);
+            const rawKey = localStorage.getItem(getProviderApiStorageKey(retailer)) || '';
+            if (rawKey && /^https?:\/\//i.test(rawKey)) return true;
+            return Boolean(endpoint && getApiKeysToTry(retailer).length);
         }
 
         function liveRetailerSearchBlockedMessage(retailer) {
-            return 'Live ' + (retailer || 'retailer') + ' search requires an API key. Open Settings → Connections & API keys, paste your key, and save.';
+            return 'Live ' + (retailer || 'retailer') + ' search needs that retailer’s API URL and key. Add them under Integrations → Retailer & store connections or Settings → Product search API.';
         }
 
-        async function fetchSearchApiProducts(retailer, query, apiKey) {
-            let products = [];
-            if (retailer === 'amazon') {
-                const url = SEARCHAPI_URL + '?engine=amazon_search&api_key=' + encodeURIComponent(apiKey) + '&q=' + encodeURIComponent(query) + '&num=20';
-                const res = await fetch(url, { method: 'GET', headers: { 'Accept': 'application/json' } });
-                const data = await res.json();
-                if (!res.ok || (data && data.error)) {
-                    const errMsg = (data && data.error && (data.error.message || data.error)) || ('HTTP ' + res.status);
-                    throw new Error(formatProviderSearchError(typeof errMsg === 'string' ? errMsg : JSON.stringify(errMsg)));
-                }
-                if (data && data.organic_results && Array.isArray(data.organic_results)) {
-                    products = data.organic_results.map(function(item, i) {
-                        return {
-                            id: item.asin || item.product_id || ('amz_' + i),
-                            title: item.title || 'Product',
-                            image: item.thumbnail || item.image || 'https://via.placeholder.com/200',
-                            price: item.extracted_price != null ? parseFloat(item.extracted_price) : (item.price ? parseFloat(String(item.price).replace(/[^0-9.]/g, '')) : 0) || 0,
-                            retailer: 'amazon',
-                            asin: item.asin,
-                            link: item.link || ('https://www.amazon.com/dp/' + (item.asin || '')),
-                            addedDate: new Date().toISOString()
-                        };
-                    });
-                }
-            } else if (retailer === 'walmart') {
-                const params = new URLSearchParams({ engine: 'walmart_search', q: query, api_key: apiKey, num: '20' });
-                const res = await fetch(SEARCHAPI_URL + '?' + params, { method: 'GET', headers: { 'Accept': 'application/json' } });
-                const data = await res.json();
-                if (!res.ok || (data && data.error)) {
-                    const errMsg = (data && data.error && (data.error.message || data.error)) || ('HTTP ' + res.status);
-                    throw new Error(formatProviderSearchError(typeof errMsg === 'string' ? errMsg : JSON.stringify(errMsg)));
-                }
-                let allResults = [];
-                if (data && data.organic_results) allResults = allResults.concat(data.organic_results);
-                if (data && data.other_options) allResults = allResults.concat(data.other_options);
-                if (allResults.length > 0) {
-                    products = allResults.map(function(item, i) {
-                        return {
-                            id: item.product_id || item.id || ('wlm_' + i),
-                            title: item.title || 'Product',
-                            image: item.thumbnail || 'https://via.placeholder.com/200',
-                            price: item.extracted_price != null ? parseFloat(item.extracted_price) : (item.price ? parseFloat(String(item.price).replace(/[^0-9.]/g, '')) : 0) || 0,
-                            retailer: 'walmart',
-                            link: item.link || ('https://www.walmart.com/ip/' + (item.product_id || item.id || '')),
-                            addedDate: new Date().toISOString()
-                        };
-                    });
-                }
-            } else if (retailer === 'ebay') {
-                const params = new URLSearchParams({ engine: 'ebay_search', q: query, api_key: apiKey, num: '20' });
-                const res = await fetch(SEARCHAPI_URL + '?' + params, { method: 'GET', headers: { 'Accept': 'application/json' } });
-                const data = await res.json();
-                if (!res.ok || (data && data.error)) {
-                    const errMsg = (data && data.error && (data.error.message || data.error)) || ('HTTP ' + res.status);
-                    throw new Error(formatProviderSearchError(typeof errMsg === 'string' ? errMsg : JSON.stringify(errMsg)));
-                }
-                let allResults = [];
-                if (data && data.organic_results) allResults = allResults.concat(data.organic_results);
-                if (data && data.sections) data.sections.forEach(function(sec) { if (sec.results) allResults = allResults.concat(sec.results); });
-                if (allResults.length > 0) {
-                    products = allResults.slice(0, 20).map(function(item, i) {
-                        var price = 0;
-                        if (item.extracted_price != null) price = parseFloat(item.extracted_price);
-                        else if (item.price) { var m = String(item.price).match(/\$?([\d,]+\.?\d*)/); if (m) price = parseFloat(m[1].replace(/,/g, '')); }
-                        return {
-                            id: item.item_id || item.id || ('ebay_' + i),
-                            title: item.title || 'Product',
-                            image: item.thumbnail || (item.images && item.images[0]) || 'https://via.placeholder.com/200',
-                            price: price || 0,
-                            retailer: 'ebay',
-                            link: item.link || ('https://www.ebay.com/itm/' + (item.item_id || item.id || '')),
-                            addedDate: new Date().toISOString()
-                        };
-                    });
-                }
+        function extractProductsArray(data) {
+            if (!data) return [];
+            if (Array.isArray(data)) return data;
+            if (Array.isArray(data.products)) return data.products;
+            if (Array.isArray(data.results)) return data.results;
+            if (Array.isArray(data.items)) return data.items;
+            var all = [];
+            if (Array.isArray(data.organic_results)) all = all.concat(data.organic_results);
+            if (Array.isArray(data.other_options)) all = all.concat(data.other_options);
+            if (Array.isArray(data.data)) all = all.concat(data.data);
+            if (Array.isArray(data.sections)) {
+                data.sections.forEach(function(sec) {
+                    if (sec && Array.isArray(sec.results)) all = all.concat(sec.results);
+                });
             }
-            return products;
+            return all;
+        }
+
+        function mapApiItemToProduct(item, retailer, index) {
+            var price = 0;
+            if (item.extracted_price != null) price = parseFloat(item.extracted_price);
+            else if (item.price != null) {
+                var priceMatch = String(item.price).match(/\$?([\d,]+\.?\d*)/);
+                price = priceMatch ? parseFloat(priceMatch[1].replace(/,/g, '')) : parseFloat(String(item.price).replace(/[^0-9.]/g, '')) || 0;
+            }
+            var id = item.id || item.asin || item.product_id || item.item_id || (retailer + '_' + index);
+            return {
+                id: id,
+                title: item.title || item.name || 'Product',
+                image: item.thumbnail || item.image || (item.images && item.images[0]) || 'https://via.placeholder.com/200',
+                price: price || 0,
+                retailer: retailer,
+                asin: item.asin,
+                link: item.link || item.url || '#',
+                addedDate: new Date().toISOString()
+            };
+        }
+
+        function buildProviderSearchRequestUrl(retailer, query, apiKey) {
+            var endpoint = getProviderApiEndpoint(retailer);
+            var key = apiKey;
+            var storedRaw = localStorage.getItem(getProviderApiStorageKey(retailer)) || '';
+            if (storedRaw && /^https?:\/\//i.test(storedRaw)) {
+                var parsedStored = parseProviderCredential(storedRaw);
+                if (parsedStored.endpoint) endpoint = parsedStored.endpoint;
+                if (parsedStored.apiKey) key = parsedStored.apiKey;
+            }
+            if (!endpoint) throw new Error('Add a product search API URL for ' + retailer + ' in Settings.');
+            if (!key) throw new Error('Add an API key for ' + retailer + ' in Settings or paste it in chat.');
+            var requestUrl;
+            try {
+                requestUrl = new URL(endpoint, window.location.href);
+            } catch (e) {
+                throw new Error('Invalid API URL for ' + retailer + '.');
+            }
+            if (!requestUrl.searchParams.has('q') && !requestUrl.searchParams.has('query') && !requestUrl.searchParams.has('search')) {
+                requestUrl.searchParams.set('q', query);
+            }
+            if (!requestUrl.searchParams.has('retailer') && !requestUrl.searchParams.has('engine')) {
+                requestUrl.searchParams.set('retailer', retailer);
+            }
+            if (!requestUrl.searchParams.has('num') && !requestUrl.searchParams.has('limit')) {
+                requestUrl.searchParams.set('num', '20');
+            }
+            if (!requestUrl.searchParams.has('api_key') && !requestUrl.searchParams.has('key') && !requestUrl.searchParams.has('apikey') && !requestUrl.searchParams.has('token')) {
+                requestUrl.searchParams.set('api_key', key);
+            }
+            return { url: requestUrl.toString(), key: key };
+        }
+
+        async function fetchProviderProducts(retailer, query, apiKey) {
+            const built = buildProviderSearchRequestUrl(retailer, query, apiKey);
+            const headers = { Accept: 'application/json' };
+            if (!/[?&](api_key|key|apikey|token)=/i.test(built.url)) {
+                headers.Authorization = 'Bearer ' + built.key;
+            }
+            const res = await fetch(built.url, { method: 'GET', headers: headers });
+            let data = null;
+            try {
+                data = await res.json();
+            } catch (e) {
+                throw new Error('API returned a non-JSON response (HTTP ' + res.status + ').');
+            }
+            if (!res.ok || (data && data.error)) {
+                const errMsg = (data && data.error && (data.error.message || data.error)) || (data && data.message) || ('HTTP ' + res.status);
+                throw new Error(formatProviderSearchError(typeof errMsg === 'string' ? errMsg : JSON.stringify(errMsg)));
+            }
+            const items = extractProductsArray(data);
+            return items.slice(0, 20).map(function(item, i) {
+                return mapApiItemToProduct(item, retailer, i);
+            });
         }
 
         async function searchRetailerProductsLive(retailer, query) {
             const keys = getApiKeysToTry(retailer);
             if (!keys.length) {
-                throw new Error('Add an API key in Settings → Connections & API keys to search live retailer products.');
+                throw new Error('Add this retailer’s API URL and key under Integrations → Retailer & store connections or Settings → Product search API.');
             }
             let lastError = null;
             for (var ki = 0; ki < keys.length; ki++) {
                 try {
-                    const products = await fetchSearchApiProducts(retailer, query, keys[ki]);
+                    const products = await fetchProviderProducts(retailer, query, keys[ki]);
                     if (products.length > 0) return products;
                 } catch (apiErr) {
                     lastError = apiErr;
@@ -11773,9 +11921,15 @@
                 const cfg = PROVIDER_API_KEY_INPUTS[provider];
                 const input = document.getElementById(cfg.inputId);
                 const value = input && input.value ? input.value.trim() : '';
-                setProviderApiKey(provider, value);
-                setProviderApiKeyStatus(provider, Boolean(value));
-                if (value) savedCount++;
+                if (value) applyProviderCredential(provider, value);
+                const endpointInput = cfg.endpointId ? document.getElementById(cfg.endpointId) : null;
+                const endpointValue = endpointInput && endpointInput.value ? endpointInput.value.trim() : '';
+                if (endpointValue) setProviderApiEndpoint(provider, endpointValue);
+                setProviderApiKeyStatus(provider, Boolean(getProviderApiKey(provider, false) || endpointValue));
+                if (cfg.endpointStatusId) {
+                    setSettingsFieldStatus(cfg.endpointStatusId, Boolean(getProviderApiEndpoint(provider)), false);
+                }
+                if (value || endpointValue) savedCount++;
             });
             if (savedCount === 0) {
                 showNotification('Paste at least one connection value or API key before saving.', 'warning', 'Settings');
@@ -11809,9 +11963,9 @@
                 productsContainer.innerHTML = '';
                 return;
             }
-            if (SEARCHAPI_PROVIDERS.includes(retailer) && !hasLiveRetailerSearchKey(retailer)) {
+            if (LIVE_RETAILER_PROVIDERS.includes(retailer) && !hasLiveRetailerSearchConfig(retailer)) {
                 searchStatus.textContent = liveRetailerSearchBlockedMessage(retailer);
-                productsContainer.innerHTML = '<p style="text-align: center; color: var(--danger); padding: 20px;">Live search only — add your Provider API key in Settings.</p>';
+                productsContainer.innerHTML = '<p style="text-align: center; color: var(--danger); padding: 20px;">Live search only — add this retailer’s API URL and key under Integrations or Settings.</p>';
                 return;
             }
             
@@ -11821,7 +11975,7 @@
             let products = [];
             
             try {
-                if (SEARCHAPI_PROVIDERS.includes(retailer)) {
+                if (LIVE_RETAILER_PROVIDERS.includes(retailer)) {
                     try {
                         const liveProducts = await searchRetailerProductsLive(retailer, query);
                         products = liveProducts.map(function(item, index) {
@@ -11939,7 +12093,7 @@
                 resultsEl.innerHTML = '';
                 return;
             }
-            if (SEARCHAPI_PROVIDERS.includes(retailer) && !hasLiveRetailerSearchKey(retailer)) {
+            if (LIVE_RETAILER_PROVIDERS.includes(retailer) && !hasLiveRetailerSearchConfig(retailer)) {
                 statusEl.textContent = liveRetailerSearchBlockedMessage(retailer);
                 resultsEl.innerHTML = '<p style="text-align: center; color: var(--danger); padding: 20px;">Live search only — add your Provider API key in Settings.</p>';
                 window._lastLibrarySearchProducts = [];
@@ -11949,7 +12103,7 @@
             resultsEl.innerHTML = '<div style="padding: 24px; text-align: center; color: var(--gray);"><div class="spinner" style="margin: 0 auto 12px;"></div>Loading products...</div>';
             let products = [];
             try {
-                if (SEARCHAPI_PROVIDERS.includes(retailer)) {
+                if (LIVE_RETAILER_PROVIDERS.includes(retailer)) {
                     products = await searchRetailerProductsLive(retailer, query);
                 } else if (retailer === 'shopify') {
                     products = [
@@ -11996,7 +12150,7 @@
                 }
                 if (products.length > 0) {
                     statusEl.textContent = `Found ${products.length} live ${retailer} product(s) for "${query}". Click "Add to Library" to save.`;
-                } else if (SEARCHAPI_PROVIDERS.includes(retailer)) {
+                } else if (LIVE_RETAILER_PROVIDERS.includes(retailer)) {
                     statusEl.textContent = formatProviderSearchError('No live products returned. Check Connections & API keys in Settings.');
                 } else {
                     statusEl.textContent = `No ${retailer} products found for "${query}".`;
@@ -12627,15 +12781,9 @@
             }
         }
         
-        // Google AI Mode API Configuration
-        // The Google AI Mode API provides access to Google's AI-powered search results
-        // Returns AI-generated content including text blocks, generated markdown, 
-        // reference links, local results, web references, and shopping suggestions
-        // Endpoint: https://www.searchapi.io/api/v1/search?engine=google_ai_mode
-        const GOOGLE_AI_API_URL = 'https://www.searchapi.io/api/v1/search';
-        const GOOGLE_AI_ENGINE = 'google_ai_mode';
+        // Assistant API — uses the same product search API URL/key configured in Settings or pasted in chat.
         
-        // Extract main text and references from Google AI Mode API response
+        // Extract main text and references from API response
         // (text_blocks, markdown, reference_links; fallback: answer, answer_box, organic_results)
         function extractGoogleAIContent(data) {
             if (!data) return { text: '', references: [] };
@@ -12668,48 +12816,69 @@
         function escapeHtml(s) {
             return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
         }
+
+        async function fetchAssistantApiQuery(query, retailer) {
+            retailer = retailer || 'amazon';
+            const keys = getApiKeysToTry(retailer);
+            if (!hasLiveRetailerSearchConfig(retailer)) {
+                throw new Error('Configure this retailer’s product search API URL and key under Integrations or Settings.');
+            }
+            let lastError = null;
+            for (var ki = 0; ki < keys.length; ki++) {
+                try {
+                    const built = buildProviderSearchRequestUrl(retailer, query, keys[ki]);
+                    const headers = { Accept: 'application/json' };
+                    if (!/[?&](api_key|key|apikey|token)=/i.test(built.url)) {
+                        headers.Authorization = 'Bearer ' + built.key;
+                    }
+                    const response = await fetch(built.url, { method: 'GET', headers: headers });
+                    const data = await response.json();
+                    if (!response.ok || (data && data.error)) {
+                        const apiError = data && data.error;
+                        throw new Error(typeof apiError === 'string' ? apiError : (apiError && (apiError.message || JSON.stringify(apiError))) || ('HTTP ' + response.status));
+                    }
+                    const extracted = extractGoogleAIContent(data);
+                    if (extracted.text) return extracted;
+                    const products = extractProductsArray(data);
+                    if (products.length) {
+                        const lines = products.slice(0, 8).map(function(p) {
+                            return '- ' + (p.title || p.name || 'Product');
+                        });
+                        return { text: lines.join('\n'), references: [] };
+                    }
+                    throw new Error('No usable content in API response');
+                } catch (err) {
+                    lastError = err;
+                }
+            }
+            throw lastError || new Error('Assistant API request failed');
+        }
         
-        // AI Assistant Functions with Google AI Integration
+        // AI Assistant Functions — your configured API
         async function generateProductDescription() {
-            showNotification('AI is generating your product description using Google AI...', 'info', 'AI Assistant');
+            showNotification('Generating product description from your API...', 'info', 'AI Assistant');
             
-            const apiKey = getSearchApiKey();
             const query = 'How to write compelling product descriptions for e-commerce products';
             
             try {
-                const apiUrl = `${GOOGLE_AI_API_URL}?engine=${GOOGLE_AI_ENGINE}&api_key=${apiKey}&q=${encodeURIComponent(query)}`;
-                
-                const response = await fetch(apiUrl, {
-                    method: 'GET',
-                    headers: { 'Accept': 'application/json' }
-                });
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    const apiError = data && data.error;
-                    if (apiError) throw new Error(typeof apiError === 'string' ? apiError : (apiError.message || JSON.stringify(apiError)));
-                    const { text, references } = extractGoogleAIContent(data);
-                    let aiContent = text;
-                    if (references.length) aiContent += "\n\n---\nReferences:\n" + references.map(r => (r.title || 'Source') + ": " + (r.link || '')).join('\n');
-                    if (aiContent) {
-                        const resultDiv = document.getElementById('aiProductDescriptionResult');
-                        const contentDiv = document.getElementById('aiProductDescriptionContent');
-                        if (resultDiv && contentDiv) {
-                            contentDiv.textContent = aiContent + '\n\n(Generated by Google AI)\n\nYou can customize this description in your product settings.';
-                            resultDiv.style.display = 'block';
-                            resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                        } else {
-                            showNotification(aiContent.substring(0, 300) + '... (Generated by Google AI). You can customize this in your product settings.', 'info', 'AI Description');
-                        }
+                const { text, references } = await fetchAssistantApiQuery(query, 'amazon');
+                let aiContent = text;
+                if (references.length) aiContent += "\n\n---\nReferences:\n" + references.map(r => (r.title || 'Source') + ": " + (r.link || '')).join('\n');
+                if (aiContent) {
+                    const resultDiv = document.getElementById('aiProductDescriptionResult');
+                    const contentDiv = document.getElementById('aiProductDescriptionContent');
+                    if (resultDiv && contentDiv) {
+                        contentDiv.textContent = aiContent + '\n\n(From your API)\n\nYou can customize this description in your product settings.';
+                        resultDiv.style.display = 'block';
+                        resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                     } else {
-                        throw new Error('No AI content found in response');
+                        showNotification(aiContent.substring(0, 300) + '... (From your API). You can customize this in your product settings.', 'info', 'AI Description');
                     }
                 } else {
-                    const errText = await response.text();
-                    throw new Error(`API request failed: ${response.status}. ${(errText || '').substring(0, 150)}`);
+                    throw new Error('No content found in response');
                 }
             } catch (error) {
-                console.error('Google AI error:', error);
+                console.error('Assistant API error:', error);
                 const resultDiv = document.getElementById('aiProductDescriptionResult');
                 const contentDiv = document.getElementById('aiProductDescriptionContent');
                 if (resultDiv && contentDiv) {
@@ -12723,45 +12892,29 @@
         }
         
         async function optimizePerformance() {
-            showNotification('Analyzing your block performance using Google AI...', 'info', 'AI Assistant');
+            showNotification('Analyzing performance using your API...', 'info', 'AI Assistant');
             
-            const apiKey = getSearchApiKey();
             const query = 'How to optimize affiliate marketing product blocks for better click-through rates and conversions';
             
             try {
-                const apiUrl = `${GOOGLE_AI_API_URL}?engine=${GOOGLE_AI_ENGINE}&api_key=${apiKey}&q=${encodeURIComponent(query)}`;
-                
-                const response = await fetch(apiUrl, {
-                    method: 'GET',
-                    headers: { 'Accept': 'application/json' }
-                });
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    const apiError = data && data.error;
-                    if (apiError) throw new Error(typeof apiError === 'string' ? apiError : (apiError.message || JSON.stringify(apiError)));
-                    const { text, references } = extractGoogleAIContent(data);
-                    let recommendations = text;
-                    if (references.length) recommendations += "\n\n---\nReferences:\n" + references.map(r => (r.title || 'Source') + ": " + (r.link || '')).join('\n');
-                    if (recommendations) {
-                        const resultDiv = document.getElementById('aiPerformanceResult');
-                        const contentDiv = document.getElementById('aiPerformanceContent');
-                        if (resultDiv && contentDiv) {
-                            contentDiv.textContent = recommendations + '\n\n(Generated by Google AI)';
-                            resultDiv.style.display = 'block';
-                            resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                        } else {
-                            showNotification(recommendations.substring(0, 400) + '... (Generated by Google AI)', 'info', 'Performance');
-                        }
+                const { text, references } = await fetchAssistantApiQuery(query, 'amazon');
+                let recommendations = text;
+                if (references.length) recommendations += "\n\n---\nReferences:\n" + references.map(r => (r.title || 'Source') + ": " + (r.link || '')).join('\n');
+                if (recommendations) {
+                    const resultDiv = document.getElementById('aiPerformanceResult');
+                    const contentDiv = document.getElementById('aiPerformanceContent');
+                    if (resultDiv && contentDiv) {
+                        contentDiv.textContent = recommendations + '\n\n(From your API)';
+                        resultDiv.style.display = 'block';
+                        resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                     } else {
-                        throw new Error('No recommendations found');
+                        showNotification(recommendations.substring(0, 400) + '... (From your API)', 'info', 'Performance');
                     }
                 } else {
-                    const errText = await response.text();
-                    throw new Error(`API request failed: ${response.status}. ${(errText || '').substring(0, 150)}`);
+                    throw new Error('No recommendations found');
                 }
             } catch (error) {
-                console.error('Google AI error:', error);
+                console.error('Assistant API error:', error);
                 const resultDiv = document.getElementById('aiPerformanceResult');
                 const contentDiv = document.getElementById('aiPerformanceContent');
                 if (resultDiv && contentDiv) {
@@ -12775,45 +12928,29 @@
         }
         
         async function getContentIdeas() {
-            showNotification('Generating content ideas using Google AI...', 'info', 'AI Assistant');
+            showNotification('Generating content ideas from your API...', 'info', 'AI Assistant');
             
-            const apiKey = getSearchApiKey();
             const query = 'content ideas for affiliate marketing blog posts and product reviews';
             
             try {
-                const apiUrl = `${GOOGLE_AI_API_URL}?engine=${GOOGLE_AI_ENGINE}&api_key=${apiKey}&q=${encodeURIComponent(query)}`;
-                
-                const response = await fetch(apiUrl, {
-                    method: 'GET',
-                    headers: { 'Accept': 'application/json' }
-                });
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    const apiError = data && data.error;
-                    if (apiError) throw new Error(typeof apiError === 'string' ? apiError : (apiError.message || JSON.stringify(apiError)));
-                    const { text, references } = extractGoogleAIContent(data);
-                    let ideas = text;
-                    if (references.length) ideas += "\n\n---\nReferences:\n" + references.map(r => (r.title || 'Source') + ": " + (r.link || '')).join('\n');
-                    if (ideas) {
-                        const resultDiv = document.getElementById('aiContentIdeasResult');
-                        const contentDiv = document.getElementById('aiContentIdeasContent');
-                        if (resultDiv && contentDiv) {
-                            contentDiv.textContent = ideas + '\n\n(Generated by Google AI)\n\nUse these ideas to create engaging content around your products!';
-                            resultDiv.style.display = 'block';
-                            resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                        } else {
-                            showNotification(ideas.substring(0, 350) + '... (Generated by Google AI). Use these ideas for your content!', 'info', 'Content Ideas');
-                        }
+                const { text, references } = await fetchAssistantApiQuery(query, 'amazon');
+                let ideas = text;
+                if (references.length) ideas += "\n\n---\nReferences:\n" + references.map(r => (r.title || 'Source') + ": " + (r.link || '')).join('\n');
+                if (ideas) {
+                    const resultDiv = document.getElementById('aiContentIdeasResult');
+                    const contentDiv = document.getElementById('aiContentIdeasContent');
+                    if (resultDiv && contentDiv) {
+                        contentDiv.textContent = ideas + '\n\n(From your API)\n\nUse these ideas to create engaging content around your products!';
+                        resultDiv.style.display = 'block';
+                        resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                     } else {
-                        throw new Error('No content ideas found');
+                        showNotification(ideas.substring(0, 350) + '... (From your API). Use these ideas for your content!', 'info', 'Content Ideas');
                     }
                 } else {
-                    const errText = await response.text();
-                    throw new Error(`API request failed: ${response.status}. ${(errText || '').substring(0, 150)}`);
+                    throw new Error('No content ideas found');
                 }
             } catch (error) {
-                console.error('Google AI error:', error);
+                console.error('Assistant API error:', error);
                 const resultDiv = document.getElementById('aiContentIdeasResult');
                 const contentDiv = document.getElementById('aiContentIdeasContent');
                 if (resultDiv && contentDiv) {
@@ -12826,12 +12963,22 @@
             }
         }
         
-        // Chat with AI Assistant using Google AI
+        // Chat with AI Assistant — uses your configured API; paste an API key/URL in chat to save it
         let aiChatHistory = [];
         
         async function sendAIChatMessage(message) {
             const chatContainer = document.getElementById('aiChatContainer');
             if (!chatContainer) return;
+
+            if (saveApiKeyFromChatPaste(message)) {
+                showNotification('API credential saved from chat. Product search will use it on your next query.', 'success', 'API Key');
+                const ackDiv = document.createElement('div');
+                ackDiv.style.cssText = 'margin-bottom: 15px; text-align: left;';
+                ackDiv.innerHTML = '<div style="display:inline-block;background:#ecfdf5;color:#065f46;padding:12px 16px;border-radius:12px;max-width:70%;"><div style="font-weight:600;margin-bottom:4px;">AI Assistant</div><div>API key saved. Add your API URL in Settings if you have not already, then search for products.</div></div>';
+                chatContainer.appendChild(ackDiv);
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+                return;
+            }
             
             // Remove welcome message on first interaction
             const welcomeMsg = document.getElementById('aiChatWelcome');
@@ -12862,47 +13009,25 @@
             chatContainer.appendChild(loadingDiv);
             chatContainer.scrollTop = chatContainer.scrollHeight;
             
-            const apiKey = getSearchApiKey();
-            
             try {
-                const apiUrl = `${GOOGLE_AI_API_URL}?engine=${GOOGLE_AI_ENGINE}&api_key=${apiKey}&q=${encodeURIComponent(message)}`;
+                const assistantResult = await fetchAssistantApiQuery(message, 'amazon');
                 
-                const response = await fetch(apiUrl, {
-                    method: 'GET',
-                    headers: { 'Accept': 'application/json' }
-                });
-                
-                // Remove loading indicator
                 loadingDiv.remove();
                 
-                if (response.ok) {
-                    const data = await response.json();
-                    const apiError = data && data.error;
-                    if (apiError) throw new Error(typeof apiError === 'string' ? apiError : (apiError.message || JSON.stringify(apiError)));
-                    const { text, references } = extractGoogleAIContent(data);
-                    let aiResponse = text || 'I\'m here to help! Could you provide more details about what you\'d like to know?';
-                    const refs = data.reference_links || data.references || references;
-                    const local = data.local_results || [];
-                    const web = data.web_results || [];
-                    const shopping = data.inline_shopping || [];
-                    const safe = (u) => (u||'').match(/^https?:\/\//) ? String(u).replace(/&/g,'&amp;').replace(/"/g,'&quot;') : '#';
-                    const refHtml = refs.length ? '<div style="margin-top:10px;padding-top:10px;border-top:1px solid #e5e7eb;"><div style="font-size:0.85rem;color:var(--gray);margin-bottom:5px;">References:</div>' + refs.slice(0, 5).map(r => '<a href="' + safe(r.link) + '" target="_blank" rel="noopener" style="font-size:0.8rem;color:var(--primary);display:block;margin-top:4px;">' + escapeHtml(r.title || 'Source') + '</a>').join('') + '</div>' : '';
-                    const localHtml = local.length ? '<div style="margin-top:10px;padding-top:10px;border-top:1px solid #e5e7eb;"><div style="font-size:0.85rem;color:var(--gray);margin-bottom:5px;">Local:</div>' + local.slice(0, 3).map(l => '<div style="font-size:0.85rem;margin-top:4px;">' + escapeHtml(l.title||'') + (l.address ? ' — ' + escapeHtml(l.address) : '') + (l.rating ? ' ★ ' + l.rating : '') + ' <a href="' + safe(l.link) + '" target="_blank" rel="noopener" style="color:var(--primary);">View</a></div>').join('') + '</div>' : '';
-                    const webHtml = web.length ? '<div style="margin-top:10px;padding-top:10px;border-top:1px solid #e5e7eb;"><div style="font-size:0.85rem;color:var(--gray);margin-bottom:5px;">Web:</div>' + web.slice(0, 3).map(w => '<div style="font-size:0.85rem;margin-top:4px;"><a href="' + safe(w.link) + '" target="_blank" rel="noopener" style="color:var(--primary);">' + escapeHtml(w.title || w.source || '') + '</a>' + (w.snippet ? ' — ' + escapeHtml(String(w.snippet).substring(0,100)) + '…' : '') + '</div>').join('') + '</div>' : '';
-                    const shopHtml = shopping.length ? '<div style="margin-top:10px;padding-top:10px;border-top:1px solid #e5e7eb;"><div style="font-size:0.85rem;color:var(--gray);margin-bottom:5px;">Shopping:</div>' + shopping.slice(0, 3).map(s => '<div style="font-size:0.85rem;margin-top:4px;"><a href="' + safe(s.link) + '" target="_blank" rel="noopener" style="color:var(--primary);">' + escapeHtml(s.title||'') + '</a> — ' + escapeHtml(s.price||'') + '</div>').join('') + '</div>' : '';
-                    const aiMessageDiv = document.createElement('div');
-                    aiMessageDiv.style.cssText = 'margin-bottom: 15px; text-align: left;';
-                    aiMessageDiv.innerHTML = '<div style="display:inline-block;background:#f3f4f6;padding:12px 16px;border-radius:12px;max-width:70%;"><div style="font-weight:600;margin-bottom:4px;color:var(--primary);"><i class="fas fa-robot"></i> AI Assistant</div><div style="color:var(--dark);white-space:pre-wrap;">' + escapeHtml(aiResponse) + '</div>' + refHtml + localHtml + webHtml + shopHtml + '</div>';
-                    chatContainer.appendChild(aiMessageDiv);
-                    chatContainer.scrollTop = chatContainer.scrollHeight;
-                    aiChatHistory.push({ role: 'user', content: message });
-                    aiChatHistory.push({ role: 'assistant', content: aiResponse });
-                } else {
-                    const errText = await response.text();
-                    throw new Error(`API request failed: ${response.status}. ${(errText || '').substring(0, 150)}`);
-                }
+                const { text, references } = assistantResult;
+                let aiResponse = text || 'I\'m here to help! Could you provide more details about what you\'d like to know?';
+                const refs = references || [];
+                const safe = (u) => (u||'').match(/^https?:\/\//) ? String(u).replace(/&/g,'&amp;').replace(/"/g,'&quot;') : '#';
+                const refHtml = refs.length ? '<div style="margin-top:10px;padding-top:10px;border-top:1px solid #e5e7eb;"><div style="font-size:0.85rem;color:var(--gray);margin-bottom:5px;">References:</div>' + refs.slice(0, 5).map(r => '<a href="' + safe(r.link) + '" target="_blank" rel="noopener" style="font-size:0.8rem;color:var(--primary);display:block;margin-top:4px;">' + escapeHtml(r.title || 'Source') + '</a>').join('') + '</div>' : '';
+                const aiMessageDiv = document.createElement('div');
+                aiMessageDiv.style.cssText = 'margin-bottom: 15px; text-align: left;';
+                aiMessageDiv.innerHTML = '<div style="display:inline-block;background:#f3f4f6;padding:12px 16px;border-radius:12px;max-width:70%;"><div style="font-weight:600;margin-bottom:4px;color:var(--primary);"><i class="fas fa-robot"></i> AI Assistant</div><div style="color:var(--dark);white-space:pre-wrap;">' + escapeHtml(aiResponse) + '</div>' + refHtml + '</div>';
+                chatContainer.appendChild(aiMessageDiv);
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+                aiChatHistory.push({ role: 'user', content: message });
+                aiChatHistory.push({ role: 'assistant', content: aiResponse });
             } catch (error) {
-                console.error('Google AI chat error:', error);
+                console.error('Assistant chat error:', error);
                 loadingDiv.remove();
                 const errMsg = escapeHtml(error.message || 'Unknown error');
                 const errorDiv = document.createElement('div');
@@ -13654,60 +13779,7 @@
             });
         }
         
-        // AI Assistant Chat
-        const aiChatInput = document.getElementById('aiChatInput');
-        const aiChatSend = document.getElementById('aiChatSend');
-        const aiChatContainer = document.getElementById('aiChatContainer');
-        
-        if (aiChatSend && aiChatInput) {
-            aiChatSend.addEventListener('click', () => {
-                const message = aiChatInput.value.trim();
-                if (message) {
-                    addAIChatMessage('user', message);
-                    aiChatInput.value = '';
-                    // Simulate AI response
-                    setTimeout(() => {
-                        addAIChatMessage('ai', 'I understand you\'re asking about: ' + message + '. How can I help you with your products, blocks, or analytics?');
-                    }, 1000);
-                }
-            });
-            
-            aiChatInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    aiChatSend.click();
-                }
-            });
-        }
-        
-        function addAIChatMessage(sender, message) {
-            if (!aiChatContainer) return;
-            
-            // Clear initial message if present
-            if (aiChatContainer.querySelector('div[style*="text-align: center"]')) {
-                aiChatContainer.innerHTML = '';
-            }
-            
-            const messageDiv = document.createElement('div');
-            messageDiv.style.cssText = `
-                margin-bottom: 15px;
-                display: flex;
-                ${sender === 'user' ? 'justify-content: flex-end;' : 'justify-content: flex-start;'}
-            `;
-            
-            const messageBubble = document.createElement('div');
-            messageBubble.style.cssText = `
-                max-width: 70%;
-                padding: 12px 16px;
-                border-radius: 12px;
-                background: ${sender === 'user' ? 'var(--primary)' : '#f3f4f6'};
-                color: ${sender === 'user' ? 'white' : 'var(--dark)'};
-            `;
-            messageBubble.textContent = message;
-            
-            messageDiv.appendChild(messageBubble);
-            aiChatContainer.appendChild(messageDiv);
-            aiChatContainer.scrollTop = aiChatContainer.scrollHeight;
-        }
+        // AI chat uses sendAIChatMessage (bound earlier on DOMContentLoaded)
     </script>
 </body>
 
