@@ -355,14 +355,18 @@ class AmazonRetailer extends BaseRetailer {
       rh, 
       sort_by, 
       price_min, 
-      price_max 
+      price_max,
+      apiKey,
+      apiBaseUrl
     } = options;
 
-    // API key is always available (default is set in constructor)
+    const resolvedApiKey = apiKey || this.apiKey;
+    const resolvedApiBaseUrl = apiBaseUrl || this.apiBaseUrl;
+
     try {
       const params = {
         engine: 'amazon_search',
-        api_key: this.apiKey,
+        api_key: resolvedApiKey,
         q: query,
         num: limit,
         page: page
@@ -377,7 +381,7 @@ class AmazonRetailer extends BaseRetailer {
       if (price_min) params.price_min = price_min;
       if (price_max) params.price_max = price_max;
 
-      const response = await axios.get(this.apiBaseUrl, {
+      const response = await axios.get(resolvedApiBaseUrl, {
         params: params,
         timeout: this.service.config.requestTimeout
       });
@@ -534,14 +538,15 @@ class WalmartRetailer extends BaseRetailer {
    * Search Walmart products using SearchAPI.io
    */
   async searchProducts(query, options = {}) {
-    const { limit = 20, page = 1 } = options;
+    const { limit = 20, page = 1, apiKey, apiBaseUrl } = options;
+    const resolvedApiKey = apiKey || this.apiKey;
+    const resolvedApiBaseUrl = apiBaseUrl || this.apiBaseUrl;
 
-    // API key is always available (default is set in constructor)
     try {
-      const response = await axios.get(this.apiBaseUrl, {
+      const response = await axios.get(resolvedApiBaseUrl, {
         params: {
           engine: 'walmart_search',
-          api_key: this.apiKey,
+          api_key: resolvedApiKey,
           q: query,
           num: limit,
           page: page
@@ -714,15 +719,19 @@ class eBayRetailer extends BaseRetailer {
       advanced_filters,
       sort_by,
       layout,
-      num
+      num,
+      apiKey,
+      apiBaseUrl
     } = options;
 
+    const resolvedApiKey = apiKey || this.apiKey;
+    const resolvedApiBaseUrl = apiBaseUrl || this.apiBaseUrl;
     const numVal = num || (limit <= 60 ? 60 : limit <= 120 ? 120 : 240);
 
     try {
       const params = {
         engine: 'ebay_search',
-        api_key: this.apiKey,
+        api_key: resolvedApiKey,
         q: query,
         num: Math.min(numVal, 240),
         page: page
@@ -744,7 +753,7 @@ class eBayRetailer extends BaseRetailer {
       if (sort_by) params.sort_by = sort_by;
       if (layout) params.layout = layout;
 
-      const response = await axios.get(this.apiBaseUrl, {
+      const response = await axios.get(resolvedApiBaseUrl, {
         params,
         timeout: this.service.config.requestTimeout
       });

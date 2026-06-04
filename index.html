@@ -4992,10 +4992,10 @@
                     <div class="card" style="margin-top:20px;">
                         <div class="card-header"><h3 class="card-title">Provider API keys</h3></div>
                         <div class="card-body">
-                            <p style="margin:0 0 16px;font-size:0.9rem;color:var(--gray);line-height:1.5;">Live product search uses <a href="https://www.searchapi.io/docs/amazon-search-api" target="_blank" rel="noopener noreferrer">SearchAPI.io</a> at <code>https://www.searchapi.io/api/v1/search</code> with your keys (<code>engine=amazon_search</code>, <code>walmart_search</code>, <code>ebay_search</code>). Product links use your affiliate IDs from the profile above.</p>
+                            <p style="margin:0 0 16px;font-size:0.9rem;color:var(--gray);line-height:1.5;">Paste your <strong>Amazon product search API key</strong> (or full search URL with <code>api_key=</code>). Default endpoint: <code>https://www.searchapi.io/api/v1/search</code> with <code>engine=amazon_search</code>. Product links use your affiliate tag from Connections above.</p>
                             <div class="form-group">
-                                <label for="amazonApiKey">SearchAPI.io key (Amazon product search)</label>
-                                <input type="password" id="amazonApiKey" class="form-control provider-api-key-input" data-provider="amazon" placeholder="Paste your SearchAPI.io API key" autocomplete="off" spellcheck="false">
+                                <label for="amazonApiKey">Amazon product search API key</label>
+                                <input type="password" id="amazonApiKey" class="form-control provider-api-key-input" data-provider="amazon" placeholder="Paste API key or full search URL" autocomplete="off" spellcheck="false">
                                 <p id="amazonApiKeyStatus" style="margin-top:8px;font-size:0.85rem;color:var(--gray);"></p>
                             </div>
                             <div class="form-group">
@@ -9842,6 +9842,9 @@
         }
 
         function loadSavedIntegrations() {
+            LIVE_RETAILER_PROVIDERS.forEach(function(p) {
+                migrateProviderCredentialsFromLocalScope(p);
+            });
             const defaults = getDefaultIntegrations();
             let saved = [];
             try {
@@ -11686,8 +11689,25 @@
             else if (!parsed.endpoint && raw) setProviderApiKey(provider, raw);
         }
 
+        function migrateProviderCredentialsFromLocalScope(provider) {
+            provider = String(provider || '').toLowerCase();
+            const uid = currentUser?.uid;
+            if (!uid || uid === 'local') return;
+            const localKeyStorage = 'providerApiKey_local_' + provider;
+            const localEndpointStorage = 'providerApiEndpoint_local_' + provider;
+            if (!localStorage.getItem(getProviderApiStorageKey(provider))) {
+                const fromLocal = localStorage.getItem(localKeyStorage) || '';
+                if (fromLocal) localStorage.setItem(getProviderApiStorageKey(provider), fromLocal);
+            }
+            if (!localStorage.getItem(getProviderApiEndpointStorageKey(provider))) {
+                const fromLocalEp = localStorage.getItem(localEndpointStorage) || '';
+                if (fromLocalEp) localStorage.setItem(getProviderApiEndpointStorageKey(provider), fromLocalEp);
+            }
+        }
+
         function getProviderApiEndpoint(provider) {
             provider = String(provider || '').toLowerCase();
+            migrateProviderCredentialsFromLocalScope(provider);
             const saved = localStorage.getItem(getProviderApiEndpointStorageKey(provider)) || '';
             if (saved) return saved;
             if (LIVE_RETAILER_PROVIDERS.includes(provider)) return DEFAULT_LIVE_SEARCH.endpoint;
@@ -11704,18 +11724,37 @@
 
         function getProviderApiKey(provider, includeDefault = false) {
             provider = String(provider || 'amazon').toLowerCase();
+            migrateProviderCredentialsFromLocalScope(provider);
             const scopedKey = localStorage.getItem(getProviderApiStorageKey(provider)) || '';
             const localFallback = localStorage.getItem('providerApiKey_local_' + provider) || '';
             const legacyKey = LIVE_RETAILER_PROVIDERS.includes(provider)
                 ? (localStorage.getItem('searchapi_' + provider + '_key') || localStorage.getItem('searchapi_key') || localStorage.getItem('searchapi_amazon_key') || '')
                 : '';
-            const saved = scopedKey || localFallback || legacyKey;
+            const saved = scopedKey || localScopedFallback || localFallback || legacyKey;
             if (saved && /^https?:\/\//i.test(saved)) {
                 return parseProviderCredential(saved).apiKey || '';
             }
             if (saved) return saved;
             if (includeDefault && LIVE_RETAILER_PROVIDERS.includes(provider)) {
                 return DEFAULT_LIVE_SEARCH.apiKey;
+            }
+            return '';
+        }
+
+        function getUnsavedProviderApiKeyFromDom(provider) {
+            provider = String(provider || '').toLowerCase();
+            const cfg = PROVIDER_API_KEY_INPUTS[provider];
+            if (cfg) {
+                const settingsInput = document.getElementById(cfg.inputId);
+                if (settingsInput && settingsInput.value.trim()) {
+                    const parsed = parseProviderCredential(settingsInput.value.trim());
+                    return parsed.apiKey || settingsInput.value.trim();
+                }
+            }
+            const integrationInput = document.querySelector('.integration-api-key[data-id="' + provider + '"]');
+            if (integrationInput && integrationInput.value.trim()) {
+                const parsed = parseProviderCredential(integrationInput.value.trim());
+                return parsed.apiKey || integrationInput.value.trim();
             }
             return '';
         }
@@ -11953,8 +11992,19 @@
         }
 
         function getApiKeysToTry(provider) {
-            const userKey = getProviderApiKey(provider, false);
-            return userKey ? [userKey] : [];
+            provider = String(provider || 'amazon').toLowerCase();
+            const keys = [];
+            function addKey(raw) {
+                const value = String(raw || '').trim();
+                if (!value) return;
+                const parsed = parseProviderCredential(value);
+                const key = parsed.apiKey || (/^https?:\/\//i.test(value) ? '' : value);
+                if (key && keys.indexOf(key) === -1) keys.push(key);
+            }
+            addKey(getProviderApiKey(provider, false));
+            addKey(getUnsavedProviderApiKeyFromDom(provider));
+            if (!keys.length) addKey(getProviderApiKey(provider, true));
+            return keys;
         }
 
         function applyAffiliateToProductLink(link, retailer) {
@@ -12020,7 +12070,12 @@
 
         async function fetchProductsFromBackend(retailer, query) {
             const apiRoot = getProductsApiBase();
-            const url = (apiRoot || '') + '/api/products/search?retailer=' + encodeURIComponent(retailer) + '&query=' + encodeURIComponent(query);
+            const keys = getApiKeysToTry(retailer);
+            const apiKey = keys[0] || '';
+            const apiEndpoint = getProviderApiEndpoint(retailer);
+            let url = (apiRoot || '') + '/api/products/search?retailer=' + encodeURIComponent(retailer) + '&query=' + encodeURIComponent(query);
+            if (apiKey) url += '&apiKey=' + encodeURIComponent(apiKey);
+            if (apiEndpoint) url += '&apiEndpoint=' + encodeURIComponent(apiEndpoint);
             try {
                 const res = await fetch(url, { method: 'GET', headers: { Accept: 'application/json' } });
                 let data = null;
@@ -12042,7 +12097,7 @@
         }
 
         function liveRetailerSearchBlockedMessage(retailer) {
-            return 'Live ' + (retailer || 'retailer') + ' search needs your SearchAPI.io key. Add it under Settings → Provider API keys or Integrations.';
+            return 'Live ' + (retailer || 'retailer') + ' search needs an API key. Add it under Settings → Provider API keys or Integrations, then click Save.';
         }
 
         function extractProductsArray(data) {
@@ -12140,6 +12195,13 @@
         }
 
         async function searchRetailerProductsLive(retailer, query) {
+            const unsavedKey = getUnsavedProviderApiKeyFromDom(retailer);
+            if (unsavedKey) applyProviderCredential(retailer, unsavedKey);
+            const unsavedEndpointEl = document.querySelector('.integration-api-endpoint[data-id="' + retailer + '"]');
+            if (unsavedEndpointEl && unsavedEndpointEl.value.trim()) {
+                setProviderApiEndpoint(retailer, unsavedEndpointEl.value.trim());
+            }
+
             const backendProducts = await fetchProductsFromBackend(retailer, query);
             if (backendProducts && backendProducts.length) return backendProducts;
 
@@ -12267,7 +12329,7 @@
                             };
                         });
                         searchStatus.textContent = products.length
-                            ? ('Showing sample products for "' + query + '" — add SearchAPI.io key in Settings for live Amazon results.')
+                            ? ('Showing sample products for "' + query + '" — add your Amazon API key in Settings for live results.')
                             : formatProviderSearchError(liveErr.message);
                     }
                     if (!products.length && LIVE_RETAILER_PROVIDERS.includes(retailer)) {
@@ -12371,7 +12433,7 @@
             } catch (error) {
                 console.error('Search products error:', error);
                 searchStatus.textContent = formatProviderSearchError(error.message);
-                productsContainer.innerHTML = '<p style="text-align: center; color: var(--danger); padding: 20px;">Live search failed. Add your SearchAPI.io key under Settings → Provider API keys and try again.</p>';
+                productsContainer.innerHTML = '<p style="text-align: center; color: var(--danger); padding: 20px;">Live search failed. Check Connections &amp; API keys in Settings and try again.</p>';
             }
         }
         

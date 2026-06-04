@@ -551,7 +551,9 @@ app.get('/api/products/search', async (req, res) => {
     const liveRetailers = ['amazon', 'walmart', 'ebay'];
     if (liveRetailers.includes(String(retailer).toLowerCase())) {
       const products = await retailerService.searchProducts(String(retailer).toLowerCase(), String(query), {
-        limit: parseInt(req.query.limit, 10) || 20
+        limit: parseInt(req.query.limit, 10) || 20,
+        apiKey: req.query.apiKey || req.headers['x-provider-api-key'] || undefined,
+        apiBaseUrl: req.query.apiEndpoint || req.query.apiBaseUrl || undefined
       });
       return res.json({
         retailer,
