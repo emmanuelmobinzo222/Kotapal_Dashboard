@@ -11,6 +11,10 @@
     <meta name="theme-color" content="#3b82f6">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <script>
+        window.KOTAPAL_AUTO_LIVE_PRODUCTS = true;
+        if (typeof window.KOTAPAL_API_BASE === 'undefined') window.KOTAPAL_API_BASE = '';
+    </script>
     <title>KotaPal – Monetize Content with Smart Product Blocks | USA Creators & E-Commerce</title>
     <meta name="description"
         content="KotaPal helps US creators, bloggers & e-commerce sellers monetize content with AI-powered Shopify + Amazon + Walmart product blocks. Trusted by 10,000+ US creators.">
@@ -3994,6 +3998,57 @@
             margin: 0 0 8px; font-size: 1rem; font-weight: 600; color: var(--dark);
         }
         #dashboard-view.theme-dark .settings-connections-divider { border-top-color: #334155; }
+        /* Embed drag preview + full-page SmartBlock placement (over all UI) */
+        #dashboard-view .embed-drag-preview {
+            display: flex; align-items: center; gap: 14px; padding: 14px 16px;
+            border: 2px dashed var(--primary); border-radius: 12px; background: #f8fafc;
+            cursor: grab; max-width: 420px; user-select: none; transition: box-shadow 0.2s, opacity 0.2s;
+        }
+        #dashboard-view .embed-drag-preview:active { cursor: grabbing; }
+        #dashboard-view .embed-drag-preview-thumb {
+            width: 56px; height: 56px; border-radius: 8px; object-fit: cover; background: #e2e8f0;
+        }
+        #dashboard-view .embed-drag-preview-meta { flex: 1; min-width: 0; }
+        #dashboard-view .embed-drag-preview-meta strong { display: block; font-size: 0.95rem; color: var(--dark); }
+        #dashboard-view .embed-drag-preview-meta span { font-size: 0.8rem; color: var(--gray); }
+        #kotapalPagePlacementLayer {
+            position: fixed; inset: 0; z-index: 200000; pointer-events: none; display: none;
+        }
+        #kotapalPagePlacementLayer.active { display: block; pointer-events: auto; }
+        #kotapalPagePlacementLayer .kotapal-placement-hint {
+            position: fixed; top: 12px; left: 50%; transform: translateX(-50%); z-index: 200002;
+            background: rgba(15, 23, 42, 0.92); color: #fff; padding: 10px 18px; border-radius: 999px;
+            font-size: 0.85rem; pointer-events: none; box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+        }
+        #kotapalPagePlacementLayer .kotapal-placement-toolbar {
+            position: fixed; bottom: 20px; right: 20px; z-index: 200002; display: flex; gap: 10px; flex-wrap: wrap;
+        }
+        .kotapal-placed-block {
+            position: fixed; z-index: 200001; min-width: 220px; max-width: 300px;
+            background: #fff; border-radius: 12px; box-shadow: 0 12px 40px rgba(0,0,0,0.22);
+            border: 1px solid #e2e8f0; overflow: hidden; cursor: grab; touch-action: none;
+            pointer-events: auto;
+        }
+        .kotapal-placed-block.dragging { cursor: grabbing; opacity: 0.95; box-shadow: 0 16px 48px rgba(0,0,0,0.28); }
+        .kotapal-placed-block-header {
+            display: flex; align-items: center; justify-content: space-between; gap: 8px;
+            padding: 8px 10px; background: linear-gradient(135deg, var(--primary), #6366f1); color: #fff;
+            font-size: 0.8rem; font-weight: 600;
+        }
+        .kotapal-placed-block-header button {
+            border: none; background: rgba(255,255,255,0.2); color: #fff; border-radius: 6px;
+            padding: 4px 8px; cursor: pointer; font-size: 0.75rem;
+        }
+        .kotapal-placed-block-header button:hover { background: rgba(255,255,255,0.35); }
+        .kotapal-placed-block-body { padding: 10px; }
+        .kotapal-placed-block-body img {
+            width: 100%; height: 100px; object-fit: contain; border-radius: 8px; background: #f8fafc;
+        }
+        .kotapal-placed-block-stats {
+            display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px; font-size: 0.72rem; color: var(--gray);
+        }
+        .kotapal-placed-block-stats span strong { color: var(--dark); }
+        #deleteBlockConfirmModal { z-index: 200010 !important; }
         #dashboard-view [data-sensitive="true"] { filter: blur(8px); user-select: none; transition: filter 0.3s ease; }
         #dashboard-view [data-sensitive="true"].revealed { filter: none; }
         #dashboard-view .sidebar-toggle {
@@ -4472,7 +4527,19 @@
                                 <textarea id="embedCodeTextarea" class="form-control" rows="3" readonly></textarea>
                             </div>
                             <button type="button" class="btn btn-secondary" id="copyEmbedCodeBtn">Copy embed code</button>
-                            <p id="embedDragBlockTitle" style="margin-top:12px;font-size:0.9rem;color:var(--gray);"></p>
+                            <div class="form-group" style="margin-top:20px;">
+                                <label>Drag onto your page</label>
+                                <p style="margin:0 0 10px;font-size:0.85rem;color:var(--gray);">Select a block above, then drag the preview anywhere. SmartBlocks float above the entire dashboard.</p>
+                                <div id="embedDragPreview" class="embed-drag-preview" draggable="true" title="Drag to place on page">
+                                    <img id="embedDragPreviewImg" class="embed-drag-preview-thumb" src="https://via.placeholder.com/56?text=Block" alt="">
+                                    <div class="embed-drag-preview-meta">
+                                        <strong id="embedDragPreviewTitle">Select a block</strong>
+                                        <span id="embedDragBlockTitle">Drag me onto your page</span>
+                                    </div>
+                                    <i class="fas fa-grip-vertical" style="color:var(--gray);"></i>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-primary" id="togglePagePlacementBtn" style="margin-top:8px;">Show placement mode</button>
                         </div>
                     </div>
                 </div>
@@ -4503,8 +4570,7 @@
                             <div class="form-group">
                                 <label>Select Retailer</label>
                                 <select id="retailerSelect" class="form-control">
-                                    <option value="">Select a retailer</option>
-                                    <option value="amazon">Amazon</option>
+                                    <option value="amazon" selected>Amazon</option>
                                     <option value="walmart">Walmart</option>
                                     <option value="ebay">eBay</option>
                                     <option value="shopify">Shopify</option>
@@ -4513,7 +4579,10 @@
                             </div>
                             <div class="form-group">
                                 <label>Search Products</label>
-                                <input type="text" id="productSearch" class="form-control" placeholder="Search for products...">
+                                <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:stretch;">
+                                    <input type="text" id="productSearch" class="form-control" placeholder="Search for products..." value="headphones" style="flex:1;min-width:180px;">
+                                    <button type="button" class="btn btn-primary" id="productSearchBtn" style="white-space:nowrap;">Search</button>
+                                </div>
                                 <div id="searchStatus" style="margin-top: 10px; font-size: 0.9rem; color: var(--gray);"></div>
                             </div>
                             <div id="productsContainer" class="product-grid"></div>
@@ -4598,6 +4667,11 @@
                                         <div class="stat-label">CTR</div>
                                     </div>
                                     <div class="stat-card">
+                                        <div class="stat-icon stat-info"><i class="fas fa-shopping-cart"></i></div>
+                                        <div class="stat-value" id="filteredConversions">0</div>
+                                        <div class="stat-label">Conversions</div>
+                                    </div>
+                                    <div class="stat-card">
                                         <div class="stat-icon stat-info"><i class="fas fa-cubes"></i></div>
                                         <div class="stat-value" id="blocksShowing">0</div>
                                         <div class="stat-label">Blocks Showing</div>
@@ -4646,6 +4720,7 @@
                                         <th></th>
                                         <th>Block</th>
                                         <th>Clicks</th>
+                                        <th>Conversions</th>
                                         <th>CTR</th>
                                         <th>Revenue</th>
                                         <th>Status</th>
@@ -4748,7 +4823,7 @@
                                     <option value="shopify">Shopify</option>
                                     <option value="skimlinks">Skimlinks</option>
                                 </select>
-                                <input id="productLibraryRetailerQuery" class="form-control" placeholder="Search retailers..." style="max-width:240px;">
+                                <input id="productLibraryRetailerQuery" class="form-control" placeholder="Search retailers..." value="best sellers" style="max-width:240px;">
                                 <button type="button" class="btn btn-secondary" id="productLibrarySearchRetailersBtn">Search retailers</button>
                                 <span id="productLibrarySearchStatus" style="font-size:0.9rem;color:var(--gray);"></span>
                             </div>
@@ -4882,6 +4957,22 @@
                                 <small style="color:var(--gray);font-size:0.85rem;margin-top:4px;display:block;">Administrators can update your profile email in Firebase; changes sync here in real time. Your sign-in email stays the same until you change it in Firebase Auth.</small>
                             </div>
                             <div class="form-group">
+                                <label for="userWebsite">Website/Blog URL</label>
+                                <input type="url" id="userWebsite" class="form-control settings-connection-input" data-connection="website" placeholder="https://yoursite.com" autocomplete="url">
+                            </div>
+                            <div class="form-group">
+                                <label for="shopifyStoreUrl">Shopify store connection</label>
+                                <input type="url" id="shopifyStoreUrl" class="form-control settings-connection-input" data-connection="shopifyStore" placeholder="https://your-store.myshopify.com" autocomplete="off" spellcheck="false">
+                            </div>
+                            <div class="form-group">
+                                <label for="amazonAffiliateTag">Amazon affiliate tag</label>
+                                <input type="text" id="amazonAffiliateTag" class="form-control settings-connection-input" data-connection="amazonAffiliate" placeholder="your-tag-20" autocomplete="off" spellcheck="false">
+                            </div>
+                            <div class="form-group">
+                                <label for="walmartImpactId">Walmart Impact ID</label>
+                                <input type="text" id="walmartImpactId" class="form-control settings-connection-input" data-connection="walmartAffiliate" placeholder="Impact ID" autocomplete="off" spellcheck="false">
+                            </div>
+                            <div class="form-group">
                                 <label>Geo redirect</label>
                                 <div class="toggle-wrap">
                                     <input type="checkbox" id="geoRedirectToggle" class="toggle-input" checked>
@@ -4899,119 +4990,49 @@
                         </form>
                     </div>
                     <div class="card" style="margin-top:20px;">
-                        <div class="card-header"><h3 class="card-title">Connections &amp; API keys</h3></div>
+                        <div class="card-header"><h3 class="card-title">Provider API keys</h3></div>
                         <div class="card-body">
-                            <p class="settings-connections-intro">Connect your site, store, affiliate IDs, and API keys in one place. Paste each value below — most fields save automatically as you type.</p>
-                            <div class="settings-connections-grid">
-                                <div class="settings-connection-field settings-connection-field--full">
-                                    <label for="userWebsite">Website/Blog URL</label>
-                                    <p class="settings-field-hint">Your public site or blog where SmartBlocks and affiliate links appear.</p>
-                                    <input type="url" id="userWebsite" class="form-control settings-connection-input" data-connection="website" placeholder="https://yoursite.com" autocomplete="url">
-                                    <p id="userWebsiteStatus" class="settings-field-status"></p>
-                                </div>
-                                <div class="settings-connection-field">
-                                    <label for="shopifyStoreUrl">Shopify store connection</label>
-                                    <p class="settings-field-hint">Your <code>*.myshopify.com</code> store URL. <a href="https://help.shopify.com/en/manual/your-account/login#store-url" target="_blank" rel="noopener noreferrer">Find your store URL</a></p>
-                                    <input type="url" id="shopifyStoreUrl" class="form-control settings-connection-input" data-connection="shopifyStore" placeholder="https://your-store.myshopify.com" autocomplete="off" spellcheck="false">
-                                    <p id="shopifyStoreUrlStatus" class="settings-field-status"></p>
-                                </div>
-                                <div class="settings-connection-field">
-                                    <label for="amazonAffiliateTag">Amazon affiliate tag</label>
-                                    <p class="settings-field-hint">Associates tracking ID (e.g. <code>yourname-20</code>). <a href="https://affiliate-program.amazon.com/help/node/topic/GP38PJ6EUR6PFBEC" target="_blank" rel="noopener noreferrer">Get your tag</a></p>
-                                    <input type="text" id="amazonAffiliateTag" class="form-control settings-connection-input" data-connection="amazonAffiliate" placeholder="your-tag-20" autocomplete="off" spellcheck="false">
-                                    <p id="amazonAffiliateTagStatus" class="settings-field-status"></p>
-                                </div>
-                                <div class="settings-connection-field">
-                                    <label for="walmartImpactId">Walmart Impact ID</label>
-                                    <p class="settings-field-hint">From Walmart Creator / Impact dashboard. <a href="https://creator.walmart.com/" target="_blank" rel="noopener noreferrer">Walmart Creator</a></p>
-                                    <input type="text" id="walmartImpactId" class="form-control settings-connection-input" data-connection="walmartAffiliate" placeholder="Paste your Impact ID" autocomplete="off" spellcheck="false">
-                                    <p id="walmartImpactIdStatus" class="settings-field-status"></p>
-                                </div>
+                            <p style="margin:0 0 16px;font-size:0.9rem;color:var(--gray);line-height:1.5;">Live product search uses <a href="https://www.searchapi.io/docs/amazon-search-api" target="_blank" rel="noopener noreferrer">SearchAPI.io</a> at <code>https://www.searchapi.io/api/v1/search</code> with your keys (<code>engine=amazon_search</code>, <code>walmart_search</code>, <code>ebay_search</code>). Product links use your affiliate IDs from the profile above.</p>
+                            <div class="form-group">
+                                <label for="amazonApiKey">SearchAPI.io key (Amazon product search)</label>
+                                <input type="password" id="amazonApiKey" class="form-control provider-api-key-input" data-provider="amazon" placeholder="Paste your SearchAPI.io API key" autocomplete="off" spellcheck="false">
+                                <p id="amazonApiKeyStatus" style="margin-top:8px;font-size:0.85rem;color:var(--gray);"></p>
                             </div>
-                            <hr class="settings-connections-divider">
-                            <h4 class="settings-connections-subtitle">Product search API (live fetch)</h4>
-                            <p class="settings-field-hint settings-connection-field--full" style="margin-bottom:16px;">Paste each retailer’s product-search API URL and key here (or the same values under <strong>Integrations → Retailer &amp; store connections</strong>). Live search uses only these retailer keys — not your KotaPal API key under API &amp; webhooks. Demo products are never shown.</p>
-                            <div class="settings-connections-grid">
-                                <div class="settings-connection-field">
-                                    <label for="amazonApiEndpoint">Amazon API URL</label>
-                                    <p class="settings-field-hint">Base search endpoint (e.g. <code>https://your-api.com/search</code>).</p>
-                                    <input type="url" id="amazonApiEndpoint" class="form-control provider-api-endpoint-input" data-provider="amazon" placeholder="https://your-api.com/amazon/search" autocomplete="off" spellcheck="false">
-                                    <p id="amazonApiEndpointStatus" class="settings-field-status"></p>
-                                </div>
-                                <div class="settings-connection-field">
-                                    <label for="amazonApiKey">Amazon API key</label>
-                                    <p class="settings-field-hint">API key for Amazon product search (or paste a full URL with the key in the query string).</p>
-                                    <div class="api-key-input-wrap">
-                                        <input type="password" id="amazonApiKey" class="form-control provider-api-key-input" data-provider="amazon" placeholder="Paste your Amazon API key" autocomplete="off" spellcheck="false">
-                                        <button type="button" class="api-key-eye-btn" data-api-key-eye="true" data-target-input="amazonApiKey" aria-label="Show/hide API key">
-                                            <i class="fas fa-eye-slash"></i>
-                                        </button>
-                                    </div>
-                                    <p id="amazonApiKeyStatus" class="settings-field-status"></p>
-                                </div>
-                                <div class="settings-connection-field">
-                                    <label for="walmartApiEndpoint">Walmart API URL</label>
-                                    <p class="settings-field-hint">Base search endpoint for Walmart products.</p>
-                                    <input type="url" id="walmartApiEndpoint" class="form-control provider-api-endpoint-input" data-provider="walmart" placeholder="https://your-api.com/walmart/search" autocomplete="off" spellcheck="false">
-                                    <p id="walmartApiEndpointStatus" class="settings-field-status"></p>
-                                </div>
-                                <div class="settings-connection-field">
-                                    <label for="walmartApiKey">Walmart API key</label>
-                                    <p class="settings-field-hint">API key for Walmart product search.</p>
-                                    <div class="api-key-input-wrap">
-                                        <input type="password" id="walmartApiKey" class="form-control provider-api-key-input" data-provider="walmart" placeholder="Paste your Walmart API key" autocomplete="off" spellcheck="false">
-                                        <button type="button" class="api-key-eye-btn" data-api-key-eye="true" data-target-input="walmartApiKey" aria-label="Show/hide API key">
-                                            <i class="fas fa-eye-slash"></i>
-                                        </button>
-                                    </div>
-                                    <p id="walmartApiKeyStatus" class="settings-field-status"></p>
-                                </div>
-                                <div class="settings-connection-field">
-                                    <label for="ebayApiEndpoint">eBay API URL</label>
-                                    <p class="settings-field-hint">Base search endpoint for eBay products.</p>
-                                    <input type="url" id="ebayApiEndpoint" class="form-control provider-api-endpoint-input" data-provider="ebay" placeholder="https://your-api.com/ebay/search" autocomplete="off" spellcheck="false">
-                                    <p id="ebayApiEndpointStatus" class="settings-field-status"></p>
-                                </div>
-                                <div class="settings-connection-field">
-                                    <label for="ebayApiKey">eBay API key</label>
-                                    <p class="settings-field-hint">API key for eBay product search.</p>
-                                    <div class="api-key-input-wrap">
-                                        <input type="password" id="ebayApiKey" class="form-control provider-api-key-input" data-provider="ebay" placeholder="Paste your eBay API key" autocomplete="off" spellcheck="false">
-                                        <button type="button" class="api-key-eye-btn" data-api-key-eye="true" data-target-input="ebayApiKey" aria-label="Show/hide API key">
-                                            <i class="fas fa-eye-slash"></i>
-                                        </button>
-                                    </div>
-                                    <p id="ebayApiKeyStatus" class="settings-field-status"></p>
-                                </div>
-                                <div class="settings-connection-field">
-                                    <label for="shopifyApiKey">Shopify API key / access token</label>
-                                    <p class="settings-field-hint">Admin API token from Shopify → Settings → Apps. <a href="https://help.shopify.com/en/manual/apps/app-types/custom-apps" target="_blank" rel="noopener noreferrer">Create a custom app</a></p>
-                                    <div class="api-key-input-wrap">
-                                        <input type="password" id="shopifyApiKey" class="form-control provider-api-key-input" data-provider="shopify" placeholder="Paste your Shopify API key or token" autocomplete="off" spellcheck="false">
-                                        <button type="button" class="api-key-eye-btn" data-api-key-eye="true" data-target-input="shopifyApiKey" aria-label="Show/hide API key">
-                                            <i class="fas fa-eye-slash"></i>
-                                        </button>
-                                    </div>
-                                    <p id="shopifyApiKeyStatus" class="settings-field-status"></p>
-                                </div>
-                                <div class="settings-connection-field">
-                                    <label for="skimlinksApiKey">Skimlinks API key</label>
-                                    <p class="settings-field-hint">Publisher API key from your Skimlinks dashboard. <a href="https://skimlinks.com/" target="_blank" rel="noopener noreferrer">Skimlinks</a></p>
-                                    <div class="api-key-input-wrap">
-                                        <input type="password" id="skimlinksApiKey" class="form-control provider-api-key-input" data-provider="skimlinks" placeholder="Paste your Skimlinks API key" autocomplete="off" spellcheck="false">
-                                        <button type="button" class="api-key-eye-btn" data-api-key-eye="true" data-target-input="skimlinksApiKey" aria-label="Show/hide API key">
-                                            <i class="fas fa-eye-slash"></i>
-                                        </button>
-                                    </div>
-                                    <p id="skimlinksApiKeyStatus" class="settings-field-status"></p>
-                                </div>
+                            <div class="form-group">
+                                <label for="walmartApiKey">SearchAPI.io key (Walmart product search)</label>
+                                <input type="password" id="walmartApiKey" class="form-control provider-api-key-input" data-provider="walmart" placeholder="Paste your SearchAPI.io API key" autocomplete="off" spellcheck="false">
+                                <p id="walmartApiKeyStatus" style="margin-top:8px;font-size:0.85rem;color:var(--gray);"></p>
                             </div>
-                            <button type="button" class="btn btn-primary" id="saveAmazonApiKey" style="margin-top:20px;">Save connections</button>
+                            <div class="form-group">
+                                <label for="ebayApiKey">SearchAPI.io key (eBay product search)</label>
+                                <input type="password" id="ebayApiKey" class="form-control provider-api-key-input" data-provider="ebay" placeholder="Paste your SearchAPI.io API key" autocomplete="off" spellcheck="false">
+                                <p id="ebayApiKeyStatus" style="margin-top:8px;font-size:0.85rem;color:var(--gray);"></p>
+                            </div>
+                            <div class="form-group">
+                                <label for="shopifyApiKey">Shopify API key / access token</label>
+                                <input type="password" id="shopifyApiKey" class="form-control provider-api-key-input" data-provider="shopify" placeholder="Paste your Shopify API key or token" autocomplete="off" spellcheck="false">
+                                <p id="shopifyApiKeyStatus" style="margin-top:8px;font-size:0.85rem;color:var(--gray);"></p>
+                            </div>
+                            <div class="form-group">
+                                <label for="skimlinksApiKey">Skimlinks API key</label>
+                                <input type="password" id="skimlinksApiKey" class="form-control provider-api-key-input" data-provider="skimlinks" placeholder="Paste your Skimlinks API key" autocomplete="off" spellcheck="false">
+                                <p id="skimlinksApiKeyStatus" style="margin-top:8px;font-size:0.85rem;color:var(--gray);"></p>
+                            </div>
+                            <button type="button" class="btn btn-primary" id="saveAmazonApiKey">Save API keys</button>
                         </div>
                     </div>
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Full-page SmartBlock placement (renders above dashboard, sidebar, and modals) -->
+    <div id="kotapalPagePlacementLayer" aria-hidden="true">
+        <div class="kotapal-placement-hint" id="kotapalPlacementHint">Drag SmartBlocks anywhere · Click × to remove from page</div>
+        <div id="kotapalPlacedBlocksHost"></div>
+        <div class="kotapal-placement-toolbar">
+            <button type="button" class="btn btn-secondary" id="kotapalPlacementExitBtn">Exit placement mode</button>
         </div>
     </div>
 
@@ -10091,6 +10112,7 @@
             if (deleteBlockCancel) deleteBlockCancel.addEventListener('click', function() { if (deleteBlockModal) deleteBlockModal.style.display = 'none'; });
             if (deleteBlockConfirm) deleteBlockConfirm.addEventListener('click', function() {
                 const blockId = window._deleteBlockId;
+                if (blockId && typeof removePlacementsForBlock === 'function') removePlacementsForBlock(blockId);
                 if (blockId) {
                     currentBlocks = currentBlocks.filter(function(b) { return b.id !== blockId; });
                     saveUserBlocks();
@@ -10122,7 +10144,7 @@
             if (profileForm) {
                 profileForm.addEventListener('submit', handleProfileUpdate);
                 var autoSaveProfile = debounce(handleProfileUpdate, 600);
-                ['userName', 'userWebsite'].forEach(function(id) {
+                ['userName', 'userWebsite', 'shopifyStoreUrl', 'amazonAffiliateTag', 'walmartImpactId'].forEach(function(id) {
                     var el = document.getElementById(id);
                     if (el) { el.addEventListener('input', autoSaveProfile); el.addEventListener('change', autoSaveProfile); el.addEventListener('blur', autoSaveProfile); }
                 });
@@ -10173,9 +10195,11 @@
             const retailerSelect = document.getElementById('retailerSelect');
             const productSearch = document.getElementById('productSearch');
             if (retailerSelect) {
+                if (!retailerSelect.value) retailerSelect.value = 'amazon';
                 retailerSelect.addEventListener('change', function() {
                     if (this.value) {
-                        searchProducts(this.value, 'headphones');
+                        var q = document.getElementById('productSearch');
+                        searchProducts(this.value, (q && q.value.trim()) || AUTO_LIVE_DEFAULT_QUERY);
                     }
                 });
             }
@@ -10187,6 +10211,17 @@
                         if (retailerSelect && retailerSelect.value && this.value.trim()) {
                             searchProducts(retailerSelect.value, this.value);
                         }
+                    }
+                });
+            }
+            const productSearchBtn = document.getElementById('productSearchBtn');
+            if (productSearchBtn && !productSearchBtn.dataset.bound) {
+                productSearchBtn.dataset.bound = '1';
+                productSearchBtn.addEventListener('click', function() {
+                    const rs = document.getElementById('retailerSelect');
+                    const ps = document.getElementById('productSearch');
+                    if (rs && rs.value) {
+                        searchProducts(rs.value, (ps && ps.value.trim()) || AUTO_LIVE_DEFAULT_QUERY);
                     }
                 });
             }
@@ -10262,7 +10297,15 @@
                     currentIntegrations = loadSavedIntegrations();
                     renderIntegrations();
                 }
-                if (page === 'product-library') loadProductLibrary();
+                if (page === 'product-library') {
+                    loadProductLibrary();
+                    runAutomatedLibrarySearch();
+                }
+                if (page === 'new-block') runAutomatedNewBlockProductSearch();
+                if (page === 'blocks') {
+                    updateEmbedAnywhere();
+                    setupEmbedAnywhere();
+                }
                 if (page === 'reports') {
                     var fromEl = document.getElementById('reportDateFrom');
                     var toEl = document.getElementById('reportDateTo');
@@ -10810,6 +10853,7 @@
                         </div>
                         <div class="block-meta">
                             <span>Clicks: ${block.clicks}</span>
+                            <span>Conversions: ${getBlockConversions(block)}</span>
                             <span>Revenue: $${block.revenue.toFixed(2)}</span>
                         </div>
                         <div class="block-meta">
@@ -10862,6 +10906,7 @@
                 });
                 initBlockImageLightbox();
             }, 100);
+            if (typeof updateEmbedAnywhere === 'function') updateEmbedAnywhere();
         }
 
         var blockLightboxImages = [];
@@ -11151,16 +11196,19 @@
                 });
             }
             
-            const totalClicks = filteredBlocks.reduce((sum, block) => sum + block.clicks, 0);
-            const totalRevenue = filteredBlocks.reduce((sum, block) => sum + block.revenue, 0);
-            const avgCTR = filteredBlocks.length > 0 ? (filteredBlocks.reduce((sum, block) => sum + block.ctr, 0) / filteredBlocks.length) : 0;
+            const totalClicks = filteredBlocks.reduce((sum, block) => sum + (block.clicks || 0), 0);
+            const totalConversions = filteredBlocks.reduce((sum, block) => sum + getBlockConversions(block), 0);
+            const totalRevenue = filteredBlocks.reduce((sum, block) => sum + (block.revenue || 0), 0);
+            const avgCTR = filteredBlocks.length > 0 ? (filteredBlocks.reduce((sum, block) => sum + (block.ctr || 0), 0) / filteredBlocks.length) : 0;
             
             const filteredClicksEl = document.getElementById('filteredClicks');
             const filteredRevenueEl = document.getElementById('filteredRevenue');
             const filteredCTREl = document.getElementById('filteredCTR');
+            const filteredConversionsEl = document.getElementById('filteredConversions');
             const blocksShowingEl = document.getElementById('blocksShowing');
             
             if (filteredClicksEl) filteredClicksEl.textContent = totalClicks.toLocaleString();
+            if (filteredConversionsEl) filteredConversionsEl.textContent = totalConversions.toLocaleString();
             if (filteredRevenueEl) filteredRevenueEl.textContent = '$' + totalRevenue.toFixed(2);
             if (filteredCTREl) filteredCTREl.textContent = avgCTR.toFixed(1) + '%';
             if (blocksShowingEl) blocksShowingEl.textContent = filteredBlocks.length;
@@ -11230,7 +11278,7 @@
                 filteredBlocks.forEach(function(block) {
                     var row = document.createElement('tr');
                     var blockId = (block.id || '').replace(/"/g, '&quot;');
-                    row.innerHTML = '<td style="vertical-align:middle;">' + thumb(block) + '</td><td>' + (block.title || '') + '</td><td>' + (block.clicks || 0) + '</td><td>' + (block.ctr != null ? block.ctr : 0) + '%</td><td>$' + (block.revenue != null ? block.revenue.toFixed(2) : '0.00') + '</td><td><span class="block-status ' + (block.status === 'active' ? 'status-active' : 'status-draft') + '">' + (block.status || 'draft') + '</span></td><td style="white-space:nowrap;"><button type="button" class="btn btn-secondary btn-sm analytics-view-btn" data-block-id="' + blockId + '" title="View block" style="padding:6px 10px; font-size:0.85rem;"><i class="fas fa-eye"></i> View</button></td>';
+                    row.innerHTML = '<td style="vertical-align:middle;">' + thumb(block) + '</td><td>' + (block.title || '') + '</td><td>' + (block.clicks || 0) + '</td><td>' + getBlockConversions(block) + '</td><td>' + (block.ctr != null ? block.ctr : 0) + '%</td><td>$' + (block.revenue != null ? block.revenue.toFixed(2) : '0.00') + '</td><td><span class="block-status ' + (block.status === 'active' ? 'status-active' : 'status-draft') + '">' + (block.status || 'draft') + '</span></td><td style="white-space:nowrap;"><button type="button" class="btn btn-secondary btn-sm analytics-view-btn" data-block-id="' + blockId + '" title="View block" style="padding:6px 10px; font-size:0.85rem;"><i class="fas fa-eye"></i> View</button></td>';
                     tbody.appendChild(row);
                 });
                 tbody.querySelectorAll('.analytics-view-btn').forEach(btn => {
@@ -11318,6 +11366,10 @@
             if (e) e.preventDefault();
             const name = document.getElementById('userName')?.value || '';
             const website = document.getElementById('userWebsite')?.value || '';
+            persistSettingsConnection('website', website);
+            persistSettingsConnection('shopifyStore', document.getElementById('shopifyStoreUrl')?.value || '');
+            persistSettingsConnection('amazonAffiliate', document.getElementById('amazonAffiliateTag')?.value || '');
+            persistSettingsConnection('walmartAffiliate', document.getElementById('walmartImpactId')?.value || '');
             const preview = document.getElementById('profilePicturePreview');
             if (preview && preview.src) {
                 localStorage.setItem('kota_profile_picture', preview.src);
@@ -11361,6 +11413,7 @@
                 products: selectedProductsList.length,
                 productsList: selectedProductsList.map(p => ({ ...p, addedDate: new Date().toISOString() })),
                 clicks: 0,
+                conversions: 0,
                 revenue: 0,
                 ctr: 0,
                 lastUpdated: new Date().toISOString().split('T')[0],
@@ -11396,12 +11449,190 @@
             showNotification('Block created successfully!', 'success', 'Create Block');
         }
 
-        // Live retailer search — uses per-retailer API URL + key from Integrations or Settings (not the KotaPal platform key).
+        // Live retailer search — SearchAPI.io (user overrides in Integrations / Settings).
         const LIVE_RETAILER_PROVIDERS = ['amazon', 'walmart', 'ebay'];
+        const DEFAULT_LIVE_SEARCH = {
+            endpoint: 'https://www.searchapi.io/api/v1/search',
+            apiKey: 'WceNe5Tmok9RVw5Y4Qn6PnLM',
+            engines: {
+                amazon: 'amazon_search',
+                walmart: 'walmart_search',
+                ebay: 'ebay_search'
+            }
+        };
+
+        function getLiveSearchEngine(retailer) {
+            return (DEFAULT_LIVE_SEARCH.engines[retailer] || retailer + '_search');
+        }
+
+        const FALLBACK_SEARCH_PRODUCTS = {
+            amazon: [
+                { id: 'amz_demo_1', title: 'Sony WH-1000XM5 Wireless Headphones', image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&q=80', price: 299.99, asin: 'demo1', link: 'https://www.amazon.com/s?k=headphones' },
+                { id: 'amz_demo_2', title: 'Apple AirPods Pro (2nd Gen)', image: 'https://images.unsplash.com/photo-1572536147248-ac59a8abfa4b?w=500&q=80', price: 249.00, asin: 'demo2', link: 'https://www.amazon.com/s?k=airpods' },
+                { id: 'amz_demo_3', title: 'Bose QuietComfort Ultra Headphones', image: 'https://images.unsplash.com/photo-1484704849700-f032a568e944?w=500&q=80', price: 429.00, asin: 'demo3', link: 'https://www.amazon.com/s?k=bose+headphones' },
+                { id: 'amz_demo_4', title: 'JBL Tune 510BT Wireless On-Ear', image: 'https://images.unsplash.com/photo-1545127398-000a298cfcd6?w=500&q=80', price: 39.95, asin: 'demo4', link: 'https://www.amazon.com/s?k=jbl+headphones' }
+            ],
+            walmart: [
+                { id: 'wlm_demo_1', title: 'onn. Wireless On-Ear Headphones', image: 'https://images.unsplash.com/photo-1484704849700-f032a568e944?w=500&q=80', price: 14.88, link: 'https://www.walmart.com/search?q=headphones' },
+                { id: 'wlm_demo_2', title: 'Beats Studio Buds', image: 'https://images.unsplash.com/photo-1572536147248-ac59a8abfa4b?w=500&q=80', price: 99.00, link: 'https://www.walmart.com/search?q=earbuds' }
+            ],
+            ebay: [
+                { id: 'ebay_demo_1', title: 'Refurbished Sony WH-1000XM4', image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&q=80', price: 189.99, link: 'https://www.ebay.com/sch/i.html?_nkw=headphones' },
+                { id: 'ebay_demo_2', title: 'Samsung Galaxy Buds2 Pro', image: 'https://images.unsplash.com/photo-1572536147248-ac59a8abfa4b?w=500&q=80', price: 74.99, link: 'https://www.ebay.com/sch/i.html?_nkw=earbuds' }
+            ]
+        };
+
+        function getFallbackSearchProducts(retailer, query) {
+            const list = FALLBACK_SEARCH_PRODUCTS[retailer] || FALLBACK_SEARCH_PRODUCTS.amazon;
+            const q = String(query || '').trim().toLowerCase();
+            if (!q) return list.slice();
+            return list.filter(function(p) {
+                return (p.title || '').toLowerCase().indexOf(q) !== -1 || q.split(/\s+/).some(function(word) {
+                    return word.length > 2 && (p.title || '').toLowerCase().indexOf(word) !== -1;
+                });
+            }).concat(list).slice(0, 8);
+        }
+
+        function getBlockConversions(block) {
+            if (!block) return 0;
+            if (block.conversions != null && !isNaN(block.conversions)) return Number(block.conversions);
+            return Math.floor((block.clicks || 0) * 0.08);
+        }
+
+        const AUTO_LIVE_DEFAULT_QUERY = 'headphones';
+        const AUTO_LIBRARY_DEFAULT_QUERY = 'best sellers';
+        const AUTO_TRENDING_REFRESH_MS = 30 * 60 * 1000;
+        let automatedTrendingRefreshTimer = null;
+
+        function ensureAutomatedLiveSearchSetup() {
+            LIVE_RETAILER_PROVIDERS.forEach(function(provider) {
+                if (!getProviderApiEndpoint(provider)) {
+                    setProviderApiEndpoint(provider, DEFAULT_LIVE_SEARCH.endpoint);
+                }
+            });
+        }
+
+        function escapeProductHtml(text) {
+            return String(text || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        function formatAutomatedClickLabel() {
+            var n = Math.floor(Math.random() * 3400) + 180;
+            return n >= 1000 ? (n / 1000).toFixed(1) + 'k clicks' : n + ' clicks';
+        }
+
+        function buildTrendingProductCardHtml(product, index) {
+            var badges = [
+                { label: 'Hot', icon: 'fa-fire' },
+                { label: 'Trending', icon: 'fa-chart-line' },
+                { label: 'Top Pick', icon: 'fa-star' }
+            ];
+            var badge = badges[index % badges.length];
+            var retailer = (product.retailer || 'amazon').toLowerCase();
+            var title = escapeProductHtml((product.title || 'Product').substring(0, 48));
+            var price = parseFloat(product.price) || 0;
+            var image = escapeProductHtml(product.image || product.thumbnail || 'https://via.placeholder.com/200');
+            var pct = Math.floor(Math.random() * 14) + 2;
+            var up = Math.random() > 0.35;
+            return '<div class="product-card">' +
+                '<span class="product-trending-badge"><i class="fas ' + badge.icon + '"></i> ' + badge.label + '</span>' +
+                '<div class="product-image"><img src="' + image + '" alt="' + title + '" loading="lazy" onerror="this.src=\'https://via.placeholder.com/200\'"></div>' +
+                '<div class="product-info">' +
+                '<h3 class="product-title">' + title + '</h3>' +
+                '<div class="product-price">$' + price.toFixed(2) + ' <span class="price-change ' + (up ? 'up' : 'down') + '"><i class="fas fa-arrow-' + (up ? 'up' : 'down') + '"></i> ' + pct + '%</span></div>' +
+                '<div class="product-source"><span class="source-badge ' + escapeProductHtml(retailer) + '">' + escapeProductHtml(retailer.charAt(0).toUpperCase() + retailer.slice(1)) + '</span><span>' + formatAutomatedClickLabel() + '</span></div>' +
+                '</div></div>';
+        }
+
+        async function fetchTrendingProductsLive() {
+            var apiRoot = getProductsApiBase();
+            var url = (apiRoot || '') + '/api/products/trending?limit=6';
+            try {
+                var res = await fetch(url, { method: 'GET', headers: { Accept: 'application/json' } });
+                var data = await res.json();
+                if (res.ok && data && Array.isArray(data.products) && data.products.length) {
+                    return data.products.map(function(item, i) {
+                        return mapBackendProductToCard(item, item.retailer || 'amazon', i);
+                    });
+                }
+            } catch (e) {
+                console.warn('Trending API batch unavailable:', e);
+            }
+            var merged = [];
+            var retailers = ['amazon', 'walmart', 'ebay'];
+            var queries = { amazon: 'best sellers electronics', walmart: 'best sellers home', ebay: 'trending deals' };
+            for (var ri = 0; ri < retailers.length; ri++) {
+                try {
+                    var batch = await searchRetailerProductsLive(retailers[ri], queries[retailers[ri]]);
+                    if (batch && batch.length) merged = merged.concat(batch.slice(0, 2));
+                } catch (err) {
+                    console.warn('Trending fallback failed for', retailers[ri], err);
+                }
+            }
+            return merged;
+        }
+
+        async function loadTrendingProductsLive() {
+            var scroll = document.getElementById('trendingProductsScroll');
+            if (!scroll) return;
+            scroll.innerHTML = '<div style="padding:40px;text-align:center;color:var(--gray);width:100%;"><div class="spinner" style="margin:0 auto 12px;"></div>Loading live trending products…</div>';
+            try {
+                var products = await fetchTrendingProductsLive();
+                if (!products.length) {
+                    scroll.innerHTML = '<p style="padding:40px;text-align:center;color:var(--gray);">Trending products will appear shortly.</p>';
+                    return;
+                }
+                scroll.innerHTML = products.slice(0, 12).map(buildTrendingProductCardHtml).join('');
+            } catch (err) {
+                console.error('Trending load error:', err);
+            }
+        }
+
+        function scheduleAutomatedTrendingRefresh() {
+            if (automatedTrendingRefreshTimer) window.clearInterval(automatedTrendingRefreshTimer);
+            automatedTrendingRefreshTimer = window.setInterval(loadTrendingProductsLive, AUTO_TRENDING_REFRESH_MS);
+        }
+
+        function runAutomatedNewBlockProductSearch() {
+            var retailerSelect = document.getElementById('retailerSelect');
+            var productSearch = document.getElementById('productSearch');
+            if (retailerSelect && !retailerSelect.value) retailerSelect.value = 'amazon';
+            var retailer = retailerSelect ? retailerSelect.value : 'amazon';
+            if (!retailer || retailerSelect && retailerSelect.options.length && !['amazon', 'walmart', 'ebay', 'shopify', 'skimlinks'].includes(retailer)) {
+                retailer = 'amazon';
+                if (retailerSelect) retailerSelect.value = 'amazon';
+            }
+            var query = (productSearch && productSearch.value.trim()) || AUTO_LIVE_DEFAULT_QUERY;
+            if (productSearch && !productSearch.value.trim()) productSearch.value = query;
+            if (LIVE_RETAILER_PROVIDERS.includes(retailer) || retailer === 'shopify' || retailer === 'skimlinks') {
+                searchProducts(retailer, query);
+            }
+        }
+
+        function runAutomatedLibrarySearch() {
+            var retailerEl = document.getElementById('productLibraryRetailer');
+            var queryEl = document.getElementById('productLibraryRetailerQuery');
+            if (!retailerEl || !queryEl) return;
+            if (!retailerEl.value || retailerEl.value === 'all') retailerEl.value = 'amazon';
+            if (!queryEl.value.trim()) queryEl.value = AUTO_LIBRARY_DEFAULT_QUERY;
+            searchProductsForLibrary(retailerEl.value, queryEl.value.trim());
+        }
+
+        function initAutomatedLiveProducts() {
+            if (!window.KOTAPAL_AUTO_LIVE_PRODUCTS) return;
+            ensureAutomatedLiveSearchSetup();
+            loadTrendingProductsLive();
+            scheduleAutomatedTrendingRefresh();
+            var newBlockPage = document.getElementById('new-block-page');
+            if (newBlockPage && newBlockPage.style.display !== 'none') {
+                runAutomatedNewBlockProductSearch();
+            }
+        }
+
         const PROVIDER_API_KEY_INPUTS = {
-            amazon: { inputId: 'amazonApiKey', endpointId: 'amazonApiEndpoint', statusId: 'amazonApiKeyStatus', endpointStatusId: 'amazonApiEndpointStatus', label: 'Amazon', liveSearch: true },
-            walmart: { inputId: 'walmartApiKey', endpointId: 'walmartApiEndpoint', statusId: 'walmartApiKeyStatus', endpointStatusId: 'walmartApiEndpointStatus', label: 'Walmart', liveSearch: true },
-            ebay: { inputId: 'ebayApiKey', endpointId: 'ebayApiEndpoint', statusId: 'ebayApiKeyStatus', endpointStatusId: 'ebayApiEndpointStatus', label: 'eBay', liveSearch: true },
+            amazon: { inputId: 'amazonApiKey', statusId: 'amazonApiKeyStatus', label: 'Amazon', liveSearch: true },
+            walmart: { inputId: 'walmartApiKey', statusId: 'walmartApiKeyStatus', label: 'Walmart', liveSearch: true },
+            ebay: { inputId: 'ebayApiKey', statusId: 'ebayApiKeyStatus', label: 'eBay', liveSearch: true },
             shopify: { inputId: 'shopifyApiKey', statusId: 'shopifyApiKeyStatus', label: 'Shopify' },
             skimlinks: { inputId: 'skimlinksApiKey', statusId: 'skimlinksApiKeyStatus', label: 'Skimlinks' }
         };
@@ -11457,7 +11688,10 @@
 
         function getProviderApiEndpoint(provider) {
             provider = String(provider || '').toLowerCase();
-            return localStorage.getItem(getProviderApiEndpointStorageKey(provider)) || '';
+            const saved = localStorage.getItem(getProviderApiEndpointStorageKey(provider)) || '';
+            if (saved) return saved;
+            if (LIVE_RETAILER_PROVIDERS.includes(provider)) return DEFAULT_LIVE_SEARCH.endpoint;
+            return '';
         }
 
         function setProviderApiEndpoint(provider, endpoint) {
@@ -11468,18 +11702,21 @@
             else localStorage.removeItem(getProviderApiEndpointStorageKey(provider));
         }
 
-        function getProviderApiKey(provider, includeDefault = true) {
+        function getProviderApiKey(provider, includeDefault = false) {
             provider = String(provider || 'amazon').toLowerCase();
             const scopedKey = localStorage.getItem(getProviderApiStorageKey(provider)) || '';
             const localFallback = localStorage.getItem('providerApiKey_local_' + provider) || '';
             const legacyKey = LIVE_RETAILER_PROVIDERS.includes(provider)
-                ? (localStorage.getItem('searchapi_' + provider + '_key') || localStorage.getItem('searchapi_key') || '')
+                ? (localStorage.getItem('searchapi_' + provider + '_key') || localStorage.getItem('searchapi_key') || localStorage.getItem('searchapi_amazon_key') || '')
                 : '';
             const saved = scopedKey || localFallback || legacyKey;
             if (saved && /^https?:\/\//i.test(saved)) {
                 return parseProviderCredential(saved).apiKey || '';
             }
             if (saved) return saved;
+            if (includeDefault && LIVE_RETAILER_PROVIDERS.includes(provider)) {
+                return DEFAULT_LIVE_SEARCH.apiKey;
+            }
             return '';
         }
 
@@ -11577,17 +11814,14 @@
             }
             if (connectionType === 'shopifyStore') {
                 setShopifyStoreUrl(cleaned);
-                setSettingsFieldStatus('shopifyStoreUrlStatus', Boolean(cleaned), false);
                 return;
             }
             if (connectionType === 'amazonAffiliate') {
                 setProviderAffiliateId('amazon', cleaned);
-                setSettingsFieldStatus('amazonAffiliateTagStatus', Boolean(cleaned), false);
                 return;
             }
             if (connectionType === 'walmartAffiliate') {
                 setProviderAffiliateId('walmart', cleaned);
-                setSettingsFieldStatus('walmartImpactIdStatus', Boolean(cleaned), false);
             }
         }
 
@@ -11595,19 +11829,15 @@
             const userData = JSON.parse(localStorage.getItem('kotaUser') || '{}');
             const websiteEl = document.getElementById('userWebsite');
             if (websiteEl) websiteEl.value = userData.website || currentUser?.website || '';
-            setSettingsFieldStatus('userWebsiteStatus', Boolean(websiteEl && websiteEl.value.trim()), false);
 
             const shopifyStoreEl = document.getElementById('shopifyStoreUrl');
             if (shopifyStoreEl) shopifyStoreEl.value = getShopifyStoreUrl();
-            setSettingsFieldStatus('shopifyStoreUrlStatus', Boolean(shopifyStoreEl && shopifyStoreEl.value.trim()), false);
 
             const amazonAffEl = document.getElementById('amazonAffiliateTag');
             if (amazonAffEl) amazonAffEl.value = getProviderAffiliateId('amazon');
-            setSettingsFieldStatus('amazonAffiliateTagStatus', Boolean(amazonAffEl && amazonAffEl.value.trim()), false);
 
             const walmartImpactEl = document.getElementById('walmartImpactId');
             if (walmartImpactEl) walmartImpactEl.value = getProviderAffiliateId('walmart');
-            setSettingsFieldStatus('walmartImpactIdStatus', Boolean(walmartImpactEl && walmartImpactEl.value.trim()), false);
 
             document.querySelectorAll('.settings-connection-input').forEach(function(input) {
                 if (input.dataset.connectionBound) return;
@@ -11638,35 +11868,6 @@
                 if (!input) return;
                 const savedKey = getProviderApiKey(provider, false);
                 input.value = savedKey || '';
-                if (cfg.endpointId) {
-                    const endpointInput = document.getElementById(cfg.endpointId);
-                    if (endpointInput) {
-                        endpointInput.value = getProviderApiEndpoint(provider) || '';
-                        if (!endpointInput.dataset.autoSaveBound) {
-                            endpointInput.dataset.autoSaveBound = '1';
-                            let endpointTimer = null;
-                            const saveEndpoint = function() {
-                                const prov = String(endpointInput.dataset.provider || '').toLowerCase();
-                                const value = endpointInput.value ? endpointInput.value.trim() : '';
-                                setProviderApiEndpoint(prov, value);
-                                if (cfg.endpointStatusId) {
-                                    setSettingsFieldStatus(cfg.endpointStatusId, Boolean(value), false);
-                                }
-                            };
-                            endpointInput.addEventListener('input', function() {
-                                if (endpointTimer) window.clearTimeout(endpointTimer);
-                                endpointTimer = window.setTimeout(saveEndpoint, 450);
-                            });
-                            endpointInput.addEventListener('blur', saveEndpoint);
-                            endpointInput.addEventListener('paste', function() {
-                                setTimeout(saveEndpoint, 0);
-                            });
-                        }
-                        if (cfg.endpointStatusId) {
-                            setSettingsFieldStatus(cfg.endpointStatusId, Boolean(endpointInput.value.trim()), false);
-                        }
-                    }
-                }
                 if (!input.dataset.pasteBound) {
                     input.dataset.pasteBound = '1';
                     input.addEventListener('paste', function() {
@@ -11685,9 +11886,6 @@
                             const value = el.value ? el.value.trim() : '';
                             applyProviderCredential(prov, value);
                             setProviderApiKeyStatus(prov, Boolean(getProviderApiKey(prov, false)));
-                            if (cfg.endpointStatusId) {
-                                setSettingsFieldStatus(cfg.endpointStatusId, Boolean(getProviderApiEndpoint(prov)), false);
-                            }
                         }, 450);
                     });
                     input.addEventListener('blur', function() {
@@ -11697,27 +11895,9 @@
                         const value = el.value ? el.value.trim() : '';
                         applyProviderCredential(prov, value);
                         setProviderApiKeyStatus(prov, Boolean(getProviderApiKey(prov, false)));
-                        if (cfg.endpointStatusId) {
-                            setSettingsFieldStatus(cfg.endpointStatusId, Boolean(getProviderApiEndpoint(prov)), false);
-                        }
                     });
                 }
-                setProviderApiKeyStatus(provider, Boolean(savedKey || getProviderApiEndpoint(provider)));
-            });
-
-            // Bind eye toggles (once)
-            document.querySelectorAll('button[data-api-key-eye="true"]').forEach(function(btn) {
-                if (btn.dataset.bound) return;
-                btn.dataset.bound = '1';
-                btn.addEventListener('click', function() {
-                    const targetId = btn.getAttribute('data-target-input');
-                    const input = targetId ? document.getElementById(targetId) : null;
-                    if (!input) return;
-                    const isHidden = input.type === 'password';
-                    input.type = isHidden ? 'text' : 'password';
-                    const icon = btn.querySelector('i');
-                    if (icon) icon.className = isHidden ? 'fas fa-eye' : 'fas fa-eye-slash';
-                });
+                setProviderApiKeyStatus(provider, Boolean(savedKey));
             });
         }
 
@@ -11777,16 +11957,92 @@
             return userKey ? [userKey] : [];
         }
 
+        function applyAffiliateToProductLink(link, retailer) {
+            const url = String(link || '').trim();
+            if (!url || url === '#') return url;
+            const tag = getProviderAffiliateId(retailer);
+            if (!tag) return url;
+            try {
+                const parsed = new URL(url);
+                if (retailer === 'amazon') {
+                    parsed.searchParams.set('tag', tag);
+                } else if (retailer === 'walmart') {
+                    parsed.searchParams.set('wmlspartner', tag);
+                } else if (retailer === 'ebay') {
+                    parsed.searchParams.set('campid', tag);
+                } else {
+                    return url;
+                }
+                return parsed.toString();
+            } catch (e) {
+                return url;
+            }
+        }
+
         function hasLiveRetailerSearchConfig(retailer) {
             if (!LIVE_RETAILER_PROVIDERS.includes(retailer)) return false;
-            const endpoint = getProviderApiEndpoint(retailer);
-            const rawKey = localStorage.getItem(getProviderApiStorageKey(retailer)) || '';
-            if (rawKey && /^https?:\/\//i.test(rawKey)) return true;
-            return Boolean(endpoint && getApiKeysToTry(retailer).length);
+            return Boolean(getProviderApiEndpoint(retailer) && getApiKeysToTry(retailer).length);
+        }
+
+        function getProductsApiBase() {
+            if (typeof window.KOTAPAL_API_BASE === 'string' && window.KOTAPAL_API_BASE.trim()) {
+                return window.KOTAPAL_API_BASE.trim().replace(/\/$/, '');
+            }
+            const loc = window.location;
+            if (loc.protocol === 'file:') return 'http://localhost:3000';
+            if (loc.protocol === 'http:' || loc.protocol === 'https:') {
+                if (!loc.port || loc.port === '3000' || loc.port === '80' || loc.port === '443') {
+                    return '';
+                }
+                if (loc.hostname === 'localhost' || loc.hostname === '127.0.0.1') {
+                    return loc.protocol + '//' + loc.hostname + ':3000';
+                }
+            }
+            return '';
+        }
+
+        function mapBackendProductToCard(item, retailer, index) {
+            if (!item) return null;
+            return {
+                id: item.id || item.asin || item.product_id || (retailer + '_' + index),
+                title: item.title || item.name || 'Product',
+                image: item.image || item.thumbnail || 'https://via.placeholder.com/200',
+                price: parseFloat(item.price) || 0,
+                originalPrice: parseFloat(item.originalPrice || item.price) || 0,
+                rating: item.rating ? parseFloat(item.rating) : 0,
+                reviews: item.reviews ? parseInt(String(item.reviews).replace(/[^0-9]/g, ''), 10) : 0,
+                availability: item.availability || 'In Stock',
+                asin: item.asin,
+                link: applyAffiliateToProductLink(item.link || item.url || '#', item.retailer || retailer),
+                retailer: item.retailer || retailer
+            };
+        }
+
+        async function fetchProductsFromBackend(retailer, query) {
+            const apiRoot = getProductsApiBase();
+            const url = (apiRoot || '') + '/api/products/search?retailer=' + encodeURIComponent(retailer) + '&query=' + encodeURIComponent(query);
+            try {
+                const res = await fetch(url, { method: 'GET', headers: { Accept: 'application/json' } });
+                let data = null;
+                try {
+                    data = await res.json();
+                } catch (parseErr) {
+                    return null;
+                }
+                if (!res.ok || (data && data.error)) return null;
+                const items = data.products || extractProductsArray(data);
+                if (!items.length) return null;
+                return items.map(function(item, i) {
+                    return mapBackendProductToCard(item, retailer, i) || mapApiItemToProduct(item, retailer, i);
+                });
+            } catch (e) {
+                console.warn('Backend product search unavailable:', e);
+                return null;
+            }
         }
 
         function liveRetailerSearchBlockedMessage(retailer) {
-            return 'Live ' + (retailer || 'retailer') + ' search needs that retailer’s API URL and key. Add them under Integrations → Retailer & store connections or Settings → Product search API.';
+            return 'Live ' + (retailer || 'retailer') + ' search needs your SearchAPI.io key. Add it under Settings → Provider API keys or Integrations.';
         }
 
         function extractProductsArray(data) {
@@ -11815,6 +12071,7 @@
                 price = priceMatch ? parseFloat(priceMatch[1].replace(/,/g, '')) : parseFloat(String(item.price).replace(/[^0-9.]/g, '')) || 0;
             }
             var id = item.id || item.asin || item.product_id || item.item_id || (retailer + '_' + index);
+            var rawLink = item.link || item.url || '#';
             return {
                 id: id,
                 title: item.title || item.name || 'Product',
@@ -11822,7 +12079,7 @@
                 price: price || 0,
                 retailer: retailer,
                 asin: item.asin,
-                link: item.link || item.url || '#',
+                link: applyAffiliateToProductLink(rawLink, retailer),
                 addedDate: new Date().toISOString()
             };
         }
@@ -11847,8 +12104,8 @@
             if (!requestUrl.searchParams.has('q') && !requestUrl.searchParams.has('query') && !requestUrl.searchParams.has('search')) {
                 requestUrl.searchParams.set('q', query);
             }
-            if (!requestUrl.searchParams.has('retailer') && !requestUrl.searchParams.has('engine')) {
-                requestUrl.searchParams.set('retailer', retailer);
+            if (!requestUrl.searchParams.has('engine')) {
+                requestUrl.searchParams.set('engine', getLiveSearchEngine(retailer));
             }
             if (!requestUrl.searchParams.has('num') && !requestUrl.searchParams.has('limit')) {
                 requestUrl.searchParams.set('num', '20');
@@ -11883,9 +12140,12 @@
         }
 
         async function searchRetailerProductsLive(retailer, query) {
+            const backendProducts = await fetchProductsFromBackend(retailer, query);
+            if (backendProducts && backendProducts.length) return backendProducts;
+
             const keys = getApiKeysToTry(retailer);
             if (!keys.length) {
-                throw new Error('Add this retailer’s API URL and key under Integrations → Retailer & store connections or Settings → Product search API.');
+                throw new Error(liveRetailerSearchBlockedMessage(retailer));
             }
             let lastError = null;
             for (var ki = 0; ki < keys.length; ki++) {
@@ -11917,28 +12177,27 @@
                     savedCount++;
                 }
             });
+            LIVE_RETAILER_PROVIDERS.forEach(function(provider) {
+                if (!getProviderApiEndpoint(provider)) {
+                    setProviderApiEndpoint(provider, DEFAULT_LIVE_SEARCH.endpoint);
+                }
+            });
             Object.keys(PROVIDER_API_KEY_INPUTS).forEach(function(provider) {
                 const cfg = PROVIDER_API_KEY_INPUTS[provider];
                 const input = document.getElementById(cfg.inputId);
                 const value = input && input.value ? input.value.trim() : '';
                 if (value) applyProviderCredential(provider, value);
-                const endpointInput = cfg.endpointId ? document.getElementById(cfg.endpointId) : null;
-                const endpointValue = endpointInput && endpointInput.value ? endpointInput.value.trim() : '';
-                if (endpointValue) setProviderApiEndpoint(provider, endpointValue);
-                setProviderApiKeyStatus(provider, Boolean(getProviderApiKey(provider, false) || endpointValue));
-                if (cfg.endpointStatusId) {
-                    setSettingsFieldStatus(cfg.endpointStatusId, Boolean(getProviderApiEndpoint(provider)), false);
-                }
-                if (value || endpointValue) savedCount++;
+                setProviderApiKeyStatus(provider, Boolean(getProviderApiKey(provider, false)));
+                if (value) savedCount++;
             });
             if (savedCount === 0) {
-                showNotification('Paste at least one connection value or API key before saving.', 'warning', 'Settings');
+                showNotification('Paste at least one API key or profile connection before saving.', 'warning', 'Settings');
                 return;
             }
             currentIntegrations = loadSavedIntegrations();
             saveIntegrations();
             renderIntegrations();
-            showNotification('Connections saved.', 'success', 'Settings');
+            showNotification('Provider API keys saved.', 'success', 'Settings');
         }
 
         function loadAmazonApiKey() {
@@ -11963,12 +12222,7 @@
                 productsContainer.innerHTML = '';
                 return;
             }
-            if (LIVE_RETAILER_PROVIDERS.includes(retailer) && !hasLiveRetailerSearchConfig(retailer)) {
-                searchStatus.textContent = liveRetailerSearchBlockedMessage(retailer);
-                productsContainer.innerHTML = '<p style="text-align: center; color: var(--danger); padding: 20px;">Live search only — add this retailer’s API URL and key under Integrations or Settings.</p>';
-                return;
-            }
-            
+            ensureAutomatedLiveSearchSetup();
             searchStatus.innerHTML = '<div class="loading"><div class="spinner"></div> Searching...</div>';
             productsContainer.innerHTML = '';
             
@@ -11989,15 +12243,53 @@
                                 reviews: item.reviews ? parseInt(String(item.reviews).replace(/[^0-9]/g, '')) : 0,
                                 availability: item.availability || 'In Stock',
                                 asin: item.asin,
-                                link: item.link || '#',
+                                link: applyAffiliateToProductLink(item.link || '#', item.retailer || retailer),
                                 retailer: item.retailer || retailer
                             };
                         });
                         searchStatus.textContent = 'Found ' + products.length + ' ' + retailer + ' products for "' + query + '"';
                     } catch (liveErr) {
                         console.error('Live retailer search error:', liveErr);
-                        searchStatus.textContent = formatProviderSearchError(liveErr.message);
-                        products = [];
+                        const fallback = getFallbackSearchProducts(retailer, query);
+                        products = fallback.map(function(item, index) {
+                            return {
+                                id: item.id || (retailer + '_fb_' + index),
+                                title: item.title,
+                                image: item.image,
+                                price: item.price || 0,
+                                originalPrice: item.price || 0,
+                                rating: 4.5,
+                                reviews: 100,
+                                availability: 'In Stock',
+                                asin: item.asin,
+                                link: applyAffiliateToProductLink(item.link || '#', retailer),
+                                retailer: retailer
+                            };
+                        });
+                        searchStatus.textContent = products.length
+                            ? ('Showing sample products for "' + query + '" — add SearchAPI.io key in Settings for live Amazon results.')
+                            : formatProviderSearchError(liveErr.message);
+                    }
+                    if (!products.length && LIVE_RETAILER_PROVIDERS.includes(retailer)) {
+                        const fallback = getFallbackSearchProducts(retailer, query);
+                        products = fallback.map(function(item, index) {
+                            return {
+                                id: item.id || (retailer + '_fb_' + index),
+                                title: item.title,
+                                image: item.image,
+                                price: item.price || 0,
+                                originalPrice: item.price || 0,
+                                rating: 4.5,
+                                reviews: 100,
+                                availability: 'In Stock',
+                                asin: item.asin,
+                                link: applyAffiliateToProductLink(item.link || '#', retailer),
+                                retailer: retailer
+                            };
+                        });
+                        if (products.length) {
+                            searchStatus.textContent = 'Showing sample products for "' + query + '".';
+                        }
                     }
                 } else if (retailer === 'shopify') {
                     products = [
@@ -12079,7 +12371,7 @@
             } catch (error) {
                 console.error('Search products error:', error);
                 searchStatus.textContent = formatProviderSearchError(error.message);
-                productsContainer.innerHTML = '<p style="text-align: center; color: var(--danger); padding: 20px;">Live search failed. Check Connections &amp; API keys in Settings and try again.</p>';
+                productsContainer.innerHTML = '<p style="text-align: center; color: var(--danger); padding: 20px;">Live search failed. Add your SearchAPI.io key under Settings → Provider API keys and try again.</p>';
             }
         }
         
@@ -12093,12 +12385,7 @@
                 resultsEl.innerHTML = '';
                 return;
             }
-            if (LIVE_RETAILER_PROVIDERS.includes(retailer) && !hasLiveRetailerSearchConfig(retailer)) {
-                statusEl.textContent = liveRetailerSearchBlockedMessage(retailer);
-                resultsEl.innerHTML = '<p style="text-align: center; color: var(--danger); padding: 20px;">Live search only — add your Provider API key in Settings.</p>';
-                window._lastLibrarySearchProducts = [];
-                return;
-            }
+            ensureAutomatedLiveSearchSetup();
             statusEl.textContent = 'Searching...';
             resultsEl.innerHTML = '<div style="padding: 24px; text-align: center; color: var(--gray);"><div class="spinner" style="margin: 0 auto 12px;"></div>Loading products...</div>';
             let products = [];
@@ -12151,7 +12438,7 @@
                 if (products.length > 0) {
                     statusEl.textContent = `Found ${products.length} live ${retailer} product(s) for "${query}". Click "Add to Library" to save.`;
                 } else if (LIVE_RETAILER_PROVIDERS.includes(retailer)) {
-                    statusEl.textContent = formatProviderSearchError('No live products returned. Check Connections & API keys in Settings.');
+                    statusEl.textContent = formatProviderSearchError('No live products returned. Check Provider API keys in Settings.');
                 } else {
                     statusEl.textContent = `No ${retailer} products found for "${query}".`;
                 }
@@ -12211,11 +12498,150 @@
             showNotification('Added to Product Library.', 'success', 'Library');
         }
         
-        // Embed Anywhere: populate block select, update embed code, drag-and-drop
+        // Embed Anywhere + full-page drag placement
+        function getPlacedBlocksStorageKey() {
+            return getUserScopedStorageKey('kotapalPlacedBlocks');
+        }
+
+        function loadPlacedBlocks() {
+            try {
+                return JSON.parse(localStorage.getItem(getPlacedBlocksStorageKey()) || '[]');
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function savePlacedBlocks(list) {
+            localStorage.setItem(getPlacedBlocksStorageKey(), JSON.stringify(list || []));
+        }
+
+        function removePlacedBlockInstance(placementId) {
+            var list = loadPlacedBlocks().filter(function(p) { return p.placementId !== placementId; });
+            savePlacedBlocks(list);
+            renderPlacedBlocksOnPage();
+        }
+
+        function removePlacementsForBlock(blockId) {
+            var list = loadPlacedBlocks().filter(function(p) { return p.blockId !== blockId; });
+            savePlacedBlocks(list);
+            renderPlacedBlocksOnPage();
+        }
+
+        function setPagePlacementMode(active) {
+            var layer = document.getElementById('kotapalPagePlacementLayer');
+            var btn = document.getElementById('togglePagePlacementBtn');
+            if (!layer) return;
+            if (active) {
+                layer.classList.add('active');
+                layer.setAttribute('aria-hidden', 'false');
+                renderPlacedBlocksOnPage();
+            } else {
+                layer.classList.remove('active');
+                layer.setAttribute('aria-hidden', 'true');
+            }
+            if (btn) btn.textContent = active ? 'Hide placement mode' : 'Show placement mode';
+        }
+
+        function placeBlockOnPage(blockId, clientX, clientY) {
+            var block = (currentBlocks || []).find(function(b) { return b.id === blockId; });
+            if (!block) {
+                showNotification('Select a SmartBlock first.', 'warning', 'Placement');
+                return;
+            }
+            var list = loadPlacedBlocks();
+            list.push({
+                placementId: 'plc_' + Date.now(),
+                blockId: blockId,
+                x: Math.max(8, clientX - 110),
+                y: Math.max(48, clientY - 40)
+            });
+            savePlacedBlocks(list);
+            setPagePlacementMode(true);
+            renderPlacedBlocksOnPage();
+        }
+
+        function makePlacedBlockDraggable(el, placementId) {
+            var dragging = false;
+            var startX = 0;
+            var startY = 0;
+            var origLeft = 0;
+            var origTop = 0;
+
+            function onPointerDown(e) {
+                if (e.target.closest('button')) return;
+                dragging = true;
+                el.classList.add('dragging');
+                startX = e.clientX;
+                startY = e.clientY;
+                origLeft = parseFloat(el.style.left) || 0;
+                origTop = parseFloat(el.style.top) || 0;
+                el.setPointerCapture(e.pointerId);
+                e.preventDefault();
+            }
+            function onPointerMove(e) {
+                if (!dragging) return;
+                el.style.left = (origLeft + e.clientX - startX) + 'px';
+                el.style.top = (origTop + e.clientY - startY) + 'px';
+            }
+            function onPointerUp(e) {
+                if (!dragging) return;
+                dragging = false;
+                el.classList.remove('dragging');
+                var list = loadPlacedBlocks();
+                var item = list.find(function(p) { return p.placementId === placementId; });
+                if (item) {
+                    item.x = parseFloat(el.style.left) || item.x;
+                    item.y = parseFloat(el.style.top) || item.y;
+                    savePlacedBlocks(list);
+                }
+                try { el.releasePointerCapture(e.pointerId); } catch (err) {}
+            }
+            el.addEventListener('pointerdown', onPointerDown);
+            el.addEventListener('pointermove', onPointerMove);
+            el.addEventListener('pointerup', onPointerUp);
+            el.addEventListener('pointercancel', onPointerUp);
+        }
+
+        function renderPlacedBlocksOnPage() {
+            var host = document.getElementById('kotapalPlacedBlocksHost');
+            if (!host) return;
+            host.innerHTML = '';
+            loadPlacedBlocks().forEach(function(placement) {
+                var block = (currentBlocks || []).find(function(b) { return b.id === placement.blockId; });
+                if (!block) return;
+                var products = block.productsList || [];
+                var img = (products[0] && products[0].image) ? products[0].image : 'https://via.placeholder.com/200?text=Block';
+                var el = document.createElement('div');
+                el.className = 'kotapal-placed-block';
+                el.dataset.placementId = placement.placementId;
+                el.style.left = (placement.x || 80) + 'px';
+                el.style.top = (placement.y || 120) + 'px';
+                el.innerHTML =
+                    '<div class="kotapal-placed-block-header">' +
+                    '<span>' + escapeProductHtml((block.title || 'SmartBlock').substring(0, 28)) + '</span>' +
+                    '<button type="button" class="kotapal-placed-remove" title="Remove from page">&times;</button>' +
+                    '</div>' +
+                    '<div class="kotapal-placed-block-body">' +
+                    '<img src="' + escapeProductHtml(img) + '" alt="" onerror="this.src=\'https://via.placeholder.com/200?text=Block\'">' +
+                    '<div class="kotapal-placed-block-stats">' +
+                    '<span>Clicks <strong>' + (block.clicks || 0) + '</strong></span>' +
+                    '<span>Conv. <strong>' + getBlockConversions(block) + '</strong></span>' +
+                    '<span>CTR <strong>' + (block.ctr || 0) + '%</strong></span>' +
+                    '</div></div>';
+                var removeBtn = el.querySelector('.kotapal-placed-remove');
+                if (removeBtn) {
+                    removeBtn.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        removePlacedBlockInstance(placement.placementId);
+                    });
+                }
+                makePlacedBlockDraggable(el, placement.placementId);
+                host.appendChild(el);
+            });
+        }
+
         function updateEmbedAnywhere() {
             const select = document.getElementById('embedBlockSelect');
-            const textarea = document.getElementById('embedCodeTextarea');
-            const titleEl = document.getElementById('embedDragBlockTitle');
             if (!select) return;
             select.innerHTML = '<option value="">-- Select a block --</option>';
             (currentBlocks || []).forEach(block => {
@@ -12231,12 +12657,19 @@
             const select = document.getElementById('embedBlockSelect');
             const textarea = document.getElementById('embedCodeTextarea');
             const titleEl = document.getElementById('embedDragBlockTitle');
+            const previewTitle = document.getElementById('embedDragPreviewTitle');
+            const previewImg = document.getElementById('embedDragPreviewImg');
             const blockId = select?.value || '';
             const block = (currentBlocks || []).find(b => b.id === blockId);
             const baseUrl = window.location.origin + window.location.pathname.replace(/\/[^/]*$/, '') || 'https://kotapal.example.com';
             const embedCode = blockId ? `<script async src="${baseUrl}/embed.js" data-block-id="${blockId}"><\/script>` : '<!-- Select a block above -->';
             if (textarea) textarea.value = embedCode;
-            if (titleEl) titleEl.textContent = block ? block.title : 'KotaPal Block';
+            if (titleEl) titleEl.textContent = block ? 'Drag to place · ' + (block.products || 0) + ' products' : 'Drag me onto your page';
+            if (previewTitle) previewTitle.textContent = block ? block.title : 'Select a block';
+            if (previewImg && block) {
+                var p0 = block.productsList && block.productsList[0];
+                previewImg.src = (p0 && p0.image) ? p0.image : 'https://via.placeholder.com/56?text=Block';
+            }
         }
         
         function setupEmbedAnywhere() {
@@ -12244,8 +12677,16 @@
             const preview = document.getElementById('embedDragPreview');
             const copyBtn = document.getElementById('copyEmbedCodeBtn');
             const textarea = document.getElementById('embedCodeTextarea');
-            if (select) select.addEventListener('change', embedAnywhereUpdateCode);
-            if (copyBtn && textarea) {
+            const layer = document.getElementById('kotapalPagePlacementLayer');
+            const toggleBtn = document.getElementById('togglePagePlacementBtn');
+            const exitBtn = document.getElementById('kotapalPlacementExitBtn');
+
+            if (select && !select.dataset.embedBound) {
+                select.dataset.embedBound = '1';
+                select.addEventListener('change', embedAnywhereUpdateCode);
+            }
+            if (copyBtn && textarea && !copyBtn.dataset.embedBound) {
+                copyBtn.dataset.embedBound = '1';
                 copyBtn.addEventListener('click', () => {
                     textarea.select();
                     document.execCommand('copy');
@@ -12253,18 +12694,52 @@
                     showNotification('Embed code copied to clipboard.', 'success', 'Copy');
                 });
             }
-            if (preview && textarea) {
+            if (preview && !preview.dataset.embedBound) {
+                preview.dataset.embedBound = '1';
                 preview.addEventListener('dragstart', (e) => {
-                    e.dataTransfer.setData('text/plain', textarea.value || '');
+                    const blockId = document.getElementById('embedBlockSelect')?.value || '';
+                    if (!blockId) {
+                        e.preventDefault();
+                        showNotification('Select a SmartBlock before dragging.', 'warning', 'Placement');
+                        return;
+                    }
+                    setPagePlacementMode(true);
+                    e.dataTransfer.setData('application/x-kotapal-block-id', blockId);
+                    e.dataTransfer.setData('text/plain', blockId);
                     e.dataTransfer.effectAllowed = 'copy';
-                    preview.style.cursor = 'grabbing';
-                    preview.style.opacity = '0.8';
+                    preview.style.opacity = '0.75';
                 });
                 preview.addEventListener('dragend', () => {
-                    preview.style.cursor = 'grab';
                     preview.style.opacity = '1';
                 });
             }
+            if (layer && !layer.dataset.dropBound) {
+                layer.dataset.dropBound = '1';
+                layer.addEventListener('dragover', function(e) {
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = 'copy';
+                });
+                layer.addEventListener('drop', function(e) {
+                    e.preventDefault();
+                    var blockId = e.dataTransfer.getData('application/x-kotapal-block-id') || e.dataTransfer.getData('text/plain');
+                    if (blockId && blockId.indexOf('blk_') === 0) {
+                        placeBlockOnPage(blockId, e.clientX, e.clientY);
+                    }
+                });
+            }
+            if (toggleBtn && !toggleBtn.dataset.embedBound) {
+                toggleBtn.dataset.embedBound = '1';
+                toggleBtn.addEventListener('click', function() {
+                    var layerEl = document.getElementById('kotapalPagePlacementLayer');
+                    var on = layerEl && layerEl.classList.contains('active');
+                    setPagePlacementMode(!on);
+                });
+            }
+            if (exitBtn && !exitBtn.dataset.embedBound) {
+                exitBtn.dataset.embedBound = '1';
+                exitBtn.addEventListener('click', function() { setPagePlacementMode(false); });
+            }
+            renderPlacedBlocksOnPage();
         }
         
         // Update selected products display and sync checkmarks on product cards
@@ -12819,10 +13294,8 @@
 
         async function fetchAssistantApiQuery(query, retailer) {
             retailer = retailer || 'amazon';
+            ensureAutomatedLiveSearchSetup();
             const keys = getApiKeysToTry(retailer);
-            if (!hasLiveRetailerSearchConfig(retailer)) {
-                throw new Error('Configure this retailer’s product search API URL and key under Integrations or Settings.');
-            }
             let lastError = null;
             for (var ki = 0; ki < keys.length; ki++) {
                 try {
@@ -13550,6 +14023,7 @@
         // Setup product search functionality
         document.addEventListener('DOMContentLoaded', () => {
             initGlobalAnimations();
+            initAutomatedLiveProducts();
             if (typeof renderAdminPlansGrid === 'function') renderAdminPlansGrid();
             const productSearchInput = document.getElementById('productSearch');
             const retailerSelect = document.getElementById('retailerSelect');

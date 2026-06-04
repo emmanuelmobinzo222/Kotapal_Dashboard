@@ -1,20 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="Kotapal">
   <defs>
-    <linearGradient id="g" x1="10" y1="8" x2="54" y2="56" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#7c3aed"/>
-      <stop offset="1" stop-color="#2563eb"/>
+    <!-- Matches IMG_4258 / dashboard logo: purple stem, purple→blue wing, blue→cyan wing -->
+    <linearGradient id="kotapal-wing-top" x1="30.13" y1="4" x2="60" y2="32" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#5B8DEF"/>
+      <stop offset="1" stop-color="#3BDEFF"/>
     </linearGradient>
-    <filter id="s" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="2" stdDeviation="2" flood-opacity="0.18"/>
-    </filter>
+    <linearGradient id="kotapal-wing-bottom" x1="30.13" y1="32" x2="60" y2="60" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#A855F7"/>
+      <stop offset="0.45" stop-color="#7F52FF"/>
+      <stop offset="1" stop-color="#5B8DEF"/>
+    </linearGradient>
   </defs>
 
-  <circle cx="32" cy="32" r="28" fill="url(#g)" filter="url(#s)"/>
-
-  <!-- Simple, legible "K" for favicon sizes -->
-  <path
-    d="M24 18h7v11.2L42.7 18H51L38.8 30.6 52 46h-8.5L31 31.8V46h-7V18z"
-    fill="#ffffff"
-  />
+  <!-- Kotlin-style K (same mark as dashboard IMG_4258), scaled into 64×64 with padding -->
+  <path fill="#C026D3" d="M4 60V4h26.13v56H4z"/>
+  <path fill="url(#kotapal-wing-top)" d="M30.13 4H60L30.13 32V4z"/>
+  <path fill="url(#kotapal-wing-bottom)" d="M60 60L30.13 32v28H60z"/>
 </svg>

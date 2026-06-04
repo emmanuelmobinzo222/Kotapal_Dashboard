@@ -106,6 +106,50 @@ class RetailerIntegrationService extends EventEmitter {
   }
 
   /**
+   * Search products from a retailer (live SearchAPI.io)
+   */
+  async searchProducts(retailerName, query, options = {}) {
+    const cacheKey = `search:${retailerName}:${query}:${JSON.stringify(options)}`;
+
+    const cachedData = this.cache.get(cacheKey);
+    if (cachedData) {
+      this.metrics.cacheHits++;
+      return cachedData;
+    }
+
+    this.metrics.cacheMisses++;
+
+    try {
+      const retailer = this.getRetailer(retailerName);
+      const data = await this.executeWithRetry(
+        () => retailer.searchProducts(query, options),
+        { retailer: retailerName, operation: 'searchProducts' }
+      );
+
+      const items = Array.isArray(data) ? data : [];
+      this.cache.set(cacheKey, items, 300);
+      this.metrics.successfulRequests++;
+
+      this.emit('data-fetched', {
+        retailer: retailerName,
+        itemsCount: items.length,
+        operation: 'searchProducts',
+        timestamp: new Date()
+      });
+
+      return items;
+    } catch (error) {
+      this.metrics.failedRequests++;
+      this.emit('error', {
+        retailer: retailerName,
+        operation: 'searchProducts',
+        error: error.message
+      });
+      throw error;
+    }
+  }
+
+  /**
    * Fetch click analytics for products
    */
   async fetchClickAnalytics(retailerName, options = {}) {

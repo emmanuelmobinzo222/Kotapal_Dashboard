@@ -8,13 +8,22 @@ const jwt = require('jsonwebtoken');
 const { v4: uuidv4 } = require('uuid');
 require('dotenv').config();
 
+const { RetailerIntegrationService } = require('./services/retailerIntegration');
+const retailerService = new RetailerIntegrationService({
+  cacheStdTTL: 3600,
+  maxRetries: 3,
+  requestTimeout: 10000
+});
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(cors());
 app.use(bodyParser.json());
+const path = require('path');
 app.use(express.static('public'));
+app.use(express.static(__dirname));
 
 // Secret key for JWT
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
@@ -115,9 +124,12 @@ const authenticateToken = (req, res, next) => {
 
 // Routes
 
-// Health check
+app.get('/api/health', (req, res) => {
+  res.json({ ok: true, message: 'KOTA PAL API is running' });
+});
+
 app.get('/', (req, res) => {
-  res.json({ message: 'KOTA PAL API is running' });
+  res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 // User registration
@@ -527,21 +539,28 @@ app.post('/api/integrations/:id/sync', authenticateToken, (req, res) => {
   }
 });
 
-// Search products from retailers
-app.get('/api/products/search', authenticateToken, async (req, res) => {
+// Search products from retailers (live SearchAPI.io for amazon, walmart, ebay)
+app.get('/api/products/search', async (req, res) => {
   try {
     const { retailer, query } = req.query;
 
-    // Validate input
     if (!retailer || !query) {
       return res.status(400).json({ error: 'Retailer and query are required' });
     }
 
-    // Mock product search - in production, integrate with actual APIs
-    let products = [];
+    const liveRetailers = ['amazon', 'walmart', 'ebay'];
+    if (liveRetailers.includes(String(retailer).toLowerCase())) {
+      const products = await retailerService.searchProducts(String(retailer).toLowerCase(), String(query), {
+        limit: parseInt(req.query.limit, 10) || 20
+      });
+      return res.json({
+        retailer,
+        query,
+        products: Array.isArray(products) ? products : []
+      });
+    }
 
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    let products = [];
 
     switch (retailer) {
       case 'amazon':
@@ -711,10 +730,10 @@ app.get('/api/products/search', authenticateToken, async (req, res) => {
         return res.status(400).json({ error: 'Unsupported retailer' });
     }
 
-    res.json(products);
+    res.json({ retailer, query, products });
   } catch (error) {
     console.error('Search products error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: error.message || 'Internal server error' });
   }
 });
 

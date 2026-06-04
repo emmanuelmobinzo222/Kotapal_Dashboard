@@ -10,6 +10,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { v4: uuidv4 } = require('uuid');
 const http = require('http');
+const path = require('path');
 require('dotenv').config();
 
 // Import services
@@ -26,6 +27,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-producti
 app.use(cors());
 app.use(bodyParser.json());
 app.use(express.static('public'));
+app.use(express.static(__dirname));
 
 // Initialize services
 let retailerService;
@@ -47,7 +49,12 @@ async function initializeServices() {
       aggregationWindow: 60000
     });
 
-    await realTimeDataPipeline.connect();
+    try {
+      await realTimeDataPipeline.connect();
+    } catch (redisError) {
+      console.warn('Redis unavailable — real-time pipeline disabled:', redisError.message);
+      realTimeDataPipeline = null;
+    }
 
     // Initialize WebSocket Service
     websocketService = new WebSocketService(server, {
@@ -83,27 +90,29 @@ function setupEventListeners() {
     });
   });
 
-  // Real-time pipeline events
-  realTimeDataPipeline.on('click-recorded', (data) => {
-    websocketService.publishToUser(data.userId, {
-      type: 'click-recorded',
-      data
+  // Real-time pipeline events (optional when Redis is unavailable)
+  if (realTimeDataPipeline) {
+    realTimeDataPipeline.on('click-recorded', (data) => {
+      websocketService.publishToUser(data.userId, {
+        type: 'click-recorded',
+        data
+      });
     });
-  });
 
-  realTimeDataPipeline.on('bestsellers-updated', (data) => {
-    websocketService.publishToChannel(`bestsellers:${data.retailer}`, {
-      type: 'bestsellers-updated',
-      data
+    realTimeDataPipeline.on('bestsellers-updated', (data) => {
+      websocketService.publishToChannel(`bestsellers:${data.retailer}`, {
+        type: 'bestsellers-updated',
+        data
+      });
     });
-  });
 
-  realTimeDataPipeline.on('aggregation-flushed', (data) => {
-    websocketService.publishToChannel('analytics', {
-      type: 'analytics-updated',
-      data
+    realTimeDataPipeline.on('aggregation-flushed', (data) => {
+      websocketService.publishToChannel('analytics', {
+        type: 'analytics-updated',
+        data
+      });
     });
-  });
+  }
 }
 
 // Mock database
@@ -150,12 +159,17 @@ const authenticateToken = (req, res, next) => {
 // Health Check Endpoints
 // ===========================
 
-app.get('/', (req, res) => {
-  res.json({ 
+app.get('/api/health', (req, res) => {
+  res.json({
+    ok: true,
     message: 'KOTA PAL API is running',
     version: '2.0.0',
-    features: ['multi-retailer-integration', 'real-time-updates', 'websockets']
+    features: ['multi-retailer-integration', 'real-time-updates', 'websockets', 'live-product-search']
   });
+});
+
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 // ===========================
@@ -238,6 +252,78 @@ app.post('/api/auth/login', async (req, res) => {
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// ===========================
+// Product search (live retailer APIs)
+// ===========================
+
+app.get('/api/products/search', async (req, res) => {
+  try {
+    const { retailer, query } = req.query;
+
+    if (!retailer || !query) {
+      return res.status(400).json({ error: 'Retailer and query are required' });
+    }
+
+    if (!retailerService) {
+      return res.status(503).json({ error: 'Retailer service not ready' });
+    }
+
+    const products = await retailerService.searchProducts(String(retailer).toLowerCase(), String(query), {
+      limit: parseInt(req.query.limit, 10) || 20
+    });
+
+    res.json({
+      retailer,
+      query,
+      products: Array.isArray(products) ? products : [],
+      timestamp: new Date()
+    });
+  } catch (error) {
+    console.error('Product search error:', error);
+    res.status(500).json({ error: error.message || 'Product search failed' });
+  }
+});
+
+const TRENDING_SEARCH_QUERIES = {
+  amazon: 'best sellers electronics',
+  walmart: 'best sellers home',
+  ebay: 'trending deals'
+};
+
+app.get('/api/products/trending', async (req, res) => {
+  try {
+    if (!retailerService) {
+      return res.status(503).json({ error: 'Retailer service not ready' });
+    }
+
+    const limit = Math.min(parseInt(req.query.limit, 10) || 4, 10);
+    const retailers = ['amazon', 'walmart', 'ebay'];
+    const batches = await Promise.allSettled(
+      retailers.map((retailer) =>
+        retailerService.searchProducts(retailer, TRENDING_SEARCH_QUERIES[retailer], { limit })
+      )
+    );
+
+    const products = [];
+    batches.forEach((result, index) => {
+      if (result.status === 'fulfilled' && Array.isArray(result.value)) {
+        products.push(...result.value);
+      } else if (result.status === 'rejected') {
+        console.warn('Trending fetch failed for', retailers[index], result.reason?.message);
+      }
+    });
+
+    res.json({
+      products,
+      retailers,
+      timestamp: new Date()
+    });
+  } catch (error) {
+    console.error('Trending products error:', error);
+    res.status(500).json({ error: error.message || 'Trending products failed' });
   }
 });
 
@@ -463,20 +549,21 @@ app.get('/r/:userId/:blockId/:productId', async (req, res) => {
     const { userId, blockId, productId } = req.params;
     const { retailer } = req.query;
 
-    // Queue click event for async processing
-    await realTimeDataPipeline.enqueueEvent({
-      type: 'click',
-      data: {
-        userId,
-        blockId,
-        productId,
-        retailer: retailer || 'unknown',
-        referrer: req.get('Referrer'),
-        userAgent: req.get('User-Agent'),
-        ip: req.ip
-      },
-      timestamp: new Date().toISOString()
-    }, 'normal');
+    if (realTimeDataPipeline) {
+      await realTimeDataPipeline.enqueueEvent({
+        type: 'click',
+        data: {
+          userId,
+          blockId,
+          productId,
+          retailer: retailer || 'unknown',
+          referrer: req.get('Referrer'),
+          userAgent: req.get('User-Agent'),
+          ip: req.ip
+        },
+        timestamp: new Date().toISOString()
+      }, 'normal');
+    }
 
     // Generate affiliate URL
     const user = users.find(u => u.id === userId);
@@ -517,8 +604,8 @@ async function startServer() {
     // Graceful shutdown
     process.on('SIGTERM', async () => {
       console.log('SIGTERM received, shutting down gracefully...');
-      await realTimeDataPipeline.disconnect();
-      websocketService.close();
+      if (realTimeDataPipeline) await realTimeDataPipeline.disconnect();
+      if (websocketService) websocketService.close();
       server.close();
     });
   } catch (error) {

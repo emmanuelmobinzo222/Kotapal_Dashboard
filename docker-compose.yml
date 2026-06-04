@@ -66,6 +66,11 @@ services:
       
       SKIMLINKS_API_URL: ${SKIMLINKS_API_URL}
       SKIMLINKS_API_KEY: ${SKIMLINKS_API_KEY}
+
+      SEARCHAPI_API_KEY: ${SEARCHAPI_API_KEY:-WceNe5Tmok9RVw5Y4Qn6PnLM}
+      SEARCHAPI_AMAZON_URL: ${SEARCHAPI_AMAZON_URL:-https://www.searchapi.io/api/v1/search}
+      SEARCHAPI_WALMART_URL: ${SEARCHAPI_WALMART_URL:-https://www.searchapi.io/api/v1/search}
+      SEARCHAPI_EBAY_URL: ${SEARCHAPI_EBAY_URL:-https://www.searchapi.io/api/v1/search}
     ports:
       - "3000:3000"
     volumes:
@@ -74,7 +79,7 @@ services:
       - ./logs:/app/logs
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/"]
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
       interval: 30s
       timeout: 10s
       retries: 3
