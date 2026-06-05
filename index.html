@@ -62,7 +62,10 @@
         function showAdminLoginRoute() {
             if (window._adminAuthModalLoginPending) {
                 var plPending = document.getElementById('pageLoader');
-                if (plPending) plPending.classList.remove('hidden');
+                if (plPending) {
+                    plPending.classList.remove('hidden');
+                    plPending.classList.add('admin-auth-pending');
+                }
                 var adminLoginPending = document.getElementById('admin-login-screen');
                 if (adminLoginPending) adminLoginPending.classList.remove('active');
                 return;
@@ -136,7 +139,10 @@
         });
         function hidePageLoaderEarly() {
             var pl = document.getElementById('pageLoader');
-            if (pl) pl.classList.add('hidden');
+            if (pl) {
+                pl.classList.add('hidden');
+                pl.classList.remove('admin-auth-pending');
+            }
             if (typeof window.clearStaleOverlays === 'function') window.clearStaleOverlays();
         }
         window.kotapalModalIds = [
@@ -172,7 +178,10 @@
         window.clearStaleOverlays = function() {
             window._adminAuthModalLoginPending = false;
             var pl = document.getElementById('pageLoader');
-            if (pl) pl.classList.add('hidden');
+            if (pl) {
+                pl.classList.add('hidden');
+                pl.classList.remove('admin-auth-pending');
+            }
             ['sidebarOverlay', 'adminSidebarOverlay'].forEach(function(id) {
                 var ov = document.getElementById(id);
                 if (ov) ov.classList.remove('active');
@@ -920,28 +929,27 @@
             transform: translateY(0);
         }
 
-        /* Page Loader */
+        /* Full-screen shells must never block clicks unless explicitly active */
+        #pageLoader,
         .page-loader {
+            display: none !important;
+            pointer-events: none !important;
+            visibility: hidden !important;
+            z-index: -9999 !important;
+        }
+        .page-loader.admin-auth-pending {
+            display: flex !important;
             position: fixed;
-            top: 0;
-            left: 0;
+            inset: 0;
             width: 100%;
             height: 100%;
             background: #fff;
-            display: flex;
             align-items: center;
             justify-content: center;
-            z-index: 10000;
+            z-index: 10002 !important;
+            pointer-events: auto !important;
+            visibility: visible !important;
             transition: opacity 0.5s ease, visibility 0.5s ease;
-        }
-        .page-loader.hidden {
-            opacity: 0;
-            visibility: hidden;
-            pointer-events: none !important;
-            z-index: -1;
-        }
-        .page-loader.admin-auth-pending {
-            z-index: 10002;
         }
         html.landing-page-active #landing-page-view {
             position: relative;
@@ -952,7 +960,8 @@
         html.landing-page-active body > #admin-login-screen:not(.active),
         html.landing-page-active body > #admin-view:not(.active),
         html.landing-page-active body > #blockImageLightbox:not(.active),
-        html.landing-page-active body > #admin-setup-screen {
+        html.landing-page-active body > #admin-setup-screen,
+        html.landing-page-active body > #kotapalPagePlacementLayer:not(.active) {
             display: none !important;
             pointer-events: none !important;
             visibility: hidden !important;
@@ -960,16 +969,28 @@
         }
         #admin-login-screen:not(.active),
         #admin-view:not(.active),
-        #blockImageLightbox:not(.active) {
+        #blockImageLightbox:not(.active),
+        #kotapalPagePlacementLayer:not(.active) {
             pointer-events: none !important;
         }
         #dashboard-view:not([data-kotapal-visible="true"]) {
+            display: none !important;
             pointer-events: none !important;
+            visibility: hidden !important;
         }
         #dashboard-view[data-kotapal-visible="true"] {
             display: block !important;
             pointer-events: auto !important;
             visibility: visible !important;
+            position: relative;
+            z-index: 10;
+            min-height: 100vh;
+            min-height: 100dvh;
+            width: 100%;
+        }
+        #landing-page-view .section-reveal,
+        #landing-page-view .section-reveal:not(.revealed) {
+            pointer-events: auto;
         }
         .modal.kotapal-modal-hidden,
         .plan-detail-modal.kotapal-modal-hidden,
@@ -3099,7 +3120,7 @@
 
 <body>
     <!-- Page Loader -->
-    <div class="page-loader" id="pageLoader">
+    <div class="page-loader hidden" id="pageLoader" aria-hidden="true">
         <div class="loader-spinner"></div>
     </div>
 
@@ -6888,6 +6909,7 @@
                     if (adminLogin) adminLogin.classList.remove('active');
                 } else if (pl) {
                     pl.classList.remove('admin-auth-pending');
+                    pl.classList.add('hidden');
                 }
             }
             function showAdminUI(show, options) {
