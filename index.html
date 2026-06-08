@@ -142,8 +142,12 @@
             if (pl) {
                 pl.classList.add('hidden');
                 pl.classList.remove('admin-auth-pending');
+                pl.setAttribute('aria-hidden', 'true');
+                pl.style.display = 'none';
+                pl.style.pointerEvents = 'none';
             }
             if (typeof window.clearStaleOverlays === 'function') window.clearStaleOverlays();
+            if (typeof window.ensureSiteInteractive === 'function') window.ensureSiteInteractive();
         }
         window.kotapalModalIds = [
             'planDetailModal', 'carouselItemLightbox', 'authModal', 'resetPasswordModal', 'inactivityWarningModal',
@@ -181,6 +185,19 @@
             if (pl) {
                 pl.classList.add('hidden');
                 pl.classList.remove('admin-auth-pending');
+                pl.setAttribute('aria-hidden', 'true');
+                pl.style.display = 'none';
+                pl.style.pointerEvents = 'none';
+            }
+            var hash = window.location.hash || '';
+            var onAdminRoute = hash === '#admin' || hash === '#admin-setup';
+            if (!onAdminRoute) {
+                var adminLoginShell = document.getElementById('admin-login-screen');
+                var adminViewShell = document.getElementById('admin-view');
+                var setupShell = document.getElementById('admin-setup-screen');
+                if (adminLoginShell) adminLoginShell.classList.remove('active');
+                if (adminViewShell) adminViewShell.classList.remove('active');
+                if (setupShell) setupShell.style.display = 'none';
             }
             ['sidebarOverlay', 'adminSidebarOverlay'].forEach(function(id) {
                 var ov = document.getElementById(id);
@@ -210,6 +227,12 @@
             });
             document.body.style.pointerEvents = 'auto';
             document.documentElement.style.pointerEvents = 'auto';
+            var authModalEl = document.getElementById('authModal');
+            var authOpen = authModalEl && authModalEl.style.display && authModalEl.style.display !== 'none';
+            if (!authOpen) {
+                document.documentElement.style.overflow = '';
+                document.body.style.overflow = '';
+            }
         };
         window.dismissBlockingOverlays = function() {
             window.clearStaleOverlays();
@@ -297,11 +320,15 @@
         }
         if (document.readyState !== 'loading') initLandingMobileNav();
         window.addEventListener('load', function() { setTimeout(hidePageLoaderEarly, 200); });
+        if (typeof window.ensureSiteInteractive === 'function') window.ensureSiteInteractive();
         document.addEventListener('DOMContentLoaded', function() {
             if (typeof window.ensureSiteInteractive === 'function') window.ensureSiteInteractive();
         });
         window.addEventListener('load', function() {
             if (typeof window.ensureSiteInteractive === 'function') window.ensureSiteInteractive();
+            setTimeout(function() {
+                if (typeof window.ensureSiteInteractive === 'function') window.ensureSiteInteractive();
+            }, 100);
         });
         window.addEventListener('hashchange', function() {
             if (window.location.hash !== '#admin' && window.location.hash !== '#admin-setup') {
@@ -931,13 +958,15 @@
 
         /* Full-screen shells must never block clicks unless explicitly active */
         #pageLoader,
-        .page-loader {
+        .page-loader,
+        .page-loader.hidden,
+        #pageLoader.hidden {
             display: none !important;
             pointer-events: none !important;
             visibility: hidden !important;
             z-index: -9999 !important;
         }
-        .page-loader.admin-auth-pending {
+        .page-loader.admin-auth-pending:not(.hidden) {
             display: flex !important;
             position: fixed;
             inset: 0;
@@ -956,12 +985,13 @@
             z-index: 2;
             pointer-events: auto;
         }
-        html.landing-page-active body > #dashboard-view:not([data-kotapal-visible="true"]),
-        html.landing-page-active body > #admin-login-screen:not(.active),
-        html.landing-page-active body > #admin-view:not(.active),
-        html.landing-page-active body > #blockImageLightbox:not(.active),
+        /* Landing mode: never let dashboard/admin/placement shells block clicks (even if .active stuck) */
+        html.landing-page-active body > #dashboard-view,
+        html.landing-page-active body > #admin-login-screen,
+        html.landing-page-active body > #admin-view,
+        html.landing-page-active body > #blockImageLightbox,
         html.landing-page-active body > #admin-setup-screen,
-        html.landing-page-active body > #kotapalPagePlacementLayer:not(.active) {
+        html.landing-page-active body > #kotapalPagePlacementLayer {
             display: none !important;
             pointer-events: none !important;
             visibility: hidden !important;
@@ -3120,7 +3150,7 @@
 
 <body>
     <!-- Page Loader -->
-    <div class="page-loader hidden" id="pageLoader" aria-hidden="true">
+    <div class="page-loader hidden" id="pageLoader" aria-hidden="true" style="display:none!important;pointer-events:none!important;visibility:hidden!important;">
         <div class="loader-spinner"></div>
     </div>
 
@@ -3855,7 +3885,7 @@
     </footer>
 
     <!-- Plan Detail Modal -->
-    <div id="planDetailModal" class="plan-detail-modal">
+    <div id="planDetailModal" class="plan-detail-modal kotapal-modal-hidden" aria-hidden="true" style="display:none;">
         <div class="plan-modal-content">
             <div class="plan-modal-header">
                 <h2 id="planModalTitle">Plan Details</h2>
@@ -3879,7 +3909,7 @@
     </div>
 
     <!-- Content Modals -->
-    <div id="guidesModal" class="modal content-modal">
+    <div id="guidesModal" class="modal content-modal kotapal-modal-hidden" aria-hidden="true" style="display:none;">
         <div class="modal-content">
             <span class="close">&times;</span>
             <h2>Guides</h2>
@@ -3907,7 +3937,7 @@
         </div>
     </div>
 
-    <div id="privacyModal" class="modal content-modal">
+    <div id="privacyModal" class="modal content-modal kotapal-modal-hidden" aria-hidden="true" style="display:none;">
         <div class="modal-content">
             <span class="close">&times;</span>
             <h2>Privacy Policy</h2>
@@ -3931,7 +3961,7 @@
         </div>
     </div>
 
-    <div id="tosModal" class="modal content-modal">
+    <div id="tosModal" class="modal content-modal kotapal-modal-hidden" aria-hidden="true" style="display:none;">
         <div class="modal-content">
             <span class="close">&times;</span>
             <h2>Terms of Service</h2>
@@ -6905,11 +6935,18 @@
                     if (pl) {
                         pl.classList.remove('hidden');
                         pl.classList.add('admin-auth-pending');
+                        pl.removeAttribute('aria-hidden');
+                        pl.style.display = '';
+                        pl.style.pointerEvents = '';
+                        pl.style.visibility = '';
                     }
                     if (adminLogin) adminLogin.classList.remove('active');
                 } else if (pl) {
                     pl.classList.remove('admin-auth-pending');
                     pl.classList.add('hidden');
+                    pl.setAttribute('aria-hidden', 'true');
+                    pl.style.display = 'none';
+                    pl.style.pointerEvents = 'none';
                 }
             }
             function showAdminUI(show, options) {
@@ -7105,6 +7142,7 @@
                         if (navEl) navEl.style.display = 'flex';
                         if (footerEl) footerEl.style.display = 'block';
                         if (dashView) dashView.style.display = 'none';
+                        if (typeof window.ensureSiteInteractive === 'function') window.ensureSiteInteractive();
                     }
                     showAdminLoginError((err && err.message) ? err.message : 'Login failed.');
                     return false;
@@ -9147,19 +9185,24 @@
 
         function showAuthModal() {
             if (authModal) {
-                authModal.style.display = 'flex';
+                if (typeof window.openKotapalModal === 'function') window.openKotapalModal(authModal, 'flex');
+                else authModal.style.display = 'flex';
                 document.documentElement.style.overflow = 'hidden';
                 document.body.style.overflow = 'hidden';
             }
         }
+        window.showAuthModal = showAuthModal;
 
         function closeAuthModal() {
             if (authModal) {
-                authModal.style.display = 'none';
+                if (typeof window.hideKotapalModal === 'function') window.hideKotapalModal(authModal);
+                else authModal.style.display = 'none';
             }
             document.documentElement.style.overflow = '';
             document.body.style.overflow = '';
+            if (typeof window.ensureSiteInteractive === 'function') window.ensureSiteInteractive();
         }
+        window.closeAuthModal = closeAuthModal;
 
         // Do NOT close auth modal on overlay click - keeps form open, user closes via X or Back to Homepage
         
@@ -9480,18 +9523,23 @@
             if (!modal || !titleEl || !contentEl) return;
             titleEl.textContent = plan.title;
             contentEl.innerHTML = '<div class="plan-modal-price">' + plan.price + '</div><p class="plan-modal-description">' + plan.description + '</p><h3>Features:</h3><ul class="plan-modal-features">' + plan.features.map(function(f) { return '<li>' + f + '</li>'; }).join('') + '</ul><button class="btn btn-primary" style="width: 100%;" onclick="closePlanModal(); showAuthModal();">Get Started</button>';
-            modal.style.display = 'flex';
+            if (typeof window.openKotapalModal === 'function') window.openKotapalModal(modal, 'flex');
+            else modal.style.display = 'flex';
             document.documentElement.style.overflow = 'hidden';
             document.body.style.overflow = 'hidden';
         }
+        window.showPlanDetails = showPlanDetails;
         function closePlanModal() {
             const modal = document.getElementById('planDetailModal');
             if (modal) {
-                modal.style.display = 'none';
+                if (typeof window.hideKotapalModal === 'function') window.hideKotapalModal(modal);
+                else modal.style.display = 'none';
             }
             document.documentElement.style.overflow = '';
             document.body.style.overflow = '';
+            if (typeof window.ensureSiteInteractive === 'function') window.ensureSiteInteractive();
         }
+        window.closePlanModal = closePlanModal;
         document.querySelector('#planDetailModal .plan-modal-close') && document.querySelector('#planDetailModal .plan-modal-close').addEventListener('click', closePlanModal);
         document.getElementById('planDetailModal') && document.getElementById('planDetailModal').addEventListener('click', function(e) {
             if (e.target === this) closePlanModal();
@@ -9642,6 +9690,7 @@
                 setTimeout(function() { scrollDocumentToElement(section, 100, true); }, 80);
             }
         }
+        window.scrollToSection = scrollToSection;
         function goToContactForm(clickedEl) {
             if (clickedEl) {
                 document.querySelectorAll('.nav-links a[data-section]').forEach(function(a) { a.classList.remove('active'); });
@@ -9668,6 +9717,7 @@
                 if (heading) scrollDocumentToElement(heading, 100, true);
             }, 80);
         }
+        window.goToContactForm = goToContactForm;
 
         // Content Modals
         function setupContentModals() {
@@ -9677,30 +9727,40 @@
             });
 
             // Add click handlers for content links
+            function openContentModal(id) {
+                var modal = document.getElementById(id);
+                if (!modal) return;
+                if (typeof window.openKotapalModal === 'function') window.openKotapalModal(modal, 'flex');
+                else modal.style.display = 'flex';
+                document.documentElement.style.overflow = 'hidden';
+                document.body.style.overflow = 'hidden';
+            }
             document.querySelectorAll('.footer-links a').forEach(link => {
                 const text = link.textContent.trim();
                 if (text === 'Guides') {
-                    link.onclick = (e) => {
-                        e.preventDefault();
-                        document.getElementById('guidesModal').style.display = 'block';
-                    };
+                    link.onclick = (e) => { e.preventDefault(); openContentModal('guidesModal'); };
                 } else if (text === 'Privacy Policy') {
-                    link.onclick = (e) => {
-                        e.preventDefault();
-                        document.getElementById('privacyModal').style.display = 'block';
-                    };
+                    link.onclick = (e) => { e.preventDefault(); openContentModal('privacyModal'); };
                 } else if (text === 'Terms of Service') {
-                    link.onclick = (e) => {
-                        e.preventDefault();
-                        document.getElementById('tosModal').style.display = 'block';
-                    };
+                    link.onclick = (e) => { e.preventDefault(); openContentModal('tosModal'); };
                 }
             });
+            var privacyLink = document.getElementById('privacyLink');
+            var tosLink = document.getElementById('tosLink');
+            if (privacyLink) privacyLink.addEventListener('click', function(e) { e.preventDefault(); openContentModal('privacyModal'); });
+            if (tosLink) tosLink.addEventListener('click', function(e) { e.preventDefault(); openContentModal('tosModal'); });
 
             // Set up close buttons for content modals
             document.querySelectorAll('.content-modal .close').forEach(closeBtn => {
                 closeBtn.onclick = function() {
-                    this.closest('.modal').style.display = 'none';
+                    var modal = this.closest('.modal');
+                    if (modal) {
+                        if (typeof window.hideKotapalModal === 'function') window.hideKotapalModal(modal);
+                        else modal.style.display = 'none';
+                    }
+                    document.documentElement.style.overflow = '';
+                    document.body.style.overflow = '';
+                    if (typeof window.ensureSiteInteractive === 'function') window.ensureSiteInteractive();
                 };
             });
         }
