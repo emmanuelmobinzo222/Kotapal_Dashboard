@@ -336,7 +336,7 @@ class AmazonRetailer extends BaseRetailer {
     // Default API key for Amazon product searches
     this.apiKey = process.env.SEARCHAPI_API_KEY || 
                   process.env.AMAZON_API_KEY || 
-                  'WceNe5Tmok9RVw5Y4Qn6PnLM';
+                  'GdCvM3NbHRcCPV4mGj8yx8Xy';
   }
 
   /**
@@ -531,7 +531,7 @@ class WalmartRetailer extends BaseRetailer {
     // Default API key for Walmart product searches (same as Amazon)
     this.apiKey = process.env.SEARCHAPI_API_KEY || 
                   process.env.WALMART_API_KEY || 
-                  'WceNe5Tmok9RVw5Y4Qn6PnLM';
+                  'GdCvM3NbHRcCPV4mGj8yx8Xy';
   }
 
   /**
@@ -691,7 +691,7 @@ class eBayRetailer extends BaseRetailer {
     this.apiBaseUrl = process.env.SEARCHAPI_EBAY_URL || 'https://www.searchapi.io/api/v1/search';
     this.apiKey = process.env.SEARCHAPI_API_KEY ||
                   process.env.EBAY_API_KEY ||
-                  'WceNe5Tmok9RVw5Y4Qn6PnLM';
+                  'GdCvM3NbHRcCPV4mGj8yx8Xy';
   }
 
   /**

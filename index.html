@@ -10801,8 +10801,7 @@
             if (newBlockForm) newBlockForm.addEventListener('submit', handleCreateBlock);
             const platformApiInput = document.getElementById('integrationsApiKey');
             if (platformApiInput) {
-                const savedPlatformKey = localStorage.getItem(getUserScopedStorageKey('kotapalApiKey')) || '';
-                if (savedPlatformKey) platformApiInput.value = savedPlatformKey;
+                syncIntegrationsPlatformApiKeyField();
                 if (!platformApiInput.dataset.pasteBound) {
                     platformApiInput.dataset.pasteBound = '1';
                     platformApiInput.addEventListener('paste', function() {
@@ -10818,6 +10817,7 @@
                     return;
                 }
                 localStorage.setItem(getUserScopedStorageKey('kotapalApiKey'), value);
+                syncIntegrationsPlatformApiKeyField();
                 showNotification('KotaPal API key saved.', 'success', 'API Key');
             });
             if (copyApiKey) copyApiKey.addEventListener('click', function() {
@@ -10922,6 +10922,22 @@
             }
         }
 
+        function syncDashboardNavHighlight(page) {
+            document.querySelectorAll('#dashboard-view .nav-link[data-page]').forEach(function(l) {
+                l.classList.toggle('active', l.getAttribute('data-page') === page);
+            });
+        }
+
+        function syncIntegrationsPlatformApiKeyField() {
+            const input = document.getElementById('integrationsApiKey');
+            if (!input) return;
+            const saved = localStorage.getItem(getUserScopedStorageKey('kotapalApiKey')) || '';
+            input.value = '';
+            input.placeholder = saved
+                ? 'API key saved — paste a new key to replace'
+                : 'Paste or enter your KotaPal API key';
+        }
+
         // Show dashboard page
         function showDashboardPage(page) {
             if (!page) return;
@@ -10934,14 +10950,20 @@
             const target = document.getElementById(page + '-page');
             if (target) {
                 target.style.display = 'block';
+                syncDashboardNavHighlight(page);
                 if (window.innerWidth <= 1024 && typeof closeSidebar === 'function') closeSidebar();
                 if (page === 'new-block') maybeShowOnboardingTour();
                 if (page === 'analytics') renderAnalytics();
                 if (page === 'help') initHelpPage();
                 if (page === 'dashboard') refreshDashboard();
                 if (page === 'integrations') {
-                    currentIntegrations = loadSavedIntegrations();
-                    renderIntegrations();
+                    try {
+                        currentIntegrations = loadSavedIntegrations();
+                        renderIntegrations();
+                        syncIntegrationsPlatformApiKeyField();
+                    } catch (err) {
+                        console.error('Integrations page render failed:', err);
+                    }
                 }
                 if (page === 'product-library') {
                     loadProductLibrary();
@@ -10988,10 +11010,9 @@
                         if (content) content.style.display = 'none';
                     }
                 }
+            } else {
+                syncDashboardNavHighlight(page);
             }
-            document.querySelectorAll('#dashboard-view .nav-link[data-page]').forEach(function(l) {
-                l.classList.toggle('active', l.getAttribute('data-page') === page);
-            });
         }
         window.showDashboardPage = showDashboardPage;
 
@@ -11644,9 +11665,12 @@
             container.innerHTML = '';
             
             currentIntegrations.forEach(integration => {
-                const apiKey = getProviderApiKey(integration.id, false);
+                const hasApiKey = Boolean(getProviderApiKey(integration.id, false));
                 const affiliateId = integration.affiliateId || getProviderAffiliateId(integration.id) || '';
                 const providerLabel = getProviderLabel(integration.id);
+                const apiKeyPlaceholder = hasApiKey
+                    ? (providerLabel + ' API key saved — paste a new key to replace')
+                    : ('Paste ' + providerLabel + ' API key');
                 const integrationCard = document.createElement('div');
                 integrationCard.className = 'card';
                 integrationCard.innerHTML = `
@@ -11665,7 +11689,7 @@
                         </div>
                         <div class="form-group">
                             <label>${providerLabel} API key</label>
-                            <input type="password" value="${escapeHtml(apiKey)}" class="form-control integration-api-key" data-id="${integration.id}" placeholder="Paste ${providerLabel} API key" autocomplete="off" spellcheck="false">
+                            <input type="password" value="" class="form-control integration-api-key" data-id="${integration.id}" placeholder="${escapeHtml(apiKeyPlaceholder)}" autocomplete="off" spellcheck="false">
                         </div>
                         <div style="display: flex; gap: 10px; margin-top: 20px; flex-wrap:wrap;">
                             <button class="btn btn-primary integration-save-btn" data-id="${integration.id}">Save credentials</button>
@@ -12072,7 +12096,7 @@
         const LIVE_RETAILER_PROVIDERS = ['amazon', 'walmart', 'ebay'];
         const DEFAULT_LIVE_SEARCH = {
             endpoint: 'https://www.searchapi.io/api/v1/search',
-            apiKey: 'WceNe5Tmok9RVw5Y4Qn6PnLM',
+            apiKey: 'GdCvM3NbHRcCPV4mGj8yx8Xy',
             engines: {
                 amazon: 'amazon_search',
                 walmart: 'walmart_search',
@@ -12346,7 +12370,7 @@
             const legacyKey = LIVE_RETAILER_PROVIDERS.includes(provider)
                 ? (localStorage.getItem('searchapi_' + provider + '_key') || localStorage.getItem('searchapi_key') || localStorage.getItem('searchapi_amazon_key') || '')
                 : '';
-            const saved = scopedKey || localScopedFallback || localFallback || legacyKey;
+            const saved = scopedKey || localFallback || legacyKey;
             if (saved && /^https?:\/\//i.test(saved)) {
                 return parseProviderCredential(saved).apiKey || '';
             }
@@ -12558,8 +12582,8 @@
 
         function formatProviderSearchError(message) {
             const m = String(message || '');
-            if (/quota|rate limit|429/i.test(m)) {
-                return 'API rate limit reached. Check your provider plan or try again later.';
+            if (/used all of the searches|quota|rate limit|429/i.test(m)) {
+                return 'SearchAPI monthly quota reached. Add your own API key under Settings → Provider API keys, or upgrade at searchapi.io.';
             }
             if (/failed to fetch|network|cors/i.test(m)) {
                 return 'Could not reach your API. Confirm the URL allows browser requests (CORS) or use a proxy.';
@@ -12599,8 +12623,7 @@
                     applyProviderCredential(retailerTarget, extracted);
                 } else if (!getPlatformApiKey()) {
                     localStorage.setItem(getUserScopedStorageKey('kotapalApiKey'), extracted);
-                    var integrationsInput = document.getElementById('integrationsApiKey');
-                    if (integrationsInput) integrationsInput.value = extracted;
+                    if (typeof syncIntegrationsPlatformApiKeyField === 'function') syncIntegrationsPlatformApiKeyField();
                 }
             }
             loadProviderApiKeys();
@@ -12619,7 +12642,11 @@
             }
             addKey(getProviderApiKey(provider, false));
             addKey(getUnsavedProviderApiKeyFromDom(provider));
-            if (!keys.length) addKey(getProviderApiKey(provider, true));
+            if (LIVE_RETAILER_PROVIDERS.includes(provider)) {
+                addKey(DEFAULT_LIVE_SEARCH.apiKey);
+            } else if (!keys.length) {
+                addKey(getProviderApiKey(provider, true));
+            }
             return keys;
         }
 
@@ -12928,46 +12955,12 @@
                         searchStatus.textContent = 'Found ' + products.length + ' ' + retailer + ' products for "' + query + '"';
                     } catch (liveErr) {
                         console.error('Live retailer search error:', liveErr);
-                        const fallback = getFallbackSearchProducts(retailer, query);
-                        products = fallback.map(function(item, index) {
-                            return {
-                                id: item.id || (retailer + '_fb_' + index),
-                                title: item.title,
-                                image: item.image,
-                                price: item.price || 0,
-                                originalPrice: item.price || 0,
-                                rating: 4.5,
-                                reviews: 100,
-                                availability: 'In Stock',
-                                asin: item.asin,
-                                link: applyAffiliateToProductLink(item.link || '#', retailer),
-                                retailer: retailer
-                            };
-                        });
-                        searchStatus.textContent = products.length
-                            ? ('Showing sample products for "' + query + '" — add your Amazon API key in Settings for live results.')
-                            : formatProviderSearchError(liveErr.message);
+                        searchStatus.textContent = formatProviderSearchError(liveErr.message);
+                        productsContainer.innerHTML = '<p style="text-align: center; color: var(--danger); padding: 20px;">' + escapeProductHtml(formatProviderSearchError(liveErr.message)) + '</p>';
+                        return;
                     }
-                    if (!products.length && LIVE_RETAILER_PROVIDERS.includes(retailer)) {
-                        const fallback = getFallbackSearchProducts(retailer, query);
-                        products = fallback.map(function(item, index) {
-                            return {
-                                id: item.id || (retailer + '_fb_' + index),
-                                title: item.title,
-                                image: item.image,
-                                price: item.price || 0,
-                                originalPrice: item.price || 0,
-                                rating: 4.5,
-                                reviews: 100,
-                                availability: 'In Stock',
-                                asin: item.asin,
-                                link: applyAffiliateToProductLink(item.link || '#', retailer),
-                                retailer: retailer
-                            };
-                        });
-                        if (products.length) {
-                            searchStatus.textContent = 'Showing sample products for "' + query + '".';
-                        }
+                    if (!products.length) {
+                        searchStatus.textContent = 'No ' + retailer + ' products found for "' + query + '". Try a different search term.';
                     }
                 } else if (retailer === 'shopify') {
                     products = [
