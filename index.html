@@ -42,8 +42,9 @@
 
 
 
-    <!-- Favicon: gradient K mark (matches dashboard logo icon) -->
+    <!-- Favicon: purple gradient K mark -->
     <link rel="icon" type="image/svg+xml" href="images/kotapal-k.svg">
+    <link rel="apple-touch-icon" href="images/kotapal-k.svg">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -5004,22 +5005,16 @@
                     <p style="margin-bottom:20px;color:var(--gray);">Connect your stores and affiliate accounts to pull products and track performance in one place.</p>
                     <div class="card">
                         <div class="card-header"><h3 class="card-title">Retailer & store connections</h3></div>
-                        <p style="margin-bottom:16px;">Paste each retailer’s <strong>product-search API URL and key</strong> below (Amazon, Walmart, eBay, Shopify, Skimlinks). These credentials power <strong>live product fetch</strong> in New Block, Product Library, and chat — not your main KotaPal key.</p>
+                        <p style="margin-bottom:16px;">Link Shopify, Amazon Associates, and Walmart Affiliate to sync products and commissions.</p>
                         <div id="integrationsContainer"></div>
                     </div>
                     <div class="card">
                         <div class="card-header"><h3 class="card-title">API & webhooks</h3></div>
-                        <p style="margin-bottom:12px;">Paste your <strong>KotaPal API key</strong> here for custom integrations and webhooks. Webhooks notify your server when blocks are updated. Do not use this key for retailer product search — add retailer keys in the section above.</p>
+                        <p style="margin-bottom:12px;">Use your API key for custom integrations. Webhooks notify your server when blocks are updated.</p>
                         <div class="form-group">
-                            <label for="integrationsApiKey">KotaPal API key</label>
-                            <p class="settings-field-hint" style="margin-bottom:8px;">Example format: a short token like <code>GdCvM3NbHRcCPV4mGj8yx8Xy</code>. Save, then use Copy when wiring external tools.</p>
-                            <div class="api-key-input-wrap" style="max-width:420px;">
-                                <input type="password" id="integrationsApiKey" class="form-control" placeholder="Paste or enter your KotaPal API key" autocomplete="off" spellcheck="false">
-                                <button type="button" class="api-key-eye-btn" data-api-key-eye="true" data-target-input="integrationsApiKey" aria-label="Show/hide KotaPal API key">
-                                    <i class="fas fa-eye-slash"></i>
-                                </button>
-                            </div>
-                            <div style="display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap;">
+                            <label>API Key</label>
+                            <div style="display:flex;gap:8px;align-items:center;">
+                                <input type="password" id="integrationsApiKey" class="form-control" placeholder="Paste or enter your KotaPal API key" autocomplete="off" spellcheck="false" style="max-width:320px;">
                                 <button type="button" class="btn btn-primary" id="saveIntegrationsApiKey">Save</button>
                                 <button type="button" class="btn btn-secondary" id="copyApiKey">Copy</button>
                             </div>
@@ -6899,26 +6894,36 @@
             
             // Nav scroll highlight — window scroll with fixed landing nav
             var activeMenuScrollPending = false;
+            var navHighlightLockUntil = 0;
+            window._lockLandingNavHighlight = function(ms) {
+                navHighlightLockUntil = Date.now() + (ms || 1200);
+            };
             function updateActiveMenu() {
+                if (Date.now() < navHighlightLockUntil) return;
+                var landing = document.getElementById('landing-page-view');
+                if (!landing || landing.style.display === 'none') return;
+                var contactPage = document.getElementById('contact-page');
+                if (contactPage && contactPage.style.display === 'block') return;
                 if (activeMenuScrollPending) return;
                 activeMenuScrollPending = true;
                 requestAnimationFrame(function() {
                     activeMenuScrollPending = false;
                     var y = window.scrollY || document.documentElement.scrollTop || 0;
                     var navOffset = 100;
-                    var sections = document.querySelectorAll('#landing-page-view section[id]');
-                    var navLinks = document.querySelectorAll('.nav-links a[data-section]');
+                    var sections = Array.prototype.slice.call(document.querySelectorAll('#landing-page-view section[id]'));
+                    var navLinks = document.querySelectorAll('#landingNavLinks a[data-section]');
                     var currentSection = '';
-                    sections.forEach(function(section) {
+                    for (var i = sections.length - 1; i >= 0; i--) {
+                        var section = sections[i];
                         var sectionTop = section.offsetTop - navOffset;
-                        var sectionHeight = section.offsetHeight;
-                        if (y >= sectionTop && y < sectionTop + sectionHeight) {
+                        if (y >= sectionTop) {
                             currentSection = section.getAttribute('id');
+                            break;
                         }
-                    });
+                    }
+                    if (!currentSection && sections.length) currentSection = sections[0].getAttribute('id');
                     navLinks.forEach(function(link) {
-                        link.classList.remove('active');
-                        if (link.getAttribute('data-section') === currentSection) link.classList.add('active');
+                        link.classList.toggle('active', link.getAttribute('data-section') === currentSection);
                     });
                 });
             }
@@ -10040,8 +10045,9 @@
         // Smooth scroll to section (landing home only) - set active immediately for instant underline
         function scrollToSection(sectionId, clickedEl) {
             if (clickedEl) {
-                document.querySelectorAll('.nav-links a[data-section]').forEach(function(a) { a.classList.remove('active'); });
+                document.querySelectorAll('#landingNavLinks a[data-section]').forEach(function(a) { a.classList.remove('active'); });
                 clickedEl.classList.add('active');
+                if (typeof window._lockLandingNavHighlight === 'function') window._lockLandingNavHighlight(1200);
             }
             closeLandingMobileMenu();
             showLandingPage('home-page');
@@ -10053,8 +10059,9 @@
         window.scrollToSection = scrollToSection;
         function goToContactForm(clickedEl) {
             if (clickedEl) {
-                document.querySelectorAll('.nav-links a[data-section]').forEach(function(a) { a.classList.remove('active'); });
+                document.querySelectorAll('#landingNavLinks a[data-section]').forEach(function(a) { a.classList.remove('active'); });
                 clickedEl.classList.add('active');
+                if (typeof window._lockLandingNavHighlight === 'function') window._lockLandingNavHighlight(60000);
             }
             closeLandingMobileMenu();
             var landing = document.getElementById('landing-page-view');
@@ -10412,11 +10419,11 @@
 
         function getDefaultIntegrations() {
             return [
-                { id: 'amazon', name: 'Amazon Associates', status: 'disconnected', lastSync: 'Never', affiliateId: '' },
-                { id: 'walmart', name: 'Walmart Affiliate', status: 'disconnected', lastSync: 'Never', affiliateId: '' },
+                { id: 'amazon', name: 'Amazon Associates', status: 'connected', lastSync: '2 hours ago', affiliateId: 'john-20' },
+                { id: 'walmart', name: 'Walmart Affiliate', status: 'connected', lastSync: '1 day ago', affiliateId: 'walmart-123' },
                 { id: 'ebay', name: 'eBay Partner Network', status: 'disconnected', lastSync: 'Never', affiliateId: '' },
                 { id: 'shopify', name: 'Shopify Partner', status: 'disconnected', lastSync: 'Never', affiliateId: '' },
-                { id: 'skimlinks', name: 'Skimlinks', status: 'disconnected', lastSync: 'Never', affiliateId: '' }
+                { id: 'skimlinks', name: 'Skimlinks', status: 'connected', lastSync: '3 hours ago', affiliateId: 'skim-456' }
             ];
         }
 
@@ -10434,9 +10441,6 @@
         }
 
         function loadSavedIntegrations() {
-            LIVE_RETAILER_PROVIDERS.forEach(function(p) {
-                migrateProviderCredentialsFromLocalScope(p);
-            });
             const defaults = getDefaultIntegrations();
             let saved = [];
             try {
@@ -10447,14 +10451,13 @@
             return defaults.map(function(def) {
                 const found = saved.find(function(item) { return item && item.id === def.id; }) || {};
                 const apiKey = getProviderApiKey(def.id, false);
-                const affiliateId = found.affiliateId != null ? found.affiliateId : (localStorage.getItem(getProviderAffiliateStorageKey(def.id)) || '');
-                const merged = Object.assign({}, def, found, {
+                const affiliateId = found.affiliateId != null ? found.affiliateId : (localStorage.getItem(getProviderAffiliateStorageKey(def.id)) || def.affiliateId || '');
+                const status = found.status || (apiKey || affiliateId ? 'connected' : def.status);
+                return Object.assign({}, def, found, {
                     affiliateId: affiliateId,
+                    status: status,
                     apiKeyConfigured: Boolean(apiKey)
                 });
-                merged.status = getIntegrationConnectionStatus(merged);
-                if (merged.status === 'disconnected') merged.lastSync = 'Never';
-                return merged;
             });
         }
 
@@ -10575,18 +10578,25 @@
 
         window.showLogoutConfirm = function showLogoutConfirm() {
             const modal = document.getElementById('logoutConfirmModal');
-            if (modal) modal.style.display = 'flex';
-        }
+            if (!modal) return;
+            if (typeof window.openKotapalModal === 'function') window.openKotapalModal(modal, 'flex');
+            else modal.style.display = 'flex';
+            document.documentElement.style.overflow = 'hidden';
+            document.body.style.overflow = 'hidden';
+        };
 
-        async function performLogout() {
+        window.performLogout = async function performLogout() {
             const modal = document.getElementById('logoutConfirmModal');
-            if (modal) modal.style.display = 'none';
+            if (modal && typeof window.hideKotapalModal === 'function') window.hideKotapalModal(modal);
+            else if (modal) modal.style.display = 'none';
             if (typeof stopInactivityTimer === 'function') stopInactivityTimer();
             try {
                 if (typeof auth !== 'undefined' && auth) {
                     await auth.signOut();
                 }
                 localStorage.removeItem('kotaUser');
+                localStorage.removeItem('kotapal_explicit_login');
+                sessionStorage.removeItem('kotapal_explicit_login');
                 if (typeof window.setKotapalLoginMode === 'function') window.setKotapalLoginMode('');
                 sessionStorage.removeItem('settings_access_granted');
                 if (typeof settingsAccessUnlocked !== 'undefined') settingsAccessUnlocked = false;
@@ -10616,11 +10626,12 @@
                 var contactPage = document.getElementById('contact-page');
                 if (homePage) homePage.style.display = 'block';
                 if (contactPage) contactPage.style.display = 'none';
+                if (typeof window.ensureSiteInteractive === 'function') window.ensureSiteInteractive();
             } catch (error) {
                 console.error('Logout error:', error);
                 showNotification('Error signing out. Please try again.', 'error', 'Logout');
             }
-        }
+        };
 
         function bindSettingsAccessControls() {
             var settingsUnlockBtn = document.getElementById('settingsUnlockBtn');
@@ -10663,10 +10674,7 @@
                 link.addEventListener('click', function(e) {
                     e.preventDefault();
                     const page = this.getAttribute('data-page');
-                    showDashboardPage(page);
-                    
-                    navLinks.forEach(l => l.classList.remove('active'));
-                    this.classList.add('active');
+                    if (page) showDashboardPage(page);
                 });
             });
 
@@ -10687,8 +10695,13 @@
             const logoutConfirmModal = document.getElementById('logoutConfirmModal');
             const logoutConfirmBtn = document.getElementById('logoutConfirmBtn');
             const logoutConfirmCancel = document.getElementById('logoutConfirmCancel');
-            if (logoutConfirmCancel) logoutConfirmCancel.addEventListener('click', function() { if (logoutConfirmModal) logoutConfirmModal.style.display = 'none'; });
-            if (logoutConfirmBtn) logoutConfirmBtn.addEventListener('click', performLogout);
+            if (logoutConfirmCancel) logoutConfirmCancel.addEventListener('click', function() {
+                if (logoutConfirmModal && typeof window.hideKotapalModal === 'function') window.hideKotapalModal(logoutConfirmModal);
+                else if (logoutConfirmModal) logoutConfirmModal.style.display = 'none';
+                document.documentElement.style.overflow = '';
+                document.body.style.overflow = '';
+            });
+            if (logoutConfirmBtn) logoutConfirmBtn.addEventListener('click', function() { window.performLogout(); });
 
             // Inactivity warning - Stay logged in
             const inactivityStayBtn = document.getElementById('inactivityStayBtn');
@@ -11633,39 +11646,30 @@
             currentIntegrations.forEach(integration => {
                 const apiKey = getProviderApiKey(integration.id, false);
                 const affiliateId = integration.affiliateId || getProviderAffiliateId(integration.id) || '';
-                const connectionStatus = getIntegrationConnectionStatus(integration);
-                const isConnected = connectionStatus === 'connected';
                 const providerLabel = getProviderLabel(integration.id);
                 const integrationCard = document.createElement('div');
                 integrationCard.className = 'card';
                 integrationCard.innerHTML = `
                     <div class="card-header">
                         <h3 class="card-title">${escapeHtml(integration.name)}</h3>
-                        <div class="integration-status-wrap">
-                            <span class="integration-status-label">Status</span>
-                            <span class="block-status ${isConnected ? 'status-active' : 'status-draft'}">
-                                ${isConnected ? 'Connected' : 'Disconnected'}
-                            </span>
-                        </div>
+                        <span class="block-status ${integration.status === 'connected' ? 'status-active' : 'status-draft'}">
+                            ${integration.status === 'connected' ? 'Connected' : 'Disconnected'}
+                        </span>
                     </div>
                     <div>
                         <p>Last synced: ${escapeHtml(integration.lastSync || 'Never')}</p>
-                        <p style="color:var(--gray);font-size:0.9rem;margin-bottom:12px;">Paste your ${providerLabel} API URL and key here to <strong>fetch products LIVE</strong> (New Block, Product Library). Separate from your KotaPal API key in API &amp; webhooks below.</p>
+                        <p style="color:var(--gray);font-size:0.9rem;margin-bottom:12px;">Save the ${providerLabel} credentials used for product search, SmartBlocks, and Product Library items from this provider.</p>
                         <div class="form-group">
                             <label>${providerLabel} affiliate / partner ID</label>
                             <input type="text" value="${escapeHtml(affiliateId)}" class="form-control integration-id" data-id="${integration.id}" placeholder="Paste affiliate or partner ID" autocomplete="off" spellcheck="false">
                         </div>
                         <div class="form-group">
-                            <label>${providerLabel} API URL</label>
-                            <input type="url" value="${escapeHtml(getProviderApiEndpoint(integration.id))}" class="form-control integration-api-endpoint" data-id="${integration.id}" placeholder="https://your-api.com/${integration.id}/search" autocomplete="off" spellcheck="false">
-                        </div>
-                        <div class="form-group">
                             <label>${providerLabel} API key</label>
-                            <input type="password" value="${escapeHtml(apiKey)}" class="form-control integration-api-key" data-id="${integration.id}" placeholder="Paste ${providerLabel} API key or full URL" autocomplete="off" spellcheck="false">
+                            <input type="password" value="${escapeHtml(apiKey)}" class="form-control integration-api-key" data-id="${integration.id}" placeholder="Paste ${providerLabel} API key" autocomplete="off" spellcheck="false">
                         </div>
                         <div style="display: flex; gap: 10px; margin-top: 20px; flex-wrap:wrap;">
                             <button class="btn btn-primary integration-save-btn" data-id="${integration.id}">Save credentials</button>
-                            ${isConnected
+                            ${integration.status === 'connected'
                                 ? `<button class="btn btn-danger disconnect-btn" data-id="${integration.id}">Disconnect</button>`
                                 : `<button class="btn btn-secondary connect-btn" data-id="${integration.id}">Connect Account</button>`}
                             <button class="btn btn-secondary sync-btn" data-id="${integration.id}">Sync Now</button>
@@ -11689,27 +11693,18 @@
                         const integrationId = this.getAttribute('data-id');
                         const integrationIndex = currentIntegrations.findIndex(i => i.id === integrationId);
                         const apiInput = document.querySelector('.integration-api-key[data-id="' + integrationId + '"]');
-                        const endpointInput = document.querySelector('.integration-api-endpoint[data-id="' + integrationId + '"]');
                         const idInput = document.querySelector('.integration-id[data-id="' + integrationId + '"]');
                         const apiValue = apiInput && apiInput.value ? apiInput.value.trim() : '';
-                        const endpointValue = endpointInput && endpointInput.value ? endpointInput.value.trim() : '';
                         const affiliateValue = idInput && idInput.value ? idInput.value.trim() : '';
 
-                        if (endpointValue) setProviderApiEndpoint(integrationId, endpointValue);
-                        if (apiValue) applyProviderCredential(integrationId, apiValue);
+                        if (apiValue) setProviderApiKey(integrationId, apiValue);
                         setProviderAffiliateId(integrationId, affiliateValue);
 
                         if (integrationIndex !== -1) {
+                            currentIntegrations[integrationIndex].status = (apiValue || affiliateValue) ? 'connected' : currentIntegrations[integrationIndex].status;
                             currentIntegrations[integrationIndex].affiliateId = affiliateValue;
+                            currentIntegrations[integrationIndex].lastSync = 'Just now';
                             currentIntegrations[integrationIndex].apiKeyConfigured = Boolean(apiValue || getProviderApiKey(integrationId, false));
-                            const hasCredentials = Boolean(currentIntegrations[integrationIndex].apiKeyConfigured || affiliateValue);
-                            if (!hasCredentials) {
-                                currentIntegrations[integrationIndex].status = 'disconnected';
-                                currentIntegrations[integrationIndex].lastSync = 'Never';
-                            } else if (currentIntegrations[integrationIndex].status === 'connected') {
-                                currentIntegrations[integrationIndex].lastSync = 'Just now';
-                            }
-                            currentIntegrations[integrationIndex].status = getIntegrationConnectionStatus(currentIntegrations[integrationIndex]);
                         }
                         saveIntegrations();
                         loadProviderApiKeys();
@@ -11723,27 +11718,12 @@
                         const integrationIndex = currentIntegrations.findIndex(i => i.id === integrationId);
                         
                         if (integrationIndex !== -1) {
-                            const apiInput = document.querySelector('.integration-api-key[data-id="' + integrationId + '"]');
-                            const idInput = document.querySelector('.integration-id[data-id="' + integrationId + '"]');
-                            const apiValue = apiInput && apiInput.value ? apiInput.value.trim() : '';
-                            const affiliateValue = idInput && idInput.value ? idInput.value.trim() : '';
-                            const storedApiKey = getProviderApiKey(integrationId, false);
-                            const storedAffiliate = currentIntegrations[integrationIndex].affiliateId || getProviderAffiliateId(integrationId) || '';
-                            if (!(apiValue || affiliateValue || storedApiKey || storedAffiliate)) {
-                                showNotification('Save an API key or affiliate ID before connecting.', 'warn', 'Integrations');
-                                return;
-                            }
                             currentIntegrations[integrationIndex].status = 'connected';
                             currentIntegrations[integrationIndex].lastSync = 'Just now';
-                            currentIntegrations[integrationIndex].affiliateId = affiliateValue || storedAffiliate;
-                            currentIntegrations[integrationIndex].status = getIntegrationConnectionStatus(currentIntegrations[integrationIndex]);
+                            currentIntegrations[integrationIndex].affiliateId = currentIntegrations[integrationIndex].affiliateId || getProviderAffiliateId(integrationId) || '';
                             saveIntegrations();
                             renderIntegrations();
-                            if (currentIntegrations[integrationIndex].status === 'connected') {
-                                showNotification('Integration connected successfully!', 'success', 'Connected');
-                            } else {
-                                showNotification('Could not connect. Add credentials and try again.', 'warn', 'Integrations');
-                            }
+                            showNotification('Integration connected successfully!', 'success', 'Connected');
                         }
                     });
                 });
