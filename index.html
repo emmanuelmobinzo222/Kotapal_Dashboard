@@ -151,7 +151,7 @@
         }
         window.kotapalModalIds = [
             'planDetailModal', 'carouselItemLightbox', 'authModal', 'resetPasswordModal', 'inactivityWarningModal',
-            'adminProductEditModal', 'adminDetailModal', 'adminUserManageModal', 'changePlanModal',
+            'adminProductEditModal', 'adminSmartBlockProductEditModal', 'adminDetailModal', 'adminUserManageModal', 'changePlanModal',
             'adminPlanEditModal', 'adminRoleEditModal', 'logoutConfirmModal', 'downloadReportFormatModal',
             'guidesModal', 'privacyModal', 'tosModal', 'deleteBlockConfirmModal', 'editBlockTitleModal'
         ];
@@ -323,8 +323,13 @@
             dv.style.visibility = 'visible';
             document.body.style.pointerEvents = '';
             document.documentElement.style.pointerEvents = '';
+            var dashSidebar = document.getElementById('sidebar');
+            var dashOverlay = document.getElementById('sidebarOverlay');
+            if (dashSidebar) dashSidebar.classList.remove('active');
+            if (dashOverlay) dashOverlay.classList.remove('active');
             if (typeof setDashboardScrollLock === 'function') setDashboardScrollLock(true);
             if (typeof syncDashboardNavForViewport === 'function') syncDashboardNavForViewport();
+            if (typeof setupDashboardEventListeners === 'function') setupDashboardEventListeners();
         };
         window.hideKotapalDashboard = function() {
             var dv = document.getElementById('dashboard-view');
@@ -1017,17 +1022,23 @@
             z-index: 2;
             pointer-events: auto;
         }
-        /* Landing mode: never let dashboard/admin/placement shells block clicks (even if .active stuck) */
-        html.landing-page-active body > #dashboard-view,
-        html.landing-page-active body > #admin-login-screen,
-        html.landing-page-active body > #admin-view,
-        html.landing-page-active body > #blockImageLightbox,
+        /* Landing mode: hide inactive shells only — keep signed-in dashboard interactive */
+        html.landing-page-active body > #dashboard-view:not([data-kotapal-visible="true"]),
+        html.landing-page-active body > #admin-login-screen:not(.active),
+        html.landing-page-active body > #admin-view:not(.active),
+        html.landing-page-active body > #blockImageLightbox:not(.active),
         html.landing-page-active body > #admin-setup-screen,
-        html.landing-page-active body > #kotapalPagePlacementLayer {
+        html.landing-page-active body > #kotapalPagePlacementLayer:not(.active) {
             display: none !important;
             pointer-events: none !important;
             visibility: hidden !important;
             z-index: -9999 !important;
+        }
+        html.landing-page-active body > #dashboard-view[data-kotapal-visible="true"] {
+            display: block !important;
+            pointer-events: auto !important;
+            visibility: visible !important;
+            z-index: 10;
         }
         #admin-login-screen:not(.active),
         #admin-view:not(.active),
@@ -1049,6 +1060,20 @@
             min-height: 100vh;
             min-height: 100dvh;
             width: 100%;
+        }
+        #dashboard-view[data-kotapal-visible="true"] button,
+        #dashboard-view[data-kotapal-visible="true"] .btn,
+        #dashboard-view[data-kotapal-visible="true"] a,
+        #dashboard-view[data-kotapal-visible="true"] .nav-link,
+        #dashboard-view[data-kotapal-visible="true"] input,
+        #dashboard-view[data-kotapal-visible="true"] select,
+        #dashboard-view[data-kotapal-visible="true"] textarea {
+            pointer-events: auto;
+            touch-action: manipulation;
+        }
+        #dashboard-view .sidebar-overlay:not(.active) {
+            display: none !important;
+            pointer-events: none !important;
         }
         #landing-page-view .section-reveal,
         #landing-page-view .section-reveal:not(.revealed) {
@@ -4632,9 +4657,114 @@
         #adminUserManageModal,
         #adminDetailModal,
         #adminProductEditModal,
+        #adminSmartBlockProductEditModal,
         #adminPlanEditModal,
         #adminRoleEditModal {
             z-index: 10050 !important;
+        }
+        #adminUserManageModal .admin-user-smartblock-card {
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 14px;
+            margin-bottom: 14px;
+            background: #fafafa;
+        }
+        #adminUserManageModal .admin-user-smartblock-header {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+        }
+        #adminUserManageModal .admin-user-smartblock-status {
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 999px;
+        }
+        #adminUserManageModal .admin-user-smartblock-status.status-active { background: #d1fae5; color: #065f46; }
+        #adminUserManageModal .admin-user-smartblock-status.status-draft { background: #fef3c7; color: #92400e; }
+        #adminUserManageModal .admin-user-smartblock-layout {
+            font-size: 0.75rem;
+            color: #6b7280;
+            text-transform: capitalize;
+        }
+        #adminUserManageModal .admin-user-products-carousel-wrap {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        #adminUserManageModal .admin-user-products-carousel {
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            scroll-behavior: smooth;
+            padding: 8px 4px;
+            flex: 1;
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        #adminUserManageModal .admin-user-products-carousel::-webkit-scrollbar { display: none; }
+        #adminUserManageModal .admin-user-product-card {
+            flex: 0 0 148px;
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+        }
+        #adminUserManageModal .admin-user-product-card img {
+            width: 100%;
+            height: 100px;
+            object-fit: contain;
+            border-radius: 6px;
+            margin-bottom: 8px;
+        }
+        #adminUserManageModal .admin-user-product-title {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #111827;
+            line-height: 1.3;
+            margin-bottom: 4px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        #adminUserManageModal .admin-user-product-meta {
+            font-size: 0.7rem;
+            color: #6b7280;
+            margin-bottom: 8px;
+        }
+        #adminUserManageModal .admin-btn-sm {
+            padding: 5px 10px;
+            font-size: 0.72rem;
+        }
+        #adminUserManageModal .admin-carousel-btn {
+            flex: 0 0 32px;
+            width: 32px;
+            height: 32px;
+            border: 1px solid #e5e7eb;
+            border-radius: 50%;
+            background: #fff;
+            color: #374151;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #adminUserManageModal .admin-carousel-btn:hover { background: #f3f4f6; }
+        #adminUserManageModal .admin-smartblocks-empty {
+            font-size: 0.85rem;
+            color: #6b7280;
+            padding: 12px 0;
+        }
+        #adminUserManageModal #adminUserBlocksJsonDetails summary {
+            cursor: pointer;
+            font-size: 0.8rem;
+            color: #6b7280;
+            margin-bottom: 8px;
         }
         #admin-toast-host { position: fixed; bottom: 22px; right: 22px; z-index: 100000; display: flex; flex-direction: column; gap: 8px; pointer-events: none; font-family: 'Inter', sans-serif; }
         .admin-users-table-wrap { position: relative; }
@@ -4683,18 +4813,18 @@
                     </div>
                 </div>
                 <ul class="nav-menu">
-                    <li class="nav-item"><a href="#" class="nav-link active" data-page="dashboard"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
-                    <li class="nav-item"><a href="#" class="nav-link" data-page="blocks"><i class="fas fa-cubes"></i> SmartBlocks</a></li>
-                    <li class="nav-item"><a href="#" class="nav-link" data-page="new-block"><i class="fas fa-plus"></i> Create New Block</a></li>
-                    <li class="nav-item"><a href="#" class="nav-link" data-page="product-library"><i class="fas fa-box"></i> Product Library</a></li>
-                    <li class="nav-item"><a href="#" class="nav-link" data-page="ai-assistant"><i class="fas fa-robot"></i> AI Assistant</a></li>
-                    <li class="nav-item"><a href="#" class="nav-link" data-page="analytics"><i class="fas fa-chart-line"></i> Analytics</a></li>
-                    <li class="nav-item"><a href="#" class="nav-link" data-page="integrations"><i class="fas fa-link"></i> Integrations</a></li>
-                    <li class="nav-item"><a href="#" class="nav-link" data-page="reports"><i class="fas fa-file-alt"></i> Reports</a></li>
-                    <li class="nav-item"><a href="#" class="nav-link" data-page="settings"><i class="fas fa-cog"></i> Settings</a></li>
-                    <li class="nav-item"><a href="#" class="nav-link" data-page="billing"><i class="fas fa-credit-card"></i> Billing</a></li>
-                    <li class="nav-item"><a href="#" class="nav-link" data-page="help"><i class="fas fa-question-circle"></i> Help</a></li>
-                    <li class="nav-item"><a href="#" class="nav-link" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+                    <li class="nav-item"><a href="javascript:void(0)" class="nav-link active" data-page="dashboard" onclick="if(typeof showDashboardPage==='function'){showDashboardPage('dashboard');}return false;"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+                    <li class="nav-item"><a href="javascript:void(0)" class="nav-link" data-page="blocks" onclick="if(typeof showDashboardPage==='function'){showDashboardPage('blocks');}return false;"><i class="fas fa-cubes"></i> SmartBlocks</a></li>
+                    <li class="nav-item"><a href="javascript:void(0)" class="nav-link" data-page="new-block" onclick="if(typeof showDashboardPage==='function'){showDashboardPage('new-block');}return false;"><i class="fas fa-plus"></i> Create New Block</a></li>
+                    <li class="nav-item"><a href="javascript:void(0)" class="nav-link" data-page="product-library" onclick="if(typeof showDashboardPage==='function'){showDashboardPage('product-library');}return false;"><i class="fas fa-box"></i> Product Library</a></li>
+                    <li class="nav-item"><a href="javascript:void(0)" class="nav-link" data-page="ai-assistant" onclick="if(typeof showDashboardPage==='function'){showDashboardPage('ai-assistant');}return false;"><i class="fas fa-robot"></i> AI Assistant</a></li>
+                    <li class="nav-item"><a href="javascript:void(0)" class="nav-link" data-page="analytics" onclick="if(typeof showDashboardPage==='function'){showDashboardPage('analytics');}return false;"><i class="fas fa-chart-line"></i> Analytics</a></li>
+                    <li class="nav-item"><a href="javascript:void(0)" class="nav-link" data-page="integrations" onclick="if(typeof showDashboardPage==='function'){showDashboardPage('integrations');}return false;"><i class="fas fa-link"></i> Integrations</a></li>
+                    <li class="nav-item"><a href="javascript:void(0)" class="nav-link" data-page="reports" onclick="if(typeof showDashboardPage==='function'){showDashboardPage('reports');}return false;"><i class="fas fa-file-alt"></i> Reports</a></li>
+                    <li class="nav-item"><a href="javascript:void(0)" class="nav-link" data-page="settings" onclick="if(typeof showDashboardPage==='function'){showDashboardPage('settings');}return false;"><i class="fas fa-cog"></i> Settings</a></li>
+                    <li class="nav-item"><a href="javascript:void(0)" class="nav-link" data-page="billing" onclick="if(typeof showDashboardPage==='function'){showDashboardPage('billing');}return false;"><i class="fas fa-credit-card"></i> Billing</a></li>
+                    <li class="nav-item"><a href="javascript:void(0)" class="nav-link" data-page="help" onclick="if(typeof showDashboardPage==='function'){showDashboardPage('help');}return false;"><i class="fas fa-question-circle"></i> Help</a></li>
+                    <li class="nav-item"><a href="javascript:void(0)" class="nav-link" id="logoutBtn" onclick="if(typeof showLogoutConfirm==='function'){showLogoutConfirm();}return false;"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
                 </ul>
             </div>
             <button type="button" class="nav-toggle-float" id="navToggleFloat" aria-label="Toggle navigation" title="Hide Nav"><i class="fas fa-compress-arrows-alt"></i></button>
@@ -4703,7 +4833,7 @@
                     <div class="header">
                         <h1 class="page-title">Dashboard</h1>
                         <div style="display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; width: 100%;">
-                            <button class="btn btn-primary" id="createBlockBtn">Create New Block</button>
+                            <button type="button" class="btn btn-primary" id="createBlockBtn" onclick="if(typeof showDashboardPage==='function')showDashboardPage('new-block');">Create New Block</button>
                         </div>
                         <div style="display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; width: 100%; margin-top: 12px;">
                             <button type="button" class="btn btn-primary sensitive-toggle" id="globalSensitiveToggle" onclick="toggleAllSensitive()">
@@ -5857,7 +5987,7 @@
     </div>
 
     <div id="adminUserManageModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:2100;align-items:center;justify-content:center;padding:20px;overflow-y:auto;">
-        <div style="background:white;padding:24px;border-radius:12px;max-width:560px;width:100%;max-height:92vh;overflow-y:auto;">
+        <div style="background:white;padding:24px;border-radius:12px;max-width:820px;width:100%;max-height:92vh;overflow-y:auto;">
             <h3 id="adminUserManageTitle" style="margin-bottom:8px;">Manage user</h3>
             <p id="adminUserManageHelp" style="font-size:0.875rem;color:#6b7280;margin-bottom:16px;">Update this user’s Firestore profile, suspension state, and dashboard blocks. Blocks sync live to the user dashboard.</p>
             <input type="hidden" id="adminUserManageMode" value="manage">
@@ -5866,7 +5996,15 @@
             <div class="admin-form-group"><label>Display name</label><input type="text" id="adminUserManageName" style="width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:8px;"></div>
             <div class="admin-form-group"><label>Plan</label><select id="adminUserManagePlan" style="width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:8px;"><option value="free">Free</option><option value="starter">Starter</option><option value="pro">Pro</option><option value="creatorplus">Creator+</option><option value="agency">Agency</option></select></div>
             <div class="admin-form-group"><label>Account status</label><select id="adminUserManageStatus" style="width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:8px;"><option value="active">Active</option><option value="suspended">Suspended (disabled)</option></select></div>
-            <div class="admin-form-group" id="adminUserManageBlocksGroup"><label>Dashboard blocks (JSON array)</label><textarea id="adminUserManageBlocksJson" style="width:100%;min-height:180px;padding:10px;border:1px solid #e5e7eb;border-radius:8px;font-family:ui-monospace,monospace;font-size:12px;" placeholder="[]"></textarea><div style="font-size:0.8rem;color:#6b7280;margin-top:6px;">Saved to Firestore and updates the user’s dashboard in real time.</div></div>
+            <div class="admin-form-group" id="adminUserManageBlocksGroup">
+                <label>SmartBlocks &amp; products</label>
+                <div id="adminUserSmartBlocksContainer" class="admin-smartblocks-empty">Loading SmartBlocks…</div>
+                <details id="adminUserBlocksJsonDetails" style="margin-top:12px;">
+                    <summary>Advanced: JSON editor</summary>
+                    <textarea id="adminUserManageBlocksJson" style="width:100%;min-height:140px;padding:10px;border:1px solid #e5e7eb;border-radius:8px;font-family:ui-monospace,monospace;font-size:12px;margin-top:8px;" placeholder="[]"></textarea>
+                </details>
+                <div style="font-size:0.8rem;color:#6b7280;margin-top:6px;">Product edits sync to Firestore when you click Save blocks. Changes appear on the user dashboard in real time.</div>
+            </div>
             <div id="adminUserManageActions" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:20px;">
                 <button type="button" class="admin-btn" id="adminUserManageSaveProfileBtn" onclick="adminUserManageSaveProfile()">Save profile</button>
                 <button type="button" class="admin-btn" id="adminUserManageSaveBlocksBtn" onclick="adminUserManageSaveBlocks()">Save blocks</button>
@@ -5882,6 +6020,23 @@
             <div id="adminDetailModalBody" style="font-size:14px;color:#374151;line-height:1.6;white-space:pre-wrap;"></div>
             <div style="display:flex;gap:10px;margin-top:20px;justify-content:flex-end;">
                 <button type="button" class="admin-btn admin-btn-secondary" onclick="closeAdminDetailModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="adminSmartBlockProductEditModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:2200;align-items:center;justify-content:center;padding:20px;">
+        <div style="background:white;padding:24px;border-radius:12px;max-width:480px;width:100%;">
+            <h3 style="margin-bottom:16px;">Edit SmartBlock product</h3>
+            <input type="hidden" id="adminSbProductEditBlockId">
+            <input type="hidden" id="adminSbProductEditIndex">
+            <input type="hidden" id="adminSbProductEditId">
+            <div class="admin-form-group"><label>Title</label><input type="text" id="adminSbProductEditTitle" style="width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:8px;"></div>
+            <div class="admin-form-group"><label>Image URL</label><input type="url" id="adminSbProductEditImage" style="width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:8px;"></div>
+            <div class="admin-form-group"><label>Price ($)</label><input type="number" step="0.01" id="adminSbProductEditPrice" style="width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:8px;"></div>
+            <div class="admin-form-group"><label>Retailer</label><input type="text" id="adminSbProductEditRetailer" style="width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:8px;" placeholder="amazon, walmart, ebay…"></div>
+            <div style="display:flex;gap:10px;margin-top:20px;">
+                <button type="button" class="admin-btn" onclick="saveAdminSmartBlockProductEdit()">Save product</button>
+                <button type="button" class="admin-btn admin-btn-secondary" onclick="closeAdminSmartBlockProductEditModal()">Cancel</button>
             </div>
         </div>
     </div>
@@ -8210,6 +8365,7 @@
                 syncAdminPlanSelectOptions(document.getElementById('adminUserManagePlan'), 'starter');
                 document.getElementById('adminUserManageStatus').value = 'active';
                 document.getElementById('adminUserManageBlocksJson').value = '[]';
+                if (typeof window.setAdminUserBlocks === 'function') window.setAdminUserBlocks([]);
                 if (typeof setAdminUserManageMode === 'function') setAdminUserManageMode('add');
                 m.style.display = 'flex';
             };
@@ -8232,16 +8388,35 @@
                 m.style.display = 'flex';
                 var dbUse = db || window.firebaseDb;
                 var ta = document.getElementById('adminUserManageBlocksJson');
+                var smartContainer = document.getElementById('adminUserSmartBlocksContainer');
+                if (smartContainer) smartContainer.innerHTML = 'Loading SmartBlocks…';
                 if (ta) ta.value = '[]';
+                window._adminUserBlocks = [];
+                if (typeof window.renderAdminUserSmartBlocks === 'function') window.renderAdminUserSmartBlocks();
                 if (dbUse && uid) {
                     dbUse.collection('users').doc(uid).get().then(function(doc) {
-                        if (!doc.exists || !ta) return;
+                        if (!doc.exists) {
+                            if (typeof window.setAdminUserBlocks === 'function') window.setAdminUserBlocks([]);
+                            return;
+                        }
                         var d = doc.data() || {};
                         var js = d.dashboardBlocksJson;
                         if (js && typeof js === 'string') {
-                            try { ta.value = JSON.stringify(JSON.parse(js), null, 2); } catch (e) { ta.value = js; }
+                            try {
+                                var arr = JSON.parse(js);
+                                if (typeof window.setAdminUserBlocks === 'function') window.setAdminUserBlocks(Array.isArray(arr) ? arr : []);
+                            } catch (e) {
+                                if (ta) ta.value = js;
+                                if (typeof window.setAdminUserBlocks === 'function') window.setAdminUserBlocks([]);
+                            }
+                        } else if (typeof window.setAdminUserBlocks === 'function') {
+                            window.setAdminUserBlocks([]);
                         }
-                    }).catch(function() {});
+                    }).catch(function() {
+                        if (typeof window.setAdminUserBlocks === 'function') window.setAdminUserBlocks([]);
+                    });
+                } else if (typeof window.setAdminUserBlocks === 'function') {
+                    window.setAdminUserBlocks([]);
                 }
             };
             window.adminUserManageSaveProfile = async function() {
@@ -8307,7 +8482,11 @@
                 var dbUse = db || window.firebaseDb;
                 if (!uid || !dbUse) { window.adminToast('Enter a UID and ensure Firebase is connected.', 'warn'); return; }
                 var arr;
-                try { arr = JSON.parse(raw || '[]'); } catch (e) { window.adminToast('Invalid JSON.', 'warn'); return; }
+                if (window._adminUserBlocks && Array.isArray(window._adminUserBlocks)) {
+                    arr = window._adminUserBlocks;
+                } else {
+                    try { arr = JSON.parse(raw || '[]'); } catch (e) { window.adminToast('Invalid JSON.', 'warn'); return; }
+                }
                 if (!Array.isArray(arr)) { window.adminToast('Blocks must be a JSON array.', 'warn'); return; }
                 var compact = JSON.stringify(arr);
                 try {
@@ -8665,6 +8844,130 @@
             if (uidEl && document.getElementById('adminUserManageMode').value !== 'add') uidEl.readOnly = true;
             var actions = document.getElementById('adminUserManageActions');
             if (actions) actions.style.display = isView ? 'none' : 'flex';
+            if (typeof window.renderAdminUserSmartBlocks === 'function') window.renderAdminUserSmartBlocks();
+        };
+        window._adminUserBlocks = [];
+        function adminEscapeHtml(s) {
+            return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+        function syncAdminUserBlocksToTextarea() {
+            var ta = document.getElementById('adminUserManageBlocksJson');
+            if (ta) ta.value = JSON.stringify(window._adminUserBlocks || [], null, 2);
+        }
+        function parseAdminUserBlocksFromTextarea() {
+            var ta = document.getElementById('adminUserManageBlocksJson');
+            if (!ta) return [];
+            try {
+                var arr = JSON.parse(ta.value || '[]');
+                return Array.isArray(arr) ? arr : [];
+            } catch (e) { return []; }
+        }
+        window.setAdminUserBlocks = function(arr) {
+            window._adminUserBlocks = Array.isArray(arr) ? JSON.parse(JSON.stringify(arr)) : [];
+            syncAdminUserBlocksToTextarea();
+            if (typeof window.renderAdminUserSmartBlocks === 'function') window.renderAdminUserSmartBlocks();
+        };
+        window.renderAdminUserSmartBlocks = function() {
+            var container = document.getElementById('adminUserSmartBlocksContainer');
+            if (!container) return;
+            var modeEl = document.getElementById('adminUserManageMode');
+            var isView = modeEl && modeEl.value === 'view';
+            var blocks = window._adminUserBlocks || [];
+            if (!blocks.length) {
+                container.innerHTML = '<p class="admin-smartblocks-empty">No SmartBlocks yet. This user has not created any product blocks.</p>';
+                return;
+            }
+            var html = '';
+            blocks.forEach(function(block) {
+                var products = block.productsList || [];
+                var blockId = adminEscapeHtml(block.id || '');
+                var slidesHtml = '';
+                if (!products.length) {
+                    slidesHtml = '<p class="admin-smartblocks-empty" style="margin:0;padding:8px 0;">No products in this block.</p>';
+                } else {
+                    products.forEach(function(p, pIdx) {
+                        var imgUrl = adminEscapeHtml(p.image || 'https://via.placeholder.com/120');
+                        var title = adminEscapeHtml(p.title || 'Untitled');
+                        var price = typeof p.price === 'number' ? '$' + p.price.toFixed(2) : adminEscapeHtml(p.price || '');
+                        var retailer = adminEscapeHtml(p.retailer || '');
+                        var editBtn = isView ? '' : '<button type="button" class="admin-btn admin-btn-sm admin-user-product-edit-btn" data-block-id="' + blockId + '" data-product-index="' + pIdx + '">Edit</button>';
+                        slidesHtml += '<div class="admin-user-product-card">' +
+                            '<img src="' + imgUrl + '" alt="' + title + '" onerror="this.src=\'https://via.placeholder.com/120\'">' +
+                            '<div class="admin-user-product-title">' + title + '</div>' +
+                            '<div class="admin-user-product-meta">' + price + (retailer ? ' · ' + retailer : '') + '</div>' +
+                            editBtn +
+                        '</div>';
+                    });
+                }
+                var statusCls = block.status === 'active' ? 'status-active' : 'status-draft';
+                var carouselId = 'adminCarousel_' + String(block.id || '').replace(/[^a-zA-Z0-9_-]/g, '_');
+                html += '<div class="admin-user-smartblock-card" data-block-id="' + blockId + '">' +
+                    '<div class="admin-user-smartblock-header">' +
+                        '<strong>' + adminEscapeHtml(block.title || 'Untitled block') + '</strong>' +
+                        '<span class="admin-user-smartblock-status ' + statusCls + '">' + (block.status === 'active' ? 'Active' : 'Draft') + '</span>' +
+                        '<span class="admin-user-smartblock-layout">' + adminEscapeHtml(block.layout || 'grid') + ' · ' + products.length + ' product' + (products.length === 1 ? '' : 's') + '</span>' +
+                    '</div>' +
+                    '<div class="admin-user-products-carousel-wrap">' +
+                        '<button type="button" class="admin-carousel-btn" aria-label="Previous products" data-carousel-dir="left" data-carousel-id="' + carouselId + '"><i class="fas fa-chevron-left"></i></button>' +
+                        '<div class="admin-user-products-carousel" id="' + carouselId + '">' + slidesHtml + '</div>' +
+                        '<button type="button" class="admin-carousel-btn" aria-label="Next products" data-carousel-dir="right" data-carousel-id="' + carouselId + '"><i class="fas fa-chevron-right"></i></button>' +
+                    '</div>' +
+                '</div>';
+            });
+            container.innerHTML = html;
+            container.querySelectorAll('.admin-user-product-edit-btn').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    if (typeof window.openAdminSmartBlockProductEdit === 'function') {
+                        window.openAdminSmartBlockProductEdit(this.getAttribute('data-block-id'), parseInt(this.getAttribute('data-product-index'), 10));
+                    }
+                });
+            });
+            container.querySelectorAll('.admin-carousel-btn').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    var carousel = document.getElementById(this.getAttribute('data-carousel-id'));
+                    if (!carousel) return;
+                    var step = 168;
+                    var delta = this.getAttribute('data-carousel-dir') === 'left' ? -step : step;
+                    carousel.scrollTo({ left: carousel.scrollLeft + delta, behavior: 'smooth' });
+                });
+            });
+        };
+        window.openAdminSmartBlockProductEdit = function(blockId, productIndex) {
+            var block = (window._adminUserBlocks || []).find(function(b) { return b.id === blockId; });
+            if (!block || !block.productsList || !block.productsList[productIndex]) return;
+            var p = block.productsList[productIndex];
+            document.getElementById('adminSbProductEditBlockId').value = blockId;
+            document.getElementById('adminSbProductEditIndex').value = String(productIndex);
+            document.getElementById('adminSbProductEditId').value = p.id || '';
+            document.getElementById('adminSbProductEditTitle').value = p.title || '';
+            document.getElementById('adminSbProductEditImage').value = p.image || '';
+            document.getElementById('adminSbProductEditPrice').value = typeof p.price === 'number' ? p.price : (parseFloat(p.price) || 0);
+            document.getElementById('adminSbProductEditRetailer').value = p.retailer || '';
+            var modal = document.getElementById('adminSmartBlockProductEditModal');
+            if (modal) modal.style.display = 'flex';
+        };
+        window.saveAdminSmartBlockProductEdit = function() {
+            var blockId = document.getElementById('adminSbProductEditBlockId').value;
+            var productIndex = parseInt(document.getElementById('adminSbProductEditIndex').value, 10);
+            var block = (window._adminUserBlocks || []).find(function(b) { return b.id === blockId; });
+            if (!block || !block.productsList || !block.productsList[productIndex]) return;
+            block.productsList[productIndex] = Object.assign({}, block.productsList[productIndex], {
+                id: document.getElementById('adminSbProductEditId').value || block.productsList[productIndex].id,
+                title: (document.getElementById('adminSbProductEditTitle').value || '').trim(),
+                image: (document.getElementById('adminSbProductEditImage').value || '').trim(),
+                price: parseFloat(document.getElementById('adminSbProductEditPrice').value) || 0,
+                retailer: (document.getElementById('adminSbProductEditRetailer').value || '').trim()
+            });
+            block.products = block.productsList.length;
+            block.lastUpdated = new Date().toISOString().split('T')[0];
+            syncAdminUserBlocksToTextarea();
+            if (typeof window.renderAdminUserSmartBlocks === 'function') window.renderAdminUserSmartBlocks();
+            if (typeof window.closeAdminSmartBlockProductEditModal === 'function') window.closeAdminSmartBlockProductEditModal();
+            if (typeof window.adminToast === 'function') window.adminToast('Product updated. Click Save blocks to push to Firestore.', 'success');
+        };
+        window.closeAdminSmartBlockProductEditModal = function() {
+            var m = document.getElementById('adminSmartBlockProductEditModal');
+            if (m) m.style.display = 'none';
         };
         window.openBlockEditor = function(blockId) {
             var block = (currentBlocks || []).find(function(b) { return b.id === blockId; });
@@ -8792,6 +9095,24 @@
                 if (aumm && !aumm._backdropClose) {
                     aumm._backdropClose = true;
                     aumm.addEventListener('click', function(e) { if (e.target === aumm && typeof window.closeAdminUserManageModal === 'function') window.closeAdminUserManageModal(); });
+                }
+                var adminBlocksJson = document.getElementById('adminUserManageBlocksJson');
+                if (adminBlocksJson && !adminBlocksJson._smartBlocksWire) {
+                    adminBlocksJson._smartBlocksWire = true;
+                    adminBlocksJson.addEventListener('blur', function() {
+                        try {
+                            var arr = JSON.parse(adminBlocksJson.value || '[]');
+                            window._adminUserBlocks = Array.isArray(arr) ? arr : [];
+                        } catch (e) {
+                            window._adminUserBlocks = [];
+                        }
+                        if (typeof window.renderAdminUserSmartBlocks === 'function') window.renderAdminUserSmartBlocks();
+                    });
+                }
+                var asbpem = document.getElementById('adminSmartBlockProductEditModal');
+                if (asbpem && !asbpem._backdropClose) {
+                    asbpem._backdropClose = true;
+                    asbpem.addEventListener('click', function(e) { if (e.target === asbpem && typeof window.closeAdminSmartBlockProductEditModal === 'function') window.closeAdminSmartBlockProductEditModal(); });
                 }
                 var cpm = document.getElementById('changePlanModal');
                 if (cpm && !cpm._backdropClose) {
@@ -10254,7 +10575,7 @@
             renderAlerts();
         }
 
-        function showLogoutConfirm() {
+        window.showLogoutConfirm = function showLogoutConfirm() {
             const modal = document.getElementById('logoutConfirmModal');
             if (modal) modal.style.display = 'flex';
         }
@@ -10329,6 +10650,12 @@
                 dashboardShell.addEventListener('click', function(e) {
                     var anchor = e.target && e.target.closest ? e.target.closest('a[href="#"]') : null;
                     if (anchor) e.preventDefault();
+                    var navLink = e.target && e.target.closest ? e.target.closest('.nav-link[data-page]') : null;
+                    if (navLink) {
+                        e.preventDefault();
+                        var pageId = navLink.getAttribute('data-page');
+                        if (pageId) showDashboardPage(pageId);
+                    }
                 });
             }
 
@@ -10587,6 +10914,7 @@
 
         // Show dashboard page
         function showDashboardPage(page) {
+            if (!page) return;
             const pages = ['dashboard-page', 'blocks-page', 'new-block-page', 'integrations-page', 'analytics-page', 'reports-page', 'billing-page', 'product-library-page', 'ai-assistant-page', 'help-page', 'settings-page'];
             pages.forEach(p => {
                 const el = document.getElementById(p);
@@ -10596,6 +10924,7 @@
             const target = document.getElementById(page + '-page');
             if (target) {
                 target.style.display = 'block';
+                if (window.innerWidth <= 1024 && typeof closeSidebar === 'function') closeSidebar();
                 if (page === 'new-block') maybeShowOnboardingTour();
                 if (page === 'analytics') renderAnalytics();
                 if (page === 'help') initHelpPage();
@@ -10650,7 +10979,11 @@
                     }
                 }
             }
+            document.querySelectorAll('#dashboard-view .nav-link[data-page]').forEach(function(l) {
+                l.classList.toggle('active', l.getAttribute('data-page') === page);
+            });
         }
+        window.showDashboardPage = showDashboardPage;
 
         let billingAccessUnlocked = false;
         async function checkBillingAccess() {
@@ -14126,94 +14459,14 @@
             `).join('');
         }
         
-        // Page Navigation Function
+        // Page Navigation Function (creator dashboard only — delegates to showDashboardPage)
         function showPage(pageName) {
-            // Redirect account to settings (they're the same)
-            if (pageName === 'account') {
-                pageName = 'settings';
-            }
-            
-            // Hide all pages
-            const pages = document.querySelectorAll('.page-content');
-            pages.forEach(page => {
-                page.style.display = 'none';
-            });
-            
-            // Remove active class from all nav links
-            const navLinks = document.querySelectorAll('.nav-link');
-            navLinks.forEach(link => {
-                link.classList.remove('active');
-            });
-            
-            // Show requested page
-            const targetPage = document.getElementById(pageName + '-page');
-            if (targetPage) {
-                targetPage.style.display = 'block';
-                
-                if (pageName === 'settings') {
-                    const gate = document.getElementById('settings-access-gate');
-                    const content = document.getElementById('settings-content');
-                    if (typeof settingsAccessUnlocked !== 'undefined' && settingsAccessUnlocked) {
-                        if (gate) gate.style.display = 'none';
-                        if (content) content.style.display = 'block';
-                        if (typeof initSettingsPage === 'function') initSettingsPage();
-                    } else {
-                        if (gate) gate.style.display = 'block';
-                        if (content) content.style.display = 'none';
-                    }
-                    loadProfileSettings();
-                    updateSidebarUserInfo();
-                    loadAmazonApiKey();
-                }
-                
-                // Load product library when product-library page is shown (refresh blocks from storage first)
-                if (pageName === 'product-library') {
-                    const uid = currentUser?.uid;
-                    if (uid) {
-                        try {
-                            const saved = localStorage.getItem('kotaBlocks_' + uid);
-                            if (saved) currentBlocks = JSON.parse(saved);
-                        } catch (e) { console.error('Error loading blocks for library:', e); }
-                    }
-                    loadProductLibrary();
-                    updateEmbedAnywhere();
-                }
-                
-                // Update subscription and render billing plans when billing page is shown
-                if (pageName === 'billing') {
-                    var gate = document.getElementById('billing-access-gate');
-                    var content = document.getElementById('billing-content');
-                    if (typeof billingAccessUnlocked !== 'undefined' && billingAccessUnlocked) {
-                        if (gate) gate.style.display = 'none';
-                        if (content) content.style.display = 'block';
-                    updateCurrentSubscription();
-                    renderBillingPlans();
-                    } else {
-                        if (gate) gate.style.display = 'block';
-                        if (content) content.style.display = 'none';
-                    }
-                }
-                
-                // Load reports when reports page is shown
-                if (pageName === 'reports') {
-                    var from = document.getElementById('reportDateFrom');
-                    var to = document.getElementById('reportDateTo');
-                    if (from && !from.value) {
-                        var d = new Date();
-                        d.setDate(d.getDate() - 30);
-                        from.value = d.toISOString().slice(0, 16);
-                    }
-                    if (to && !to.value) {
-                        to.value = new Date().toISOString().slice(0, 16);
-                    }
-                    loadReports();
-                }
-            }
-            
-            // Add active class to nav link
-            const activeLink = document.querySelector(`[data-page="${pageName}"]`);
-            if (activeLink) {
-                activeLink.classList.add('active');
+            if (pageName === 'account') pageName = 'settings';
+            if (typeof showDashboardPage === 'function') showDashboardPage(pageName);
+            if (pageName === 'settings') {
+                if (typeof loadProfileSettings === 'function') loadProfileSettings();
+                if (typeof updateSidebarUserInfo === 'function') updateSidebarUserInfo();
+                if (typeof loadAmazonApiKey === 'function') loadAmazonApiKey();
             }
         }
         
