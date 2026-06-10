@@ -1,20 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="Kotapal">
   <defs>
-    <!-- Matches IMG_4258 / dashboard logo: purple stem, purple→blue wing, blue→cyan wing -->
-    <linearGradient id="kotapal-wing-top" x1="30.13" y1="4" x2="60" y2="32" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#5B8DEF"/>
-      <stop offset="1" stop-color="#3BDEFF"/>
+    <linearGradient id="k-top" x1="20" y1="22" x2="58" y2="8" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#3B59F3"/>
+      <stop offset="1" stop-color="#30C5FF"/>
     </linearGradient>
-    <linearGradient id="kotapal-wing-bottom" x1="30.13" y1="32" x2="60" y2="60" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#A855F7"/>
-      <stop offset="0.45" stop-color="#7F52FF"/>
-      <stop offset="1" stop-color="#5B8DEF"/>
+    <linearGradient id="k-bottom" x1="20" y1="42" x2="58" y2="56" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#9333EA"/>
+      <stop offset="1" stop-color="#3B59F3"/>
+    </linearGradient>
+    <linearGradient id="k-stem" x1="8" y1="54" x2="8" y2="10" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#7C3AED"/>
+      <stop offset="0.5" stop-color="#6D28D9"/>
+      <stop offset="1" stop-color="#3B59F3"/>
     </linearGradient>
   </defs>
 
-  <!-- Kotlin-style K (same mark as dashboard IMG_4258), scaled into 64×64 with padding -->
-  <path fill="#C026D3" d="M4 60V4h26.13v56H4z"/>
-  <path fill="url(#kotapal-wing-top)" d="M30.13 4H60L30.13 32V4z"/>
-  <path fill="url(#kotapal-wing-bottom)" d="M60 60L30.13 32v28H60z"/>
+  <path d="M7 12 L7 52 L23 40 L23 24 Z" fill="url(#k-stem)"/>
+  <path d="M23 24 L56 9 L56 23 L29 31 Z" fill="url(#k-top)"/>
+  <path d="M23 40 L29 31 L56 44 L56 55 Z" fill="url(#k-bottom)"/>
 </svg>

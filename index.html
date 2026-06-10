@@ -42,7 +42,7 @@
 
 
 
-    <!-- Favicon: purple iconic K only (not full KotaPal wordmark) -->
+    <!-- Favicon: gradient K mark (matches dashboard logo icon) -->
     <link rel="icon" type="image/svg+xml" href="images/kotapal-k.svg">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -250,11 +250,17 @@
                 if (typeof setAdminScrollLock === 'function') setAdminScrollLock(false);
             }
             if (!dashboardVisible) {
-                var dashboardView = document.getElementById('dashboard-view');
-                if (dashboardView) {
-                    dashboardView.style.display = 'none';
-                    dashboardView.classList.remove('active');
-                    dashboardView.removeAttribute('data-kotapal-visible');
+                var authUser = (typeof auth !== 'undefined' && auth) ? auth.currentUser : null;
+                var keepDashboard = authUser && typeof window.hasKotapalExplicitLogin === 'function' && window.hasKotapalExplicitLogin();
+                if (keepDashboard && typeof window.showKotapalDashboard === 'function') {
+                    window.showKotapalDashboard();
+                } else {
+                    var dashboardView = document.getElementById('dashboard-view');
+                    if (dashboardView) {
+                        dashboardView.style.display = 'none';
+                        dashboardView.classList.remove('active');
+                        dashboardView.removeAttribute('data-kotapal-visible');
+                    }
                 }
             }
             if (!dashboardVisible && !adminVisible) {
@@ -263,7 +269,33 @@
                 document.documentElement.classList.remove('dashboard-scroll-lock', 'admin-scroll-lock');
             }
         };
+        window.hasKotapalExplicitLogin = function() {
+            try {
+                return sessionStorage.getItem('kotapal_explicit_login') === 'true' ||
+                    localStorage.getItem('kotapal_explicit_login') === 'true';
+            } catch (e) { return false; }
+        };
+        window.setKotapalExplicitLogin = function(on) {
+            try {
+                if (on) {
+                    sessionStorage.setItem('kotapal_explicit_login', 'true');
+                    localStorage.setItem('kotapal_explicit_login', 'true');
+                } else {
+                    sessionStorage.removeItem('kotapal_explicit_login');
+                    localStorage.removeItem('kotapal_explicit_login');
+                }
+            } catch (e) {}
+        };
+        window.ensureKotapalExplicitLoginSynced = function() {
+            try {
+                if (sessionStorage.getItem('kotapal_explicit_login') !== 'true' &&
+                    localStorage.getItem('kotapal_explicit_login') === 'true') {
+                    sessionStorage.setItem('kotapal_explicit_login', 'true');
+                }
+            } catch (e) {}
+        };
         window.ensureSiteInteractive = function() {
+            if (typeof window.ensureKotapalExplicitLoginSynced === 'function') window.ensureKotapalExplicitLoginSynced();
             if (window.isKotapalDashboardVisible() || window.isKotapalAdminVisible()) {
                 window.clearStaleOverlays();
             } else {
@@ -4378,8 +4410,7 @@
         .admin-sidebar-overlay.active { display: block; }
         .admin-sidebar .sidebar-header { padding: 20px; border-bottom: 1px solid var(--admin-gray-200); display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
         .admin-sidebar .logo { padding: 0; border: none; display: flex; align-items: center; gap: 12px; }
-        .admin-sidebar .logo-img { width: 40px; height: 40px; background: #3b82f6; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 20px; }
-        .admin-sidebar .logo img { max-width: 40px; height: 40px; object-fit: contain; border-radius: 10px; }
+        .admin-sidebar .logo img { width: 40px; height: 40px; object-fit: contain; display: block; }
         .admin-sidebar .brand-name { font-size: 22px; font-weight: 700; color: var(--admin-gray-800); letter-spacing: -0.02em; }
         .admin-sidebar .admin-info { padding: 14px 20px; border-bottom: 1px solid var(--admin-gray-200); flex-shrink: 0; }
         .admin-sidebar .admin-info .label { font-size: 0.75rem; color: var(--admin-gray-400); text-transform: uppercase; margin-bottom: 4px; letter-spacing: 0.5px; }
@@ -5366,7 +5397,7 @@
         <aside class="admin-sidebar" id="adminSidebar">
             <div class="sidebar-header">
                 <div class="logo">
-                    <div class="logo-img">K</div>
+                    <img src="images/kotapal-k.svg" alt="Kotapal" />
                 </div>
                 <div class="brand-name">Kotapal</div>
             </div>
@@ -6310,6 +6341,8 @@
                     submitBtn.textContent = 'Logging in...';
                 }
 
+                if (typeof window.setKotapalExplicitLogin === 'function') window.setKotapalExplicitLogin(true);
+
                 const userCredential = await auth.signInWithEmailAndPassword(email.trim(), password);
                 const user = userCredential.user;
                 
@@ -6343,9 +6376,7 @@
                         console.error('Firestore user update failed:', fsErr);
                     }
                 }
-                // Set explicit login flag in BOTH sessionStorage AND localStorage for maximum persistence
-                sessionStorage.setItem('kotapal_explicit_login', 'true');
-                localStorage.setItem('kotapal_explicit_login', 'true'); // Backup in localStorage
+                if (typeof window.setKotapalExplicitLogin === 'function') window.setKotapalExplicitLogin(true);
                 localStorage.setItem('kotaUser', JSON.stringify(userData));
                 currentUser = userData;
                 var logs = JSON.parse(localStorage.getItem('kota_activity_logs') || '[]');
@@ -6447,6 +6478,8 @@
                     submitBtn.textContent = 'Creating Account...';
                 }
 
+                if (typeof window.setKotapalExplicitLogin === 'function') window.setKotapalExplicitLogin(true);
+
                 const userCredential = await auth.createUserWithEmailAndPassword(email.trim(), password);
                 const user = userCredential.user;
                 
@@ -6486,8 +6519,7 @@
                         console.error('Firestore user write failed:', fsErr);
                     }
                 }
-                // Set explicit login flag FIRST, before any state changes
-                sessionStorage.setItem('kotapal_explicit_login', 'true');
+                if (typeof window.setKotapalExplicitLogin === 'function') window.setKotapalExplicitLogin(true);
                 localStorage.setItem('kotaUser', JSON.stringify(userData));
                 currentUser = userData;
                 
@@ -9083,9 +9115,15 @@
                     isProcessingAuthState = false;
                     return;
                 }
-                
+
+                if (typeof window.ensureKotapalExplicitLoginSynced === 'function') window.ensureKotapalExplicitLoginSynced();
+                if (user && typeof window.isKotapalDashboardVisible === 'function' && window.isKotapalDashboardVisible() &&
+                    typeof window.hasKotapalExplicitLogin === 'function' && !window.hasKotapalExplicitLogin()) {
+                    if (typeof window.setKotapalExplicitLogin === 'function') window.setKotapalExplicitLogin(true);
+                }
+
                 // Require login this session: show Login/Sign Up forms when user visits (no auto-login to another user's dashboard)
-                let explicitLogin = sessionStorage.getItem('kotapal_explicit_login') === 'true';
+                let explicitLogin = typeof window.hasKotapalExplicitLogin === 'function' && window.hasKotapalExplicitLogin();
                 
                 // Only show dashboard if user signed in this session (entered credentials)
                 if (user && explicitLogin) {
@@ -9117,9 +9155,11 @@
                     // Clear user data if signed out
                     if (!user) {
                         localStorage.removeItem('kotaUser');
-                        localStorage.removeItem('kotapal_explicit_login'); // Also remove from localStorage
-                        sessionStorage.removeItem('kotapal_explicit_login');
+                        if (typeof window.setKotapalExplicitLogin === 'function') window.setKotapalExplicitLogin(false);
                         currentUser = null;
+                    } else if (typeof window.isKotapalDashboardVisible === 'function' && window.isKotapalDashboardVisible()) {
+                        isProcessingAuthState = false;
+                        return;
                     }
                     
                     // Show landing page if not explicitly logged in
@@ -9849,7 +9889,9 @@
             var modal = document.getElementById('inactivityWarningModal');
             if (modal) modal.style.display = 'none';
             var dv = document.getElementById('dashboard-view');
-            if (!dv || dv.style.display !== 'block') return;
+            var dashActive = (typeof window.isKotapalDashboardVisible === 'function' && window.isKotapalDashboardVisible()) ||
+                (dv && dv.style.display === 'block');
+            if (!dashActive) return;
             inactivityTimerId = setTimeout(function() {
                 inactivityTimerId = null;
                 showInactivityWarning();
@@ -9883,6 +9925,7 @@
         }
 
         function initDashboard() {
+            if (typeof window.ensureKotapalExplicitLoginSynced === 'function') window.ensureKotapalExplicitLoginSynced();
             if (sessionStorage.getItem('settings_access_granted') === 'true') {
                 settingsAccessUnlocked = true;
             }
@@ -10019,8 +10062,7 @@
                 if (!snap.exists) return;
                 const data = snap.data() || {};
                 if (typeof auth !== 'undefined' && auth && auth.currentUser && auth.currentUser.uid === uid && window.location.hash !== '#admin' && String(data.status || '').toLowerCase() === 'suspended') {
-                    sessionStorage.removeItem('kotapal_explicit_login');
-                    localStorage.removeItem('kotapal_explicit_login');
+                    if (typeof window.setKotapalExplicitLogin === 'function') window.setKotapalExplicitLogin(false);
                     auth.signOut().catch(function() {});
                     if (typeof showNotification === 'function') showNotification('Your account has been disabled. Contact support if this is a mistake.', 'error', 'Account');
                     setTimeout(function() { window.location.reload(); }, 800);
@@ -10226,8 +10268,7 @@
                     await auth.signOut();
                 }
                 localStorage.removeItem('kotaUser');
-                localStorage.removeItem('kotapal_explicit_login');
-                sessionStorage.removeItem('kotapal_explicit_login');
+                if (typeof window.setKotapalExplicitLogin === 'function') window.setKotapalExplicitLogin(false);
                 sessionStorage.removeItem('settings_access_granted');
                 if (typeof settingsAccessUnlocked !== 'undefined') settingsAccessUnlocked = false;
                 if (typeof billingAccessUnlocked !== 'undefined') billingAccessUnlocked = false;
@@ -10281,6 +10322,16 @@
         function setupDashboardEventListeners() {
             if (window._dashboardListenersBound) return;
             window._dashboardListenersBound = true;
+
+            var dashboardShell = document.getElementById('dashboard-view');
+            if (dashboardShell && !dashboardShell._hashGuard) {
+                dashboardShell._hashGuard = true;
+                dashboardShell.addEventListener('click', function(e) {
+                    var anchor = e.target && e.target.closest ? e.target.closest('a[href="#"]') : null;
+                    if (anchor) e.preventDefault();
+                });
+            }
+
             // Navigation (dashboard sidebar only — not admin)
             const navLinks = document.querySelectorAll('#dashboard-view .nav-link[data-page]');
             navLinks.forEach(link => {
@@ -10326,9 +10377,12 @@
                 window._inactivityListenersAttached = true;
                 var activityEvents = ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart'];
                 function onActivity() {
+                    if (typeof window.ensureKotapalExplicitLoginSynced === 'function') window.ensureKotapalExplicitLoginSynced();
                     var dv = document.getElementById('dashboard-view');
                     var warnModal = document.getElementById('inactivityWarningModal');
-                    if (dv && dv.style.display === 'block' && (!warnModal || warnModal.style.display === 'none') && typeof resetInactivityTimer === 'function') resetInactivityTimer();
+                    var dashActive = (typeof window.isKotapalDashboardVisible === 'function' && window.isKotapalDashboardVisible()) ||
+                        (dv && dv.style.display === 'block');
+                    if (dashActive && (!warnModal || warnModal.style.display === 'none') && typeof resetInactivityTimer === 'function') resetInactivityTimer();
                 }
                 activityEvents.forEach(function(ev) {
                     document.addEventListener(ev, onActivity, { passive: true });
