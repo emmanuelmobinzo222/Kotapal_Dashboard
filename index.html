@@ -337,6 +337,7 @@
             if (typeof setDashboardScrollLock === 'function') setDashboardScrollLock(true);
             if (typeof syncDashboardNavForViewport === 'function') syncDashboardNavForViewport();
             if (typeof setupDashboardEventListeners === 'function') setupDashboardEventListeners();
+            if (typeof resetInactivityTimer === 'function') resetInactivityTimer();
         };
         window.hideKotapalDashboard = function() {
             var dv = document.getElementById('dashboard-view');
@@ -5534,7 +5535,7 @@
                     <div class="card" style="margin-top:20px;">
                         <div class="card-header"><h3 class="card-title">Provider API keys</h3></div>
                         <div class="card-body">
-                            <p style="margin:0 0 16px;font-size:0.9rem;color:var(--gray);line-height:1.5;">Paste your <strong>Amazon product search API key</strong> (or full search URL with <code>api_key=</code>). Default endpoint: <code>https://www.searchapi.io/api/v1/search</code> with <code>engine=amazon_search</code>. Product links use your affiliate tag from Connections above.</p>
+                            <p style="margin:0 0 16px;font-size:0.9rem;color:var(--gray);line-height:1.5;">Paste your <strong>Amazon product search API key</strong> (or full search URL with <code>api_key=</code>). Live results load whenever you search. Product links use your affiliate tag from Connections above.</p>
                             <div class="form-group">
                                 <label for="amazonApiKey">Amazon product search API key</label>
                                 <input type="password" id="amazonApiKey" class="form-control provider-api-key-input" data-provider="amazon" placeholder="Paste API key or full search URL" autocomplete="off" spellcheck="false">
@@ -10720,20 +10721,43 @@
         var warningCountdownSec = 60;
         var inactivityTimerId = null;
         var countdownIntervalId = null;
+        var lastActivityAt = Date.now();
+
+        function isDashboardSessionActive() {
+            var dv = document.getElementById('dashboard-view');
+            return (typeof window.isKotapalDashboardVisible === 'function' && window.isKotapalDashboardVisible()) ||
+                (dv && dv.style.display === 'block');
+        }
+
+        function markUserActivity() {
+            lastActivityAt = Date.now();
+        }
 
         function resetInactivityTimer() {
+            markUserActivity();
             if (inactivityTimerId) clearTimeout(inactivityTimerId);
             if (countdownIntervalId) clearInterval(countdownIntervalId);
             var modal = document.getElementById('inactivityWarningModal');
             if (modal) modal.style.display = 'none';
-            var dv = document.getElementById('dashboard-view');
-            var dashActive = (typeof window.isKotapalDashboardVisible === 'function' && window.isKotapalDashboardVisible()) ||
-                (dv && dv.style.display === 'block');
-            if (!dashActive) return;
+            if (!isDashboardSessionActive()) return;
             inactivityTimerId = setTimeout(function() {
                 inactivityTimerId = null;
                 showInactivityWarning();
             }, inactivityTimeoutMs);
+        }
+
+        function checkInactivityOnReturn() {
+            if (!isDashboardSessionActive()) return;
+            var elapsed = Date.now() - lastActivityAt;
+            var warnModal = document.getElementById('inactivityWarningModal');
+            var warningVisible = warnModal && warnModal.style.display !== 'none';
+            if (elapsed >= inactivityTimeoutMs + (warningCountdownSec * 1000)) {
+                if (typeof window.performLogout === 'function') window.performLogout();
+            } else if (elapsed >= inactivityTimeoutMs && !warningVisible) {
+                showInactivityWarning();
+            } else if (!warningVisible) {
+                resetInactivityTimer();
+            }
         }
 
         function showInactivityWarning() {
@@ -10751,6 +10775,7 @@
                     countdownIntervalId = null;
                     modal.style.display = 'none';
                     if (typeof performLogout === 'function') performLogout();
+                    else if (typeof window.performLogout === 'function') window.performLogout();
                 }
             }, 1000);
         }
@@ -11224,17 +11249,20 @@
             // Activity listeners to reset inactivity timer (only when dashboard visible)
             if (!window._inactivityListenersAttached) {
                 window._inactivityListenersAttached = true;
-                var activityEvents = ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart'];
+                var activityEvents = ['mousedown', 'keydown', 'scroll', 'touchstart', 'click'];
                 function onActivity() {
-                    var dv = document.getElementById('dashboard-view');
                     var warnModal = document.getElementById('inactivityWarningModal');
-                    var dashActive = (typeof window.isKotapalDashboardVisible === 'function' && window.isKotapalDashboardVisible()) ||
-                        (dv && dv.style.display === 'block');
-                    if (dashActive && (!warnModal || warnModal.style.display === 'none') && typeof resetInactivityTimer === 'function') resetInactivityTimer();
+                    if (isDashboardSessionActive() && (!warnModal || warnModal.style.display === 'none') && typeof resetInactivityTimer === 'function') {
+                        resetInactivityTimer();
+                    }
                 }
                 activityEvents.forEach(function(ev) {
                     document.addEventListener(ev, onActivity, { passive: true });
                 });
+                document.addEventListener('visibilitychange', function() {
+                    if (document.visibilityState === 'visible') checkInactivityOnReturn();
+                });
+                window.addEventListener('focus', checkInactivityOnReturn);
             }
 
             // Edit block title modal
@@ -12604,11 +12632,10 @@
             showNotification('Block created successfully!', 'success', 'Create Block');
         }
 
-        // Live retailer search — SearchAPI.io (user overrides in Integrations / Settings).
+        // Live retailer search — uses your saved Provider API keys only (no shared fallback keys).
         const LIVE_RETAILER_PROVIDERS = ['amazon', 'walmart', 'ebay'];
         const DEFAULT_LIVE_SEARCH = {
             endpoint: 'https://www.searchapi.io/api/v1/search',
-            apiKey: 'GdCvM3NbHRcCPV4mGj8yx8Xy',
             engines: {
                 amazon: 'amazon_search',
                 walmart: 'walmart_search',
@@ -12923,9 +12950,6 @@
                 return parseProviderCredential(saved).apiKey || '';
             }
             if (saved) return saved;
-            if (includeDefault && LIVE_RETAILER_PROVIDERS.includes(provider)) {
-                return DEFAULT_LIVE_SEARCH.apiKey;
-            }
             return '';
         }
 
@@ -13131,12 +13155,15 @@
         function formatProviderSearchError(message) {
             const m = String(message || '');
             if (/used all of the searches|quota|rate limit|429/i.test(m)) {
-                return 'SearchAPI monthly quota reached. Add your own API key under Settings → Provider API keys, or upgrade at searchapi.io.';
+                return 'Your product search API quota is exhausted. Add or update your API key under Settings → Provider API keys.';
+            }
+            if (/api key|no api key|key required|missing.*key/i.test(m)) {
+                return 'Add your product search API key under Settings → Provider API keys, then click Save.';
             }
             if (/failed to fetch|network|cors/i.test(m)) {
-                return 'Could not reach your API. Confirm the URL allows browser requests (CORS) or use a proxy.';
+                return 'Could not reach the product search API. Check your API URL and key in Settings.';
             }
-            return m || 'Live search is unavailable. Check your API URL and key in Settings.';
+            return m || 'Product search is unavailable. Check your API key in Settings.';
         }
 
         function tryExtractApiKeyFromText(text) {
@@ -13190,11 +13217,6 @@
             }
             addKey(getProviderApiKey(provider, false));
             addKey(getUnsavedProviderApiKeyFromDom(provider));
-            if (LIVE_RETAILER_PROVIDERS.includes(provider)) {
-                addKey(DEFAULT_LIVE_SEARCH.apiKey);
-            } else if (!keys.length) {
-                addKey(getProviderApiKey(provider, true));
-            }
             return keys;
         }
 
@@ -13259,32 +13281,34 @@
             };
         }
 
-        async function fetchProductsFromBackend(retailer, query) {
+        async function fetchProductsFromBackend(retailer, query, preferredKey) {
             const apiRoot = getProductsApiBase();
             const keys = getApiKeysToTry(retailer);
-            const apiKey = keys[0] || '';
+            const apiKey = preferredKey || keys[0] || '';
             const apiEndpoint = getProviderApiEndpoint(retailer);
-            let url = (apiRoot || '') + '/api/products/search?retailer=' + encodeURIComponent(retailer) + '&query=' + encodeURIComponent(query);
-            if (apiKey) url += '&apiKey=' + encodeURIComponent(apiKey);
-            if (apiEndpoint) url += '&apiEndpoint=' + encodeURIComponent(apiEndpoint);
-            try {
-                const res = await fetch(url, { method: 'GET', headers: { Accept: 'application/json' } });
-                let data = null;
-                try {
-                    data = await res.json();
-                } catch (parseErr) {
-                    return null;
-                }
-                if (!res.ok || (data && data.error)) return null;
-                const items = data.products || extractProductsArray(data);
-                if (!items.length) return null;
-                return items.map(function(item, i) {
-                    return mapBackendProductToCard(item, retailer, i) || mapApiItemToProduct(item, retailer, i);
-                });
-            } catch (e) {
-                console.warn('Backend product search unavailable:', e);
-                return null;
+            if (!apiKey) {
+                throw new Error(liveRetailerSearchBlockedMessage(retailer));
             }
+            let url = (apiRoot || '') + '/api/products/search?retailer=' + encodeURIComponent(retailer) + '&query=' + encodeURIComponent(query);
+            url += '&apiKey=' + encodeURIComponent(apiKey);
+            if (apiEndpoint) url += '&apiEndpoint=' + encodeURIComponent(apiEndpoint);
+            const headers = { Accept: 'application/json', 'X-Provider-Api-Key': apiKey };
+            const res = await fetch(url, { method: 'GET', headers: headers });
+            let data = null;
+            try {
+                data = await res.json();
+            } catch (parseErr) {
+                throw new Error('Product search returned an invalid response.');
+            }
+            if (!res.ok || (data && data.error)) {
+                const errMsg = (data && data.error && (data.error.message || data.error)) || (data && data.message) || ('HTTP ' + res.status);
+                throw new Error(formatProviderSearchError(typeof errMsg === 'string' ? errMsg : JSON.stringify(errMsg)));
+            }
+            const items = data.products || extractProductsArray(data);
+            if (!items.length) return [];
+            return items.map(function(item, i) {
+                return mapBackendProductToCard(item, retailer, i) || mapApiItemToProduct(item, retailer, i);
+            });
         }
 
         function liveRetailerSearchBlockedMessage(retailer) {
@@ -13393,21 +13417,26 @@
                 setProviderApiEndpoint(retailer, unsavedEndpointEl.value.trim());
             }
 
-            const backendProducts = await fetchProductsFromBackend(retailer, query);
-            if (backendProducts && backendProducts.length) return backendProducts;
-
             const keys = getApiKeysToTry(retailer);
             if (!keys.length) {
                 throw new Error(liveRetailerSearchBlockedMessage(retailer));
             }
+
             let lastError = null;
             for (var ki = 0; ki < keys.length; ki++) {
+                try {
+                    const backendProducts = await fetchProductsFromBackend(retailer, query, keys[ki]);
+                    if (backendProducts && backendProducts.length) return backendProducts;
+                } catch (backendErr) {
+                    lastError = backendErr;
+                    console.warn('Backend product search failed:', retailer, backendErr);
+                }
                 try {
                     const products = await fetchProviderProducts(retailer, query, keys[ki]);
                     if (products.length > 0) return products;
                 } catch (apiErr) {
                     lastError = apiErr;
-                    console.warn('Live retailer search attempt failed:', retailer, apiErr);
+                    console.warn('Direct retailer search failed:', retailer, apiErr);
                 }
             }
             if (lastError) throw lastError;
@@ -13504,8 +13533,9 @@
                         searchStatus.textContent = 'Found ' + products.length + ' ' + retailer + ' products for "' + query + '"';
                     } catch (liveErr) {
                         console.error('Live retailer search error:', liveErr);
-                        searchStatus.textContent = formatProviderSearchError(liveErr.message);
-                        productsContainer.innerHTML = '<p style="text-align: center; color: var(--danger); padding: 20px;">' + escapeProductHtml(formatProviderSearchError(liveErr.message)) + '</p>';
+                        const errText = formatProviderSearchError(liveErr.message);
+                        searchStatus.textContent = errText;
+                        productsContainer.innerHTML = '<p style="text-align: center; color: var(--danger); padding: 20px;">' + escapeProductHtml(errText) + '</p>';
                         return;
                     }
                     if (!products.length) {
@@ -13591,8 +13621,9 @@
                 
             } catch (error) {
                 console.error('Search products error:', error);
-                searchStatus.textContent = formatProviderSearchError(error.message);
-                productsContainer.innerHTML = '<p style="text-align: center; color: var(--danger); padding: 20px;">Live search failed. Check Connections &amp; API keys in Settings and try again.</p>';
+                const errText = formatProviderSearchError(error.message);
+                searchStatus.textContent = errText;
+                productsContainer.innerHTML = '<p style="text-align: center; color: var(--danger); padding: 20px;">' + escapeProductHtml(errText) + '</p>';
             }
         }
         
@@ -13678,8 +13709,9 @@
             } catch (err) {
                 console.error('Product Library search error:', err);
                 window._lastLibrarySearchProducts = [];
-                statusEl.textContent = formatProviderSearchError(err.message);
-                resultsEl.innerHTML = '<p style="text-align: center; color: var(--danger); padding: 20px;">Live search failed. Check Connections &amp; API keys in Settings and try again.</p>';
+                const errText = formatProviderSearchError(err.message);
+                statusEl.textContent = errText;
+                resultsEl.innerHTML = '<p style="text-align: center; color: var(--danger); padding: 20px;">' + escapeProductHtml(errText) + '</p>';
             }
         }
         

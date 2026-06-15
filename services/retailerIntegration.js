@@ -333,10 +333,7 @@ class AmazonRetailer extends BaseRetailer {
     // SearchAPI.io Amazon Search API
     // Endpoint: https://www.searchapi.io/api/v1/search?engine=amazon_search
     this.apiBaseUrl = process.env.SEARCHAPI_AMAZON_URL || 'https://www.searchapi.io/api/v1/search';
-    // Default API key for Amazon product searches
-    this.apiKey = process.env.SEARCHAPI_API_KEY || 
-                  process.env.AMAZON_API_KEY || 
-                  'GdCvM3NbHRcCPV4mGj8yx8Xy';
+    this.apiKey = process.env.SEARCHAPI_API_KEY || process.env.AMAZON_API_KEY || '';
   }
 
   /**
@@ -362,6 +359,10 @@ class AmazonRetailer extends BaseRetailer {
 
     const resolvedApiKey = apiKey || this.apiKey;
     const resolvedApiBaseUrl = apiBaseUrl || this.apiBaseUrl;
+
+    if (!resolvedApiKey) {
+      throw new Error('Amazon product search API key is required. Add your key in Settings.');
+    }
 
     try {
       const params = {
@@ -529,9 +530,7 @@ class WalmartRetailer extends BaseRetailer {
     // SearchAPI.io Walmart Search API
     this.apiBaseUrl = process.env.SEARCHAPI_WALMART_URL || 'https://www.searchapi.io/api/v1/search';
     // Default API key for Walmart product searches (same as Amazon)
-    this.apiKey = process.env.SEARCHAPI_API_KEY || 
-                  process.env.WALMART_API_KEY || 
-                  'GdCvM3NbHRcCPV4mGj8yx8Xy';
+    this.apiKey = process.env.SEARCHAPI_API_KEY || process.env.WALMART_API_KEY || '';
   }
 
   /**
@@ -541,6 +540,10 @@ class WalmartRetailer extends BaseRetailer {
     const { limit = 20, page = 1, apiKey, apiBaseUrl } = options;
     const resolvedApiKey = apiKey || this.apiKey;
     const resolvedApiBaseUrl = apiBaseUrl || this.apiBaseUrl;
+
+    if (!resolvedApiKey) {
+      throw new Error('Walmart product search API key is required. Add your key in Settings.');
+    }
 
     try {
       const response = await axios.get(resolvedApiBaseUrl, {
@@ -689,9 +692,7 @@ class eBayRetailer extends BaseRetailer {
     super(integrationService);
     this.name = 'ebay';
     this.apiBaseUrl = process.env.SEARCHAPI_EBAY_URL || 'https://www.searchapi.io/api/v1/search';
-    this.apiKey = process.env.SEARCHAPI_API_KEY ||
-                  process.env.EBAY_API_KEY ||
-                  'GdCvM3NbHRcCPV4mGj8yx8Xy';
+    this.apiKey = process.env.SEARCHAPI_API_KEY || process.env.EBAY_API_KEY || '';
   }
 
   /**
@@ -727,6 +728,10 @@ class eBayRetailer extends BaseRetailer {
     const resolvedApiKey = apiKey || this.apiKey;
     const resolvedApiBaseUrl = apiBaseUrl || this.apiBaseUrl;
     const numVal = num || (limit <= 60 ? 60 : limit <= 120 ? 120 : 240);
+
+    if (!resolvedApiKey) {
+      throw new Error('eBay product search API key is required. Add your key in Settings.');
+    }
 
     try {
       const params = {
