@@ -42,9 +42,10 @@
 
 
 
-    <!-- Favicon: purple gradient K mark -->
-    <link rel="icon" type="image/svg+xml" href="images/kotapal-k.svg">
-    <link rel="apple-touch-icon" href="images/kotapal-k.svg">
+    <!-- Favicon: K mark cropped from landing logo (square, correct aspect ratio) -->
+    <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="images/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="192x192" href="images/apple-touch-icon.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -152,7 +153,7 @@
         }
         window.kotapalModalIds = [
             'planDetailModal', 'carouselItemLightbox', 'authModal', 'resetPasswordModal', 'inactivityWarningModal',
-            'adminProductEditModal', 'adminSmartBlockProductEditModal', 'adminDetailModal', 'adminUserManageModal', 'changePlanModal',
+            'adminProductEditModal', 'adminSmartBlockProductEditModal', 'adminBlockEditModal', 'adminAddProductModal', 'adminDetailModal', 'adminUserManageModal', 'changePlanModal',
             'adminPlanEditModal', 'adminRoleEditModal', 'logoutConfirmModal', 'downloadReportFormatModal',
             'guidesModal', 'privacyModal', 'tosModal', 'deleteBlockConfirmModal', 'editBlockTitleModal'
         ];
@@ -4296,6 +4297,91 @@
             margin: 0 0 8px; font-size: 1rem; font-weight: 600; color: var(--dark);
         }
         #dashboard-view.theme-dark .settings-connections-divider { border-top-color: #334155; }
+        /* Dashboard form controls — unify inputs, selects, and textareas */
+        #dashboard-view .form-control,
+        #dashboard-view select.form-control,
+        #dashboard-view textarea.form-control {
+            width: 100%; padding: 10px 14px; border: 1px solid #d1d5db; border-radius: 8px;
+            font-size: 0.9375rem; font-family: inherit; background: #fff; color: var(--dark);
+            transition: border-color 0.2s, box-shadow 0.2s; box-sizing: border-box;
+        }
+        #dashboard-view select.form-control {
+            appearance: none; -webkit-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M2 4l4 4 4-4'/%3E%3C/svg%3E");
+            background-repeat: no-repeat; background-position: right 12px center; background-size: 12px;
+            padding-right: 36px; cursor: pointer;
+        }
+        #dashboard-view .form-control:focus,
+        #dashboard-view select.form-control:focus,
+        #dashboard-view textarea.form-control:focus {
+            outline: none; border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+        }
+        /* Analytics filter bar */
+        #dashboard-view .analytics-filter-bar {
+            display: flex; flex-wrap: wrap; align-items: center; gap: 14px 18px;
+            padding: 16px 20px; background: #f8fafc; border: 1px solid #e5e7eb; border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        #dashboard-view .analytics-filter-bar .filter-group { display: flex; align-items: center; gap: 8px; }
+        #dashboard-view .analytics-filter-bar .filter-label { font-size: 0.875rem; font-weight: 500; color: #6b7280; white-space: nowrap; }
+        #dashboard-view .analytics-filter-bar .filter-presets { display: flex; gap: 8px; flex-wrap: wrap; }
+        #dashboard-view .analytics-filter-bar .filter-presets .btn { font-size: 0.85rem; padding: 8px 14px; border-radius: 8px; }
+        #dashboard-view .analytics-filter-bar input.form-control,
+        #dashboard-view .analytics-filter-bar select.form-control { max-width: 170px; margin: 0; }
+        /* Product Library */
+        #dashboard-view .product-library-toolbar,
+        #dashboard-view .product-library-filters {
+            display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-bottom: 16px;
+        }
+        #dashboard-view .product-library-status { font-size: 0.875rem; color: var(--gray); margin-left: auto; }
+        #dashboard-view .product-library-search-results,
+        #dashboard-view .product-library-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px;
+        }
+        #dashboard-view .product-library-loading {
+            grid-column: 1 / -1; padding: 32px; text-align: center; color: var(--gray);
+        }
+        #dashboard-view .product-card-dashboard {
+            background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 12px;
+            display: flex; flex-direction: column; overflow: hidden; transition: box-shadow 0.2s;
+        }
+        #dashboard-view .product-card-dashboard:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+        #dashboard-view .product-image-dashboard {
+            width: 100%; height: 160px; object-fit: contain; background: #f8fafc;
+            border-radius: 8px; margin-bottom: 10px; display: block;
+        }
+        #dashboard-view .product-card-dashboard .product-title {
+            font-size: 0.875rem; font-weight: 600; line-height: 1.35; margin-bottom: 6px;
+            overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+            min-height: 2.4em;
+        }
+        #dashboard-view .product-card-dashboard .product-price { font-size: 1rem; font-weight: 700; color: var(--primary); margin-bottom: 4px; }
+        #dashboard-view .product-card-dashboard .product-retailer { font-size: 0.8rem; color: var(--gray); }
+        /* Create block product search layouts */
+        #dashboard-view .product-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 16px; margin: 16px 0;
+        }
+        #dashboard-view .product-grid.layout-carousel {
+            display: flex; flex-wrap: nowrap; overflow-x: auto; gap: 16px; padding-bottom: 8px;
+            scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch;
+        }
+        #dashboard-view .product-grid.layout-carousel .product-card-dashboard {
+            flex: 0 0 200px; scroll-snap-align: start;
+        }
+        #dashboard-view .product-grid.layout-single {
+            grid-template-columns: 1fr; max-width: 320px;
+        }
+        #dashboard-view .product-grid.layout-single .product-image-dashboard { height: 220px; }
+        #dashboard-view .product-card-dashboard.selected { border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59,130,246,0.25); }
+        #dashboard-view .btn-report-delete {
+            background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; border-radius: 8px;
+            padding: 8px 14px; font-size: 0.875rem; font-weight: 500; cursor: pointer;
+            display: inline-flex; align-items: center; gap: 6px; margin-left: 8px;
+        }
+        #dashboard-view .btn-report-delete:hover { background: #fecaca; }
+        #dashboard-view .embed-drag-preview.no-block { opacity: 0.65; cursor: not-allowed; }
+        #dashboard-view .embed-drag-preview.is-dragging { opacity: 0.75; box-shadow: 0 4px 16px rgba(59,130,246,0.25); }
         /* Embed drag preview + full-page SmartBlock placement (over all UI) */
         #dashboard-view .embed-drag-preview {
             display: flex; align-items: center; gap: 14px; padding: 14px 16px;
@@ -4664,6 +4750,8 @@
         #adminDetailModal,
         #adminProductEditModal,
         #adminSmartBlockProductEditModal,
+        #adminBlockEditModal,
+        #adminAddProductModal,
         #adminPlanEditModal,
         #adminRoleEditModal {
             z-index: 10050 !important;
@@ -4772,6 +4860,60 @@
             color: #6b7280;
             margin-bottom: 8px;
         }
+        .admin-user-profile-link {
+            cursor: pointer;
+            border-radius: 8px;
+            transition: background 0.15s;
+        }
+        .admin-user-profile-link:hover { background: rgba(99, 102, 241, 0.08); }
+        #adminUsersTableBody tr.admin-user-row-clickable { cursor: pointer; }
+        #adminUsersTableBody tr.admin-user-row-clickable:hover td:first-child { background: rgba(99, 102, 241, 0.04); }
+        #adminUserManageModal .admin-user-blocks-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        #adminUserManageModal .admin-user-smartblock-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-left: auto;
+        }
+        #adminUserManageModal .admin-user-product-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-top: 6px;
+        }
+        #adminAddProductModal .admin-product-search-results {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 10px;
+            max-height: 220px;
+            overflow-y: auto;
+            margin-top: 10px;
+        }
+        #adminAddProductModal .admin-product-search-card {
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 8px;
+            font-size: 0.75rem;
+            background: #fafafa;
+        }
+        #adminAddProductModal .admin-product-search-card img {
+            width: 100%;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 6px;
+            margin-bottom: 6px;
+        }
+        .admin-recent-user-item {
+            cursor: pointer;
+            border-radius: 10px;
+            transition: background 0.15s;
+        }
+        .admin-recent-user-item:hover { background: rgba(99, 102, 241, 0.06); }
         #admin-toast-host { position: fixed; bottom: 22px; right: 22px; z-index: 100000; display: flex; flex-direction: column; gap: 8px; pointer-events: none; font-family: 'Inter', sans-serif; }
         .admin-users-table-wrap { position: relative; }
         .admin-users-table-wrap.is-refreshing::after {
@@ -4987,7 +5129,7 @@
                                 </div>
                                 <div id="searchStatus" style="margin-top: 10px; font-size: 0.9rem; color: var(--gray);"></div>
                             </div>
-                            <div id="productsContainer" class="product-grid"></div>
+                            <div id="productsContainer" class="product-grid layout-grid"></div>
                             <div class="form-group">
                                 <label>Selected Products (<span id="selectedCount">0</span>/10)</label>
                                 <div id="selectedProducts" style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px;"></div>
@@ -5027,15 +5169,19 @@
                     <div id="analyticsBlurWrapper" style="filter:blur(6px); transition:filter 0.4s ease;">
                         <div class="card">
                             <div class="card-body">
-                                <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:15px; align-items:center;">
-                                    <label style="font-size:0.9rem; color:var(--gray);">From</label>
-                                    <input type="date" id="dateRangeFrom" class="form-control" style="max-width:160px;">
-                                    <label style="font-size:0.9rem; color:var(--gray);">To</label>
-                                    <input type="date" id="dateRangeTo" class="form-control" style="max-width:160px;">
-                                    <div style="display:flex; gap:6px;">
-                                        <button type="button" class="btn btn-secondary" id="datePreset7" style="font-size:0.85rem; padding:6px 10px;">7 days</button>
-                                        <button type="button" class="btn btn-secondary" id="datePreset30" style="font-size:0.85rem; padding:6px 10px;">30 days</button>
-                                        <button type="button" class="btn btn-secondary" id="datePreset90" style="font-size:0.85rem; padding:6px 10px;">90 days</button>
+                                <div class="analytics-filter-bar">
+                                    <div class="filter-group">
+                                        <span class="filter-label">From</span>
+                                        <input type="date" id="dateRangeFrom" class="form-control">
+                                    </div>
+                                    <div class="filter-group">
+                                        <span class="filter-label">To</span>
+                                        <input type="date" id="dateRangeTo" class="form-control">
+                                    </div>
+                                    <div class="filter-presets">
+                                        <button type="button" class="btn btn-secondary" id="datePreset7">7 days</button>
+                                        <button type="button" class="btn btn-secondary" id="datePreset30">30 days</button>
+                                        <button type="button" class="btn btn-secondary" id="datePreset90">90 days</button>
                                     </div>
                                     <select id="retailerFilter" class="form-control" style="max-width:200px;">
                                         <option value="all">All Retailers</option>
@@ -5211,7 +5357,7 @@
                     <div class="header"><h1 class="page-title">Product Library</h1></div>
                     <div class="card">
                         <div class="card-body">
-                            <div style="display:flex; gap:12px; margin-bottom:12px; flex-wrap:wrap; align-items:flex-end;">
+                            <div class="product-library-toolbar">
                                 <select id="productLibraryRetailer" class="form-control" style="max-width:160px;">
                                     <option value="amazon">Amazon</option>
                                     <option value="walmart">Walmart</option>
@@ -5221,10 +5367,10 @@
                                 </select>
                                 <input id="productLibraryRetailerQuery" class="form-control" placeholder="Search retailers..." value="best sellers" style="max-width:240px;">
                                 <button type="button" class="btn btn-secondary" id="productLibrarySearchRetailersBtn">Search retailers</button>
-                                <span id="productLibrarySearchStatus" style="font-size:0.9rem;color:var(--gray);"></span>
+                                <span id="productLibrarySearchStatus" class="product-library-status"></span>
                             </div>
-                            <div id="productLibrarySearchResults" style="margin-bottom:16px;"></div>
-                            <div style="display:flex; gap:12px; margin-bottom:12px; flex-wrap:wrap;">
+                            <div id="productLibrarySearchResults" class="product-library-search-results" style="margin-bottom:20px;"></div>
+                            <div class="product-library-filters">
                                 <input id="productLibrarySearch" class="form-control" placeholder="Search products..." style="max-width:300px;">
                                 <select id="productLibraryFilter" class="form-control" style="max-width:180px;">
                                     <option value="all">All retailers</option>
@@ -5241,7 +5387,7 @@
                                     <option value="name">Name A–Z</option>
                                 </select>
                             </div>
-                            <div id="productLibraryContainer" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:16px;"></div>
+                            <div id="productLibraryContainer" class="product-library-grid"></div>
                         </div>
                     </div>
                 </div>
@@ -5527,7 +5673,7 @@
         <aside class="admin-sidebar" id="adminSidebar">
             <div class="sidebar-header">
                 <div class="logo">
-                    <img src="images/kotapal-k.svg" alt="Kotapal" />
+                    <img src="images/favicon-32x32.png" alt="Kotapal" />
                 </div>
                 <div class="brand-name">Kotapal</div>
             </div>
@@ -5998,6 +6144,9 @@
             <div class="admin-form-group"><label>Account status</label><select id="adminUserManageStatus" style="width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:8px;"><option value="active">Active</option><option value="suspended">Suspended (disabled)</option></select></div>
             <div class="admin-form-group" id="adminUserManageBlocksGroup">
                 <label>SmartBlocks &amp; products</label>
+                <div id="adminUserBlocksToolbar" class="admin-user-blocks-toolbar" style="display:none;">
+                    <button type="button" class="admin-btn admin-btn-sm" id="adminUserAddBlockBtn" onclick="openAdminAddSmartBlock()"><i class="fas fa-plus"></i> Add SmartBlock</button>
+                </div>
                 <div id="adminUserSmartBlocksContainer" class="admin-smartblocks-empty">Loading SmartBlocks…</div>
                 <details id="adminUserBlocksJsonDetails" style="margin-top:12px;">
                     <summary>Advanced: JSON editor</summary>
@@ -6037,6 +6186,47 @@
             <div style="display:flex;gap:10px;margin-top:20px;">
                 <button type="button" class="admin-btn" onclick="saveAdminSmartBlockProductEdit()">Save product</button>
                 <button type="button" class="admin-btn admin-btn-secondary" onclick="closeAdminSmartBlockProductEditModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="adminBlockEditModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:2200;align-items:center;justify-content:center;padding:20px;">
+        <div style="background:white;padding:24px;border-radius:12px;max-width:480px;width:100%;">
+            <h3 id="adminBlockEditTitle" style="margin-bottom:16px;">Edit SmartBlock</h3>
+            <input type="hidden" id="adminBlockEditId">
+            <div class="admin-form-group"><label>Block title</label><input type="text" id="adminBlockEditName" style="width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:8px;" placeholder="e.g. Best Headphones"></div>
+            <div class="admin-form-group"><label>Layout</label><select id="adminBlockEditLayout" style="width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:8px;"><option value="grid">Grid</option><option value="carousel">Carousel</option><option value="single">Single</option></select></div>
+            <div class="admin-form-group"><label>Status</label><select id="adminBlockEditStatus" style="width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:8px;"><option value="active">Active</option><option value="draft">Draft</option></select></div>
+            <div class="admin-form-group"><label>CTA button text</label><input type="text" id="adminBlockEditCta" style="width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:8px;" placeholder="Buy Now"></div>
+            <div style="display:flex;gap:10px;margin-top:20px;">
+                <button type="button" class="admin-btn" onclick="saveAdminBlockEdit()">Save block</button>
+                <button type="button" class="admin-btn admin-btn-secondary" onclick="closeAdminBlockEditModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="adminAddProductModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:2200;align-items:center;justify-content:center;padding:20px;">
+        <div style="background:white;padding:24px;border-radius:12px;max-width:560px;width:100%;max-height:90vh;overflow-y:auto;">
+            <h3 style="margin-bottom:12px;">Add product to block</h3>
+            <input type="hidden" id="adminAddProductBlockId">
+            <div class="admin-form-group"><label>Search retailer</label>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                    <select id="adminAddProductRetailer" style="flex:1;min-width:120px;padding:10px;border:1px solid #e5e7eb;border-radius:8px;"><option value="amazon">Amazon</option><option value="walmart">Walmart</option><option value="ebay">eBay</option></select>
+                    <input type="text" id="adminAddProductQuery" placeholder="Search products…" style="flex:2;min-width:160px;padding:10px;border:1px solid #e5e7eb;border-radius:8px;">
+                    <button type="button" class="admin-btn admin-btn-sm" onclick="searchAdminProductsForBlock()">Search</button>
+                </div>
+            </div>
+            <p id="adminAddProductSearchStatus" style="font-size:0.8rem;color:#6b7280;margin:0 0 8px;"></p>
+            <div id="adminAddProductSearchResults" class="admin-product-search-results"></div>
+            <hr style="margin:16px 0;border:none;border-top:1px solid #e5e7eb;">
+            <p style="font-size:0.85rem;color:#374151;margin-bottom:10px;font-weight:600;">Or add manually</p>
+            <div class="admin-form-group"><label>Title</label><input type="text" id="adminAddProductTitle" style="width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:8px;"></div>
+            <div class="admin-form-group"><label>Image URL</label><input type="url" id="adminAddProductImage" style="width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:8px;"></div>
+            <div class="admin-form-group"><label>Price ($)</label><input type="number" step="0.01" id="adminAddProductPrice" style="width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:8px;"></div>
+            <div class="admin-form-group"><label>Retailer</label><input type="text" id="adminAddProductRetailerManual" style="width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:8px;" placeholder="amazon, walmart, ebay…"></div>
+            <div style="display:flex;gap:10px;margin-top:20px;">
+                <button type="button" class="admin-btn" onclick="saveAdminManualProductToBlock()">Add product</button>
+                <button type="button" class="admin-btn admin-btn-secondary" onclick="closeAdminAddProductModal()">Cancel</button>
             </div>
         </div>
     </div>
@@ -6965,6 +7155,9 @@
                     case 'user-edit':
                         if (window.openAdminManageUser) window.openAdminManageUser(dec('data-user-id'), dec('data-user-email'), dec('data-user-name'), dec('data-user-plan'), dec('data-user-status'), 'manage');
                         break;
+                    case 'user-profile':
+                        if (window.openAdminManageUser) window.openAdminManageUser(dec('data-user-id'), dec('data-user-email'), dec('data-user-name'), dec('data-user-plan'), dec('data-user-status'), 'manage');
+                        break;
                     case 'user-plan':
                         if (window.openChangePlan) window.openChangePlan(dec('data-user-id'), dec('data-user-plan'));
                         break;
@@ -7031,6 +7224,16 @@
                 e.preventDefault();
                 window.runAdminTableAction(actEl);
             }, true);
+            document.addEventListener('click', function(e) {
+                var row = e.target && e.target.closest ? e.target.closest('#adminUsersTableBody tr[data-user-id]') : null;
+                if (!row || !row.getAttribute('data-user-id')) return;
+                if (e.target.closest('.action-btns') || e.target.closest('[data-admin-action]')) return;
+                var uid = row.getAttribute('data-user-id');
+                var u = (window.adminUsers || []).find(function(x) { return x.id === uid; });
+                if (!u || !window.openAdminManageUser) return;
+                e.preventDefault();
+                window.openAdminManageUser(u.id, u.email || '', u.name || '', u.plan || 'starter', u.status || 'active', 'manage');
+            });
         };
         
         function initAdmin() {
@@ -7676,8 +7879,8 @@
                         '<button type="button" class="admin-btn-sm admin-btn-secondary" data-admin-action="user-plan" data-user-id="' + idEnc + '" data-user-plan="' + plEnc + '"><i class="fas fa-layer-group"></i> Plan</button>' +
                         '<button type="button" class="admin-btn-sm admin-btn-primary" data-admin-action="user-suspend" data-user-id="' + idEnc + '" data-user-status="' + stEnc + '"><i class="fas fa-' + (status === 'suspended' ? 'user-check' : 'user-slash') + '"></i> ' + (status === 'suspended' ? 'Unsuspend' : 'Suspend') + '</button>' +
                         '<button type="button" class="admin-btn-sm admin-btn-danger" data-admin-action="user-delete" data-user-id="' + idEnc + '"><i class="fas fa-trash"></i> Delete</button></div>';
-                    var userCell = '<div style="display:flex;align-items:center;gap:10px;"><div class="user-avatar" style="width:35px;height:35px;font-size:14px;">' + html(initials(u.name)) + '</div><span>' + html(u.name || '-') + '</span></div>';
-                    return '<tr data-user-id="' + escAttr(u.id || '') + '" data-filter-email="' + escAttr(fe) + '" data-filter-name="' + escAttr(fn) + '" data-filter-status="' + escAttr(status) + '" data-filter-plan="' + escAttr(planRaw) + '"><td>' + userCell + '</td><td>' + html(u.email || '-') + '</td><td>' + planBadge + '</td><td>' + statusBadge + '</td><td>' + html(joined) + '</td><td>' + actions + '</td></tr>';
+                    var userCell = '<div class="admin-user-profile-link" style="display:flex;align-items:center;gap:10px;" data-admin-action="user-profile" data-user-id="' + idEnc + '" data-user-email="' + emEnc + '" data-user-name="' + nmEnc + '" data-user-plan="' + plEnc + '" data-user-status="' + stEnc + '" title="Manage user &amp; products"><div class="user-avatar" style="width:35px;height:35px;font-size:14px;">' + html(initials(u.name)) + '</div><span>' + html(u.name || '-') + '</span></div>';
+                    return '<tr class="admin-user-row-clickable" data-user-id="' + escAttr(u.id || '') + '" data-filter-email="' + escAttr(fe) + '" data-filter-name="' + escAttr(fn) + '" data-filter-status="' + escAttr(status) + '" data-filter-plan="' + escAttr(planRaw) + '"><td>' + userCell + '</td><td>' + html(u.email || '-') + '</td><td>' + planBadge + '</td><td>' + statusBadge + '</td><td>' + html(joined) + '</td><td>' + actions + '</td></tr>';
                 }).join('');
                 if (typeof window.applyAdminUserFilters === 'function') window.applyAdminUserFilters();
             };
@@ -7803,7 +8006,13 @@
                         var plan = (u.plan || 'starter').toLowerCase();
                         var planInfo = getKotaPlan(plan);
                         var tag = '<span class="badge-tag ' + planInfo.badgeClass + '">' + planInfo.name + '</span>';
-                        return '<div class="user-item"><div class="user-avatar" style="width:45px;height:45px;font-size:16px;">' + html(initials(u.name)) + '</div><div class="user-info"><div class="user-name-text">' + html(u.name || '-') + '</div><div class="user-email">' + html(u.email || '-') + '</div></div><div class="user-meta"><div class="user-date">' + html(joined) + '</div>' + tag + '</div></div>';
+                        function encAttr(s) { return encodeURIComponent(String(s == null ? '' : s)); }
+                        var idEnc = encAttr(u.id || u.email);
+                        var emEnc = encAttr(u.email || '');
+                        var nmEnc = encAttr(u.name || '');
+                        var plEnc = encAttr(plan);
+                        var stEnc = encAttr((u.status || 'active').toLowerCase());
+                        return '<div class="user-item admin-recent-user-item" data-admin-action="user-profile" data-user-id="' + idEnc + '" data-user-email="' + emEnc + '" data-user-name="' + nmEnc + '" data-user-plan="' + plEnc + '" data-user-status="' + stEnc + '" title="Manage user &amp; products"><div class="user-avatar" style="width:45px;height:45px;font-size:16px;">' + html(initials(u.name)) + '</div><div class="user-info"><div class="user-name-text">' + html(u.name || '-') + '</div><div class="user-email">' + html(u.email || '-') + '</div></div><div class="user-meta"><div class="user-date">' + html(joined) + '</div>' + tag + '</div></div>';
                     }).join('');
                 }
                 var txList = document.getElementById('adminLatestTransactionsList');
@@ -7867,7 +8076,7 @@
                     var nmEnc = encAttr(u.name || '');
                     var plEnc = encAttr(planRaw);
                     var stEnc = encAttr(status);
-                    return '<tr><td>' + html(u.name || '-') + '</td><td>' + html(u.email || '-') + '</td><td>' + planBadge + '</td><td>' + html(joined) + '</td><td>' + statusBadge + '</td><td><div class="action-btns"><button type="button" class="admin-btn-sm admin-btn-secondary" data-admin-action="user-view" data-user-id="' + idEnc + '" data-user-email="' + emEnc + '" data-user-name="' + nmEnc + '" data-user-plan="' + plEnc + '" data-user-status="' + stEnc + '">View</button><button type="button" class="admin-btn-sm admin-btn-primary" data-admin-action="user-edit" data-user-id="' + idEnc + '" data-user-email="' + emEnc + '" data-user-name="' + nmEnc + '" data-user-plan="' + plEnc + '" data-user-status="' + stEnc + '">Manage</button></div></td></tr>';
+                    return '<tr><td><span class="admin-user-profile-link" data-admin-action="user-profile" data-user-id="' + idEnc + '" data-user-email="' + emEnc + '" data-user-name="' + nmEnc + '" data-user-plan="' + plEnc + '" data-user-status="' + stEnc + '" title="Manage user &amp; products">' + html(u.name || '-') + '</span></td><td>' + html(u.email || '-') + '</td><td>' + planBadge + '</td><td>' + html(joined) + '</td><td>' + statusBadge + '</td><td><div class="action-btns"><button type="button" class="admin-btn-sm admin-btn-secondary" data-admin-action="user-view" data-user-id="' + idEnc + '" data-user-email="' + emEnc + '" data-user-name="' + nmEnc + '" data-user-plan="' + plEnc + '" data-user-status="' + stEnc + '">View</button><button type="button" class="admin-btn-sm admin-btn-primary" data-admin-action="user-edit" data-user-id="' + idEnc + '" data-user-email="' + emEnc + '" data-user-name="' + nmEnc + '" data-user-plan="' + plEnc + '" data-user-status="' + stEnc + '">Manage</button></div></td></tr>';
                 }).join('');
             };
             window.renderAdminSubscriptionUsers = function() {
@@ -8363,6 +8572,10 @@
                 }
             };
             window.closeAdminUserManageModal = function() {
+                if (window._adminUserBlocksUnsub) {
+                    try { window._adminUserBlocksUnsub(); } catch (e) {}
+                    window._adminUserBlocksUnsub = null;
+                }
                 var m = document.getElementById('adminUserManageModal');
                 if (m) m.style.display = 'none';
             };
@@ -8408,9 +8621,15 @@
                 if (smartContainer) smartContainer.innerHTML = 'Loading SmartBlocks…';
                 if (ta) ta.value = '[]';
                 window._adminUserBlocks = [];
+                window._adminUserBlocksDirty = false;
                 if (typeof window.renderAdminUserSmartBlocks === 'function') window.renderAdminUserSmartBlocks();
+                if (window._adminUserBlocksUnsub) {
+                    try { window._adminUserBlocksUnsub(); } catch (e) {}
+                    window._adminUserBlocksUnsub = null;
+                }
                 if (dbUse && uid) {
-                    dbUse.collection('users').doc(uid).get().then(function(doc) {
+                    window._adminUserBlocksUnsub = dbUse.collection('users').doc(uid).onSnapshot(function(doc) {
+                        if (window._adminUserBlocksDirty) return;
                         if (!doc.exists) {
                             if (typeof window.setAdminUserBlocks === 'function') window.setAdminUserBlocks([]);
                             return;
@@ -8428,8 +8647,28 @@
                         } else if (typeof window.setAdminUserBlocks === 'function') {
                             window.setAdminUserBlocks([]);
                         }
-                    }).catch(function() {
-                        if (typeof window.setAdminUserBlocks === 'function') window.setAdminUserBlocks([]);
+                    }, function() {
+                        dbUse.collection('users').doc(uid).get().then(function(doc) {
+                            if (!doc.exists) {
+                                if (typeof window.setAdminUserBlocks === 'function') window.setAdminUserBlocks([]);
+                                return;
+                            }
+                            var d = doc.data() || {};
+                            var js = d.dashboardBlocksJson;
+                            if (js && typeof js === 'string') {
+                                try {
+                                    var arr = JSON.parse(js);
+                                    if (typeof window.setAdminUserBlocks === 'function') window.setAdminUserBlocks(Array.isArray(arr) ? arr : []);
+                                } catch (e) {
+                                    if (ta) ta.value = js;
+                                    if (typeof window.setAdminUserBlocks === 'function') window.setAdminUserBlocks([]);
+                                }
+                            } else if (typeof window.setAdminUserBlocks === 'function') {
+                                window.setAdminUserBlocks([]);
+                            }
+                        }).catch(function() {
+                            if (typeof window.setAdminUserBlocks === 'function') window.setAdminUserBlocks([]);
+                        });
                     });
                 } else if (typeof window.setAdminUserBlocks === 'function') {
                     window.setAdminUserBlocks([]);
@@ -8515,6 +8754,7 @@
                     return;
                 }
                 window.adminToast('Blocks saved. Connected user dashboards refresh automatically.', 'success');
+                window._adminUserBlocksDirty = false;
             };
             window.adminUserManageDeleteFirestore = async function() {
                 var uid = (document.getElementById('adminUserManageUid') && document.getElementById('adminUserManageUid').value || '').trim();
@@ -8860,6 +9100,8 @@
             if (uidEl && document.getElementById('adminUserManageMode').value !== 'add') uidEl.readOnly = true;
             var actions = document.getElementById('adminUserManageActions');
             if (actions) actions.style.display = isView ? 'none' : 'flex';
+            var toolbar = document.getElementById('adminUserBlocksToolbar');
+            if (toolbar) toolbar.style.display = isView ? 'none' : 'flex';
             if (typeof window.renderAdminUserSmartBlocks === 'function') window.renderAdminUserSmartBlocks();
         };
         window._adminUserBlocks = [];
@@ -8869,6 +9111,7 @@
         function syncAdminUserBlocksToTextarea() {
             var ta = document.getElementById('adminUserManageBlocksJson');
             if (ta) ta.value = JSON.stringify(window._adminUserBlocks || [], null, 2);
+            window._adminUserBlocksDirty = true;
         }
         function parseAdminUserBlocksFromTextarea() {
             var ta = document.getElementById('adminUserManageBlocksJson');
@@ -8880,7 +9123,8 @@
         }
         window.setAdminUserBlocks = function(arr) {
             window._adminUserBlocks = Array.isArray(arr) ? JSON.parse(JSON.stringify(arr)) : [];
-            syncAdminUserBlocksToTextarea();
+            var ta = document.getElementById('adminUserManageBlocksJson');
+            if (ta) ta.value = JSON.stringify(window._adminUserBlocks || [], null, 2);
             if (typeof window.renderAdminUserSmartBlocks === 'function') window.renderAdminUserSmartBlocks();
         };
         window.renderAdminUserSmartBlocks = function() {
@@ -8890,13 +9134,17 @@
             var isView = modeEl && modeEl.value === 'view';
             var blocks = window._adminUserBlocks || [];
             if (!blocks.length) {
-                container.innerHTML = '<p class="admin-smartblocks-empty">No SmartBlocks yet. This user has not created any product blocks.</p>';
+                var emptyMsg = isView
+                    ? '<p class="admin-smartblocks-empty">No SmartBlocks yet. This user has not created any product blocks.</p>'
+                    : '<p class="admin-smartblocks-empty">No SmartBlocks yet. Click <strong>Add SmartBlock</strong> above to create one, then add products.</p>';
+                container.innerHTML = emptyMsg;
                 return;
             }
             var html = '';
             blocks.forEach(function(block) {
                 var products = block.productsList || [];
                 var blockId = adminEscapeHtml(block.id || '');
+                var blockIdRaw = block.id || '';
                 var slidesHtml = '';
                 if (!products.length) {
                     slidesHtml = '<p class="admin-smartblocks-empty" style="margin:0;padding:8px 0;">No products in this block.</p>';
@@ -8906,22 +9154,37 @@
                         var title = adminEscapeHtml(p.title || 'Untitled');
                         var price = typeof p.price === 'number' ? '$' + p.price.toFixed(2) : adminEscapeHtml(p.price || '');
                         var retailer = adminEscapeHtml(p.retailer || '');
-                        var editBtn = isView ? '' : '<button type="button" class="admin-btn admin-btn-sm admin-user-product-edit-btn" data-block-id="' + blockId + '" data-product-index="' + pIdx + '">Edit</button>';
+                        var actionBtns = '';
+                        if (!isView) {
+                            actionBtns = '<div class="admin-user-product-actions">' +
+                                '<button type="button" class="admin-btn admin-btn-sm admin-user-product-edit-btn" data-block-id="' + blockId + '" data-product-index="' + pIdx + '">Edit</button>' +
+                                '<button type="button" class="admin-btn admin-btn-sm admin-user-product-delete-btn" style="background:rgba(239,68,68,0.12);color:#b91c1c;" data-block-id="' + blockId + '" data-product-index="' + pIdx + '">Remove</button>' +
+                            '</div>';
+                        }
                         slidesHtml += '<div class="admin-user-product-card">' +
                             '<img src="' + imgUrl + '" alt="' + title + '" onerror="this.src=\'https://via.placeholder.com/120\'">' +
                             '<div class="admin-user-product-title">' + title + '</div>' +
                             '<div class="admin-user-product-meta">' + price + (retailer ? ' · ' + retailer : '') + '</div>' +
-                            editBtn +
+                            actionBtns +
                         '</div>';
                     });
                 }
                 var statusCls = block.status === 'active' ? 'status-active' : 'status-draft';
                 var carouselId = 'adminCarousel_' + String(block.id || '').replace(/[^a-zA-Z0-9_-]/g, '_');
+                var blockActions = '';
+                if (!isView) {
+                    blockActions = '<div class="admin-user-smartblock-actions">' +
+                        '<button type="button" class="admin-btn admin-btn-sm admin-user-block-add-product-btn" data-block-id="' + blockId + '"><i class="fas fa-plus"></i> Add product</button>' +
+                        '<button type="button" class="admin-btn admin-btn-sm admin-user-block-edit-btn" data-block-id="' + blockId + '">Edit block</button>' +
+                        '<button type="button" class="admin-btn admin-btn-sm admin-user-block-delete-btn" style="background:rgba(239,68,68,0.12);color:#b91c1c;" data-block-id="' + blockId + '">Delete block</button>' +
+                    '</div>';
+                }
                 html += '<div class="admin-user-smartblock-card" data-block-id="' + blockId + '">' +
                     '<div class="admin-user-smartblock-header">' +
                         '<strong>' + adminEscapeHtml(block.title || 'Untitled block') + '</strong>' +
                         '<span class="admin-user-smartblock-status ' + statusCls + '">' + (block.status === 'active' ? 'Active' : 'Draft') + '</span>' +
                         '<span class="admin-user-smartblock-layout">' + adminEscapeHtml(block.layout || 'grid') + ' · ' + products.length + ' product' + (products.length === 1 ? '' : 's') + '</span>' +
+                        blockActions +
                     '</div>' +
                     '<div class="admin-user-products-carousel-wrap">' +
                         '<button type="button" class="admin-carousel-btn" aria-label="Previous products" data-carousel-dir="left" data-carousel-id="' + carouselId + '"><i class="fas fa-chevron-left"></i></button>' +
@@ -8938,6 +9201,34 @@
                     }
                 });
             });
+            container.querySelectorAll('.admin-user-product-delete-btn').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    if (typeof window.deleteAdminSmartBlockProduct === 'function') {
+                        window.deleteAdminSmartBlockProduct(this.getAttribute('data-block-id'), parseInt(this.getAttribute('data-product-index'), 10));
+                    }
+                });
+            });
+            container.querySelectorAll('.admin-user-block-add-product-btn').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    if (typeof window.openAdminAddProductToBlock === 'function') {
+                        window.openAdminAddProductToBlock(this.getAttribute('data-block-id'));
+                    }
+                });
+            });
+            container.querySelectorAll('.admin-user-block-edit-btn').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    if (typeof window.openAdminBlockEdit === 'function') {
+                        window.openAdminBlockEdit(this.getAttribute('data-block-id'));
+                    }
+                });
+            });
+            container.querySelectorAll('.admin-user-block-delete-btn').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    if (typeof window.deleteAdminSmartBlock === 'function') {
+                        window.deleteAdminSmartBlock(this.getAttribute('data-block-id'));
+                    }
+                });
+            });
             container.querySelectorAll('.admin-carousel-btn').forEach(function(btn) {
                 btn.addEventListener('click', function() {
                     var carousel = document.getElementById(this.getAttribute('data-carousel-id'));
@@ -8947,6 +9238,202 @@
                     carousel.scrollTo({ left: carousel.scrollLeft + delta, behavior: 'smooth' });
                 });
             });
+        };
+        window.openAdminAddSmartBlock = function() {
+            document.getElementById('adminBlockEditId').value = '';
+            document.getElementById('adminBlockEditName').value = '';
+            document.getElementById('adminBlockEditLayout').value = 'grid';
+            document.getElementById('adminBlockEditStatus').value = 'draft';
+            document.getElementById('adminBlockEditCta').value = 'Buy Now';
+            var titleEl = document.getElementById('adminBlockEditTitle');
+            if (titleEl) titleEl.textContent = 'Add SmartBlock';
+            var modal = document.getElementById('adminBlockEditModal');
+            if (modal) modal.style.display = 'flex';
+        };
+        window.openAdminBlockEdit = function(blockId) {
+            var block = (window._adminUserBlocks || []).find(function(b) { return b.id === blockId; });
+            if (!block) return;
+            document.getElementById('adminBlockEditId').value = block.id || '';
+            document.getElementById('adminBlockEditName').value = block.title || '';
+            document.getElementById('adminBlockEditLayout').value = block.layout || 'grid';
+            document.getElementById('adminBlockEditStatus').value = block.status || 'draft';
+            document.getElementById('adminBlockEditCta').value = block.ctaText || 'Buy Now';
+            var titleEl = document.getElementById('adminBlockEditTitle');
+            if (titleEl) titleEl.textContent = 'Edit SmartBlock';
+            var modal = document.getElementById('adminBlockEditModal');
+            if (modal) modal.style.display = 'flex';
+        };
+        window.saveAdminBlockEdit = function() {
+            var blockId = (document.getElementById('adminBlockEditId').value || '').trim();
+            var title = (document.getElementById('adminBlockEditName').value || '').trim();
+            if (!title) {
+                if (typeof window.adminToast === 'function') window.adminToast('Enter a block title.', 'warn');
+                return;
+            }
+            var layout = document.getElementById('adminBlockEditLayout').value || 'grid';
+            var status = document.getElementById('adminBlockEditStatus').value || 'draft';
+            var ctaText = (document.getElementById('adminBlockEditCta').value || '').trim() || 'Buy Now';
+            if (blockId) {
+                var block = (window._adminUserBlocks || []).find(function(b) { return b.id === blockId; });
+                if (!block) return;
+                block.title = title;
+                block.layout = layout;
+                block.status = status;
+                block.ctaText = ctaText;
+                block.lastUpdated = new Date().toISOString().split('T')[0];
+            } else {
+                var uid = (document.getElementById('adminUserManageUid') && document.getElementById('adminUserManageUid').value || '').trim();
+                var newBlock = {
+                    id: 'blk_' + Date.now(),
+                    title: title,
+                    layout: layout,
+                    ctaText: ctaText,
+                    products: 0,
+                    productsList: [],
+                    clicks: 0,
+                    conversions: 0,
+                    revenue: 0,
+                    ctr: 0,
+                    lastUpdated: new Date().toISOString().split('T')[0],
+                    status: status,
+                    retailer: '',
+                    userId: uid || null
+                };
+                window._adminUserBlocks = window._adminUserBlocks || [];
+                window._adminUserBlocks.push(newBlock);
+            }
+            syncAdminUserBlocksToTextarea();
+            if (typeof window.renderAdminUserSmartBlocks === 'function') window.renderAdminUserSmartBlocks();
+            if (typeof window.closeAdminBlockEditModal === 'function') window.closeAdminBlockEditModal();
+            if (typeof window.adminToast === 'function') window.adminToast('Block saved. Click Save blocks to push to Firestore.', 'success');
+        };
+        window.closeAdminBlockEditModal = function() {
+            var m = document.getElementById('adminBlockEditModal');
+            if (m) m.style.display = 'none';
+        };
+        window.deleteAdminSmartBlock = function(blockId) {
+            if (!blockId) return;
+            if (!window.confirm('Delete this SmartBlock and all its products?')) return;
+            window._adminUserBlocks = (window._adminUserBlocks || []).filter(function(b) { return b.id !== blockId; });
+            syncAdminUserBlocksToTextarea();
+            if (typeof window.renderAdminUserSmartBlocks === 'function') window.renderAdminUserSmartBlocks();
+            if (typeof window.adminToast === 'function') window.adminToast('Block removed. Click Save blocks to push to Firestore.', 'success');
+        };
+        window.deleteAdminSmartBlockProduct = function(blockId, productIndex) {
+            var block = (window._adminUserBlocks || []).find(function(b) { return b.id === blockId; });
+            if (!block || !block.productsList || !block.productsList[productIndex]) return;
+            if (!window.confirm('Remove this product from the block?')) return;
+            block.productsList.splice(productIndex, 1);
+            block.products = block.productsList.length;
+            block.lastUpdated = new Date().toISOString().split('T')[0];
+            if (block.productsList.length && block.productsList[0].retailer) block.retailer = block.productsList[0].retailer;
+            syncAdminUserBlocksToTextarea();
+            if (typeof window.renderAdminUserSmartBlocks === 'function') window.renderAdminUserSmartBlocks();
+            if (typeof window.adminToast === 'function') window.adminToast('Product removed. Click Save blocks to push to Firestore.', 'success');
+        };
+        window.openAdminAddProductToBlock = function(blockId) {
+            if (!blockId) return;
+            document.getElementById('adminAddProductBlockId').value = blockId;
+            document.getElementById('adminAddProductQuery').value = '';
+            document.getElementById('adminAddProductTitle').value = '';
+            document.getElementById('adminAddProductImage').value = '';
+            document.getElementById('adminAddProductPrice').value = '';
+            document.getElementById('adminAddProductRetailerManual').value = '';
+            var statusEl = document.getElementById('adminAddProductSearchStatus');
+            var resultsEl = document.getElementById('adminAddProductSearchResults');
+            if (statusEl) statusEl.textContent = '';
+            if (resultsEl) resultsEl.innerHTML = '';
+            window._adminLastBlockSearchProducts = [];
+            var modal = document.getElementById('adminAddProductModal');
+            if (modal) modal.style.display = 'flex';
+        };
+        window.closeAdminAddProductModal = function() {
+            var m = document.getElementById('adminAddProductModal');
+            if (m) m.style.display = 'none';
+        };
+        function adminPushProductToBlock(blockId, product) {
+            var block = (window._adminUserBlocks || []).find(function(b) { return b.id === blockId; });
+            if (!block || !product) return false;
+            if (!block.productsList) block.productsList = [];
+            var entry = Object.assign({}, product, { addedDate: product.addedDate || new Date().toISOString() });
+            if (!entry.id) entry.id = 'prd_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
+            block.productsList.push(entry);
+            block.products = block.productsList.length;
+            block.lastUpdated = new Date().toISOString().split('T')[0];
+            if (entry.retailer) block.retailer = entry.retailer;
+            syncAdminUserBlocksToTextarea();
+            if (typeof window.renderAdminUserSmartBlocks === 'function') window.renderAdminUserSmartBlocks();
+            return true;
+        }
+        window.saveAdminManualProductToBlock = function() {
+            var blockId = document.getElementById('adminAddProductBlockId').value;
+            var title = (document.getElementById('adminAddProductTitle').value || '').trim();
+            if (!title) {
+                if (typeof window.adminToast === 'function') window.adminToast('Enter a product title.', 'warn');
+                return;
+            }
+            var product = {
+                title: title,
+                image: (document.getElementById('adminAddProductImage').value || '').trim(),
+                price: parseFloat(document.getElementById('adminAddProductPrice').value) || 0,
+                retailer: (document.getElementById('adminAddProductRetailerManual').value || document.getElementById('adminAddProductRetailer').value || '').trim()
+            };
+            if (adminPushProductToBlock(blockId, product)) {
+                if (typeof window.closeAdminAddProductModal === 'function') window.closeAdminAddProductModal();
+                if (typeof window.adminToast === 'function') window.adminToast('Product added. Click Save blocks to push to Firestore.', 'success');
+            }
+        };
+        window.addAdminSearchProductToBlock = function(index) {
+            var products = window._adminLastBlockSearchProducts;
+            var blockId = document.getElementById('adminAddProductBlockId').value;
+            if (!products || !products[index] || !blockId) return;
+            if (adminPushProductToBlock(blockId, products[index])) {
+                if (typeof window.closeAdminAddProductModal === 'function') window.closeAdminAddProductModal();
+                if (typeof window.adminToast === 'function') window.adminToast('Product added. Click Save blocks to push to Firestore.', 'success');
+            }
+        };
+        window.searchAdminProductsForBlock = async function() {
+            var retailer = document.getElementById('adminAddProductRetailer') && document.getElementById('adminAddProductRetailer').value;
+            var query = document.getElementById('adminAddProductQuery') && document.getElementById('adminAddProductQuery').value.trim();
+            var statusEl = document.getElementById('adminAddProductSearchStatus');
+            var resultsEl = document.getElementById('adminAddProductSearchResults');
+            if (!query) {
+                if (statusEl) statusEl.textContent = 'Enter a search term.';
+                return;
+            }
+            if (statusEl) statusEl.textContent = 'Searching…';
+            if (resultsEl) resultsEl.innerHTML = '<p style="grid-column:1/-1;text-align:center;color:#6b7280;padding:16px;">Loading…</p>';
+            var products = [];
+            try {
+                if (typeof ensureAutomatedLiveSearchSetup === 'function') ensureAutomatedLiveSearchSetup();
+                if (typeof searchRetailerProductsLive === 'function' && LIVE_RETAILER_PROVIDERS.includes(retailer)) {
+                    products = await searchRetailerProductsLive(retailer, query);
+                }
+                window._adminLastBlockSearchProducts = products || [];
+                if (!products.length) {
+                    if (statusEl) statusEl.textContent = 'No products found. Try another search or add manually below.';
+                    if (resultsEl) resultsEl.innerHTML = '';
+                    return;
+                }
+                if (statusEl) statusEl.textContent = 'Found ' + products.length + ' product(s). Click Add to add to this block.';
+                if (resultsEl) {
+                    resultsEl.innerHTML = products.map(function(p, idx) {
+                        var img = adminEscapeHtml(p.image || 'https://via.placeholder.com/120');
+                        var title = adminEscapeHtml((p.title || 'Product').substring(0, 50));
+                        var price = '$' + (Number(p.price) || 0).toFixed(2);
+                        return '<div class="admin-product-search-card">' +
+                            '<img src="' + img + '" alt="" onerror="this.src=\'https://via.placeholder.com/120\'">' +
+                            '<div style="font-weight:600;margin-bottom:4px;">' + title + '</div>' +
+                            '<div style="color:#6b7280;margin-bottom:6px;">' + price + '</div>' +
+                            '<button type="button" class="admin-btn admin-btn-sm" style="width:100%;" onclick="addAdminSearchProductToBlock(' + idx + ')">Add</button>' +
+                        '</div>';
+                    }).join('');
+                }
+            } catch (err) {
+                window._adminLastBlockSearchProducts = [];
+                if (statusEl) statusEl.textContent = 'Search failed. Add the product manually below.';
+                if (resultsEl) resultsEl.innerHTML = '';
+            }
         };
         window.openAdminSmartBlockProductEdit = function(blockId, productIndex) {
             var block = (window._adminUserBlocks || []).find(function(b) { return b.id === blockId; });
@@ -9003,6 +9490,7 @@
             if (pageTitle) pageTitle.textContent = 'Edit SmartBlock';
             if (submitBtn) submitBtn.textContent = 'Save Changes';
             if (typeof updateSelectedProducts === 'function') updateSelectedProducts();
+            if (typeof applyProductSearchLayout === 'function') applyProductSearchLayout();
             showDashboardPage('new-block');
         };
         function resetBlockEditorForm() {
@@ -9018,6 +9506,7 @@
             if (pageTitle) pageTitle.textContent = 'Create New SmartBlock';
             if (submitBtn) submitBtn.textContent = 'Create Block';
             if (typeof updateSelectedProducts === 'function') updateSelectedProducts();
+            if (typeof applyProductSearchLayout === 'function') applyProductSearchLayout();
         }
 
             window.adminBillingInvoice = function(recordKey, amount) {
@@ -9119,8 +9608,10 @@
                         try {
                             var arr = JSON.parse(adminBlocksJson.value || '[]');
                             window._adminUserBlocks = Array.isArray(arr) ? arr : [];
+                            window._adminUserBlocksDirty = true;
                         } catch (e) {
                             window._adminUserBlocks = [];
+                            window._adminUserBlocksDirty = true;
                         }
                         if (typeof window.renderAdminUserSmartBlocks === 'function') window.renderAdminUserSmartBlocks();
                     });
@@ -9129,6 +9620,26 @@
                 if (asbpem && !asbpem._backdropClose) {
                     asbpem._backdropClose = true;
                     asbpem.addEventListener('click', function(e) { if (e.target === asbpem && typeof window.closeAdminSmartBlockProductEditModal === 'function') window.closeAdminSmartBlockProductEditModal(); });
+                }
+                var abem = document.getElementById('adminBlockEditModal');
+                if (abem && !abem._backdropClose) {
+                    abem._backdropClose = true;
+                    abem.addEventListener('click', function(e) { if (e.target === abem && typeof window.closeAdminBlockEditModal === 'function') window.closeAdminBlockEditModal(); });
+                }
+                var aapm = document.getElementById('adminAddProductModal');
+                if (aapm && !aapm._backdropClose) {
+                    aapm._backdropClose = true;
+                    aapm.addEventListener('click', function(e) { if (e.target === aapm && typeof window.closeAdminAddProductModal === 'function') window.closeAdminAddProductModal(); });
+                }
+                var adminAddProductQuery = document.getElementById('adminAddProductQuery');
+                if (adminAddProductQuery && !adminAddProductQuery._searchWire) {
+                    adminAddProductQuery._searchWire = true;
+                    adminAddProductQuery.addEventListener('keydown', function(e) {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            if (typeof window.searchAdminProductsForBlock === 'function') window.searchAdminProductsForBlock();
+                        }
+                    });
                 }
                 var cpm = document.getElementById('changePlanModal');
                 if (cpm && !cpm._backdropClose) {
@@ -10837,6 +11348,7 @@
                     document.querySelectorAll('.layout-btn').forEach(b => b.classList.remove('active'));
                     this.classList.add('active');
                     currentLayout = this.getAttribute('data-layout');
+                    applyProductSearchLayout();
                 });
             });
 
@@ -12145,7 +12657,21 @@
         const AUTO_LIVE_DEFAULT_QUERY = 'headphones';
         const AUTO_LIBRARY_DEFAULT_QUERY = 'best sellers';
         const AUTO_TRENDING_REFRESH_MS = 30 * 60 * 1000;
+        const TRENDING_FALLBACK_PRODUCTS = [
+            { id: 'fb_1', title: 'Sony WH-1000XM5 Wireless Headphones', image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80', price: 299.99, retailer: 'amazon' },
+            { id: 'fb_2', title: 'Nike Air Max 270 Running Shoes', image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80', price: 150.00, retailer: 'shopify' },
+            { id: 'fb_3', title: 'Instant Pot Duo 7-in-1 Electric Cooker', image: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80', price: 89.99, retailer: 'walmart' },
+            { id: 'fb_4', title: 'iPad Pro 12.9" Tablet', image: 'https://images.unsplash.com/photo-1572569511254-d8f925fe2cbb?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80', price: 1099.00, retailer: 'apple' },
+            { id: 'fb_5', title: 'Apple Watch Series 9', image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80', price: 399.00, retailer: 'amazon' },
+            { id: 'fb_6', title: 'MacBook Air M2 Laptop', image: 'https://images.unsplash.com/photo-1593642702821-c8da6771f0c6?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80', price: 1199.00, retailer: 'bestbuy' }
+        ];
         let automatedTrendingRefreshTimer = null;
+
+        function applyProductSearchLayout() {
+            var container = document.getElementById('productsContainer');
+            if (!container) return;
+            container.className = 'product-grid layout-' + (currentLayout || 'grid');
+        }
 
         function ensureAutomatedLiveSearchSetup() {
             LIVE_RETAILER_PROVIDERS.forEach(function(provider) {
@@ -12194,9 +12720,9 @@
                 var res = await fetch(url, { method: 'GET', headers: { Accept: 'application/json' } });
                 var data = await res.json();
                 if (res.ok && data && Array.isArray(data.products) && data.products.length) {
-                    return data.products.map(function(item, i) {
+                    return padTrendingProducts(data.products.map(function(item, i) {
                         return mapBackendProductToCard(item, item.retailer || 'amazon', i);
-                    });
+                    }), 6);
                 }
             } catch (e) {
                 console.warn('Trending API batch unavailable:', e);
@@ -12207,12 +12733,27 @@
             for (var ri = 0; ri < retailers.length; ri++) {
                 try {
                     var batch = await searchRetailerProductsLive(retailers[ri], queries[retailers[ri]]);
-                    if (batch && batch.length) merged = merged.concat(batch.slice(0, 2));
+                    if (batch && batch.length) merged = merged.concat(batch.slice(0, 4));
                 } catch (err) {
                     console.warn('Trending fallback failed for', retailers[ri], err);
                 }
             }
-            return merged;
+            return padTrendingProducts(merged, 6);
+        }
+
+        function padTrendingProducts(products, minCount) {
+            var seen = new Set();
+            var result = [];
+            (products || []).forEach(function(p) {
+                var key = p.id || p.asin || p.title;
+                if (key && !seen.has(key)) { seen.add(key); result.push(p); }
+            });
+            TRENDING_FALLBACK_PRODUCTS.forEach(function(fp) {
+                if (result.length >= minCount) return;
+                var key = fp.id || fp.title;
+                if (!seen.has(key)) { seen.add(key); result.push(fp); }
+            });
+            return result;
         }
 
         async function loadTrendingProductsLive() {
@@ -12221,13 +12762,20 @@
             scroll.innerHTML = '<div style="padding:40px;text-align:center;color:var(--gray);width:100%;"><div class="spinner" style="margin:0 auto 12px;"></div>Loading live trending products…</div>';
             try {
                 var products = await fetchTrendingProductsLive();
+                products = padTrendingProducts(products, 6);
                 if (!products.length) {
                     scroll.innerHTML = '<p style="padding:40px;text-align:center;color:var(--gray);">Trending products will appear shortly.</p>';
                     return;
                 }
-                scroll.innerHTML = products.slice(0, 12).map(buildTrendingProductCardHtml).join('');
+                scroll.innerHTML = products.slice(0, 12).map(function(p, i) { return buildTrendingProductCardHtml(p, i); }).join('');
+                setupCarouselClickEnlarge();
             } catch (err) {
                 console.error('Trending load error:', err);
+                products = padTrendingProducts([], 6);
+                if (products.length) {
+                    scroll.innerHTML = products.map(function(p, i) { return buildTrendingProductCardHtml(p, i); }).join('');
+                    setupCarouselClickEnlarge();
+                }
             }
         }
 
@@ -12930,6 +13478,7 @@
             ensureAutomatedLiveSearchSetup();
             searchStatus.innerHTML = '<div class="loading"><div class="spinner"></div> Searching...</div>';
             productsContainer.innerHTML = '';
+            applyProductSearchLayout();
             
             let products = [];
             
@@ -13038,6 +13587,7 @@
                     
                     // #endregion
                 });
+                applyProductSearchLayout();
                 
             } catch (error) {
                 console.error('Search products error:', error);
@@ -13058,7 +13608,7 @@
             }
             ensureAutomatedLiveSearchSetup();
             statusEl.textContent = 'Searching...';
-            resultsEl.innerHTML = '<div style="padding: 24px; text-align: center; color: var(--gray);"><div class="spinner" style="margin: 0 auto 12px;"></div>Loading products...</div>';
+            resultsEl.innerHTML = '<div class="product-library-loading"><div class="spinner" style="margin:0 auto 12px;"></div>Loading products...</div>';
             let products = [];
             try {
                 if (LIVE_RETAILER_PROVIDERS.includes(retailer)) {
@@ -13114,13 +13664,13 @@
                     statusEl.textContent = `No ${retailer} products found for "${query}".`;
                 }
                 window._lastLibrarySearchProducts = products;
-                resultsEl.innerHTML = products.length === 0 ? '<p style="text-align: center; color: var(--gray); padding: 24px;">No results. Try another search.</p>' : products.map((p, idx) => `
-                    <div class="product-card-dashboard" style="position: relative;">
+                resultsEl.innerHTML = products.length === 0 ? '<p class="product-library-loading">No results. Try another search.</p>' : products.map((p, idx) => `
+                    <div class="product-card-dashboard">
                         <img src="${(p.image || 'https://via.placeholder.com/200').replace(/"/g, '&quot;')}" alt="${(p.title || '').replace(/"/g, '&quot;')}" class="product-image-dashboard" onerror="this.src='https://via.placeholder.com/200'">
                         <div class="product-title">${(p.title || 'Product').substring(0, 60)}${(p.title || '').length > 60 ? '...' : ''}</div>
                         <div class="product-price">$${(p.price || 0).toFixed(2)}</div>
                         <div class="product-retailer">${(p.retailer || '').charAt(0).toUpperCase() + (p.retailer || '').slice(1)}</div>
-                        <button type="button" class="btn btn-primary btn-sm" style="margin-top: 8px; width: 100%; padding: 8px;" onclick="addProductToLibraryByIndex(${idx})">
+                        <button type="button" class="btn btn-primary btn-sm" style="margin-top: auto; width: 100%; padding: 8px;" onclick="addProductToLibraryByIndex(${idx})">
                             <i class="fas fa-plus"></i> Add to Library
                         </button>
                     </div>
@@ -13330,6 +13880,7 @@
             const titleEl = document.getElementById('embedDragBlockTitle');
             const previewTitle = document.getElementById('embedDragPreviewTitle');
             const previewImg = document.getElementById('embedDragPreviewImg');
+            const preview = document.getElementById('embedDragPreview');
             const blockId = select?.value || '';
             const block = (currentBlocks || []).find(b => b.id === blockId);
             const baseUrl = window.location.origin + window.location.pathname.replace(/\/[^/]*$/, '') || 'https://kotapal.example.com';
@@ -13337,9 +13888,13 @@
             if (textarea) textarea.value = embedCode;
             if (titleEl) titleEl.textContent = block ? 'Drag to place · ' + (block.products || 0) + ' products' : 'Drag me onto your page';
             if (previewTitle) previewTitle.textContent = block ? block.title : 'Select a block';
-            if (previewImg && block) {
-                var p0 = block.productsList && block.productsList[0];
+            if (previewImg) {
+                var p0 = block && block.productsList && block.productsList[0];
                 previewImg.src = (p0 && p0.image) ? p0.image : 'https://via.placeholder.com/56?text=Block';
+            }
+            if (preview) {
+                preview.classList.toggle('no-block', !block);
+                preview.draggable = !!block;
             }
         }
         
@@ -13374,14 +13929,30 @@
                         showNotification('Select a SmartBlock before dragging.', 'warning', 'Placement');
                         return;
                     }
-                    setPagePlacementMode(true);
                     e.dataTransfer.setData('application/x-kotapal-block-id', blockId);
                     e.dataTransfer.setData('text/plain', blockId);
                     e.dataTransfer.effectAllowed = 'copy';
-                    preview.style.opacity = '0.75';
-                });
-                preview.addEventListener('dragend', () => {
-                    preview.style.opacity = '1';
+                    preview.classList.add('is-dragging');
+                    function onDocDragOver(ev) {
+                        ev.preventDefault();
+                        ev.dataTransfer.dropEffect = 'copy';
+                    }
+                    function onDocDrop(ev) {
+                        ev.preventDefault();
+                        var id = ev.dataTransfer.getData('application/x-kotapal-block-id') || ev.dataTransfer.getData('text/plain');
+                        if (id && id.indexOf('blk_') === 0) {
+                            placeBlockOnPage(id, ev.clientX, ev.clientY);
+                        }
+                        cleanupEmbedDrag();
+                    }
+                    function cleanupEmbedDrag() {
+                        preview.classList.remove('is-dragging');
+                        document.removeEventListener('dragover', onDocDragOver);
+                        document.removeEventListener('drop', onDocDrop);
+                    }
+                    preview.addEventListener('dragend', cleanupEmbedDrag, { once: true });
+                    document.addEventListener('dragover', onDocDragOver);
+                    document.addEventListener('drop', onDocDrop);
                 });
             }
             if (layer && !layer.dataset.dropBound) {
@@ -14230,8 +14801,9 @@
             const baseName = type.charAt(0).toUpperCase() + type.slice(1) + ' Report - ' + new Date().toLocaleDateString();
                 const reports = JSON.parse(localStorage.getItem('kotaReports') || '[]');
             const timestamp = new Date().toISOString();
-            ['PDF', 'Excel'].forEach(function(format) {
+            ['PDF', 'Excel'].forEach(function(format, fi) {
                 reports.unshift({
+                    id: 'rpt_' + Date.now() + '_' + fi + '_' + format.toLowerCase(),
                     name: baseName + ' (' + format + ')',
                     type: type,
                     date: timestamp,
@@ -14243,6 +14815,14 @@
             showNotification('Report generated. Use Download to get PDF or Excel.', 'success', 'Reports');
         }
         
+        function deleteReport(reportId) {
+            var reports = JSON.parse(localStorage.getItem('kotaReports') || '[]');
+            reports = reports.filter(function(r) { return (r.id || r.name + r.date) !== reportId; });
+            localStorage.setItem('kotaReports', JSON.stringify(reports));
+            loadReports();
+            showNotification('Report deleted.', 'success', 'Reports');
+        }
+
         function loadReports() {
             const tbody = document.getElementById('reportsTableBody');
             const titleEl = document.getElementById('reportsPageTitle');
@@ -14253,9 +14833,9 @@
                 tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:40px;color:var(--gray);">No reports yet. Click a report type above to generate.</td></tr>';
                 return;
             }
-            tbody.innerHTML = reports.map(function(report) {
-                var reportTitle = (report.name || '').replace(/"/g, '&quot;');
-                return '<tr><td style="padding:10px; border-bottom:1px solid #e5e7eb;">' + (report.name || '') + '</td><td style="padding:10px; border-bottom:1px solid #e5e7eb;">' + (report.date ? new Date(report.date).toLocaleString() : '') + '</td><td style="padding:10px; border-bottom:1px solid #e5e7eb;">' + (report.format || '') + '</td><td style="padding:10px; border-bottom:1px solid #e5e7eb; min-width:140px;"><button type="button" class="btn btn-primary report-download-btn" style="padding:8px 16px; font-size:0.875rem; display:inline-flex; align-items:center; gap:6px; cursor:pointer; background:#3b82f6; color:white; border:1px solid #3b82f6; border-radius:8px; font-weight:500;"><i class="fas fa-download"></i> Download</button></td></tr>';
+            tbody.innerHTML = reports.map(function(report, idx) {
+                var reportId = report.id || (report.name + report.date);
+                return '<tr><td style="padding:10px; border-bottom:1px solid #e5e7eb;">' + (report.name || '') + '</td><td style="padding:10px; border-bottom:1px solid #e5e7eb;">' + (report.date ? new Date(report.date).toLocaleString() : '') + '</td><td style="padding:10px; border-bottom:1px solid #e5e7eb;">' + (report.format || '') + '</td><td style="padding:10px; border-bottom:1px solid #e5e7eb; min-width:200px; white-space:nowrap;"><button type="button" class="btn btn-primary report-download-btn" style="padding:8px 16px; font-size:0.875rem; display:inline-flex; align-items:center; gap:6px; cursor:pointer; background:#3b82f6; color:white; border:1px solid #3b82f6; border-radius:8px; font-weight:500;"><i class="fas fa-download"></i> Download</button><button type="button" class="btn-report-delete report-delete-btn" data-report-id="' + reportId.replace(/"/g, '&quot;') + '"><i class="fas fa-trash-alt"></i> Delete</button></td></tr>';
             }).join('');
             tbody.querySelectorAll('.report-download-btn').forEach(function(btn, i) {
                 var report = reports[i];
@@ -14264,6 +14844,12 @@
                     window._downloadReportName = reportName;
                     var modal = document.getElementById('downloadReportFormatModal');
                     if (modal) modal.style.display = 'flex';
+                });
+            });
+            tbody.querySelectorAll('.report-delete-btn').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    var id = btn.getAttribute('data-report-id');
+                    if (id) deleteReport(id);
                 });
             });
         }
