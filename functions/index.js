@@ -331,3 +331,202 @@ exports.adminPermanentDeleteUser = onCall({ region: 'us-central1' }, async (requ
 
   return { success: true, message: 'User permanently deleted.' };
 });
+
+// ===========================
+// Live product lookup (Amazon, Walmart, eBay) — Cloud Functions + Firestore
+// ===========================
+
+const { RetailerIntegrationService, resolveRetailerSearchCredentials } = require('./retailerIntegration');
+
+let retailerServiceInstance = null;
+
+function getRetailerService() {
+  if (!retailerServiceInstance) {
+    retailerServiceInstance = new RetailerIntegrationService({
+      cacheStdTTL: 300,
+      maxRetries: 2,
+      requestTimeout: 15000
+    });
+  }
+  return retailerServiceInstance;
+}
+
+async function resolvePlatformProductKey(db) {
+  if (process.env.SEARCHAPI_API_KEY) return process.env.SEARCHAPI_API_KEY;
+  if (process.env.AMAZON_API_KEY) return process.env.AMAZON_API_KEY;
+  try {
+    const snap = await db.doc('platform/productLookup').get();
+    if (snap.exists) {
+      const data = snap.data() || {};
+      if (data.apiKey) return data.apiKey;
+      if (data.searchApiKey) return data.searchApiKey;
+    }
+  } catch (err) {
+    console.warn('Could not read platform/productLookup:', err.message);
+  }
+  return '';
+}
+
+function applyProductLookupCors(res) {
+  res.set('Access-Control-Allow-Origin', '*');
+  res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Provider-Api-Key');
+}
+
+const TRENDING_SEARCH_QUERIES = {
+  amazon: 'best sellers electronics',
+  walmart: 'best sellers home',
+  ebay: 'trending deals'
+};
+
+async function runRetailerProductSearch(params) {
+  const retailer = String(params.retailer || '').toLowerCase();
+  const query = String(params.query || params.q || '').trim();
+  if (!retailer || !query) {
+    throw new HttpsError('invalid-argument', 'Retailer and query are required.');
+  }
+
+  const db = getFirestore();
+  const platformKey = await resolvePlatformProductKey(db);
+  const credentials = resolveRetailerSearchCredentials(retailer, {
+    apiKey: params.apiKey || platformKey || undefined,
+    apiBaseUrl: params.apiEndpoint || params.apiBaseUrl || undefined
+  });
+
+  if (!credentials.apiKey) {
+    throw new HttpsError('failed-precondition', 'Product key is required. Add your key in Settings → Integrations.');
+  }
+
+  const products = await getRetailerService().searchProducts(retailer, query, {
+    limit: parseInt(params.limit, 10) || 20,
+    page: parseInt(params.page, 10) || 1,
+    apiKey: credentials.apiKey,
+    apiBaseUrl: credentials.apiBaseUrl,
+    category_id: params.category_id,
+    store_id: params.store_id,
+    ebay_domain: params.ebay_domain,
+    sort_by: params.sort_by,
+    price_min: params.price_min,
+    price_max: params.price_max,
+    filters: params.filters
+  });
+
+  return {
+    retailer,
+    query,
+    products: Array.isArray(products) ? products : [],
+    timestamp: new Date().toISOString()
+  };
+}
+
+/**
+ * Callable: searchRetailerProducts
+ * Real-time product lookup for international clients (Firebase SDK, no localhost).
+ */
+exports.searchRetailerProducts = onCall({ region: 'us-central1', timeoutSeconds: 60 }, async (request) => {
+  return runRetailerProductSearch(request.data || {});
+});
+
+async function runTrendingProductSearch(limit = 6) {
+  const capped = Math.min(parseInt(limit, 10) || 6, 12);
+  const db = getFirestore();
+  const platformKey = await resolvePlatformProductKey(db);
+  const retailers = ['amazon', 'walmart', 'ebay'];
+  const merged = [];
+
+  for (const retailer of retailers) {
+    try {
+      const credentials = resolveRetailerSearchCredentials(retailer, { apiKey: platformKey || undefined });
+      if (!credentials.apiKey) continue;
+      const batch = await getRetailerService().searchProducts(retailer, TRENDING_SEARCH_QUERIES[retailer], {
+        limit: Math.ceil(capped / retailers.length) + 2,
+        apiKey: credentials.apiKey,
+        apiBaseUrl: credentials.apiBaseUrl
+      });
+      if (Array.isArray(batch)) merged.push(...batch.slice(0, 4));
+    } catch (err) {
+      console.warn('Trending fetch failed for', retailer, err.message);
+    }
+  }
+
+  return { products: merged.slice(0, capped), timestamp: new Date().toISOString() };
+}
+
+/**
+ * Callable: getTrendingProducts
+ */
+exports.getTrendingProducts = onCall({ region: 'us-central1', timeoutSeconds: 90 }, async (request) => {
+  const limit = (request.data && request.data.limit) || 6;
+  return runTrendingProductSearch(limit);
+});
+
+/**
+ * HTTP: GET /api/health — used by Firebase Hosting rewrite and co-located servers.
+ */
+exports.apiHealth = onRequest({ region: 'us-central1', cors: true }, async (req, res) => {
+  applyProductLookupCors(res);
+  if (req.method === 'OPTIONS') {
+    res.status(204).send('');
+    return;
+  }
+  const db = getFirestore();
+  const platformKey = await resolvePlatformProductKey(db);
+  res.json({
+    ok: true,
+    message: 'KotaPal live API',
+    productSearchConfigured: Boolean(platformKey || process.env.SEARCHAPI_API_KEY)
+  });
+});
+
+/**
+ * HTTP: GET /api/products/search?retailer=&query=
+ */
+exports.apiProductsSearch = onRequest({ region: 'us-central1', cors: true, timeoutSeconds: 60 }, async (req, res) => {
+  applyProductLookupCors(res);
+  if (req.method === 'OPTIONS') {
+    res.status(204).send('');
+    return;
+  }
+  if (req.method !== 'GET') {
+    res.status(405).json({ error: 'Method not allowed' });
+    return;
+  }
+  try {
+    const payload = await runRetailerProductSearch({
+      retailer: req.query.retailer,
+      query: req.query.query || req.query.q,
+      apiKey: req.query.apiKey || req.headers['x-provider-api-key'],
+      apiEndpoint: req.query.apiEndpoint || req.query.apiBaseUrl,
+      limit: req.query.limit,
+      page: req.query.page,
+      category_id: req.query.category_id,
+      store_id: req.query.store_id,
+      ebay_domain: req.query.ebay_domain,
+      sort_by: req.query.sort_by,
+      price_min: req.query.price_min,
+      price_max: req.query.price_max,
+      filters: req.query.filters
+    });
+    res.json(payload);
+  } catch (err) {
+    const code = err.code === 'failed-precondition' ? 401 : err.code === 'invalid-argument' ? 400 : 500;
+    res.status(code).json({ error: err.message || 'Product lookup failed' });
+  }
+});
+
+/**
+ * HTTP: GET /api/products/trending
+ */
+exports.apiProductsTrending = onRequest({ region: 'us-central1', cors: true, timeoutSeconds: 90 }, async (req, res) => {
+  applyProductLookupCors(res);
+  if (req.method === 'OPTIONS') {
+    res.status(204).send('');
+    return;
+  }
+  try {
+    const result = await runTrendingProductSearch(req.query.limit || 6);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message || 'Trending lookup failed' });
+  }
+});

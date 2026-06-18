@@ -6657,7 +6657,7 @@
                 firebase.initializeApp(firebaseConfig);
                 auth = firebase.auth();
                 window.firebaseDb = firebase.firestore();
-                if (firebase.functions) window.firebaseFunctions = firebase.functions();
+                if (firebase.functions) window.firebaseFunctions = firebase.app().functions('us-central1');
                 
                 // Set persistence to LOCAL so users stay logged in across browser sessions
                 // This ensures the session persists even after closing the browser
@@ -7311,7 +7311,7 @@
                 try {
                     var ff = window.firebaseFunctions;
                     if (!ff && typeof firebase !== 'undefined' && firebase.functions) {
-                        ff = firebase.functions();
+                        ff = firebase.app().functions('us-central1');
                         window.firebaseFunctions = ff;
                     }
                     if (!ff || !ff.httpsCallable) return null;
@@ -12773,7 +12773,15 @@
                     }), 6);
                 }
             } catch (e) {
-                console.warn('Trending API batch unavailable:', e);
+                console.warn('Trending HTTP unavailable:', e);
+            }
+            try {
+                var cloudTrending = await fetchTrendingViaCloud();
+                if (cloudTrending && cloudTrending.length) {
+                    return padTrendingProducts(cloudTrending, 6);
+                }
+            } catch (e) {
+                console.warn('Trending cloud function unavailable:', e);
             }
             var merged = [];
             var retailers = ['amazon', 'walmart', 'ebay'];
@@ -13195,13 +13203,13 @@
                 return 'Add your product key in Settings → Integrations, then click Save keys.';
             }
             if (/failed to fetch|network|cors|timed out|timeout|econnrefused|cannot reach/i.test(m)) {
-                return 'Product lookup server unavailable. Run npm start in the project folder, then open http://localhost:3000 (do not open index.html as a file).';
+                return 'Product lookup is temporarily unavailable. Check your connection and try again.';
             }
             if (/503|not ready|retailer service/i.test(m)) {
-                return 'Product lookup server is still starting. Wait a few seconds and try again.';
+                return 'Product lookup is starting up. Wait a few seconds and try again.';
             }
             if (/invalid response|non-json/i.test(m)) {
-                return 'Product lookup server returned an invalid response. Make sure npm start is running on port 3000.';
+                return 'Product lookup returned an invalid response. Please try again in a moment.';
             }
             return m || 'Product lookup failed. Check Settings → Integrations for your provider key.';
         }
@@ -13290,18 +13298,95 @@
             if (typeof window.KOTAPAL_API_BASE === 'string' && window.KOTAPAL_API_BASE.trim()) {
                 return window.KOTAPAL_API_BASE.trim().replace(/\/$/, '');
             }
-            const loc = window.location;
-            if (loc.protocol === 'file:') return 'http://localhost:3000';
-            if (loc.protocol === 'http:' || loc.protocol === 'https:') {
-                const host = loc.hostname;
-                const port = loc.port || (loc.protocol === 'https:' ? '443' : '80');
-                if (host === 'localhost' || host === '127.0.0.1') {
-                    if (port === '3000') return '';
-                    return loc.protocol + '//' + host + ':3000';
-                }
-                if (port === '3000' || port === '80' || port === '443') return '';
+            if (window.location.protocol === 'http:' || window.location.protocol === 'https:') {
+                return '';
             }
             return '';
+        }
+
+        function getFirebaseFunctionsClient() {
+            if (window.firebaseFunctions) return window.firebaseFunctions;
+            if (typeof firebase !== 'undefined' && firebase.functions) {
+                try {
+                    window.firebaseFunctions = firebase.app().functions('us-central1');
+                    return window.firebaseFunctions;
+                } catch (e) {
+                    console.warn('Firebase Functions unavailable:', e);
+                }
+            }
+            return null;
+        }
+
+        function mapSearchResultItems(items, retailer) {
+            if (!items || !items.length) return [];
+            return items.map(function(item, i) {
+                return mapBackendProductToCard(item, retailer, i) || mapApiItemToProduct(item, retailer, i);
+            });
+        }
+
+        async function fetchProductsViaHttpApi(retailer, query, preferredKey) {
+            const apiRoot = getProductsApiBase();
+            const apiEndpoint = getProviderApiEndpoint(retailer);
+            const apiKey = preferredKey != null ? String(preferredKey).trim() : '';
+            let url = (apiRoot || '') + '/api/products/search?retailer=' + encodeURIComponent(retailer) + '&query=' + encodeURIComponent(query);
+            if (apiKey) url += '&apiKey=' + encodeURIComponent(apiKey);
+            if (apiEndpoint) url += '&apiEndpoint=' + encodeURIComponent(apiEndpoint);
+            const headers = { Accept: 'application/json' };
+            if (apiKey) headers['X-Provider-Api-Key'] = apiKey;
+            const res = await fetch(url, { method: 'GET', headers: headers });
+            let data = null;
+            try {
+                data = await res.json();
+            } catch (parseErr) {
+                throw new Error('Product lookup returned an invalid response.');
+            }
+            if (!res.ok || (data && data.error)) {
+                const errMsg = (data && data.error && (data.error.message || data.error)) || (data && data.message) || ('HTTP ' + res.status);
+                throw new Error(typeof errMsg === 'string' ? errMsg : JSON.stringify(errMsg));
+            }
+            return mapSearchResultItems(data.products || extractProductsArray(data), retailer);
+        }
+
+        async function fetchProductsViaFirebaseCallable(retailer, query, preferredKey) {
+            const ff = getFirebaseFunctionsClient();
+            if (!ff || !ff.httpsCallable) {
+                throw new Error('Product lookup is temporarily unavailable.');
+            }
+            const callable = ff.httpsCallable('searchRetailerProducts');
+            const apiKey = preferredKey != null ? String(preferredKey).trim() : '';
+            const payload = { retailer: retailer, query: query, limit: 20 };
+            if (apiKey) payload.apiKey = apiKey;
+            const result = await callable(payload);
+            const data = (result && result.data) || {};
+            return mapSearchResultItems(data.products || extractProductsArray(data), retailer);
+        }
+
+        async function fetchProductsFromBackend(retailer, query, preferredKey) {
+            let lastError = null;
+            if (window.location.protocol === 'http:' || window.location.protocol === 'https:') {
+                try {
+                    return await fetchProductsViaHttpApi(retailer, query, preferredKey);
+                } catch (httpErr) {
+                    lastError = httpErr;
+                    console.warn('HTTP product lookup failed, trying cloud function:', httpErr);
+                }
+            }
+            try {
+                return await fetchProductsViaFirebaseCallable(retailer, query, preferredKey);
+            } catch (cloudErr) {
+                throw new Error(formatProviderSearchError(cloudErr.message || (lastError && lastError.message) || String(cloudErr)));
+            }
+        }
+
+        async function fetchTrendingViaCloud() {
+            const ff = getFirebaseFunctionsClient();
+            if (!ff || !ff.httpsCallable) return [];
+            const result = await ff.httpsCallable('getTrendingProducts')({ limit: 6 });
+            const data = (result && result.data) || {};
+            if (!Array.isArray(data.products) || !data.products.length) return [];
+            return data.products.map(function(item, i) {
+                return mapBackendProductToCard(item, item.retailer || 'amazon', i);
+            });
         }
 
         async function checkSearchBackendHealth() {
@@ -13322,8 +13407,9 @@
         async function warnIfSearchBackendUnavailable() {
             const health = await checkSearchBackendHealth();
             if (health && health.ok) return;
+            if (getFirebaseFunctionsClient()) return;
             showNotification(
-                'Live product lookup needs the local server. Run start.bat (or npm start), then open http://localhost:3000',
+                'Live product lookup is connecting. Add your product keys in Settings → Integrations if searches stay empty.',
                 'warning',
                 'Product lookup'
             );
@@ -13347,33 +13433,6 @@
                 link: applyAffiliateToProductLink(item.link || item.url || '#', item.retailer || retailer),
                 retailer: item.retailer || retailer
             };
-        }
-
-        async function fetchProductsFromBackend(retailer, query, preferredKey) {
-            const apiRoot = getProductsApiBase();
-            const apiEndpoint = getProviderApiEndpoint(retailer);
-            const apiKey = preferredKey != null ? String(preferredKey).trim() : '';
-            let url = (apiRoot || '') + '/api/products/search?retailer=' + encodeURIComponent(retailer) + '&query=' + encodeURIComponent(query);
-            if (apiKey) url += '&apiKey=' + encodeURIComponent(apiKey);
-            if (apiEndpoint) url += '&apiEndpoint=' + encodeURIComponent(apiEndpoint);
-            const headers = { Accept: 'application/json' };
-            if (apiKey) headers['X-Provider-Api-Key'] = apiKey;
-            const res = await fetch(url, { method: 'GET', headers: headers });
-            let data = null;
-            try {
-                data = await res.json();
-            } catch (parseErr) {
-                throw new Error('Product search returned an invalid response.');
-            }
-            if (!res.ok || (data && data.error)) {
-                const errMsg = (data && data.error && (data.error.message || data.error)) || (data && data.message) || ('HTTP ' + res.status);
-                throw new Error(typeof errMsg === 'string' ? errMsg : JSON.stringify(errMsg));
-            }
-            const items = data.products || extractProductsArray(data);
-            if (!items.length) return [];
-            return items.map(function(item, i) {
-                return mapBackendProductToCard(item, retailer, i) || mapApiItemToProduct(item, retailer, i);
-            });
         }
 
         function liveRetailerSearchBlockedMessage(retailer) {
@@ -14660,21 +14719,10 @@
             let lastError = null;
             for (var ki = 0; ki < attempts.length; ki++) {
                 try {
-                    const apiRoot = getProductsApiBase();
-                    let url = (apiRoot || '') + '/api/products/search?retailer=' + encodeURIComponent(retailer) + '&query=' + encodeURIComponent(query);
-                    if (attempts[ki]) url += '&apiKey=' + encodeURIComponent(attempts[ki]);
-                    const response = await fetch(url, { method: 'GET', headers: { Accept: 'application/json' } });
-                    const data = await response.json();
-                    if (!response.ok || (data && data.error)) {
-                        const apiError = data && data.error;
-                        throw new Error(typeof apiError === 'string' ? apiError : (apiError && (apiError.message || JSON.stringify(apiError))) || ('HTTP ' + response.status));
-                    }
-                    const extracted = extractGoogleAIContent(data);
-                    if (extracted.text) return extracted;
-                    const products = data.products || extractProductsArray(data);
-                    if (products.length) {
+                    const products = await fetchProductsFromBackend(retailer, query, attempts[ki]);
+                    if (products && products.length) {
                         const lines = products.slice(0, 8).map(function(p) {
-                            return '- ' + (p.title || p.name || 'Product');
+                            return '- ' + (p.title || 'Product');
                         });
                         return { text: lines.join('\n'), references: [] };
                     }

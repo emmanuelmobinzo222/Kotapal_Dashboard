@@ -4,5 +4,44 @@
   },
   "functions": {
     "source": "functions"
+  },
+  "hosting": {
+    "public": ".",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**",
+      "functions/**",
+      "services/**",
+      "scripts/**",
+      "backend.js",
+      "backend-enhanced.js",
+      "docker-compose.yml",
+      "Dockerfile",
+      "*.md",
+      "env.txt",
+      ".env",
+      ".env.example",
+      "index.before-rollback.html",
+      "patch_buttons.py"
+    ],
+    "rewrites": [
+      {
+        "source": "/api/products/search",
+        "function": "apiProductsSearch"
+      },
+      {
+        "source": "/api/products/trending",
+        "function": "apiProductsTrending"
+      },
+      {
+        "source": "/api/health",
+        "function": "apiHealth"
+      },
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
   }
 }
