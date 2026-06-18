@@ -8,11 +8,11 @@ const jwt = require('jsonwebtoken');
 const { v4: uuidv4 } = require('uuid');
 require('dotenv').config();
 
-const { RetailerIntegrationService } = require('./services/retailerIntegration');
+const { RetailerIntegrationService, resolveRetailerSearchCredentials } = require('./services/retailerIntegration');
 const retailerService = new RetailerIntegrationService({
   cacheStdTTL: 3600,
   maxRetries: 3,
-  requestTimeout: 10000
+  requestTimeout: 15000
 });
 
 const app = express();
@@ -550,10 +550,23 @@ app.get('/api/products/search', async (req, res) => {
 
     const liveRetailers = ['amazon', 'walmart', 'ebay'];
     if (liveRetailers.includes(String(retailer).toLowerCase())) {
-      const products = await retailerService.searchProducts(String(retailer).toLowerCase(), String(query), {
-        limit: parseInt(req.query.limit, 10) || 20,
+      const retailerKey = String(retailer).toLowerCase();
+      const credentials = resolveRetailerSearchCredentials(retailerKey, {
         apiKey: req.query.apiKey || req.headers['x-provider-api-key'] || undefined,
         apiBaseUrl: req.query.apiEndpoint || req.query.apiBaseUrl || undefined
+      });
+      const products = await retailerService.searchProducts(retailerKey, String(query), {
+        limit: parseInt(req.query.limit, 10) || 20,
+        page: parseInt(req.query.page, 10) || 1,
+        apiKey: credentials.apiKey || undefined,
+        apiBaseUrl: credentials.apiBaseUrl || undefined,
+        category_id: req.query.category_id,
+        store_id: req.query.store_id,
+        ebay_domain: req.query.ebay_domain,
+        sort_by: req.query.sort_by,
+        price_min: req.query.price_min,
+        price_max: req.query.price_max,
+        filters: req.query.filters
       });
       return res.json({
         retailer,

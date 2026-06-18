@@ -14,7 +14,7 @@ const path = require('path');
 require('dotenv').config();
 
 // Import services
-const { RetailerIntegrationService } = require('./services/retailerIntegration');
+const { RetailerIntegrationService, resolveRetailerSearchCredentials } = require('./services/retailerIntegration');
 const RealTimeDataPipeline = require('./services/realTimeDataPipeline');
 const WebSocketService = require('./services/websocketService');
 
@@ -36,38 +36,44 @@ let websocketService;
 
 async function initializeServices() {
   try {
-    // Initialize Retailer Integration Service
     retailerService = new RetailerIntegrationService({
       cacheStdTTL: 3600,
       maxRetries: 3,
-      requestTimeout: 10000
-    });
-
-    // Initialize Real-time Data Pipeline
-    realTimeDataPipeline = new RealTimeDataPipeline({
-      redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
-      aggregationWindow: 60000
+      requestTimeout: 15000
     });
 
     try {
+      realTimeDataPipeline = new RealTimeDataPipeline({
+        redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
+        aggregationWindow: 60000
+      });
       await realTimeDataPipeline.connect();
     } catch (redisError) {
       console.warn('Redis unavailable — real-time pipeline disabled:', redisError.message);
       realTimeDataPipeline = null;
     }
 
-    // Initialize WebSocket Service
-    websocketService = new WebSocketService(server, {
-      heartbeatInterval: 30000
-    });
+    try {
+      websocketService = new WebSocketService(server, {
+        heartbeatInterval: 30000
+      });
+      setupEventListeners();
+    } catch (wsError) {
+      console.warn('WebSocket unavailable — live updates disabled:', wsError.message);
+      websocketService = null;
+    }
 
-    // Setup event listeners
-    setupEventListeners();
-
-    console.log('All services initialized successfully');
+    console.log('Core services initialized (product search ready)');
   } catch (error) {
     console.error('Service initialization error:', error);
-    process.exit(1);
+    if (!retailerService) {
+      retailerService = new RetailerIntegrationService({
+        cacheStdTTL: 3600,
+        maxRetries: 3,
+        requestTimeout: 10000
+      });
+      console.warn('Started with product search only — some real-time features are disabled');
+    }
   }
 }
 
@@ -75,19 +81,24 @@ async function initializeServices() {
  * Setup event listeners for real-time updates
  */
 function setupEventListeners() {
-  // Retailer service events
+  if (!retailerService) return;
+
   retailerService.on('data-fetched', (data) => {
     console.log(`Data fetched from ${data.retailer}: ${data.itemsCount} items`);
-    websocketService.publishToChannel(`bestsellers:${data.retailer}`, data);
+    if (websocketService) {
+      websocketService.publishToChannel(`bestsellers:${data.retailer}`, data);
+    }
   });
 
   retailerService.on('error', (error) => {
     console.error('Retailer service error:', error);
-    websocketService.broadcast({
-      type: 'error',
-      category: 'retailer-integration',
-      message: error.error
-    });
+    if (websocketService) {
+      websocketService.broadcast({
+        type: 'error',
+        category: 'retailer-integration',
+        message: error.error
+      });
+    }
   });
 
   // Real-time pipeline events (optional when Redis is unavailable)
@@ -160,11 +171,15 @@ const authenticateToken = (req, res, next) => {
 // ===========================
 
 app.get('/api/health', (req, res) => {
+  const productSearchConfigured = Boolean(
+    process.env.SEARCHAPI_API_KEY || process.env.AMAZON_API_KEY
+  );
   res.json({
     ok: true,
     message: 'KOTA PAL API is running',
     version: '2.0.0',
-    features: ['multi-retailer-integration', 'real-time-updates', 'websockets', 'live-product-search']
+    features: ['multi-retailer-integration', 'real-time-updates', 'websockets', 'live-product-search'],
+    productSearchConfigured
   });
 });
 
@@ -271,10 +286,24 @@ app.get('/api/products/search', async (req, res) => {
       return res.status(503).json({ error: 'Retailer service not ready' });
     }
 
-    const products = await retailerService.searchProducts(String(retailer).toLowerCase(), String(query), {
-      limit: parseInt(req.query.limit, 10) || 20,
+    const retailerKey = String(retailer).toLowerCase();
+    const credentials = resolveRetailerSearchCredentials(retailerKey, {
       apiKey: req.query.apiKey || req.headers['x-provider-api-key'] || undefined,
       apiBaseUrl: req.query.apiEndpoint || req.query.apiBaseUrl || undefined
+    });
+
+    const products = await retailerService.searchProducts(retailerKey, String(query), {
+      limit: parseInt(req.query.limit, 10) || 20,
+      page: parseInt(req.query.page, 10) || 1,
+      apiKey: credentials.apiKey || undefined,
+      apiBaseUrl: credentials.apiBaseUrl || undefined,
+      category_id: req.query.category_id,
+      store_id: req.query.store_id,
+      ebay_domain: req.query.ebay_domain,
+      sort_by: req.query.sort_by,
+      price_min: req.query.price_min,
+      price_max: req.query.price_max,
+      filters: req.query.filters
     });
 
     res.json({
@@ -596,6 +625,12 @@ async function startServer() {
     // Start server
     server.listen(PORT, () => {
       console.log(`KOTA PAL API v2.0 running on port ${PORT}`);
+      console.log(`Open http://localhost:${PORT} in your browser`);
+      if (!process.env.SEARCHAPI_API_KEY && !process.env.AMAZON_API_KEY) {
+        console.warn('Product lookup key is not set — add it to .env or paste your key in Settings → Integrations');
+      } else {
+        console.log('  ✓ Product lookup key loaded from environment');
+      }
       console.log('Features enabled:');
       console.log('  ✓ Multi-retailer API integration');
       console.log('  ✓ Real-time data pipeline');

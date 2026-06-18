@@ -7,6 +7,73 @@ const axios = require('axios');
 const NodeCache = require('node-cache');
 const EventEmitter = require('events');
 
+const DEFAULT_PROVIDER_API_URL = process.env.PROVIDER_SEARCH_URL
+  || process.env.SEARCHAPI_AMAZON_URL
+  || 'https://www.searchapi.io/api/v1/search';
+
+function extractProviderApiError(error, fallback) {
+  const apiMsg = error.response?.data?.error
+    || error.response?.data?.message
+    || (typeof error.response?.data === 'string' ? error.response.data : null);
+  return apiMsg || fallback || error.message;
+}
+
+function collectProviderSearchResults(data, limit = 20) {
+  if (!data || typeof data !== 'object') return [];
+
+  const seen = new Set();
+  const results = [];
+
+  const addItems = (items) => {
+    if (!Array.isArray(items)) return;
+    for (const item of items) {
+      const key = item.item_id || item.product_id || item.asin || item.id || item.link || item.title;
+      if (key && seen.has(String(key))) continue;
+      if (key) seen.add(String(key));
+      results.push(item);
+      if (results.length >= limit) return;
+    }
+  };
+
+  addItems(data.organic_results);
+  if (results.length < limit) addItems(data.other_options);
+  if (results.length < limit && Array.isArray(data.sections)) {
+    for (const section of data.sections) {
+      addItems(section?.results);
+      if (results.length >= limit) break;
+    }
+  }
+  if (results.length < limit) addItems(data.related_results);
+
+  return results.slice(0, limit);
+}
+
+function resolveEbayResultCount(limit = 20) {
+  const value = parseInt(limit, 10) || 20;
+  if (value <= 60) return 60;
+  if (value <= 120) return 120;
+  return 240;
+}
+
+function resolveRetailerSearchCredentials(retailerName, overrides = {}) {
+  const retailer = String(retailerName || '').toLowerCase();
+  const envKeyByRetailer = {
+    amazon: process.env.AMAZON_API_KEY,
+    walmart: process.env.WALMART_API_KEY,
+    ebay: process.env.EBAY_API_KEY
+  };
+  const envUrlByRetailer = {
+    amazon: process.env.SEARCHAPI_AMAZON_URL,
+    walmart: process.env.SEARCHAPI_WALMART_URL,
+    ebay: process.env.SEARCHAPI_EBAY_URL
+  };
+
+  return {
+    apiKey: overrides.apiKey || process.env.SEARCHAPI_API_KEY || envKeyByRetailer[retailer] || '',
+    apiBaseUrl: overrides.apiBaseUrl || envUrlByRetailer[retailer] || DEFAULT_PROVIDER_API_URL
+  };
+}
+
 class RetailerIntegrationService extends EventEmitter {
   constructor(config = {}) {
     super();
@@ -15,7 +82,7 @@ class RetailerIntegrationService extends EventEmitter {
       checkperiod: config.checkperiod || 600,
       maxRetries: config.maxRetries || 3,
       retryDelay: config.retryDelay || 1000,
-      requestTimeout: config.requestTimeout || 10000,
+      requestTimeout: config.requestTimeout || 15000,
       ...config
     };
 
@@ -361,7 +428,7 @@ class AmazonRetailer extends BaseRetailer {
     const resolvedApiBaseUrl = apiBaseUrl || this.apiBaseUrl;
 
     if (!resolvedApiKey) {
-      throw new Error('Amazon product search API key is required. Add your key in Settings.');
+      throw new Error('Amazon product key is required. Add your key in Settings.');
     }
 
     try {
@@ -369,7 +436,6 @@ class AmazonRetailer extends BaseRetailer {
         engine: 'amazon_search',
         api_key: resolvedApiKey,
         q: query,
-        num: limit,
         page: page
       };
 
@@ -387,16 +453,12 @@ class AmazonRetailer extends BaseRetailer {
         timeout: this.service.config.requestTimeout
       });
 
-      // Handle organic_results from Amazon API response
-      let allResults = [];
-      if (response.data && response.data.organic_results) {
-        allResults = allResults.concat(response.data.organic_results);
-      }
-
+      const allResults = collectProviderSearchResults(response.data, limit);
       return this.normalizeData(allResults);
     } catch (error) {
-      console.error('Amazon searchProducts error:', error.message);
-      throw new Error(`Amazon search failed: ${error.message}`);
+      const apiMsg = extractProviderApiError(error);
+      console.error('Amazon searchProducts error:', apiMsg);
+      throw new Error(apiMsg || `Amazon search failed: ${error.message}`);
     }
   }
 
@@ -412,17 +474,12 @@ class AmazonRetailer extends BaseRetailer {
           engine: 'amazon_search',
           api_key: this.apiKey,
           q: `best sellers ${category}`,
-          num: limit,
           sort_by: 'bestsellers'
         },
         timeout: this.service.config.requestTimeout
       });
 
-      let allResults = [];
-      if (response.data && response.data.organic_results) {
-        allResults = allResults.concat(response.data.organic_results);
-      }
-
+      let allResults = collectProviderSearchResults(response.data, limit);
       return this.normalizeData(allResults);
     } catch (error) {
       console.error('Amazon fetchBestSellers error:', error.message);
@@ -534,37 +591,54 @@ class WalmartRetailer extends BaseRetailer {
   }
 
   /**
-   * Search Walmart products using SearchAPI.io
+   * Search Walmart products (engine=walmart_search)
    */
   async searchProducts(query, options = {}) {
-    const { limit = 20, page = 1, apiKey, apiBaseUrl } = options;
+    const {
+      limit = 20,
+      page = 1,
+      category_id,
+      store_id,
+      price_min,
+      price_max,
+      filters,
+      sort_by,
+      apiKey,
+      apiBaseUrl
+    } = options;
     const resolvedApiKey = apiKey || this.apiKey;
     const resolvedApiBaseUrl = apiBaseUrl || this.apiBaseUrl;
 
     if (!resolvedApiKey) {
-      throw new Error('Walmart product search API key is required. Add your key in Settings.');
+      throw new Error('Walmart product key is required. Add your key in Settings.');
     }
 
     try {
+      const params = {
+        engine: 'walmart_search',
+        api_key: resolvedApiKey,
+        q: query,
+        page
+      };
+
+      if (category_id) params.category_id = category_id;
+      if (store_id) params.store_id = store_id;
+      if (price_min != null && price_min !== '') params.price_min = price_min;
+      if (price_max != null && price_max !== '') params.price_max = price_max;
+      if (filters) params.filters = filters;
+      if (sort_by) params.sort_by = sort_by;
+
       const response = await axios.get(resolvedApiBaseUrl, {
-        params: {
-          engine: 'walmart_search',
-          api_key: resolvedApiKey,
-          q: query,
-          num: limit,
-          page: page
-        },
+        params,
         timeout: this.service.config.requestTimeout
       });
 
-      if (response.data && response.data.organic_results) {
-        return this.normalizeData(response.data.organic_results);
-      }
-
-      return this.normalizeData(response.data || []);
+      const allResults = collectProviderSearchResults(response.data, limit);
+      return this.normalizeData(allResults);
     } catch (error) {
-      console.error('Walmart searchProducts error:', error.message);
-      return this.getMockBestSellers(limit);
+      const apiMsg = extractProviderApiError(error);
+      console.error('Walmart searchProducts error:', apiMsg);
+      throw new Error(apiMsg || `Walmart search failed: ${error.message}`);
     }
   }
 
@@ -572,22 +646,19 @@ class WalmartRetailer extends BaseRetailer {
     const { category = 'home-garden', limit = 20 } = options;
 
     try {
-      // Use SearchAPI.io to search for best sellers in category
-      // Always use the configured API key (default is set in constructor)
       const response = await axios.get(this.apiBaseUrl, {
         params: {
           engine: 'walmart_search',
           api_key: this.apiKey,
           q: `best sellers ${category}`,
-          num: limit
+          sort_by: 'best_seller',
+          page: 1
         },
         timeout: this.service.config.requestTimeout
       });
 
-      if (response.data && response.data.organic_results) {
-        return this.normalizeData(response.data.organic_results);
-      }
-
+      const allResults = collectProviderSearchResults(response.data, limit);
+      if (allResults.length) return this.normalizeData(allResults);
       return this.getMockBestSellers(limit);
     } catch (error) {
       console.error('Walmart fetchBestSellers error:', error.message);
@@ -727,21 +798,22 @@ class eBayRetailer extends BaseRetailer {
 
     const resolvedApiKey = apiKey || this.apiKey;
     const resolvedApiBaseUrl = apiBaseUrl || this.apiBaseUrl;
-    const numVal = num || (limit <= 60 ? 60 : limit <= 120 ? 120 : 240);
+    const resultCount = resolveEbayResultCount(limit);
 
     if (!resolvedApiKey) {
-      throw new Error('eBay product search API key is required. Add your key in Settings.');
+      throw new Error('eBay product key is required. Add your key in Settings.');
     }
 
     try {
       const params = {
         engine: 'ebay_search',
         api_key: resolvedApiKey,
-        q: query,
-        num: Math.min(numVal, 240),
-        page: page
+        num: resultCount,
+        page,
+        include_related_results: true
       };
 
+      if (query) params.q = query;
       if (category_id) params.category_id = category_id;
       if (ebay_domain) params.ebay_domain = ebay_domain;
       if (country) params.country = country;
@@ -749,8 +821,8 @@ class eBayRetailer extends BaseRetailer {
       if (postal_code) params.postal_code = postal_code;
       if (distance_radius) params.distance_radius = distance_radius;
       if (product_origin_country) params.product_origin_country = product_origin_country;
-      if (price_min) params.price_min = price_min;
-      if (price_max) params.price_max = price_max;
+      if (price_min != null && price_min !== '') params.price_min = price_min;
+      if (price_max != null && price_max !== '') params.price_max = price_max;
       if (condition) params.condition = condition;
       if (buying_format) params.buying_format = buying_format;
       if (filters) params.filters = filters;
@@ -763,22 +835,12 @@ class eBayRetailer extends BaseRetailer {
         timeout: this.service.config.requestTimeout
       });
 
-      let allResults = [];
-      if (response.data && response.data.organic_results) {
-        allResults = allResults.concat(response.data.organic_results);
-      }
-      if (response.data && response.data.sections) {
-        for (const sec of response.data.sections) {
-          if (sec.results && Array.isArray(sec.results)) {
-            allResults = allResults.concat(sec.results);
-          }
-        }
-      }
-
-      return this.normalizeData(allResults.slice(0, limit || 60));
+      const allResults = collectProviderSearchResults(response.data, limit);
+      return this.normalizeData(allResults);
     } catch (error) {
-      console.error('eBay searchProducts error:', error.message);
-      throw new Error(`eBay search failed: ${error.message}`);
+      const apiMsg = extractProviderApiError(error);
+      console.error('eBay searchProducts error:', apiMsg);
+      throw new Error(apiMsg || `eBay search failed: ${error.message}`);
     }
   }
 
@@ -790,24 +852,16 @@ class eBayRetailer extends BaseRetailer {
           engine: 'ebay_search',
           api_key: this.apiKey,
           q: `best sellers ${category}`,
-          num: 60,
-          sort_by: 'best_match'
+          num: resolveEbayResultCount(limit),
+          sort_by: 'best_match',
+          include_related_results: true,
+          page: 1
         },
         timeout: this.service.config.requestTimeout
       });
 
-      let allResults = [];
-      if (response.data && response.data.organic_results) {
-        allResults = allResults.concat(response.data.organic_results);
-      }
-      if (response.data && response.data.sections) {
-        for (const sec of response.data.sections) {
-          if (sec.results && Array.isArray(sec.results)) {
-            allResults = allResults.concat(sec.results);
-          }
-        }
-      }
-      return this.normalizeData(allResults.slice(0, limit));
+      const allResults = collectProviderSearchResults(response.data, limit);
+      return this.normalizeData(allResults);
     } catch (error) {
       console.error('eBay fetchBestSellers error:', error.message);
       throw new Error(`eBay best sellers fetch failed: ${error.message}`);
@@ -1041,5 +1095,7 @@ module.exports = {
   WalmartRetailer,
   eBayRetailer,
   ShopifyRetailer,
-  SkimlinksRetailer
+  SkimlinksRetailer,
+  collectProviderSearchResults,
+  resolveRetailerSearchCredentials
 };

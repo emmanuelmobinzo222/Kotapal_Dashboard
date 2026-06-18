@@ -138,6 +138,13 @@
                 setTimeout(showAdminLoginRoute, 0);
             }
             initLandingMobileNav();
+            if (!window._logoutConfirmWired) {
+                window._logoutConfirmWired = true;
+                var logoutConfirmCancel = document.getElementById('logoutConfirmCancel');
+                var logoutConfirmBtn = document.getElementById('logoutConfirmBtn');
+                if (logoutConfirmCancel) logoutConfirmCancel.addEventListener('click', function() { window.hideLogoutConfirm(); });
+                if (logoutConfirmBtn) logoutConfirmBtn.addEventListener('click', function() { window.executeConfirmedLogout(); });
+            }
         });
         function hidePageLoaderEarly() {
             var pl = document.getElementById('pageLoader');
@@ -181,6 +188,37 @@
             el.style.visibility = '';
             el.style.display = displayMode || 'flex';
         };
+        window._logoutConfirmTarget = 'user';
+        window._logoutConfirmOpen = false;
+        window.hideLogoutConfirm = function() {
+            window._logoutConfirmOpen = false;
+            var modal = document.getElementById('logoutConfirmModal');
+            if (modal && typeof window.hideKotapalModal === 'function') window.hideKotapalModal(modal);
+            else if (modal) modal.style.display = 'none';
+            document.documentElement.style.overflow = '';
+            document.body.style.overflow = '';
+        };
+        window.showLogoutConfirm = function(target) {
+            if (target === 'admin' || (!target && typeof window.isKotapalAdminVisible === 'function' && window.isKotapalAdminVisible())) {
+                window._logoutConfirmTarget = 'admin';
+            } else {
+                window._logoutConfirmTarget = 'user';
+            }
+            var modal = document.getElementById('logoutConfirmModal');
+            if (!modal) return;
+            window._logoutConfirmOpen = true;
+            if (typeof window.openKotapalModal === 'function') window.openKotapalModal(modal, 'flex');
+            else modal.style.display = 'flex';
+            document.documentElement.style.overflow = 'hidden';
+            document.body.style.overflow = 'hidden';
+        };
+        window.executeConfirmedLogout = function() {
+            if (window._logoutConfirmTarget === 'admin') {
+                if (typeof window.performAdminLogout === 'function') window.performAdminLogout();
+            } else if (typeof window.performLogout === 'function') {
+                window.performLogout();
+            }
+        };
         window.clearStaleOverlays = function() {
             window._adminAuthModalLoginPending = false;
             var pl = document.getElementById('pageLoader');
@@ -221,10 +259,12 @@
                 lb.style.pointerEvents = 'none';
             }
             (window.kotapalModalIds || []).forEach(function(id) {
+                if (id === 'logoutConfirmModal' && window._logoutConfirmOpen) return;
                 window.hideKotapalModal(document.getElementById(id));
             });
             document.querySelectorAll('.modal, .plan-detail-modal').forEach(function(el) {
                 if (el.id === 'authModal') return;
+                if (el.id === 'logoutConfirmModal' && window._logoutConfirmOpen) return;
                 window.hideKotapalModal(el);
             });
             document.body.style.pointerEvents = 'auto';
@@ -1036,7 +1076,7 @@
         html.landing-page-active body > #admin-view:not(.active),
         html.landing-page-active body > #blockImageLightbox:not(.active),
         html.landing-page-active body > #admin-setup-screen,
-        html.landing-page-active body > #kotapalPagePlacementLayer:not(.active) {
+        html.landing-page-active body > #kotapalPagePlacementLayer:not(.active):not(.has-placed-blocks) {
             display: none !important;
             pointer-events: none !important;
             visibility: hidden !important;
@@ -4398,21 +4438,27 @@
         #kotapalPagePlacementLayer {
             position: fixed; inset: 0; z-index: 200000; pointer-events: none; display: none;
         }
-        #kotapalPagePlacementLayer.active { display: block; pointer-events: auto; }
+        #kotapalPagePlacementLayer.active,
+        #kotapalPagePlacementLayer.has-placed-blocks { display: block; }
+        #kotapalPagePlacementLayer.active { pointer-events: auto; }
         #kotapalPagePlacementLayer .kotapal-placement-hint {
+            display: none;
             position: fixed; top: 12px; left: 50%; transform: translateX(-50%); z-index: 200002;
             background: rgba(15, 23, 42, 0.92); color: #fff; padding: 10px 18px; border-radius: 999px;
             font-size: 0.85rem; pointer-events: none; box-shadow: 0 8px 24px rgba(0,0,0,0.25);
         }
+        #kotapalPagePlacementLayer.active .kotapal-placement-hint { display: block; }
         #kotapalPagePlacementLayer .kotapal-placement-toolbar {
-            position: fixed; bottom: 20px; right: 20px; z-index: 200002; display: flex; gap: 10px; flex-wrap: wrap;
+            position: fixed; bottom: 20px; right: 20px; z-index: 200002; display: none; gap: 10px; flex-wrap: wrap;
         }
+        #kotapalPagePlacementLayer.active .kotapal-placement-toolbar { display: flex; }
         .kotapal-placed-block {
             position: fixed; z-index: 200001; min-width: 220px; max-width: 300px;
             background: #fff; border-radius: 12px; box-shadow: 0 12px 40px rgba(0,0,0,0.22);
-            border: 1px solid #e2e8f0; overflow: hidden; cursor: grab; touch-action: none;
+            border: 1px solid #e2e8f0; overflow: hidden; cursor: default; touch-action: none;
             pointer-events: auto;
         }
+        #kotapalPagePlacementLayer.active .kotapal-placed-block { cursor: grab; }
         .kotapal-placed-block.dragging { cursor: grabbing; opacity: 0.95; box-shadow: 0 16px 48px rgba(0,0,0,0.28); }
         .kotapal-placed-block-header {
             display: flex; align-items: center; justify-content: space-between; gap: 8px;
@@ -4753,7 +4799,9 @@
         #adminBlockEditModal,
         #adminAddProductModal,
         #adminPlanEditModal,
-        #adminRoleEditModal {
+        #adminRoleEditModal,
+        #logoutConfirmModal,
+        #inactivityWarningModal {
             z-index: 10050 !important;
         }
         #adminUserManageModal .admin-user-smartblock-card {
@@ -4972,7 +5020,7 @@
                     <li class="nav-item"><a href="javascript:void(0)" class="nav-link" data-page="settings" onclick="if(typeof showDashboardPage==='function'){showDashboardPage('settings');}return false;"><i class="fas fa-cog"></i> Settings</a></li>
                     <li class="nav-item"><a href="javascript:void(0)" class="nav-link" data-page="billing" onclick="if(typeof showDashboardPage==='function'){showDashboardPage('billing');}return false;"><i class="fas fa-credit-card"></i> Billing</a></li>
                     <li class="nav-item"><a href="javascript:void(0)" class="nav-link" data-page="help" onclick="if(typeof showDashboardPage==='function'){showDashboardPage('help');}return false;"><i class="fas fa-question-circle"></i> Help</a></li>
-                    <li class="nav-item"><a href="javascript:void(0)" class="nav-link" id="logoutBtn" onclick="if(typeof showLogoutConfirm==='function'){showLogoutConfirm();}return false;"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+                    <li class="nav-item"><a href="javascript:void(0)" class="nav-link" id="logoutBtn" onclick="if(typeof showLogoutConfirm==='function'){showLogoutConfirm('user');}return false;"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
                 </ul>
             </div>
             <button type="button" class="nav-toggle-float" id="navToggleFloat" aria-label="Toggle navigation" title="Hide Nav"><i class="fas fa-compress-arrows-alt"></i></button>
@@ -5517,20 +5565,20 @@
                     <div class="card" style="margin-top:20px;">
                         <div class="card-header"><h3 class="card-title">Provider API keys</h3></div>
                         <div class="card-body">
-                            <p style="margin:0 0 16px;font-size:0.9rem;color:var(--gray);line-height:1.5;">Paste your <strong>Amazon product search API key</strong> (or full search URL with <code>api_key=</code>). Live results load whenever you search. Product links use your affiliate tag from Connections above.</p>
+                            <p style="margin:0 0 16px;font-size:0.9rem;color:var(--gray);line-height:1.5;">Paste your <strong>Amazon product key</strong> (or full URL with <code>api_key=</code>). Live results load whenever you search. Product links use your affiliate tag from Connections above.</p>
                             <div class="form-group">
-                                <label for="amazonApiKey">Amazon product search API key</label>
-                                <input type="password" id="amazonApiKey" class="form-control provider-api-key-input" data-provider="amazon" placeholder="Paste API key or full search URL" autocomplete="off" spellcheck="false">
+                                <label for="amazonApiKey">Amazon product key</label>
+                                <input type="password" id="amazonApiKey" class="form-control provider-api-key-input" data-provider="amazon" placeholder="Paste product key or full URL" autocomplete="off" spellcheck="false">
                                 <p id="amazonApiKeyStatus" style="margin-top:8px;font-size:0.85rem;color:var(--gray);"></p>
                             </div>
                             <div class="form-group">
-                                <label for="walmartApiKey">SearchAPI.io key (Walmart product search)</label>
-                                <input type="password" id="walmartApiKey" class="form-control provider-api-key-input" data-provider="walmart" placeholder="Paste your SearchAPI.io API key" autocomplete="off" spellcheck="false">
+                                <label for="walmartApiKey">Walmart product key</label>
+                                <input type="password" id="walmartApiKey" class="form-control provider-api-key-input" data-provider="walmart" placeholder="Paste Walmart product key" autocomplete="off" spellcheck="false">
                                 <p id="walmartApiKeyStatus" style="margin-top:8px;font-size:0.85rem;color:var(--gray);"></p>
                             </div>
                             <div class="form-group">
-                                <label for="ebayApiKey">SearchAPI.io key (eBay product search)</label>
-                                <input type="password" id="ebayApiKey" class="form-control provider-api-key-input" data-provider="ebay" placeholder="Paste your SearchAPI.io API key" autocomplete="off" spellcheck="false">
+                                <label for="ebayApiKey">eBay product key</label>
+                                <input type="password" id="ebayApiKey" class="form-control provider-api-key-input" data-provider="ebay" placeholder="Paste eBay product key" autocomplete="off" spellcheck="false">
                                 <p id="ebayApiKeyStatus" style="margin-top:8px;font-size:0.85rem;color:var(--gray);"></p>
                             </div>
                             <div class="form-group">
@@ -5543,7 +5591,7 @@
                                 <input type="password" id="skimlinksApiKey" class="form-control provider-api-key-input" data-provider="skimlinks" placeholder="Paste your Skimlinks API key" autocomplete="off" spellcheck="false">
                                 <p id="skimlinksApiKeyStatus" style="margin-top:8px;font-size:0.85rem;color:var(--gray);"></p>
                             </div>
-                            <button type="button" class="btn btn-primary" id="saveAmazonApiKey">Save API keys</button>
+                            <button type="button" class="btn btn-primary" id="saveAmazonApiKey">Save keys</button>
                         </div>
                     </div>
                     </div>
@@ -5595,29 +5643,6 @@
             <button type="button" class="btn btn-secondary" style="margin-top: 16px;" id="downloadReportFormatCancel">Cancel</button>
         </div>
     </div>
-    <!-- Logout confirmation (in-website) -->
-    <div id="logoutConfirmModal" class="modal" style="display: none;">
-        <div class="modal-content" style="max-width: 400px;">
-            <h3 style="margin: 0 0 16px 0;">Log out</h3>
-            <p style="margin: 0 0 20px 0; color: var(--gray);">Are you sure you would like to logout?</p>
-            <div style="display: flex; gap: 12px; justify-content: flex-end;">
-                <button type="button" class="btn btn-secondary" id="logoutConfirmCancel" style="background:#f1f5f9 !important; color:#1e293b !important; border:2px solid #94a3b8 !important;">Cancel</button>
-                <button type="button" class="btn btn-primary" id="logoutConfirmBtn">Logout</button>
-            </div>
-        </div>
-    </div>
-    <!-- Inactivity logout warning (countdown) -->
-    <div id="inactivityWarningModal" class="modal" style="display: none;">
-        <div class="modal-content" style="max-width: 420px;">
-            <h3 style="margin: 0 0 12px 0; color: #dc2626;"><i class="fas fa-clock"></i> Session expiring</h3>
-            <p style="margin: 0 0 16px 0; color: var(--gray);">You will be logged out due to inactivity in <strong id="inactivityCountdown">60</strong> seconds.</p>
-            <p style="margin: 0 0 20px 0; font-size: 0.9rem; color: var(--gray);">Click "Stay logged in" to continue your session.</p>
-            <div style="display: flex; gap: 12px; justify-content: flex-end;">
-                <button type="button" class="btn btn-secondary" id="inactivityStayBtn" style="background:#f1f5f9 !important; color:#1e293b !important; border:2px solid #94a3b8 !important;">Stay logged in</button>
-            </div>
-        </div>
-    </div>
-
     <!-- SmartBlock image gallery lightbox -->
     <div id="blockImageLightbox" aria-hidden="true">
         <div class="lightbox-content">
@@ -5687,7 +5712,7 @@
                 <div class="nav-item"><a href="javascript:void(0)" class="nav-link" data-page="help" onclick="showAdminPage('help'); return false;"><i class="fas fa-book"></i> Help &amp; Documentation</a></div>
                 <div class="nav-section-label">Account</div>
                 <div class="nav-item"><a href="javascript:void(0)" class="nav-link" data-page="settings" onclick="showAdminPage('settings'); return false;"><i class="fas fa-cog"></i> Platform Settings</a></div>
-                <div class="nav-item nav-logout"><a href="javascript:void(0)" class="nav-link nav-link-logout" onclick="handleAdminLogout(); return false;"><i class="fas fa-sign-out-alt"></i> Log out</a></div>
+                <div class="nav-item nav-logout"><a href="javascript:void(0)" class="nav-link nav-link-logout" onclick="if(typeof showLogoutConfirm==='function'){showLogoutConfirm('admin');}return false;"><i class="fas fa-sign-out-alt"></i> Log out</a></div>
             </nav>
         </aside>
         <main class="admin-main scroll-box">
@@ -6107,6 +6132,30 @@
             </div>
         </main>
     </div>
+
+    <!-- Logout confirmation (global — visible from user and admin dashboards) -->
+    <div id="logoutConfirmModal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 400px;">
+            <h3 style="margin: 0 0 16px 0;">Log out</h3>
+            <p style="margin: 0 0 20px 0; color: var(--gray);">Are you sure you would like to logout?</p>
+            <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                <button type="button" class="btn btn-secondary" id="logoutConfirmCancel" style="background:#f1f5f9 !important; color:#1e293b !important; border:2px solid #94a3b8 !important;">Cancel</button>
+                <button type="button" class="btn btn-primary" id="logoutConfirmBtn">Logout</button>
+            </div>
+        </div>
+    </div>
+    <!-- Inactivity logout warning (countdown) -->
+    <div id="inactivityWarningModal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 420px;">
+            <h3 style="margin: 0 0 12px 0; color: #dc2626;"><i class="fas fa-clock"></i> Session expiring</h3>
+            <p style="margin: 0 0 16px 0; color: var(--gray);">You will be logged out due to inactivity in <strong id="inactivityCountdown">60</strong> seconds.</p>
+            <p style="margin: 0 0 20px 0; font-size: 0.9rem; color: var(--gray);">Click "Stay logged in" to continue your session.</p>
+            <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                <button type="button" class="btn btn-secondary" id="inactivityStayBtn" style="background:#f1f5f9 !important; color:#1e293b !important; border:2px solid #94a3b8 !important;">Stay logged in</button>
+            </div>
+        </div>
+    </div>
+
     <div id="changePlanModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:2000;align-items:center;justify-content:center;padding:20px;">
         <div style="background:white;padding:24px;border-radius:12px;max-width:400px;width:100%;">
             <h3 style="margin-bottom:16px;">Change Plan</h3><input type="hidden" id="changePlanUserId">
@@ -7819,7 +7868,9 @@
                     }
                 });
             };
-            window.handleAdminLogout = async function() {
+            window.performAdminLogout = async function() {
+                window._logoutConfirmOpen = false;
+                if (typeof window.hideLogoutConfirm === 'function') window.hideLogoutConfirm();
                 if (typeof window.setKotapalLoginMode === 'function') window.setKotapalLoginMode('');
                 sessionStorage.removeItem('admin_logged_in');
                 localStorage.removeItem('admin_logged_in');
@@ -7829,6 +7880,10 @@
                 window.location.hash = '';
                 if (typeof window.applyAdminView === 'function') window.applyAdminView();
                 else window.location.reload();
+            };
+            window.handleAdminLogout = function() {
+                if (typeof window.showLogoutConfirm === 'function') window.showLogoutConfirm('admin');
+                else if (typeof window.performAdminLogout === 'function') window.performAdminLogout();
             };
             window.renderAdminUsersTable = function(users) {
                 var tbody = document.getElementById('adminUsersTableBody');
@@ -9414,8 +9469,9 @@
                 }
             } catch (err) {
                 window._adminLastBlockSearchProducts = [];
-                if (statusEl) statusEl.textContent = 'Search failed. Add the product manually below.';
-                if (resultsEl) resultsEl.innerHTML = '';
+                var adminErr = typeof formatProviderSearchError === 'function' ? formatProviderSearchError(err.message || String(err)) : 'Search failed.';
+                if (statusEl) statusEl.textContent = adminErr;
+                if (resultsEl) resultsEl.innerHTML = '<p style="grid-column:1/-1;text-align:center;color:#dc2626;padding:16px;">' + (typeof adminEscapeHtml === 'function' ? adminEscapeHtml(adminErr) : adminErr) + '</p>';
             }
         };
         window.openAdminSmartBlockProductEdit = function(blockId, productIndex) {
@@ -9785,7 +9841,8 @@
                     amo._wire = true;
                     amo.addEventListener('click', function() {
                         closeAllAdminHeaderMenus();
-                        if (typeof handleAdminLogout === 'function') handleAdminLogout();
+                        if (typeof showLogoutConfirm === 'function') showLogoutConfirm('admin');
+                        else if (typeof handleAdminLogout === 'function') handleAdminLogout();
                     });
                 }
                 var addU = document.getElementById('adminAddUserBtn');
@@ -10880,6 +10937,7 @@
                 renderActivityTable();
                 renderAnalytics();
                 renderAlerts();
+                if (typeof renderPlacedBlocksOnPage === 'function') renderPlacedBlocksOnPage();
             } catch (e) {
                 console.error('applyDashboardBlocksFromRemote', e);
             }
@@ -10930,6 +10988,7 @@
                 }
                 if (rev <= appliedDashboardBlocksRevision) return;
                 applyDashboardBlocksFromRemote(uid, js, rev);
+                if (typeof renderPlacedBlocksOnPage === 'function') renderPlacedBlocksOnPage();
             }, function(err) {
                 console.error('Dashboard blocks listener:', err);
             });
@@ -11033,6 +11092,7 @@
                         renderActivityTable();
                         renderAnalytics();
                         renderAlerts();
+                        if (typeof renderPlacedBlocksOnPage === 'function') renderPlacedBlocksOnPage();
                         return;
                     }
                 } catch (e) {
@@ -11094,19 +11154,9 @@
             renderAlerts();
         }
 
-        window.showLogoutConfirm = function showLogoutConfirm() {
-            const modal = document.getElementById('logoutConfirmModal');
-            if (!modal) return;
-            if (typeof window.openKotapalModal === 'function') window.openKotapalModal(modal, 'flex');
-            else modal.style.display = 'flex';
-            document.documentElement.style.overflow = 'hidden';
-            document.body.style.overflow = 'hidden';
-        };
-
         window.performLogout = async function performLogout() {
-            const modal = document.getElementById('logoutConfirmModal');
-            if (modal && typeof window.hideKotapalModal === 'function') window.hideKotapalModal(modal);
-            else if (modal) modal.style.display = 'none';
+            window._logoutConfirmOpen = false;
+            if (typeof window.hideLogoutConfirm === 'function') window.hideLogoutConfirm();
             if (typeof stopInactivityTimer === 'function') stopInactivityTimer();
             try {
                 if (typeof auth !== 'undefined' && auth) {
@@ -11205,21 +11255,15 @@
                 });
             }
 
-            // Logout: show in-website confirmation first
+            // Logout: show in-website confirmation first (buttons wired on DOMContentLoaded)
             const logoutBtn = document.getElementById('logoutBtn');
-            if (logoutBtn) logoutBtn.addEventListener('click', function(e) { e.preventDefault(); showLogoutConfirm(); });
-
-            // Logout confirm modal
-            const logoutConfirmModal = document.getElementById('logoutConfirmModal');
-            const logoutConfirmBtn = document.getElementById('logoutConfirmBtn');
-            const logoutConfirmCancel = document.getElementById('logoutConfirmCancel');
-            if (logoutConfirmCancel) logoutConfirmCancel.addEventListener('click', function() {
-                if (logoutConfirmModal && typeof window.hideKotapalModal === 'function') window.hideKotapalModal(logoutConfirmModal);
-                else if (logoutConfirmModal) logoutConfirmModal.style.display = 'none';
-                document.documentElement.style.overflow = '';
-                document.body.style.overflow = '';
-            });
-            if (logoutConfirmBtn) logoutConfirmBtn.addEventListener('click', function() { window.performLogout(); });
+            if (logoutBtn && !logoutBtn.dataset.logoutBound) {
+                logoutBtn.dataset.logoutBound = '1';
+                logoutBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    if (typeof window.showLogoutConfirm === 'function') window.showLogoutConfirm('user');
+                });
+            }
 
             // Inactivity warning - Stay logged in
             const inactivityStayBtn = document.getElementById('inactivityStayBtn');
@@ -12617,7 +12661,6 @@
         // Live retailer search — uses your saved Provider API keys only (no shared fallback keys).
         const LIVE_RETAILER_PROVIDERS = ['amazon', 'walmart', 'ebay'];
         const DEFAULT_LIVE_SEARCH = {
-            endpoint: 'https://www.searchapi.io/api/v1/search',
             engines: {
                 amazon: 'amazon_search',
                 walmart: 'walmart_search',
@@ -12683,11 +12726,7 @@
         }
 
         function ensureAutomatedLiveSearchSetup() {
-            LIVE_RETAILER_PROVIDERS.forEach(function(provider) {
-                if (!getProviderApiEndpoint(provider)) {
-                    setProviderApiEndpoint(provider, DEFAULT_LIVE_SEARCH.endpoint);
-                }
-            });
+            /* Live retailer keys/endpoints are loaded from Settings; product lookup runs via the local backend. */
         }
 
         function escapeProductHtml(text) {
@@ -12821,6 +12860,7 @@
         function initAutomatedLiveProducts() {
             if (!window.KOTAPAL_AUTO_LIVE_PRODUCTS) return;
             ensureAutomatedLiveSearchSetup();
+            warnIfSearchBackendUnavailable();
             loadTrendingProductsLive();
             scheduleAutomatedTrendingRefresh();
             var newBlockPage = document.getElementById('new-block-page');
@@ -12900,15 +12940,16 @@
                 const fromLocalEp = localStorage.getItem(localEndpointStorage) || '';
                 if (fromLocalEp) localStorage.setItem(getProviderApiEndpointStorageKey(provider), fromLocalEp);
             }
+            const storedEndpoint = localStorage.getItem(getProviderApiEndpointStorageKey(provider)) || '';
+            if (/searchapi/i.test(storedEndpoint)) {
+                localStorage.removeItem(getProviderApiEndpointStorageKey(provider));
+            }
         }
 
         function getProviderApiEndpoint(provider) {
             provider = String(provider || '').toLowerCase();
             migrateProviderCredentialsFromLocalScope(provider);
-            const saved = localStorage.getItem(getProviderApiEndpointStorageKey(provider)) || '';
-            if (saved) return saved;
-            if (LIVE_RETAILER_PROVIDERS.includes(provider)) return DEFAULT_LIVE_SEARCH.endpoint;
-            return '';
+            return localStorage.getItem(getProviderApiEndpointStorageKey(provider)) || '';
         }
 
         function setProviderApiEndpoint(provider, endpoint) {
@@ -12933,6 +12974,17 @@
             }
             if (saved) return saved;
             return '';
+        }
+
+        function sanitizeProviderFacingText(text) {
+            return String(text || '')
+                .replace(/searchapi\.io/gi, '')
+                .replace(/searchapi/gi, '')
+                .replace(/\bSEARCHAPI_[A-Z0-9_]+\b/g, 'provider key')
+                .replace(/\bproduct search api\b/gi, 'product key')
+                .replace(/\bsearch api\b/gi, 'product lookup')
+                .replace(/\s{2,}/g, ' ')
+                .trim();
         }
 
         function getUnsavedProviderApiKeyFromDom(provider) {
@@ -13135,20 +13187,23 @@
         }
 
         function formatProviderSearchError(message) {
-            const m = String(message || '');
+            const m = sanitizeProviderFacingText(String(message || '').trim());
             if (/used all of the searches|quota|rate limit|429/i.test(m)) {
-                return 'No products found.';
+                return 'Product lookup quota exceeded. Check your provider plan or wait for your limit to reset.';
             }
-            if (/api key|no api key|key required|missing.*key|provider api keys|settings/i.test(m)) {
-                return 'No products found.';
+            if (/api key|no api key|key required|missing.*key|401|unauthorized/i.test(m)) {
+                return 'Add your product key in Settings → Integrations, then click Save keys.';
             }
-            if (/failed to fetch|network|cors/i.test(m)) {
-                return 'No products found.';
+            if (/failed to fetch|network|cors|timed out|timeout|econnrefused|cannot reach/i.test(m)) {
+                return 'Product lookup server unavailable. Run npm start in the project folder, then open http://localhost:3000 (do not open index.html as a file).';
             }
-            if (/no live products|no products|no results/i.test(m)) {
-                return 'No products found.';
+            if (/503|not ready|retailer service/i.test(m)) {
+                return 'Product lookup server is still starting. Wait a few seconds and try again.';
             }
-            return m || 'No products found.';
+            if (/invalid response|non-json/i.test(m)) {
+                return 'Product lookup server returned an invalid response. Make sure npm start is running on port 3000.';
+            }
+            return m || 'Product lookup failed. Check Settings → Integrations for your provider key.';
         }
 
         function tryExtractApiKeyFromText(text) {
@@ -13228,8 +13283,7 @@
         }
 
         function hasLiveRetailerSearchConfig(retailer) {
-            if (!LIVE_RETAILER_PROVIDERS.includes(retailer)) return false;
-            return Boolean(getProviderApiEndpoint(retailer) && getApiKeysToTry(retailer).length);
+            return LIVE_RETAILER_PROVIDERS.includes(retailer);
         }
 
         function getProductsApiBase() {
@@ -13239,28 +13293,57 @@
             const loc = window.location;
             if (loc.protocol === 'file:') return 'http://localhost:3000';
             if (loc.protocol === 'http:' || loc.protocol === 'https:') {
-                if (!loc.port || loc.port === '3000' || loc.port === '80' || loc.port === '443') {
-                    return '';
+                const host = loc.hostname;
+                const port = loc.port || (loc.protocol === 'https:' ? '443' : '80');
+                if (host === 'localhost' || host === '127.0.0.1') {
+                    if (port === '3000') return '';
+                    return loc.protocol + '//' + host + ':3000';
                 }
-                if (loc.hostname === 'localhost' || loc.hostname === '127.0.0.1') {
-                    return loc.protocol + '//' + loc.hostname + ':3000';
-                }
+                if (port === '3000' || port === '80' || port === '443') return '';
             }
             return '';
+        }
+
+        async function checkSearchBackendHealth() {
+            try {
+                const base = getProductsApiBase();
+                const res = await fetch((base || '') + '/api/health', {
+                    method: 'GET',
+                    headers: { Accept: 'application/json' },
+                    signal: typeof AbortSignal !== 'undefined' && AbortSignal.timeout ? AbortSignal.timeout(4000) : undefined
+                });
+                if (!res.ok) return null;
+                return await res.json();
+            } catch (e) {
+                return null;
+            }
+        }
+
+        async function warnIfSearchBackendUnavailable() {
+            const health = await checkSearchBackendHealth();
+            if (health && health.ok) return;
+            showNotification(
+                'Live product lookup needs the local server. Run start.bat (or npm start), then open http://localhost:3000',
+                'warning',
+                'Product lookup'
+            );
         }
 
         function mapBackendProductToCard(item, retailer, index) {
             if (!item) return null;
             return {
-                id: item.id || item.asin || item.product_id || (retailer + '_' + index),
+                id: item.id || item.asin || item.product_id || item.item_id || (retailer + '_' + index),
                 title: item.title || item.name || 'Product',
                 image: item.image || item.thumbnail || 'https://via.placeholder.com/200',
-                price: parseFloat(item.price) || 0,
-                originalPrice: parseFloat(item.originalPrice || item.price) || 0,
+                price: extractItemPrice(item),
+                originalPrice: parseFloat(item.originalPrice || item.price) || extractItemPrice(item),
                 rating: item.rating ? parseFloat(item.rating) : 0,
                 reviews: item.reviews ? parseInt(String(item.reviews).replace(/[^0-9]/g, ''), 10) : 0,
                 availability: item.availability || 'In Stock',
                 asin: item.asin,
+                item_id: item.item_id,
+                product_id: item.product_id,
+                condition: item.condition || null,
                 link: applyAffiliateToProductLink(item.link || item.url || '#', item.retailer || retailer),
                 retailer: item.retailer || retailer
             };
@@ -13268,16 +13351,13 @@
 
         async function fetchProductsFromBackend(retailer, query, preferredKey) {
             const apiRoot = getProductsApiBase();
-            const keys = getApiKeysToTry(retailer);
-            const apiKey = preferredKey || keys[0] || '';
             const apiEndpoint = getProviderApiEndpoint(retailer);
-            if (!apiKey) {
-                throw new Error(liveRetailerSearchBlockedMessage(retailer));
-            }
+            const apiKey = preferredKey != null ? String(preferredKey).trim() : '';
             let url = (apiRoot || '') + '/api/products/search?retailer=' + encodeURIComponent(retailer) + '&query=' + encodeURIComponent(query);
-            url += '&apiKey=' + encodeURIComponent(apiKey);
+            if (apiKey) url += '&apiKey=' + encodeURIComponent(apiKey);
             if (apiEndpoint) url += '&apiEndpoint=' + encodeURIComponent(apiEndpoint);
-            const headers = { Accept: 'application/json', 'X-Provider-Api-Key': apiKey };
+            const headers = { Accept: 'application/json' };
+            if (apiKey) headers['X-Provider-Api-Key'] = apiKey;
             const res = await fetch(url, { method: 'GET', headers: headers });
             let data = null;
             try {
@@ -13287,7 +13367,7 @@
             }
             if (!res.ok || (data && data.error)) {
                 const errMsg = (data && data.error && (data.error.message || data.error)) || (data && data.message) || ('HTTP ' + res.status);
-                throw new Error(formatProviderSearchError(typeof errMsg === 'string' ? errMsg : JSON.stringify(errMsg)));
+                throw new Error(typeof errMsg === 'string' ? errMsg : JSON.stringify(errMsg));
             }
             const items = data.products || extractProductsArray(data);
             if (!items.length) return [];
@@ -13297,7 +13377,7 @@
         }
 
         function liveRetailerSearchBlockedMessage(retailer) {
-            return 'No products found.';
+            return 'Add your ' + getProviderLabel(retailer) + ' product key in Settings → Integrations, then click Save keys.';
         }
 
         function extractProductsArray(data) {
@@ -13309,6 +13389,7 @@
             var all = [];
             if (Array.isArray(data.organic_results)) all = all.concat(data.organic_results);
             if (Array.isArray(data.other_options)) all = all.concat(data.other_options);
+            if (Array.isArray(data.related_results)) all = all.concat(data.related_results);
             if (Array.isArray(data.data)) all = all.concat(data.data);
             if (Array.isArray(data.sections)) {
                 data.sections.forEach(function(sec) {
@@ -13318,22 +13399,60 @@
             return all;
         }
 
-        function mapApiItemToProduct(item, retailer, index) {
-            var price = 0;
-            if (item.extracted_price != null) price = parseFloat(item.extracted_price);
-            else if (item.price != null) {
-                var priceMatch = String(item.price).match(/\$?([\d,]+\.?\d*)/);
-                price = priceMatch ? parseFloat(priceMatch[1].replace(/,/g, '')) : parseFloat(String(item.price).replace(/[^0-9.]/g, '')) || 0;
+        function extractItemPrice(item) {
+            if (!item) return 0;
+            if (typeof item.price === 'number' && !isNaN(item.price)) return item.price;
+            if (item.extracted_price != null && !isNaN(parseFloat(item.extracted_price))) {
+                return parseFloat(item.extracted_price);
             }
-            var id = item.id || item.asin || item.product_id || item.item_id || (retailer + '_' + index);
+            if (item.extracted_price_range) {
+                var rangeFrom = parseFloat(item.extracted_price_range.from);
+                var rangeTo = parseFloat(item.extracted_price_range.to);
+                if (!isNaN(rangeFrom)) return rangeFrom;
+                if (!isNaN(rangeTo)) return rangeTo;
+            }
+            if (item.price_range && item.price_range.extracted_from_price != null) {
+                return parseFloat(item.price_range.extracted_from_price) || 0;
+            }
+            if (item.price != null) {
+                var priceMatch = String(item.price).match(/\$?([\d,]+\.?\d*)/);
+                return priceMatch ? parseFloat(priceMatch[1].replace(/,/g, '')) : parseFloat(String(item.price).replace(/[^0-9.]/g, '')) || 0;
+            }
+            return 0;
+        }
+
+        function extractItemId(item, retailer, index) {
+            return item.id
+                || item.asin
+                || item.product_id
+                || item.item_id
+                || ((retailer === 'ebay' && item.item_id) ? ('ebay_' + item.item_id) : null)
+                || ((retailer === 'walmart' && (item.product_id || item.id)) ? ('walmart_' + (item.product_id || item.id)) : null)
+                || (retailer + '_' + index);
+        }
+
+        function mapApiItemToProduct(item, retailer, index) {
+            var price = extractItemPrice(item);
+            var id = extractItemId(item, retailer, index);
             var rawLink = item.link || item.url || '#';
+            if (rawLink === '#' && retailer === 'ebay' && item.item_id) {
+                rawLink = 'https://www.ebay.com/itm/' + item.item_id;
+            }
+            if (rawLink === '#' && retailer === 'walmart' && (item.product_id || item.id)) {
+                rawLink = 'https://www.walmart.com/ip/' + (item.product_id || item.id);
+            }
             return {
                 id: id,
                 title: item.title || item.name || 'Product',
                 image: item.thumbnail || item.image || (item.images && item.images[0]) || 'https://via.placeholder.com/200',
                 price: price || 0,
+                rating: item.rating != null ? parseFloat(item.rating) : 0,
+                reviews: item.reviews != null ? parseInt(String(item.reviews).replace(/[^0-9]/g, ''), 10) : 0,
                 retailer: retailer,
                 asin: item.asin,
+                item_id: item.item_id,
+                product_id: item.product_id || item.id,
+                condition: item.condition || null,
                 link: applyAffiliateToProductLink(rawLink, retailer),
                 addedDate: new Date().toISOString()
             };
@@ -13348,7 +13467,7 @@
                 if (parsedStored.endpoint) endpoint = parsedStored.endpoint;
                 if (parsedStored.apiKey) key = parsedStored.apiKey;
             }
-            if (!endpoint) throw new Error('Add a product search API URL for ' + retailer + ' in Settings.');
+            if (!endpoint) throw new Error('Add a product lookup URL for ' + retailer + ' in Settings.');
             if (!key) throw new Error('Add an API key for ' + retailer + ' in Settings or paste it in chat.');
             var requestUrl;
             try {
@@ -13403,28 +13522,27 @@
             }
 
             const keys = getApiKeysToTry(retailer);
-            if (!keys.length) {
-                throw new Error(liveRetailerSearchBlockedMessage(retailer));
-            }
-
+            const attempts = [''].concat(keys.filter(function(k, i, arr) { return k && arr.indexOf(k) === i; }));
             let lastError = null;
-            for (var ki = 0; ki < keys.length; ki++) {
+            let sawSuccessfulEmpty = false;
+
+            for (var ki = 0; ki < attempts.length; ki++) {
                 try {
-                    const backendProducts = await fetchProductsFromBackend(retailer, query, keys[ki]);
+                    const backendProducts = await fetchProductsFromBackend(retailer, query, attempts[ki]);
                     if (backendProducts && backendProducts.length) return backendProducts;
+                    sawSuccessfulEmpty = true;
                 } catch (backendErr) {
                     lastError = backendErr;
                     console.warn('Backend product search failed:', retailer, backendErr);
                 }
-                try {
-                    const products = await fetchProviderProducts(retailer, query, keys[ki]);
-                    if (products.length > 0) return products;
-                } catch (apiErr) {
-                    lastError = apiErr;
-                    console.warn('Direct retailer search failed:', retailer, apiErr);
-                }
             }
-            if (lastError) throw lastError;
+
+            if (lastError) {
+                throw new Error(formatProviderSearchError(lastError.message || String(lastError)));
+            }
+            if (!sawSuccessfulEmpty && !keys.length) {
+                throw new Error(formatProviderSearchError(liveRetailerSearchBlockedMessage(retailer)));
+            }
             return [];
         }
 
@@ -13445,9 +13563,7 @@
                 }
             });
             LIVE_RETAILER_PROVIDERS.forEach(function(provider) {
-                if (!getProviderApiEndpoint(provider)) {
-                    setProviderApiEndpoint(provider, DEFAULT_LIVE_SEARCH.endpoint);
-                }
+                /* Endpoints are optional — the backend handles live product lookup. */
             });
             Object.keys(PROVIDER_API_KEY_INPUTS).forEach(function(provider) {
                 const cfg = PROVIDER_API_KEY_INPUTS[provider];
@@ -13692,8 +13808,9 @@
             } catch (err) {
                 console.error('Product Library search error:', err);
                 window._lastLibrarySearchProducts = [];
-                statusEl.textContent = '';
-                resultsEl.innerHTML = '<p class="product-library-loading">No products found.</p>';
+                const errText = formatProviderSearchError(err.message || String(err));
+                statusEl.textContent = errText;
+                resultsEl.innerHTML = '<p class="product-library-loading" style="color:var(--danger);">' + escapeProductHtml(errText) + '</p>';
             }
         }
         
@@ -13762,18 +13879,21 @@
             renderPlacedBlocksOnPage();
         }
 
+        function syncPlacedBlocksLayerState() {
+            var layer = document.getElementById('kotapalPagePlacementLayer');
+            if (!layer) return;
+            var hasBlocks = loadPlacedBlocks().length > 0;
+            layer.classList.toggle('has-placed-blocks', hasBlocks);
+            var visible = layer.classList.contains('active') || hasBlocks;
+            layer.setAttribute('aria-hidden', visible ? 'false' : 'true');
+        }
+
         function setPagePlacementMode(active) {
             var layer = document.getElementById('kotapalPagePlacementLayer');
             var btn = document.getElementById('togglePagePlacementBtn');
             if (!layer) return;
-            if (active) {
-                layer.classList.add('active');
-                layer.setAttribute('aria-hidden', 'false');
-                renderPlacedBlocksOnPage();
-            } else {
-                layer.classList.remove('active');
-                layer.setAttribute('aria-hidden', 'true');
-            }
+            layer.classList.toggle('active', !!active);
+            syncPlacedBlocksLayerState();
             if (btn) btn.textContent = active ? 'Hide placement mode' : 'Show placement mode';
         }
 
@@ -13804,6 +13924,8 @@
 
             function onPointerDown(e) {
                 if (e.target.closest('button')) return;
+                var layer = document.getElementById('kotapalPagePlacementLayer');
+                if (!layer || !layer.classList.contains('active')) return;
                 dragging = true;
                 el.classList.add('dragging');
                 startX = e.clientX;
@@ -13873,6 +13995,7 @@
                 makePlacedBlockDraggable(el, placement.placementId);
                 host.appendChild(el);
             });
+            syncPlacedBlocksLayerState();
         }
 
         function updateEmbedAnywhere() {
@@ -14493,7 +14616,7 @@
             }
         }
         
-        // Assistant API — uses the same product search API URL/key configured in Settings or pasted in chat.
+        // Assistant — uses the same product key configured in Settings or pasted in chat.
         
         // Extract main text and references from API response
         // (text_blocks, markdown, reference_links; fallback: answer, answer_box, organic_results)
@@ -14533,15 +14656,14 @@
             retailer = retailer || 'amazon';
             ensureAutomatedLiveSearchSetup();
             const keys = getApiKeysToTry(retailer);
+            const attempts = [''].concat(keys.filter(function(k, i, arr) { return k && arr.indexOf(k) === i; }));
             let lastError = null;
-            for (var ki = 0; ki < keys.length; ki++) {
+            for (var ki = 0; ki < attempts.length; ki++) {
                 try {
-                    const built = buildProviderSearchRequestUrl(retailer, query, keys[ki]);
-                    const headers = { Accept: 'application/json' };
-                    if (!/[?&](api_key|key|apikey|token)=/i.test(built.url)) {
-                        headers.Authorization = 'Bearer ' + built.key;
-                    }
-                    const response = await fetch(built.url, { method: 'GET', headers: headers });
+                    const apiRoot = getProductsApiBase();
+                    let url = (apiRoot || '') + '/api/products/search?retailer=' + encodeURIComponent(retailer) + '&query=' + encodeURIComponent(query);
+                    if (attempts[ki]) url += '&apiKey=' + encodeURIComponent(attempts[ki]);
+                    const response = await fetch(url, { method: 'GET', headers: { Accept: 'application/json' } });
                     const data = await response.json();
                     if (!response.ok || (data && data.error)) {
                         const apiError = data && data.error;
@@ -14549,19 +14671,19 @@
                     }
                     const extracted = extractGoogleAIContent(data);
                     if (extracted.text) return extracted;
-                    const products = extractProductsArray(data);
+                    const products = data.products || extractProductsArray(data);
                     if (products.length) {
                         const lines = products.slice(0, 8).map(function(p) {
                             return '- ' + (p.title || p.name || 'Product');
                         });
                         return { text: lines.join('\n'), references: [] };
                     }
-                    throw new Error('No usable content in API response');
+                    throw new Error('No usable content in response');
                 } catch (err) {
                     lastError = err;
                 }
             }
-            throw lastError || new Error('Assistant API request failed');
+            throw lastError || new Error('Assistant request failed');
         }
         
         // AI Assistant Functions — your configured API
