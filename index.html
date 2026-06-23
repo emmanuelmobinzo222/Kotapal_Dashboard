@@ -5175,6 +5175,139 @@
                                     <input type="text" id="productSearch" class="form-control" placeholder="Search for products..." value="headphones" style="flex:1;min-width:180px;">
                                     <button type="button" class="btn btn-primary" id="productSearchBtn" style="white-space:nowrap;">Search</button>
                                 </div>
+                                <div id="amazonSearchOptions" class="amazon-search-options" style="display:none;margin-top:12px;">
+                                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;">
+                                        <div>
+                                            <label for="amazonSortBy" style="font-size:0.85rem;color:var(--gray);">Sort by</label>
+                                            <select id="amazonSortBy" class="form-control">
+                                                <option value="">Relevance</option>
+                                                <option value="bestsellers">Best sellers</option>
+                                                <option value="average_review">Avg. customer review</option>
+                                                <option value="price_low_to_high">Price: low to high</option>
+                                                <option value="price_high_to_low">Price: high to low</option>
+                                                <option value="newest_arrivals">Newest arrivals</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label for="amazonDomain" style="font-size:0.85rem;color:var(--gray);">Amazon domain</label>
+                                            <select id="amazonDomain" class="form-control">
+                                                <option value="">amazon.com (US)</option>
+                                                <option value="amazon.co.uk">amazon.co.uk</option>
+                                                <option value="amazon.ca">amazon.ca</option>
+                                                <option value="amazon.de">amazon.de</option>
+                                                <option value="amazon.fr">amazon.fr</option>
+                                                <option value="amazon.it">amazon.it</option>
+                                                <option value="amazon.es">amazon.es</option>
+                                                <option value="amazon.com.au">amazon.com.au</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label for="amazonPriceMin" style="font-size:0.85rem;color:var(--gray);">Min price</label>
+                                            <input type="number" id="amazonPriceMin" class="form-control" placeholder="e.g. 10" min="0" step="0.01">
+                                        </div>
+                                        <div>
+                                            <label for="amazonPriceMax" style="font-size:0.85rem;color:var(--gray);">Max price</label>
+                                            <input type="number" id="amazonPriceMax" class="form-control" placeholder="e.g. 200" min="0" step="0.01">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div id="ebaySearchOptions" class="ebay-search-options" style="display:none;margin-top:12px;">
+                                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;">
+                                        <div>
+                                            <label for="ebaySortBy" style="font-size:0.85rem;color:var(--gray);">Sort by</label>
+                                            <select id="ebaySortBy" class="form-control">
+                                                <option value="">Best match</option>
+                                                <option value="time_newly_listed">Newly listed</option>
+                                                <option value="time_ending_soonest">Ending soonest</option>
+                                                <option value="price_low_to_high">Price: low to high</option>
+                                                <option value="price_high_to_low">Price: high to low</option>
+                                                <option value="price_shipping_low_to_high">Price + shipping: low to high</option>
+                                                <option value="price_shipping_high_to_low">Price + shipping: high to low</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label for="ebayDomain" style="font-size:0.85rem;color:var(--gray);">eBay domain</label>
+                                            <select id="ebayDomain" class="form-control">
+                                                <option value="">ebay.com (US)</option>
+                                                <option value="ebay.co.uk">ebay.co.uk</option>
+                                                <option value="ebay.ca">ebay.ca</option>
+                                                <option value="ebay.de">ebay.de</option>
+                                                <option value="ebay.com.au">ebay.com.au</option>
+                                                <option value="ebay.fr">ebay.fr</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label for="ebayBuyingFormat" style="font-size:0.85rem;color:var(--gray);">Buying format</label>
+                                            <select id="ebayBuyingFormat" class="form-control">
+                                                <option value="">Any</option>
+                                                <option value="buy_it_now">Buy It Now</option>
+                                                <option value="auction">Auction</option>
+                                                <option value="best_offer">Best Offer</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label for="ebayCondition" style="font-size:0.85rem;color:var(--gray);">Condition</label>
+                                            <select id="ebayCondition" class="form-control">
+                                                <option value="">Any</option>
+                                                <option value="new">New</option>
+                                                <option value="used_very_good">Used — very good</option>
+                                                <option value="used_good">Used — good</option>
+                                                <option value="certified_refurbished">Certified refurbished</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label for="ebayPriceMin" style="font-size:0.85rem;color:var(--gray);">Min price</label>
+                                            <input type="number" id="ebayPriceMin" class="form-control" placeholder="e.g. 10" min="0" step="0.01">
+                                        </div>
+                                        <div>
+                                            <label for="ebayPriceMax" style="font-size:0.85rem;color:var(--gray);">Max price</label>
+                                            <input type="number" id="ebayPriceMax" class="form-control" placeholder="e.g. 200" min="0" step="0.01">
+                                        </div>
+                                        <div>
+                                            <label for="ebayFilters" style="font-size:0.85rem;color:var(--gray);">Quick filters</label>
+                                            <select id="ebayFilters" class="form-control">
+                                                <option value="">None</option>
+                                                <option value="free_shipping">Free shipping</option>
+                                                <option value="deals_and_savings">Deals &amp; savings</option>
+                                                <option value="sale_items">Sale items</option>
+                                                <option value="returns_accepted">Returns accepted</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div id="walmartSearchOptions" class="walmart-search-options" style="display:none;margin-top:12px;">
+                                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;">
+                                        <div>
+                                            <label for="walmartSortBy" style="font-size:0.85rem;color:var(--gray);">Sort by</label>
+                                            <select id="walmartSortBy" class="form-control">
+                                                <option value="">Best match</option>
+                                                <option value="best_seller">Best seller</option>
+                                                <option value="price_low_to_high">Price: low to high</option>
+                                                <option value="price_high_to_low">Price: high to low</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label for="walmartStoreId" style="font-size:0.85rem;color:var(--gray);">Store ID</label>
+                                            <input type="text" id="walmartStoreId" class="form-control" placeholder="3081 (default)">
+                                        </div>
+                                        <div>
+                                            <label for="walmartCategoryId" style="font-size:0.85rem;color:var(--gray);">Category ID</label>
+                                            <input type="text" id="walmartCategoryId" class="form-control" placeholder="e.g. 976759">
+                                        </div>
+                                        <div>
+                                            <label for="walmartFilters" style="font-size:0.85rem;color:var(--gray);">Filters</label>
+                                            <input type="text" id="walmartFilters" class="form-control" placeholder="brand:Samsung">
+                                        </div>
+                                        <div>
+                                            <label for="walmartPriceMin" style="font-size:0.85rem;color:var(--gray);">Min price</label>
+                                            <input type="number" id="walmartPriceMin" class="form-control" placeholder="e.g. 10" min="0" step="0.01">
+                                        </div>
+                                        <div>
+                                            <label for="walmartPriceMax" style="font-size:0.85rem;color:var(--gray);">Max price</label>
+                                            <input type="number" id="walmartPriceMax" class="form-control" placeholder="e.g. 50" min="0" step="0.01">
+                                        </div>
+                                    </div>
+                                </div>
                                 <div id="searchStatus" style="margin-top: 10px; font-size: 0.9rem; color: var(--gray);"></div>
                             </div>
                             <div id="productsContainer" class="product-grid layout-grid"></div>
@@ -5414,6 +5547,26 @@
                                     <option value="skimlinks">Skimlinks</option>
                                 </select>
                                 <input id="productLibraryRetailerQuery" class="form-control" placeholder="Search retailers..." value="best sellers" style="max-width:240px;">
+                                <select id="productLibraryAmazonSort" class="form-control" style="max-width:180px;display:none;">
+                                    <option value="">Relevance</option>
+                                    <option value="bestsellers" selected>Best sellers</option>
+                                    <option value="average_review">Avg. review</option>
+                                    <option value="price_low_to_high">Price: low to high</option>
+                                    <option value="price_high_to_low">Price: high to low</option>
+                                </select>
+                                <select id="productLibraryWalmartSort" class="form-control" style="max-width:180px;display:none;">
+                                    <option value="">Best match</option>
+                                    <option value="best_seller" selected>Best seller</option>
+                                    <option value="price_low_to_high">Price: low to high</option>
+                                    <option value="price_high_to_low">Price: high to low</option>
+                                </select>
+                                <select id="productLibraryEbaySort" class="form-control" style="max-width:180px;display:none;">
+                                    <option value="">Best match</option>
+                                    <option value="time_newly_listed" selected>Newly listed</option>
+                                    <option value="price_low_to_high">Price: low to high</option>
+                                    <option value="price_high_to_low">Price: high to low</option>
+                                    <option value="deals_and_savings">Deals &amp; savings</option>
+                                </select>
                                 <button type="button" class="btn btn-secondary" id="productLibrarySearchRetailersBtn">Search retailers</button>
                                 <span id="productLibrarySearchStatus" class="product-library-status"></span>
                             </div>
@@ -9445,7 +9598,19 @@
             try {
                 if (typeof ensureAutomatedLiveSearchSetup === 'function') ensureAutomatedLiveSearchSetup();
                 if (typeof searchRetailerProductsLive === 'function' && LIVE_RETAILER_PROVIDERS.includes(retailer)) {
-                    products = await searchRetailerProductsLive(retailer, query);
+                    var adminSearchOpts = (typeof getRetailerSearchOptions === 'function') ? getRetailerSearchOptions(retailer, 'block') : {};
+                    if (retailer === 'amazon' && /best.?seller/i.test(query) && !adminSearchOpts.sort_by) {
+                        adminSearchOpts.sort_by = 'bestsellers';
+                    }
+                    if (retailer === 'ebay' && /trending|deal/i.test(query) && !adminSearchOpts.sort_by && !adminSearchOpts.filters) {
+                        adminSearchOpts.sort_by = 'time_newly_listed';
+                        adminSearchOpts.filters = 'deals_and_savings';
+                        adminSearchOpts.include_related_results = true;
+                    }
+                    if (retailer === 'walmart' && /best.?seller/i.test(query) && !adminSearchOpts.sort_by) {
+                        adminSearchOpts.sort_by = 'best_seller';
+                    }
+                    products = await searchRetailerProductsLive(retailer, query, adminSearchOpts);
                 }
                 window._adminLastBlockSearchProducts = products || [];
                 if (!products.length) {
@@ -12719,6 +12884,127 @@
         ];
         let automatedTrendingRefreshTimer = null;
 
+        const RETAILER_SEARCH_OPTION_KEYS = [
+            'sort_by', 'price_min', 'price_max', 'page', 'limit',
+            'amazon_domain', 'language', 'delivery_country', 'category_id', 'rh',
+            'ebay_domain', 'country', 'postal_code', 'distance_radius',
+            'product_origin_country', 'condition', 'buying_format', 'preferred_location',
+            'include_related_results', 'filters', 'advanced_filters', 'layout', 'num',
+            'store_id'
+        ];
+
+        function toggleRetailerSearchOptions(retailer) {
+            const amazonPanel = document.getElementById('amazonSearchOptions');
+            const ebayPanel = document.getElementById('ebaySearchOptions');
+            const walmartPanel = document.getElementById('walmartSearchOptions');
+            if (amazonPanel) amazonPanel.style.display = retailer === 'amazon' ? 'block' : 'none';
+            if (ebayPanel) ebayPanel.style.display = retailer === 'ebay' ? 'block' : 'none';
+            if (walmartPanel) walmartPanel.style.display = retailer === 'walmart' ? 'block' : 'none';
+            const libAmazonSort = document.getElementById('productLibraryAmazonSort');
+            const libEbaySort = document.getElementById('productLibraryEbaySort');
+            const libWalmartSort = document.getElementById('productLibraryWalmartSort');
+            if (libAmazonSort) libAmazonSort.style.display = retailer === 'amazon' ? '' : 'none';
+            if (libEbaySort) libEbaySort.style.display = retailer === 'ebay' ? '' : 'none';
+            if (libWalmartSort) libWalmartSort.style.display = retailer === 'walmart' ? '' : 'none';
+        }
+
+        function toggleAmazonSearchOptions(retailer) {
+            toggleRetailerSearchOptions(retailer);
+        }
+
+        function getAmazonSearchOptionsFromDom() {
+            const opts = {};
+            const sortEl = document.getElementById('amazonSortBy');
+            const domainEl = document.getElementById('amazonDomain');
+            const minEl = document.getElementById('amazonPriceMin');
+            const maxEl = document.getElementById('amazonPriceMax');
+            if (sortEl && sortEl.value) opts.sort_by = sortEl.value;
+            if (domainEl && domainEl.value) opts.amazon_domain = domainEl.value;
+            if (minEl && minEl.value !== '') opts.price_min = minEl.value;
+            if (maxEl && maxEl.value !== '') opts.price_max = maxEl.value;
+            return opts;
+        }
+
+        function getEbaySearchOptionsFromDom() {
+            const opts = { include_related_results: true };
+            const sortEl = document.getElementById('ebaySortBy');
+            const domainEl = document.getElementById('ebayDomain');
+            const formatEl = document.getElementById('ebayBuyingFormat');
+            const conditionEl = document.getElementById('ebayCondition');
+            const minEl = document.getElementById('ebayPriceMin');
+            const maxEl = document.getElementById('ebayPriceMax');
+            const filtersEl = document.getElementById('ebayFilters');
+            if (sortEl && sortEl.value) opts.sort_by = sortEl.value;
+            if (domainEl && domainEl.value) opts.ebay_domain = domainEl.value;
+            if (formatEl && formatEl.value) opts.buying_format = formatEl.value;
+            if (conditionEl && conditionEl.value) opts.condition = conditionEl.value;
+            if (minEl && minEl.value !== '') opts.price_min = minEl.value;
+            if (maxEl && maxEl.value !== '') opts.price_max = maxEl.value;
+            if (filtersEl && filtersEl.value) opts.filters = filtersEl.value;
+            return opts;
+        }
+
+        function getWalmartSearchOptionsFromDom() {
+            const opts = {};
+            const sortEl = document.getElementById('walmartSortBy');
+            const storeEl = document.getElementById('walmartStoreId');
+            const categoryEl = document.getElementById('walmartCategoryId');
+            const filtersEl = document.getElementById('walmartFilters');
+            const minEl = document.getElementById('walmartPriceMin');
+            const maxEl = document.getElementById('walmartPriceMax');
+            if (sortEl && sortEl.value) opts.sort_by = sortEl.value;
+            if (storeEl && storeEl.value.trim()) opts.store_id = storeEl.value.trim();
+            if (categoryEl && categoryEl.value.trim()) opts.category_id = categoryEl.value.trim();
+            if (filtersEl && filtersEl.value.trim()) opts.filters = filtersEl.value.trim();
+            if (minEl && minEl.value !== '') opts.price_min = minEl.value;
+            if (maxEl && maxEl.value !== '') opts.price_max = maxEl.value;
+            return opts;
+        }
+
+        function getRetailerSearchOptions(retailer, context) {
+            context = context || 'block';
+            const opts = {};
+            if (retailer === 'amazon') {
+                if (context === 'library') {
+                    const libSort = document.getElementById('productLibraryAmazonSort');
+                    if (libSort && libSort.value) opts.sort_by = libSort.value;
+                } else {
+                    Object.assign(opts, getAmazonSearchOptionsFromDom());
+                }
+            } else if (retailer === 'ebay') {
+                if (context === 'library') {
+                    const libSort = document.getElementById('productLibraryEbaySort');
+                    if (libSort && libSort.value) {
+                        if (libSort.value === 'deals_and_savings') {
+                            opts.filters = 'deals_and_savings';
+                        } else {
+                            opts.sort_by = libSort.value;
+                        }
+                    }
+                } else {
+                    Object.assign(opts, getEbaySearchOptionsFromDom());
+                }
+            } else if (retailer === 'walmart') {
+                if (context === 'library') {
+                    const libSort = document.getElementById('productLibraryWalmartSort');
+                    if (libSort && libSort.value) opts.sort_by = libSort.value;
+                } else {
+                    Object.assign(opts, getWalmartSearchOptionsFromDom());
+                }
+            }
+            return opts;
+        }
+
+        function appendRetailerSearchOptionsToUrl(url, options) {
+            if (!options) return url;
+            RETAILER_SEARCH_OPTION_KEYS.forEach(function(key) {
+                if (options[key] != null && options[key] !== '') {
+                    url += '&' + encodeURIComponent(key) + '=' + encodeURIComponent(options[key]);
+                }
+            });
+            return url;
+        }
+
         function applyProductSearchLayout() {
             var container = document.getElementById('productsContainer');
             if (!container) return;
@@ -12765,12 +13051,15 @@
             var apiRoot = getProductsApiBase();
             var url = (apiRoot || '') + '/api/products/trending?limit=6';
             try {
-                var res = await fetch(url, { method: 'GET', headers: { Accept: 'application/json' } });
-                var data = await res.json();
-                if (res.ok && data && Array.isArray(data.products) && data.products.length) {
-                    return padTrendingProducts(data.products.map(function(item, i) {
-                        return mapBackendProductToCard(item, item.retailer || 'amazon', i);
-                    }), 6);
+                var health = await checkSearchBackendHealth();
+                if (health && health.ok) {
+                    var res = await fetch(url, { method: 'GET', headers: { Accept: 'application/json' } });
+                    var data = await res.json();
+                    if (res.ok && data && Array.isArray(data.products) && data.products.length) {
+                        return padTrendingProducts(data.products.map(function(item, i) {
+                            return mapBackendProductToCard(item, item.retailer || 'amazon', i);
+                        }), 6);
+                    }
                 }
             } catch (e) {
                 console.warn('Trending HTTP unavailable:', e);
@@ -12788,7 +13077,12 @@
             var queries = { amazon: 'best sellers electronics', walmart: 'best sellers home', ebay: 'trending deals' };
             for (var ri = 0; ri < retailers.length; ri++) {
                 try {
-                    var batch = await searchRetailerProductsLive(retailers[ri], queries[retailers[ri]]);
+                    var trendingOpts = retailers[ri] === 'amazon'
+                        ? { sort_by: 'bestsellers' }
+                        : (retailers[ri] === 'ebay'
+                            ? { sort_by: 'time_newly_listed', filters: 'deals_and_savings', include_related_results: true }
+                            : (retailers[ri] === 'walmart' ? { sort_by: 'best_seller' } : undefined));
+                    var batch = await searchRetailerProductsLive(retailers[ri], queries[retailers[ri]], trendingOpts);
                     if (batch && batch.length) merged = merged.concat(batch.slice(0, 4));
                 } catch (err) {
                     console.warn('Trending fallback failed for', retailers[ri], err);
@@ -13294,15 +13588,46 @@
             return LIVE_RETAILER_PROVIDERS.includes(retailer);
         }
 
+        function isPlaceholderProviderKey(key) {
+            const value = String(key || '').trim().toLowerCase();
+            if (!value) return true;
+            return /^(your[-_])?(searchapi|provider)[-_]?key$|^replace[-_]me$|^change[-_]me/.test(value);
+        }
+
         function getProductsApiBase() {
             if (typeof window.KOTAPAL_API_BASE === 'string' && window.KOTAPAL_API_BASE.trim()) {
                 return window.KOTAPAL_API_BASE.trim().replace(/\/$/, '');
             }
             if (window.location.protocol === 'http:' || window.location.protocol === 'https:') {
+                var host = window.location.hostname || '';
+                var port = window.location.port || '';
+                if (/\.firebaseapp\.com$/i.test(host) || /\.web\.app$/i.test(host) || /kotapal/i.test(host)) {
+                    return '';
+                }
+                if ((host === 'localhost' || host === '127.0.0.1') && port && port !== '3000') {
+                    return 'http://localhost:3000';
+                }
                 return '';
             }
             return '';
         }
+
+        function getCloudFunctionsApiBase() {
+            if (typeof window.KOTAPAL_CLOUD_API_BASE === 'string' && window.KOTAPAL_CLOUD_API_BASE.trim()) {
+                return window.KOTAPAL_CLOUD_API_BASE.trim().replace(/\/$/, '');
+            }
+            if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length) {
+                try {
+                    var projectId = firebase.app().options.projectId;
+                    if (projectId && projectId !== 'YOUR_PROJECT_ID') {
+                        return 'https://us-central1-' + projectId + '.cloudfunctions.net';
+                    }
+                } catch (e) {}
+            }
+            return '';
+        }
+
+        let searchBackendHealthCache = { at: 0, value: null };
 
         function getFirebaseFunctionsClient() {
             if (window.firebaseFunctions) return window.firebaseFunctions;
@@ -13324,15 +13649,18 @@
             });
         }
 
-        async function fetchProductsViaHttpApi(retailer, query, preferredKey) {
-            const apiRoot = getProductsApiBase();
+        async function fetchProductsViaHttpApi(retailer, query, preferredKey, options) {
+            options = options || {};
+            const apiRoot = options.apiRoot != null ? options.apiRoot : getProductsApiBase();
+            const searchPath = options.searchPath || '/api/products/search';
             const apiEndpoint = getProviderApiEndpoint(retailer);
             const apiKey = preferredKey != null ? String(preferredKey).trim() : '';
-            let url = (apiRoot || '') + '/api/products/search?retailer=' + encodeURIComponent(retailer) + '&query=' + encodeURIComponent(query);
-            if (apiKey) url += '&apiKey=' + encodeURIComponent(apiKey);
+            let url = (apiRoot || '') + searchPath + '?retailer=' + encodeURIComponent(retailer) + '&query=' + encodeURIComponent(query);
+            if (apiKey && !isPlaceholderProviderKey(apiKey)) url += '&apiKey=' + encodeURIComponent(apiKey);
             if (apiEndpoint) url += '&apiEndpoint=' + encodeURIComponent(apiEndpoint);
+            url = appendRetailerSearchOptionsToUrl(url, options.searchOptions);
             const headers = { Accept: 'application/json' };
-            if (apiKey) headers['X-Provider-Api-Key'] = apiKey;
+            if (apiKey && !isPlaceholderProviderKey(apiKey)) headers['X-Provider-Api-Key'] = apiKey;
             const res = await fetch(url, { method: 'GET', headers: headers });
             let data = null;
             try {
@@ -13347,34 +13675,68 @@
             return mapSearchResultItems(data.products || extractProductsArray(data), retailer);
         }
 
-        async function fetchProductsViaFirebaseCallable(retailer, query, preferredKey) {
+        async function fetchProductsViaCloudHttpApi(retailer, query, preferredKey, searchOptions) {
+            const cloudBase = getCloudFunctionsApiBase();
+            if (!cloudBase) throw new Error('Cloud product lookup is not configured.');
+            return fetchProductsViaHttpApi(retailer, query, preferredKey, {
+                apiRoot: cloudBase,
+                searchPath: '/apiProductsSearch',
+                searchOptions: searchOptions
+            });
+        }
+
+        async function fetchProductsViaFirebaseCallable(retailer, query, preferredKey, searchOptions) {
             const ff = getFirebaseFunctionsClient();
             if (!ff || !ff.httpsCallable) {
                 throw new Error('Product lookup is temporarily unavailable.');
             }
             const callable = ff.httpsCallable('searchRetailerProducts');
             const apiKey = preferredKey != null ? String(preferredKey).trim() : '';
+            const apiEndpoint = getProviderApiEndpoint(retailer);
             const payload = { retailer: retailer, query: query, limit: 20 };
-            if (apiKey) payload.apiKey = apiKey;
+            if (apiKey && !isPlaceholderProviderKey(apiKey)) payload.apiKey = apiKey;
+            if (apiEndpoint) payload.apiEndpoint = apiEndpoint;
+            if (searchOptions) {
+                RETAILER_SEARCH_OPTION_KEYS.forEach(function(key) {
+                    if (searchOptions[key] != null && searchOptions[key] !== '') payload[key] = searchOptions[key];
+                });
+            }
             const result = await callable(payload);
             const data = (result && result.data) || {};
             return mapSearchResultItems(data.products || extractProductsArray(data), retailer);
         }
 
-        async function fetchProductsFromBackend(retailer, query, preferredKey) {
+        async function fetchProductsFromBackend(retailer, query, preferredKey, searchOptions) {
             let lastError = null;
-            if (window.location.protocol === 'http:' || window.location.protocol === 'https:') {
-                try {
-                    return await fetchProductsViaHttpApi(retailer, query, preferredKey);
-                } catch (httpErr) {
-                    lastError = httpErr;
-                    console.warn('HTTP product lookup failed, trying cloud function:', httpErr);
+            const key = preferredKey != null ? String(preferredKey).trim() : '';
+            const usableKey = key && !isPlaceholderProviderKey(key) ? key : '';
+            const canTryHttp = window.location.protocol === 'http:' || window.location.protocol === 'https:';
+
+            if (canTryHttp) {
+                const health = await checkSearchBackendHealth();
+                if (health && health.ok) {
+                    try {
+                        return await fetchProductsViaHttpApi(retailer, query, usableKey, { searchOptions: searchOptions });
+                    } catch (httpErr) {
+                        lastError = httpErr;
+                        console.warn('HTTP product lookup failed, trying cloud:', httpErr);
+                    }
                 }
             }
+
             try {
-                return await fetchProductsViaFirebaseCallable(retailer, query, preferredKey);
-            } catch (cloudErr) {
-                throw new Error(formatProviderSearchError(cloudErr.message || (lastError && lastError.message) || String(cloudErr)));
+                return await fetchProductsViaFirebaseCallable(retailer, query, usableKey, searchOptions);
+            } catch (callableErr) {
+                lastError = lastError || callableErr;
+                console.warn('Callable product lookup failed, trying cloud HTTP:', callableErr);
+            }
+
+            try {
+                return await fetchProductsViaCloudHttpApi(retailer, query, usableKey, searchOptions);
+            } catch (cloudHttpErr) {
+                throw new Error(formatProviderSearchError(
+                    cloudHttpErr.message || (lastError && lastError.message) || String(cloudHttpErr)
+                ));
             }
         }
 
@@ -13390,6 +13752,10 @@
         }
 
         async function checkSearchBackendHealth() {
+            const now = Date.now();
+            if (searchBackendHealthCache.value && (now - searchBackendHealthCache.at) < 15000) {
+                return searchBackendHealthCache.value;
+            }
             try {
                 const base = getProductsApiBase();
                 const res = await fetch((base || '') + '/api/health', {
@@ -13397,9 +13763,19 @@
                     headers: { Accept: 'application/json' },
                     signal: typeof AbortSignal !== 'undefined' && AbortSignal.timeout ? AbortSignal.timeout(4000) : undefined
                 });
-                if (!res.ok) return null;
-                return await res.json();
+                if (!res.ok) {
+                    searchBackendHealthCache = { at: now, value: null };
+                    return null;
+                }
+                const data = await res.json();
+                if (!data || !data.ok) {
+                    searchBackendHealthCache = { at: now, value: null };
+                    return null;
+                }
+                searchBackendHealthCache = { at: now, value: data };
+                return data;
             } catch (e) {
+                searchBackendHealthCache = { at: now, value: null };
                 return null;
             }
         }
@@ -13407,7 +13783,7 @@
         async function warnIfSearchBackendUnavailable() {
             const health = await checkSearchBackendHealth();
             if (health && health.ok) return;
-            if (getFirebaseFunctionsClient()) return;
+            if (getFirebaseFunctionsClient() || getCloudFunctionsApiBase()) return;
             showNotification(
                 'Live product lookup is connecting. Add your product keys in Settings → Integrations if searches stay empty.',
                 'warning',
@@ -13572,7 +13948,7 @@
             });
         }
 
-        async function searchRetailerProductsLive(retailer, query) {
+        async function searchRetailerProductsLive(retailer, query, searchOptions) {
             const unsavedKey = getUnsavedProviderApiKeyFromDom(retailer);
             if (unsavedKey) applyProviderCredential(retailer, unsavedKey);
             const unsavedEndpointEl = document.querySelector('.integration-api-endpoint[data-id="' + retailer + '"]');
@@ -13580,14 +13956,16 @@
                 setProviderApiEndpoint(retailer, unsavedEndpointEl.value.trim());
             }
 
-            const keys = getApiKeysToTry(retailer);
-            const attempts = [''].concat(keys.filter(function(k, i, arr) { return k && arr.indexOf(k) === i; }));
+            const keys = getApiKeysToTry(retailer).filter(function(k) {
+                return k && !isPlaceholderProviderKey(k);
+            });
+            const attempts = keys.length ? keys : [''];
             let lastError = null;
             let sawSuccessfulEmpty = false;
 
             for (var ki = 0; ki < attempts.length; ki++) {
                 try {
-                    const backendProducts = await fetchProductsFromBackend(retailer, query, attempts[ki]);
+                    const backendProducts = await fetchProductsFromBackend(retailer, query, attempts[ki], searchOptions);
                     if (backendProducts && backendProducts.length) return backendProducts;
                     sawSuccessfulEmpty = true;
                 } catch (backendErr) {
@@ -13665,6 +14043,19 @@
                 return;
             }
             ensureAutomatedLiveSearchSetup();
+            toggleRetailerSearchOptions(retailer);
+            const searchOptions = getRetailerSearchOptions(retailer, 'block');
+            if (retailer === 'amazon' && /best.?seller/i.test(query) && !searchOptions.sort_by) {
+                searchOptions.sort_by = 'bestsellers';
+            }
+            if (retailer === 'ebay' && /trending|deal/i.test(query) && !searchOptions.sort_by && !searchOptions.filters) {
+                searchOptions.sort_by = 'time_newly_listed';
+                searchOptions.filters = 'deals_and_savings';
+                searchOptions.include_related_results = true;
+            }
+            if (retailer === 'walmart' && /best.?seller/i.test(query) && !searchOptions.sort_by) {
+                searchOptions.sort_by = 'best_seller';
+            }
             searchStatus.innerHTML = '<div class="loading"><div class="spinner"></div> Searching...</div>';
             productsContainer.innerHTML = '';
             applyProductSearchLayout();
@@ -13674,7 +14065,7 @@
             try {
                 if (LIVE_RETAILER_PROVIDERS.includes(retailer)) {
                     try {
-                        const liveProducts = await searchRetailerProductsLive(retailer, query);
+                        const liveProducts = await searchRetailerProductsLive(retailer, query, searchOptions);
                         products = liveProducts.map(function(item, index) {
                             return {
                                 id: item.id,
@@ -13798,12 +14189,25 @@
                 return;
             }
             ensureAutomatedLiveSearchSetup();
+            toggleRetailerSearchOptions(retailer);
+            const searchOptions = getRetailerSearchOptions(retailer, 'library');
+            if (retailer === 'amazon' && /best.?seller/i.test(query) && !searchOptions.sort_by) {
+                searchOptions.sort_by = 'bestsellers';
+            }
+            if (retailer === 'ebay' && /trending|deal|best.?seller/i.test(query) && !searchOptions.sort_by && !searchOptions.filters) {
+                searchOptions.sort_by = 'time_newly_listed';
+                searchOptions.filters = 'deals_and_savings';
+                searchOptions.include_related_results = true;
+            }
+            if (retailer === 'walmart' && /best.?seller/i.test(query) && !searchOptions.sort_by) {
+                searchOptions.sort_by = 'best_seller';
+            }
             statusEl.textContent = 'Searching...';
             resultsEl.innerHTML = '<div class="product-library-loading"><div class="spinner" style="margin:0 auto 12px;"></div>Loading products...</div>';
             let products = [];
             try {
                 if (LIVE_RETAILER_PROVIDERS.includes(retailer)) {
-                    products = await searchRetailerProductsLive(retailer, query);
+                    products = await searchRetailerProductsLive(retailer, query, searchOptions);
                 } else if (retailer === 'shopify') {
                     products = [
                         {
@@ -14714,8 +15118,10 @@
         async function fetchAssistantApiQuery(query, retailer) {
             retailer = retailer || 'amazon';
             ensureAutomatedLiveSearchSetup();
-            const keys = getApiKeysToTry(retailer);
-            const attempts = [''].concat(keys.filter(function(k, i, arr) { return k && arr.indexOf(k) === i; }));
+            const keys = getApiKeysToTry(retailer).filter(function(k) {
+                return k && !isPlaceholderProviderKey(k);
+            });
+            const attempts = keys.length ? keys : [''];
             let lastError = null;
             for (var ki = 0; ki < attempts.length; ki++) {
                 try {
@@ -15406,10 +15812,80 @@
             
             // Search when retailer is selected
             if (retailerSelect) {
+                toggleRetailerSearchOptions(retailerSelect.value || 'amazon');
                 retailerSelect.addEventListener('change', function() {
+                    toggleRetailerSearchOptions(this.value);
                     const query = productSearchInput ? productSearchInput.value.trim() : '';
                     if (this.value && query) {
                         searchProducts(this.value, query);
+                    }
+                });
+            }
+
+            ['amazonSortBy', 'amazonDomain', 'amazonPriceMin', 'amazonPriceMax'].forEach(function(id) {
+                const el = document.getElementById(id);
+                if (!el) return;
+                el.addEventListener('change', function() {
+                    const retailer = retailerSelect ? retailerSelect.value : '';
+                    const query = productSearchInput ? productSearchInput.value.trim() : '';
+                    if (retailer === 'amazon' && query) searchProducts(retailer, query);
+                });
+            });
+
+            ['ebaySortBy', 'ebayDomain', 'ebayBuyingFormat', 'ebayCondition', 'ebayPriceMin', 'ebayPriceMax', 'ebayFilters'].forEach(function(id) {
+                const el = document.getElementById(id);
+                if (!el) return;
+                el.addEventListener('change', function() {
+                    const retailer = retailerSelect ? retailerSelect.value : '';
+                    const query = productSearchInput ? productSearchInput.value.trim() : '';
+                    if (retailer === 'ebay' && query) searchProducts(retailer, query);
+                });
+            });
+
+            ['walmartSortBy', 'walmartStoreId', 'walmartCategoryId', 'walmartFilters', 'walmartPriceMin', 'walmartPriceMax'].forEach(function(id) {
+                const el = document.getElementById(id);
+                if (!el) return;
+                el.addEventListener('change', function() {
+                    const retailer = retailerSelect ? retailerSelect.value : '';
+                    const query = productSearchInput ? productSearchInput.value.trim() : '';
+                    if (retailer === 'walmart' && query) searchProducts(retailer, query);
+                });
+            });
+
+            const productLibraryRetailer = document.getElementById('productLibraryRetailer');
+            if (productLibraryRetailer) {
+                toggleRetailerSearchOptions(productLibraryRetailer.value || 'amazon');
+                productLibraryRetailer.addEventListener('change', function() {
+                    toggleRetailerSearchOptions(this.value);
+                });
+            }
+            const productLibraryAmazonSort = document.getElementById('productLibraryAmazonSort');
+            if (productLibraryAmazonSort) {
+                productLibraryAmazonSort.addEventListener('change', function() {
+                    const retailerEl = document.getElementById('productLibraryRetailer');
+                    const queryEl = document.getElementById('productLibraryRetailerQuery');
+                    if (retailerEl && retailerEl.value === 'amazon' && queryEl && queryEl.value.trim()) {
+                        searchProductsForLibrary('amazon', queryEl.value.trim());
+                    }
+                });
+            }
+            const productLibraryEbaySort = document.getElementById('productLibraryEbaySort');
+            if (productLibraryEbaySort) {
+                productLibraryEbaySort.addEventListener('change', function() {
+                    const retailerEl = document.getElementById('productLibraryRetailer');
+                    const queryEl = document.getElementById('productLibraryRetailerQuery');
+                    if (retailerEl && retailerEl.value === 'ebay' && queryEl && queryEl.value.trim()) {
+                        searchProductsForLibrary('ebay', queryEl.value.trim());
+                    }
+                });
+            }
+            const productLibraryWalmartSort = document.getElementById('productLibraryWalmartSort');
+            if (productLibraryWalmartSort) {
+                productLibraryWalmartSort.addEventListener('change', function() {
+                    const retailerEl = document.getElementById('productLibraryRetailer');
+                    const queryEl = document.getElementById('productLibraryRetailerQuery');
+                    if (retailerEl && retailerEl.value === 'walmart' && queryEl && queryEl.value.trim()) {
+                        searchProductsForLibrary('walmart', queryEl.value.trim());
                     }
                 });
             }

@@ -14,7 +14,7 @@ const path = require('path');
 require('dotenv').config();
 
 // Import services
-const { RetailerIntegrationService, resolveRetailerSearchCredentials } = require('./services/retailerIntegration');
+const { RetailerIntegrationService, resolveRetailerSearchCredentials, buildRetailerSearchOptions } = require('./services/retailerIntegration');
 const RealTimeDataPipeline = require('./services/realTimeDataPipeline');
 const WebSocketService = require('./services/websocketService');
 
@@ -172,7 +172,8 @@ const authenticateToken = (req, res, next) => {
 
 app.get('/api/health', (req, res) => {
   const productSearchConfigured = Boolean(
-    process.env.SEARCHAPI_API_KEY || process.env.AMAZON_API_KEY
+  (process.env.SEARCHAPI_API_KEY && !/^(your[-_])?(searchapi|provider)[-_]?key$/i.test(process.env.SEARCHAPI_API_KEY.trim()))
+    || (process.env.AMAZON_API_KEY && !/^(your[-_])?(searchapi|provider)[-_]?key$/i.test(process.env.AMAZON_API_KEY.trim()))
   );
   res.json({
     ok: true,
@@ -293,17 +294,9 @@ app.get('/api/products/search', async (req, res) => {
     });
 
     const products = await retailerService.searchProducts(retailerKey, String(query), {
-      limit: parseInt(req.query.limit, 10) || 20,
-      page: parseInt(req.query.page, 10) || 1,
+      ...buildRetailerSearchOptions(retailerKey, req.query),
       apiKey: credentials.apiKey || undefined,
-      apiBaseUrl: credentials.apiBaseUrl || undefined,
-      category_id: req.query.category_id,
-      store_id: req.query.store_id,
-      ebay_domain: req.query.ebay_domain,
-      sort_by: req.query.sort_by,
-      price_min: req.query.price_min,
-      price_max: req.query.price_max,
-      filters: req.query.filters
+      apiBaseUrl: credentials.apiBaseUrl || undefined
     });
 
     res.json({
@@ -334,7 +327,12 @@ app.get('/api/products/trending', async (req, res) => {
     const retailers = ['amazon', 'walmart', 'ebay'];
     const batches = await Promise.allSettled(
       retailers.map((retailer) =>
-        retailerService.searchProducts(retailer, TRENDING_SEARCH_QUERIES[retailer], { limit })
+        retailerService.searchProducts(retailer, TRENDING_SEARCH_QUERIES[retailer], {
+          limit,
+          ...(retailer === 'amazon' ? { sort_by: 'bestsellers' } : {}),
+          ...(retailer === 'ebay' ? { sort_by: 'time_newly_listed', filters: 'deals_and_savings', include_related_results: true } : {}),
+          ...(retailer === 'walmart' ? { sort_by: 'best_seller' } : {})
+        })
       )
     );
 
@@ -628,6 +626,11 @@ async function startServer() {
       console.log(`Open http://localhost:${PORT} in your browser`);
       if (!process.env.SEARCHAPI_API_KEY && !process.env.AMAZON_API_KEY) {
         console.warn('Product lookup key is not set — add it to .env or paste your key in Settings → Integrations');
+      } else if (
+        (process.env.SEARCHAPI_API_KEY && /^(your[-_])?(searchapi|provider)[-_]?key$/i.test(process.env.SEARCHAPI_API_KEY.trim()))
+        || (process.env.AMAZON_API_KEY && /^(your[-_])?(searchapi|provider)[-_]?key$/i.test(process.env.AMAZON_API_KEY.trim()))
+      ) {
+        console.warn('Product lookup key in .env is still a placeholder — paste your real key in Settings → Integrations');
       } else {
         console.log('  ✓ Product lookup key loaded from environment');
       }

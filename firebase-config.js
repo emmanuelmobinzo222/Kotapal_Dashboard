@@ -16,3 +16,6 @@ window.FIREBASE_CONFIG = {
 
 /** Leave empty on Firebase Hosting (API rewrites to Cloud Functions on same domain). */
 window.KOTAPAL_API_BASE = '';
+
+/** Direct Cloud Functions HTTP fallback when Hosting rewrites or localhost are unavailable. */
+window.KOTAPAL_CLOUD_API_BASE = 'https://us-central1-kotapal-1e8f6.cloudfunctions.net';

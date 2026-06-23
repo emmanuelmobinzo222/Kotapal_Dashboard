@@ -8,7 +8,7 @@ const jwt = require('jsonwebtoken');
 const { v4: uuidv4 } = require('uuid');
 require('dotenv').config();
 
-const { RetailerIntegrationService, resolveRetailerSearchCredentials } = require('./services/retailerIntegration');
+const { RetailerIntegrationService, resolveRetailerSearchCredentials, buildRetailerSearchOptions } = require('./services/retailerIntegration');
 const retailerService = new RetailerIntegrationService({
   cacheStdTTL: 3600,
   maxRetries: 3,
@@ -556,17 +556,9 @@ app.get('/api/products/search', async (req, res) => {
         apiBaseUrl: req.query.apiEndpoint || req.query.apiBaseUrl || undefined
       });
       const products = await retailerService.searchProducts(retailerKey, String(query), {
-        limit: parseInt(req.query.limit, 10) || 20,
-        page: parseInt(req.query.page, 10) || 1,
+        ...buildRetailerSearchOptions(retailerKey, req.query),
         apiKey: credentials.apiKey || undefined,
-        apiBaseUrl: credentials.apiBaseUrl || undefined,
-        category_id: req.query.category_id,
-        store_id: req.query.store_id,
-        ebay_domain: req.query.ebay_domain,
-        sort_by: req.query.sort_by,
-        price_min: req.query.price_min,
-        price_max: req.query.price_max,
-        filters: req.query.filters
+        apiBaseUrl: credentials.apiBaseUrl || undefined
       });
       return res.json({
         retailer,

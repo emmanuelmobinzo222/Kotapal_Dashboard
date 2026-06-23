@@ -36,6 +36,7 @@ function collectProviderSearchResults(data, limit = 20) {
   };
 
   addItems(data.organic_results);
+  if (results.length < limit) addItems(data.related_results);
   if (results.length < limit) addItems(data.other_options);
   if (results.length < limit && Array.isArray(data.sections)) {
     for (const section of data.sections) {
@@ -43,16 +44,34 @@ function collectProviderSearchResults(data, limit = 20) {
       if (results.length >= limit) break;
     }
   }
-  if (results.length < limit) addItems(data.related_results);
 
   return results.slice(0, limit);
 }
 
-function resolveEbayResultCount(limit = 20) {
+function resolveEbayResultCount(limit = 20, explicitNum) {
+  if (explicitNum != null && explicitNum !== '') {
+    const num = parseInt(explicitNum, 10);
+    if ([60, 120, 240].includes(num)) return num;
+  }
   const value = parseInt(limit, 10) || 20;
   if (value <= 60) return 60;
   if (value <= 120) return 120;
   return 240;
+}
+
+function isPlaceholderProviderKey(key) {
+  if (!key || typeof key !== 'string') return true;
+  const normalized = key.trim().toLowerCase();
+  if (!normalized) return true;
+  return /^(your[-_])?(searchapi|provider)[-_]?key$|^replace[-_]me$|^change[-_]me/.test(normalized);
+}
+
+function pickUsableProviderKey(...candidates) {
+  for (const candidate of candidates) {
+    const value = String(candidate || '').trim();
+    if (value && !isPlaceholderProviderKey(value)) return value;
+  }
+  return '';
 }
 
 function resolveRetailerSearchCredentials(retailerName, overrides = {}) {
@@ -69,7 +88,11 @@ function resolveRetailerSearchCredentials(retailerName, overrides = {}) {
   };
 
   return {
-    apiKey: overrides.apiKey || process.env.SEARCHAPI_API_KEY || envKeyByRetailer[retailer] || '',
+    apiKey: pickUsableProviderKey(
+      overrides.apiKey,
+      process.env.SEARCHAPI_API_KEY,
+      envKeyByRetailer[retailer]
+    ),
     apiBaseUrl: overrides.apiBaseUrl || envUrlByRetailer[retailer] || DEFAULT_PROVIDER_API_URL
   };
 }
@@ -386,6 +409,286 @@ class BaseRetailer {
   }
 }
 
+const AMAZON_VALID_SORT = new Set([
+  'featured',
+  'price_low_to_high',
+  'price_high_to_low',
+  'average_review',
+  'newest_arrivals',
+  'bestsellers'
+]);
+
+function normalizeAmazonSortBy(sortBy) {
+  if (sortBy == null || sortBy === '') return undefined;
+  const raw = String(sortBy).trim().toLowerCase().replace(/-/g, '_');
+  const aliases = {
+    best_seller: 'bestsellers',
+    bestseller: 'bestsellers',
+    best_sellers: 'bestsellers',
+    relevance: 'featured',
+    best_match: 'featured',
+    price_asc: 'price_low_to_high',
+    price_desc: 'price_high_to_low',
+    reviews: 'average_review',
+    average_reviews: 'average_review',
+    newest: 'newest_arrivals'
+  };
+  const mapped = aliases[raw] || raw;
+  return AMAZON_VALID_SORT.has(mapped) ? mapped : undefined;
+}
+
+function buildAmazonSearchParams(query, options = {}) {
+  const {
+    page = 1,
+    amazon_domain,
+    language,
+    delivery_country,
+    category_id,
+    rh,
+    sort_by,
+    price_min,
+    price_max,
+    apiKey,
+    apiBaseUrl
+  } = options;
+
+  const resolvedApiKey = apiKey;
+  const params = {
+    engine: 'amazon_search',
+    api_key: resolvedApiKey,
+    q: query,
+    page
+  };
+
+  if (amazon_domain) params.amazon_domain = amazon_domain;
+  if (language) params.language = language;
+  if (delivery_country) params.delivery_country = delivery_country;
+  if (category_id) params.category_id = category_id;
+  if (rh) params.rh = rh;
+
+  const normalizedSort = normalizeAmazonSortBy(sort_by);
+  if (normalizedSort) params.sort_by = normalizedSort;
+
+  if (price_min != null && price_min !== '') params.price_min = price_min;
+  if (price_max != null && price_max !== '') params.price_max = price_max;
+
+  return { params, apiBaseUrl };
+}
+
+function buildRetailerSearchOptions(retailerName, query = {}) {
+  const retailer = String(retailerName || '').toLowerCase();
+  const options = {
+    limit: parseInt(query.limit, 10) || 20,
+    page: parseInt(query.page, 10) || 1,
+    category_id: query.category_id,
+    store_id: query.store_id,
+    ebay_domain: query.ebay_domain,
+    sort_by: query.sort_by,
+    price_min: query.price_min,
+    price_max: query.price_max,
+    filters: query.filters
+  };
+
+  if (retailer === 'amazon') {
+    options.amazon_domain = query.amazon_domain;
+    options.language = query.language;
+    options.delivery_country = query.delivery_country;
+    options.rh = query.rh;
+    if (options.sort_by) {
+      const normalized = normalizeAmazonSortBy(options.sort_by);
+      if (normalized) options.sort_by = normalized;
+    }
+  }
+
+  if (retailer === 'ebay') {
+    options.country = query.country;
+    options.delivery_country = query.delivery_country;
+    options.postal_code = query.postal_code;
+    options.distance_radius = query.distance_radius;
+    options.product_origin_country = query.product_origin_country;
+    options.condition = query.condition;
+    options.buying_format = query.buying_format;
+    options.preferred_location = query.preferred_location;
+    options.include_related_results = query.include_related_results;
+    options.advanced_filters = query.advanced_filters;
+    options.layout = query.layout;
+    options.num = query.num;
+    if (options.sort_by) {
+      const normalized = normalizeEbaySortBy(options.sort_by);
+      if (normalized) options.sort_by = normalized;
+    }
+  }
+
+  if (retailer === 'walmart') {
+    if (options.sort_by) {
+      const normalized = normalizeWalmartSortBy(options.sort_by);
+      if (normalized) options.sort_by = normalized;
+    }
+  }
+
+  return options;
+}
+
+const EBAY_VALID_SORT = new Set([
+  'best_match',
+  'price_shipping_low_to_high',
+  'price_shipping_high_to_low',
+  'time_newly_listed',
+  'time_ending_soonest',
+  'distance_nearest',
+  'price_low_to_high',
+  'price_high_to_low',
+  'condition_new_first',
+  'condition_used_first'
+]);
+
+function normalizeEbaySortBy(sortBy) {
+  if (sortBy == null || sortBy === '') return undefined;
+  const raw = String(sortBy).trim().toLowerCase().replace(/-/g, '_');
+  const aliases = {
+    relevance: 'best_match',
+    featured: 'best_match',
+    newest: 'time_newly_listed',
+    newly_listed: 'time_newly_listed',
+    ending_soon: 'time_ending_soonest',
+    ending_soonest: 'time_ending_soonest',
+    price_asc: 'price_low_to_high',
+    price_desc: 'price_high_to_low',
+    shipping_low: 'price_shipping_low_to_high',
+    shipping_high: 'price_shipping_high_to_low',
+    distance: 'distance_nearest',
+    new_first: 'condition_new_first',
+    used_first: 'condition_used_first'
+  };
+  const mapped = aliases[raw] || raw;
+  return EBAY_VALID_SORT.has(mapped) ? mapped : undefined;
+}
+
+function buildEbaySearchParams(query, options = {}) {
+  const {
+    page = 1,
+    limit = 20,
+    category_id,
+    ebay_domain,
+    country,
+    delivery_country,
+    postal_code,
+    distance_radius,
+    product_origin_country,
+    price_min,
+    price_max,
+    condition,
+    buying_format,
+    preferred_location,
+    include_related_results = true,
+    filters,
+    advanced_filters,
+    sort_by,
+    layout,
+    num,
+    apiKey
+  } = options;
+
+  const trimmedQuery = query != null ? String(query).trim() : '';
+  if (!trimmedQuery && !category_id) {
+    throw new Error('eBay search requires a query (q) or category_id.');
+  }
+
+  const params = {
+    engine: 'ebay_search',
+    api_key: apiKey,
+    page,
+    num: resolveEbayResultCount(limit, num),
+    include_related_results: include_related_results === true
+      || include_related_results === 'true'
+      || include_related_results === '1'
+  };
+
+  if (trimmedQuery) params.q = trimmedQuery;
+  if (category_id) params.category_id = category_id;
+  if (ebay_domain) params.ebay_domain = ebay_domain;
+  if (country) params.country = country;
+  if (delivery_country) params.delivery_country = delivery_country;
+  if (postal_code) params.postal_code = postal_code;
+  if (distance_radius != null && distance_radius !== '') params.distance_radius = distance_radius;
+  if (product_origin_country) params.product_origin_country = product_origin_country;
+  if (price_min != null && price_min !== '') params.price_min = price_min;
+  if (price_max != null && price_max !== '') params.price_max = price_max;
+  if (condition) params.condition = condition;
+  if (buying_format) params.buying_format = buying_format;
+  if (preferred_location) params.preferred_location = preferred_location;
+  if (filters) params.filters = filters;
+  if (advanced_filters) params.advanced_filters = advanced_filters;
+
+  const normalizedSort = normalizeEbaySortBy(sort_by);
+  if (normalizedSort) params.sort_by = normalizedSort;
+
+  if (layout) params.layout = layout;
+
+  return { params };
+}
+
+const WALMART_VALID_SORT = new Set([
+  'best_match',
+  'price_low_to_high',
+  'price_high_to_low',
+  'best_seller'
+]);
+
+function normalizeWalmartSortBy(sortBy) {
+  if (sortBy == null || sortBy === '') return undefined;
+  const raw = String(sortBy).trim().toLowerCase().replace(/-/g, '_');
+  const aliases = {
+    relevance: 'best_match',
+    featured: 'best_match',
+    price_low: 'price_low_to_high',
+    price_high: 'price_high_to_low',
+    price_asc: 'price_low_to_high',
+    price_desc: 'price_high_to_low',
+    bestsellers: 'best_seller',
+    best_sellers: 'best_seller',
+    best_seller: 'best_seller'
+  };
+  const mapped = aliases[raw] || raw;
+  return WALMART_VALID_SORT.has(mapped) ? mapped : undefined;
+}
+
+function buildWalmartSearchParams(query, options = {}) {
+  const {
+    page = 1,
+    category_id,
+    store_id,
+    price_min,
+    price_max,
+    filters,
+    sort_by,
+    apiKey
+  } = options;
+
+  const trimmedQuery = query != null ? String(query).trim() : '';
+  if (!trimmedQuery) {
+    throw new Error('Walmart search requires a query (q).');
+  }
+
+  const params = {
+    engine: 'walmart_search',
+    api_key: apiKey,
+    q: trimmedQuery,
+    page
+  };
+
+  if (category_id) params.category_id = category_id;
+  if (store_id != null && store_id !== '') params.store_id = store_id;
+  if (price_min != null && price_min !== '') params.price_min = price_min;
+  if (price_max != null && price_max !== '') params.price_max = price_max;
+  if (filters) params.filters = filters;
+
+  const normalizedSort = normalizeWalmartSortBy(sort_by);
+  if (normalizedSort) params.sort_by = normalizedSort;
+
+  return { params };
+}
+
 /**
  * Amazon Retailer Adapter
  * Uses SearchAPI.io Amazon Search API to access Amazon's product database
@@ -410,20 +713,7 @@ class AmazonRetailer extends BaseRetailer {
    * rh (filters), sort_by, price_min, price_max, page
    */
   async searchProducts(query, options = {}) {
-    const { 
-      limit = 20, 
-      page = 1, 
-      amazon_domain, 
-      language, 
-      delivery_country, 
-      rh, 
-      sort_by, 
-      price_min, 
-      price_max,
-      apiKey,
-      apiBaseUrl
-    } = options;
-
+    const { limit = 20, apiKey, apiBaseUrl, ...searchOptions } = options;
     const resolvedApiKey = apiKey || this.apiKey;
     const resolvedApiBaseUrl = apiBaseUrl || this.apiBaseUrl;
 
@@ -432,24 +722,14 @@ class AmazonRetailer extends BaseRetailer {
     }
 
     try {
-      const params = {
-        engine: 'amazon_search',
-        api_key: resolvedApiKey,
-        q: query,
-        page: page
-      };
-
-      // Add optional parameters if provided
-      if (amazon_domain) params.amazon_domain = amazon_domain;
-      if (language) params.language = language;
-      if (delivery_country) params.delivery_country = delivery_country;
-      if (rh) params.rh = rh;
-      if (sort_by) params.sort_by = sort_by;
-      if (price_min) params.price_min = price_min;
-      if (price_max) params.price_max = price_max;
+      const { params } = buildAmazonSearchParams(query, {
+        ...searchOptions,
+        apiKey: resolvedApiKey,
+        apiBaseUrl: resolvedApiBaseUrl
+      });
 
       const response = await axios.get(resolvedApiBaseUrl, {
-        params: params,
+        params,
         timeout: this.service.config.requestTimeout
       });
 
@@ -463,23 +743,28 @@ class AmazonRetailer extends BaseRetailer {
   }
 
   async fetchBestSellers(options = {}) {
-    const { category = 'electronics', limit = 20 } = options;
+    const { category = 'electronics', limit = 20, apiKey, apiBaseUrl } = options;
+    const resolvedApiKey = apiKey || this.apiKey;
+    const resolvedApiBaseUrl = apiBaseUrl || this.apiBaseUrl;
+
+    if (!resolvedApiKey) {
+      throw new Error('Amazon product key is required. Add your key in Settings.');
+    }
 
     try {
-      // Use SearchAPI.io to search for best sellers in category
-      // Always use the configured API key (default is set in constructor)
-      // Use sort_by=bestsellers to get best-selling items
-      const response = await axios.get(this.apiBaseUrl, {
-        params: {
-          engine: 'amazon_search',
-          api_key: this.apiKey,
-          q: `best sellers ${category}`,
-          sort_by: 'bestsellers'
-        },
+      const { params } = buildAmazonSearchParams(`best sellers ${category}`, {
+        sort_by: 'bestsellers',
+        page: 1,
+        apiKey: resolvedApiKey,
+        apiBaseUrl: resolvedApiBaseUrl
+      });
+
+      const response = await axios.get(resolvedApiBaseUrl, {
+        params,
         timeout: this.service.config.requestTimeout
       });
 
-      let allResults = collectProviderSearchResults(response.data, limit);
+      const allResults = collectProviderSearchResults(response.data, limit);
       return this.normalizeData(allResults);
     } catch (error) {
       console.error('Amazon fetchBestSellers error:', error.message);
@@ -594,18 +879,7 @@ class WalmartRetailer extends BaseRetailer {
    * Search Walmart products (engine=walmart_search)
    */
   async searchProducts(query, options = {}) {
-    const {
-      limit = 20,
-      page = 1,
-      category_id,
-      store_id,
-      price_min,
-      price_max,
-      filters,
-      sort_by,
-      apiKey,
-      apiBaseUrl
-    } = options;
+    const { limit = 20, apiKey, apiBaseUrl, ...searchOptions } = options;
     const resolvedApiKey = apiKey || this.apiKey;
     const resolvedApiBaseUrl = apiBaseUrl || this.apiBaseUrl;
 
@@ -614,19 +888,10 @@ class WalmartRetailer extends BaseRetailer {
     }
 
     try {
-      const params = {
-        engine: 'walmart_search',
-        api_key: resolvedApiKey,
-        q: query,
-        page
-      };
-
-      if (category_id) params.category_id = category_id;
-      if (store_id) params.store_id = store_id;
-      if (price_min != null && price_min !== '') params.price_min = price_min;
-      if (price_max != null && price_max !== '') params.price_max = price_max;
-      if (filters) params.filters = filters;
-      if (sort_by) params.sort_by = sort_by;
+      const { params } = buildWalmartSearchParams(query, {
+        ...searchOptions,
+        apiKey: resolvedApiKey
+      });
 
       const response = await axios.get(resolvedApiBaseUrl, {
         params,
@@ -643,26 +908,31 @@ class WalmartRetailer extends BaseRetailer {
   }
 
   async fetchBestSellers(options = {}) {
-    const { category = 'home-garden', limit = 20 } = options;
+    const { category = 'home', limit = 20, apiKey, apiBaseUrl } = options;
+    const resolvedApiKey = apiKey || this.apiKey;
+    const resolvedApiBaseUrl = apiBaseUrl || this.apiBaseUrl;
+
+    if (!resolvedApiKey) {
+      throw new Error('Walmart product key is required. Add your key in Settings.');
+    }
 
     try {
-      const response = await axios.get(this.apiBaseUrl, {
-        params: {
-          engine: 'walmart_search',
-          api_key: this.apiKey,
-          q: `best sellers ${category}`,
-          sort_by: 'best_seller',
-          page: 1
-        },
+      const { params } = buildWalmartSearchParams(`best sellers ${category}`, {
+        sort_by: 'best_seller',
+        page: 1,
+        apiKey: resolvedApiKey
+      });
+
+      const response = await axios.get(resolvedApiBaseUrl, {
+        params,
         timeout: this.service.config.requestTimeout
       });
 
       const allResults = collectProviderSearchResults(response.data, limit);
-      if (allResults.length) return this.normalizeData(allResults);
-      return this.getMockBestSellers(limit);
+      return this.normalizeData(allResults);
     } catch (error) {
       console.error('Walmart fetchBestSellers error:', error.message);
-      return this.getMockBestSellers(limit);
+      throw new Error(`Walmart best sellers fetch failed: ${error.message}`);
     }
   }
 
@@ -674,11 +944,11 @@ class WalmartRetailer extends BaseRetailer {
 
   normalizeData(data) {
     return Array.isArray(data) ? data.map(item => {
-      // Handle SearchAPI.io response format (matching the example structure)
-      // Use extracted_price if available (cleaner than parsing price string)
       let price = 0;
       if (item.extracted_price !== undefined && item.extracted_price !== null) {
         price = parseFloat(item.extracted_price);
+      } else if (item.price_range?.extracted_from_price != null) {
+        price = parseFloat(item.price_range.extracted_from_price);
       } else if (item.price) {
         const priceStr = typeof item.price === 'string' ? item.price : String(item.price);
         const priceMatch = priceStr.match(/\$?([\d,]+\.?\d*)/);
@@ -687,25 +957,24 @@ class WalmartRetailer extends BaseRetailer {
         }
       }
       
-      // Handle price_range for variants
       const priceRange = item.price_range?.extracted_from_price || price;
       
       return {
         id: item.product_id || item.id,
         title: item.title || item.name || 'Product',
         price: price || priceRange || 0,
-        originalPrice: price || priceRange, // Use same price if no original_price
+        originalPrice: price || priceRange,
         rating: item.rating ? parseFloat(item.rating) : (item.customerRating || 0),
         reviews: item.reviews ? parseInt(item.reviews) : (item.reviewCount || 0),
         image: item.thumbnail || item.image || item.imageUrl || 'https://via.placeholder.com/200',
         availability: item.fulfillment ? 'In Stock' : ((item.availability || item.in_stock || item.inStock) ? 'In Stock' : 'Out of Stock'),
         category: item.category || '',
         retailer: 'walmart',
-        link: item.link || item.url || `https://www.walmart.com/ip/${item.product_id || item.id || ''}`,
-        // Additional fields from API response
+        link: item.link || item.url || `https://www.walmart.com/ip/${item.id || item.product_id || ''}`,
         sellerName: item.seller_name || 'Walmart',
         sellerId: item.seller_id || null,
-        unitPrice: item.unit_price || item.extracted_unit_price || null,
+        unitPrice: item.unit_price || null,
+        extractedUnitPrice: item.extracted_unit_price || null,
         position: item.position || null,
         description: item.description || null,
         brand: item.brand || null,
@@ -713,7 +982,12 @@ class WalmartRetailer extends BaseRetailer {
         fulfillment: item.fulfillment || null,
         variants: item.variants || null,
         stock: item.stock || null,
-        isFreeShipping: item.is_free_shipping || item.is_free_shipping_with_walmart_plus || false,
+        priceRange: item.price_range || null,
+        isFreeShipping: item.is_free_shipping || false,
+        isFreeShippingWithWalmartPlus: item.is_free_shipping_with_walmart_plus || false,
+        isSponsored: item.is_sponsored || false,
+        isSubscriptionEligible: item.is_subscription_eligible || false,
+        flag: item.flag || null,
         normalizedAt: new Date()
       };
     }) : data;
@@ -773,62 +1047,20 @@ class eBayRetailer extends BaseRetailer {
    * buying_format, filters, advanced_filters, sort_by, layout, num, page
    */
   async searchProducts(query, options = {}) {
-    const {
-      limit = 20,
-      page = 1,
-      category_id,
-      ebay_domain,
-      country,
-      delivery_country,
-      postal_code,
-      distance_radius,
-      product_origin_country,
-      price_min,
-      price_max,
-      condition,
-      buying_format,
-      filters,
-      advanced_filters,
-      sort_by,
-      layout,
-      num,
-      apiKey,
-      apiBaseUrl
-    } = options;
-
+    const { limit = 20, apiKey, apiBaseUrl, ...searchOptions } = options;
     const resolvedApiKey = apiKey || this.apiKey;
     const resolvedApiBaseUrl = apiBaseUrl || this.apiBaseUrl;
-    const resultCount = resolveEbayResultCount(limit);
 
     if (!resolvedApiKey) {
       throw new Error('eBay product key is required. Add your key in Settings.');
     }
 
     try {
-      const params = {
-        engine: 'ebay_search',
-        api_key: resolvedApiKey,
-        num: resultCount,
-        page,
-        include_related_results: true
-      };
-
-      if (query) params.q = query;
-      if (category_id) params.category_id = category_id;
-      if (ebay_domain) params.ebay_domain = ebay_domain;
-      if (country) params.country = country;
-      if (delivery_country) params.delivery_country = delivery_country;
-      if (postal_code) params.postal_code = postal_code;
-      if (distance_radius) params.distance_radius = distance_radius;
-      if (product_origin_country) params.product_origin_country = product_origin_country;
-      if (price_min != null && price_min !== '') params.price_min = price_min;
-      if (price_max != null && price_max !== '') params.price_max = price_max;
-      if (condition) params.condition = condition;
-      if (buying_format) params.buying_format = buying_format;
-      if (filters) params.filters = filters;
-      if (advanced_filters) params.advanced_filters = advanced_filters;
-      if (sort_by) params.sort_by = sort_by;
-      if (layout) params.layout = layout;
+      const { params } = buildEbaySearchParams(query, {
+        ...searchOptions,
+        limit,
+        apiKey: resolvedApiKey
+      });
 
       const response = await axios.get(resolvedApiBaseUrl, {
         params,
@@ -845,18 +1077,26 @@ class eBayRetailer extends BaseRetailer {
   }
 
   async fetchBestSellers(options = {}) {
-    const { category = 'electronics', limit = 20 } = options;
+    const { category = 'electronics', limit = 20, apiKey, apiBaseUrl } = options;
+    const resolvedApiKey = apiKey || this.apiKey;
+    const resolvedApiBaseUrl = apiBaseUrl || this.apiBaseUrl;
+
+    if (!resolvedApiKey) {
+      throw new Error('eBay product key is required. Add your key in Settings.');
+    }
+
     try {
-      const response = await axios.get(this.apiBaseUrl, {
-        params: {
-          engine: 'ebay_search',
-          api_key: this.apiKey,
-          q: `best sellers ${category}`,
-          num: resolveEbayResultCount(limit),
-          sort_by: 'best_match',
-          include_related_results: true,
-          page: 1
-        },
+      const { params } = buildEbaySearchParams(`trending ${category}`, {
+        sort_by: 'best_match',
+        include_related_results: true,
+        page: 1,
+        limit,
+        filters: 'sale_items',
+        apiKey: resolvedApiKey
+      });
+
+      const response = await axios.get(resolvedApiBaseUrl, {
+        params,
         timeout: this.service.config.requestTimeout
       });
 
@@ -918,7 +1158,15 @@ class eBayRetailer extends BaseRetailer {
         watching: item.extracted_watching ?? item.watching,
         items_sold: item.extracted_items_sold ?? item.items_sold,
         is_free_return: item.is_free_return || false,
-        extensions: item.extensions || []
+        extensions: item.extensions || [],
+        authenticity: item.authenticity || null,
+        is_buy_it_now: item.is_buy_it_now || false,
+        is_price_range: item.is_price_range || false,
+        price_range: item.extracted_price_range || null,
+        deal: item.deal || null,
+        stock: item.stock || null,
+        images: item.images || [],
+        position: item.position || null
       };
     }) : data;
   }
@@ -1097,5 +1345,12 @@ module.exports = {
   ShopifyRetailer,
   SkimlinksRetailer,
   collectProviderSearchResults,
-  resolveRetailerSearchCredentials
+  resolveRetailerSearchCredentials,
+  buildRetailerSearchOptions,
+  normalizeAmazonSortBy,
+  buildAmazonSearchParams,
+  normalizeEbaySortBy,
+  buildEbaySearchParams,
+  normalizeWalmartSortBy,
+  buildWalmartSearchParams
 };

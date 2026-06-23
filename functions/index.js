@@ -336,7 +336,7 @@ exports.adminPermanentDeleteUser = onCall({ region: 'us-central1' }, async (requ
 // Live product lookup (Amazon, Walmart, eBay) — Cloud Functions + Firestore
 // ===========================
 
-const { RetailerIntegrationService, resolveRetailerSearchCredentials } = require('./retailerIntegration');
+const { RetailerIntegrationService, resolveRetailerSearchCredentials, buildRetailerSearchOptions } = require('./retailerIntegration');
 
 let retailerServiceInstance = null;
 
@@ -398,17 +398,9 @@ async function runRetailerProductSearch(params) {
   }
 
   const products = await getRetailerService().searchProducts(retailer, query, {
-    limit: parseInt(params.limit, 10) || 20,
-    page: parseInt(params.page, 10) || 1,
+    ...buildRetailerSearchOptions(retailer, params),
     apiKey: credentials.apiKey,
-    apiBaseUrl: credentials.apiBaseUrl,
-    category_id: params.category_id,
-    store_id: params.store_id,
-    ebay_domain: params.ebay_domain,
-    sort_by: params.sort_by,
-    price_min: params.price_min,
-    price_max: params.price_max,
-    filters: params.filters
+    apiBaseUrl: credentials.apiBaseUrl
   });
 
   return {
@@ -441,7 +433,10 @@ async function runTrendingProductSearch(limit = 6) {
       const batch = await getRetailerService().searchProducts(retailer, TRENDING_SEARCH_QUERIES[retailer], {
         limit: Math.ceil(capped / retailers.length) + 2,
         apiKey: credentials.apiKey,
-        apiBaseUrl: credentials.apiBaseUrl
+        apiBaseUrl: credentials.apiBaseUrl,
+        ...(retailer === 'amazon' ? { sort_by: 'bestsellers' } : {}),
+        ...(retailer === 'ebay' ? { sort_by: 'time_newly_listed', filters: 'deals_and_savings', include_related_results: true } : {}),
+        ...(retailer === 'walmart' ? { sort_by: 'best_seller' } : {})
       });
       if (Array.isArray(batch)) merged.push(...batch.slice(0, 4));
     } catch (err) {
@@ -497,15 +492,7 @@ exports.apiProductsSearch = onRequest({ region: 'us-central1', cors: true, timeo
       query: req.query.query || req.query.q,
       apiKey: req.query.apiKey || req.headers['x-provider-api-key'],
       apiEndpoint: req.query.apiEndpoint || req.query.apiBaseUrl,
-      limit: req.query.limit,
-      page: req.query.page,
-      category_id: req.query.category_id,
-      store_id: req.query.store_id,
-      ebay_domain: req.query.ebay_domain,
-      sort_by: req.query.sort_by,
-      price_min: req.query.price_min,
-      price_max: req.query.price_max,
-      filters: req.query.filters
+      ...buildRetailerSearchOptions(req.query.retailer, req.query)
     });
     res.json(payload);
   } catch (err) {
