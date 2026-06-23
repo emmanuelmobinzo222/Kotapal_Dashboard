@@ -6905,6 +6905,8 @@
                     }
                 }
                 if (typeof window.setKotapalLoginMode === 'function') window.setKotapalLoginMode('user');
+                localStorage.setItem('kotapal_explicit_login', '1');
+                sessionStorage.setItem('kotapal_explicit_login', '1');
                 localStorage.setItem('kotaUser', JSON.stringify(userData));
                 currentUser = userData;
                 var logs = JSON.parse(localStorage.getItem('kota_activity_logs') || '[]');
@@ -7046,6 +7048,8 @@
                     }
                 }
                 if (typeof window.setKotapalLoginMode === 'function') window.setKotapalLoginMode('user');
+                localStorage.setItem('kotapal_explicit_login', '1');
+                sessionStorage.setItem('kotapal_explicit_login', '1');
                 localStorage.setItem('kotaUser', JSON.stringify(userData));
                 currentUser = userData;
                 
@@ -10157,27 +10161,36 @@
         
         // Check authentication state and show appropriate view
         if (auth) {
-            // Track if we're currently processing an auth state change to prevent race conditions
-            let isProcessingAuthState = false;
-            
-            auth.onAuthStateChanged((user) => {
-                if (window.location.hash === '#admin') return;
-                if (isProcessingAuthState) return;
-                isProcessingAuthState = true;
+            var authStateDebounceTimer = null;
 
+            function resolveLoginModeForUser(user) {
                 var loginMode = typeof window.getKotapalLoginMode === 'function' ? window.getKotapalLoginMode() : '';
+                if (!user) return loginMode;
+                if (loginMode === 'user' || loginMode === 'admin') return loginMode;
+                if (typeof window.isKotapalAdminEmail === 'function' && window.isKotapalAdminEmail(user.email) &&
+                    (sessionStorage.getItem('admin_logged_in') === '1' || localStorage.getItem('admin_logged_in') === '1')) {
+                    if (typeof window.setKotapalLoginMode === 'function') window.setKotapalLoginMode('admin');
+                    return 'admin';
+                }
+                if (typeof window.setKotapalLoginMode === 'function') window.setKotapalLoginMode('user');
+                localStorage.setItem('kotapal_explicit_login', '1');
+                sessionStorage.setItem('kotapal_explicit_login', '1');
+                return 'user';
+            }
 
-                // Admin login (toggle on): restore admin dashboard
+            function processAuthState(user) {
+                if (window.location.hash === '#admin') return;
+
+                var loginMode = resolveLoginModeForUser(user);
+
                 if (user && loginMode === 'admin' && typeof window.isKotapalAdminEmail === 'function' && window.isKotapalAdminEmail(user.email)) {
                     sessionStorage.setItem('admin_logged_in', '1');
                     localStorage.setItem('admin_logged_in', '1');
                     if (window.location.hash !== '#admin') window.location.hash = '#admin';
                     if (typeof window.applyAdminView === 'function') window.applyAdminView();
-                    isProcessingAuthState = false;
                     return;
                 }
 
-                // User login: show user dashboard when signed in as user
                 if (user && loginMode === 'user') {
                     const savedUserData = JSON.parse(localStorage.getItem('kotaUser') || '{}');
                     const userData = {
@@ -10196,39 +10209,48 @@
                     showPage('dashboard');
                     if (typeof initDashboard === 'function') initDashboard();
                     if (typeof window.clearStaleOverlays === 'function') window.clearStaleOverlays();
-
-                    isProcessingAuthState = false;
-                } else {
-                    if (!user) {
-                        localStorage.removeItem('kotaUser');
-                        if (typeof window.setKotapalLoginMode === 'function') window.setKotapalLoginMode('');
-                        currentUser = null;
-                    }
-
-                    const landingView = document.getElementById('landing-page-view');
-                    const nav = document.querySelector('nav');
-                    const footer = document.querySelector('footer');
-                    if (typeof window.hideKotapalDashboard === 'function') window.hideKotapalDashboard();
-                    else {
-                        const dashboardView = document.getElementById('dashboard-view');
-                        if (dashboardView) {
-                            dashboardView.style.display = 'none';
-                            dashboardView.classList.remove('active');
-                            dashboardView.removeAttribute('data-kotapal-visible');
-                        }
-                    }
-                    if (typeof window.clearStaleOverlays === 'function') window.clearStaleOverlays();
-                    if (typeof setDashboardScrollLock === 'function') setDashboardScrollLock(false);
-                    if (landingView) {
-                        landingView.style.display = 'block';
-                        landingView.classList.remove('theme-dark');
-                        document.documentElement.classList.add('landing-page-active');
-                    }
-                    if (nav) nav.style.display = 'flex';
-                    if (footer) footer.style.display = 'block';
-
-                    isProcessingAuthState = false;
+                    return;
                 }
+
+                if (!user) {
+                    var hadSession = Boolean(localStorage.getItem('kotaUser') || localStorage.getItem('kotapal_explicit_login'));
+                    localStorage.removeItem('kotaUser');
+                    if (typeof window.setKotapalLoginMode === 'function') window.setKotapalLoginMode('');
+                    currentUser = null;
+                    if (hadSession && typeof showNotification === 'function') {
+                        showNotification('Your session ended. Use Login to sign in again.', 'info', 'Signed out');
+                    }
+                }
+
+                const landingView = document.getElementById('landing-page-view');
+                const nav = document.querySelector('nav');
+                const footer = document.querySelector('footer');
+                if (typeof window.hideKotapalDashboard === 'function') window.hideKotapalDashboard();
+                else {
+                    const dashboardView = document.getElementById('dashboard-view');
+                    if (dashboardView) {
+                        dashboardView.style.display = 'none';
+                        dashboardView.classList.remove('active');
+                        dashboardView.removeAttribute('data-kotapal-visible');
+                    }
+                }
+                if (typeof window.clearStaleOverlays === 'function') window.clearStaleOverlays();
+                if (typeof setDashboardScrollLock === 'function') setDashboardScrollLock(false);
+                if (typeof stopInactivityTimer === 'function') stopInactivityTimer();
+                if (landingView) {
+                    landingView.style.display = 'block';
+                    landingView.classList.remove('theme-dark');
+                    document.documentElement.classList.add('landing-page-active');
+                }
+                if (nav) nav.style.display = 'flex';
+                if (footer) footer.style.display = 'block';
+            }
+
+            auth.onAuthStateChanged(function(user) {
+                if (authStateDebounceTimer) clearTimeout(authStateDebounceTimer);
+                authStateDebounceTimer = setTimeout(function() {
+                    processAuthState(user);
+                }, 0);
             });
         } else {
             console.warn('Firebase auth not initialized - authentication features will not work');
@@ -13496,8 +13518,12 @@
             if (/api key|no api key|key required|missing.*key|401|unauthorized/i.test(m)) {
                 return 'Add your product key in Settings → Integrations, then click Save keys.';
             }
-            if (/failed to fetch|network|cors|timed out|timeout|econnrefused|cannot reach/i.test(m)) {
-                return 'Product lookup is temporarily unavailable. Check your connection and try again.';
+            if (/failed to fetch|network|cors|timed out|timeout|econnrefused|cannot reach|404|not found/i.test(m)) {
+                var host = window.location.hostname || '';
+                if (host === 'localhost' || host === '127.0.0.1') {
+                    return 'Product lookup needs the KotaPal server. Run start.bat, then open http://localhost:3000 (not Live Server). Add your product key in Settings → Integrations.';
+                }
+                return 'Product lookup is temporarily unavailable. Sign in, run start.bat locally, or add your product key in Settings → Integrations.';
             }
             if (/503|not ready|retailer service/i.test(m)) {
                 return 'Product lookup is starting up. Wait a few seconds and try again.';
@@ -13688,7 +13714,7 @@
         async function fetchProductsViaFirebaseCallable(retailer, query, preferredKey, searchOptions) {
             const ff = getFirebaseFunctionsClient();
             if (!ff || !ff.httpsCallable) {
-                throw new Error('Product lookup is temporarily unavailable.');
+                throw new Error('Firebase product lookup is not available in this browser session.');
             }
             const callable = ff.httpsCallable('searchRetailerProducts');
             const apiKey = preferredKey != null ? String(preferredKey).trim() : '';
@@ -13719,25 +13745,39 @@
                         return await fetchProductsViaHttpApi(retailer, query, usableKey, { searchOptions: searchOptions });
                     } catch (httpErr) {
                         lastError = httpErr;
-                        console.warn('HTTP product lookup failed, trying cloud:', httpErr);
+                        console.warn('HTTP product lookup failed:', httpErr);
                     }
                 }
+            }
+
+            try {
+                return await fetchProductsViaCloudHttpApi(retailer, query, usableKey, searchOptions);
+            } catch (cloudHttpErr) {
+                lastError = lastError || cloudHttpErr;
+                console.warn('Cloud HTTP product lookup failed:', cloudHttpErr);
             }
 
             try {
                 return await fetchProductsViaFirebaseCallable(retailer, query, usableKey, searchOptions);
             } catch (callableErr) {
                 lastError = lastError || callableErr;
-                console.warn('Callable product lookup failed, trying cloud HTTP:', callableErr);
+                console.warn('Callable product lookup failed:', callableErr);
             }
 
-            try {
-                return await fetchProductsViaCloudHttpApi(retailer, query, usableKey, searchOptions);
-            } catch (cloudHttpErr) {
-                throw new Error(formatProviderSearchError(
-                    cloudHttpErr.message || (lastError && lastError.message) || String(cloudHttpErr)
-                ));
+            if (canTryHttp) {
+                try {
+                    return await fetchProductsViaHttpApi(retailer, query, usableKey, {
+                        searchOptions: searchOptions,
+                        apiRoot: getProductsApiBase() || ''
+                    });
+                } catch (sameOriginErr) {
+                    lastError = lastError || sameOriginErr;
+                }
             }
+
+            throw new Error(formatProviderSearchError(
+                (lastError && lastError.message) || 'Product lookup failed'
+            ));
         }
 
         async function fetchTrendingViaCloud() {
