@@ -24,11 +24,11 @@ if not exist .env (
   echo Creating .env from .env.example...
   copy /Y .env.example .env >nul
   echo.
-  echo Edit .env and set your product lookup key.
-  echo Or paste the key in the app under Settings -^> Integrations.
+  echo Edit .env and set SEARCHAPI_API_KEY for live product search.
   echo.
 )
 
 echo Starting KotaPal on http://localhost:3000
+echo Product lookup uses the platform key from .env automatically.
 echo.
 call npm start

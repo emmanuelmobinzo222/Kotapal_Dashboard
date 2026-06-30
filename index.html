@@ -12847,6 +12847,7 @@
 
         // Live retailer search — uses your saved Provider API keys only (no shared fallback keys).
         const LIVE_RETAILER_PROVIDERS = ['amazon', 'walmart', 'ebay'];
+        const SEARCHAPI_DEFAULT_BASE = 'https://www.searchapi.io/api/v1/search';
         const DEFAULT_LIVE_SEARCH = {
             engines: {
                 amazon: 'amazon_search',
@@ -13034,7 +13035,7 @@
         }
 
         function ensureAutomatedLiveSearchSetup() {
-            /* Live retailer keys/endpoints are loaded from Settings; product lookup runs via the local backend. */
+            if (typeof syncProductLookupKeyToFirestore === 'function') syncProductLookupKeyToFirestore();
         }
 
         function escapeProductHtml(text) {
@@ -13070,21 +13071,29 @@
         }
 
         async function fetchTrendingProductsLive() {
-            var apiRoot = getProductsApiBase();
-            var url = (apiRoot || '') + '/api/products/trending?limit=6';
-            try {
-                var health = await checkSearchBackendHealth();
-                if (health && health.ok) {
-                    var res = await fetch(url, { method: 'GET', headers: { Accept: 'application/json' } });
-                    var data = await res.json();
-                    if (res.ok && data && Array.isArray(data.products) && data.products.length) {
-                        return padTrendingProducts(data.products.map(function(item, i) {
+            var trendingEndpoints = [
+                { apiRoot: '', path: '/api/products/trending?limit=6' }
+            ];
+            var cloudBase = getCloudFunctionsApiBase();
+            if (cloudBase) trendingEndpoints.push({ apiRoot: cloudBase, path: '/apiProductsTrending?limit=6' });
+
+            for (var ti = 0; ti < trendingEndpoints.length; ti++) {
+                try {
+                    var trendUrl = (trendingEndpoints[ti].apiRoot || '') + trendingEndpoints[ti].path;
+                    var trendRes = await fetch(trendUrl, {
+                        method: 'GET',
+                        headers: { Accept: 'application/json' },
+                        signal: typeof AbortSignal !== 'undefined' && AbortSignal.timeout ? AbortSignal.timeout(15000) : undefined
+                    });
+                    var trendData = await trendRes.json();
+                    if (trendRes.ok && trendData && Array.isArray(trendData.products) && trendData.products.length) {
+                        return padTrendingProducts(trendData.products.map(function(item, i) {
                             return mapBackendProductToCard(item, item.retailer || 'amazon', i);
                         }), 6);
                     }
+                } catch (e) {
+                    console.warn('Trending HTTP unavailable:', trendingEndpoints[ti], e);
                 }
-            } catch (e) {
-                console.warn('Trending HTTP unavailable:', e);
             }
             try {
                 var cloudTrending = await fetchTrendingViaCloud();
@@ -13510,20 +13519,17 @@
             });
         }
 
+        function isHostedWebApp() {
+            var host = (window.location.hostname || '').toLowerCase();
+            return /\.firebaseapp\.com$/i.test(host)
+                || /\.web\.app$/i.test(host)
+                || /kotapal/i.test(host);
+        }
+
         function formatProviderSearchError(message) {
             const m = sanitizeProviderFacingText(String(message || '').trim());
             if (/used all of the searches|quota|rate limit|429/i.test(m)) {
-                return 'Product lookup quota exceeded. Check your provider plan or wait for your limit to reset.';
-            }
-            if (/api key|no api key|key required|missing.*key|401|unauthorized/i.test(m)) {
-                return 'Add your product key in Settings → Integrations, then click Save keys.';
-            }
-            if (/failed to fetch|network|cors|timed out|timeout|econnrefused|cannot reach|404|not found/i.test(m)) {
-                var host = window.location.hostname || '';
-                if (host === 'localhost' || host === '127.0.0.1') {
-                    return 'Product lookup needs the KotaPal server. Run start.bat, then open http://localhost:3000 (not Live Server). Add your product key in Settings → Integrations.';
-                }
-                return 'Product lookup is temporarily unavailable. Sign in, run start.bat locally, or add your product key in Settings → Integrations.';
+                return 'Product lookup quota exceeded. Please try again later.';
             }
             if (/503|not ready|retailer service/i.test(m)) {
                 return 'Product lookup is starting up. Wait a few seconds and try again.';
@@ -13531,7 +13537,7 @@
             if (/invalid response|non-json/i.test(m)) {
                 return 'Product lookup returned an invalid response. Please try again in a moment.';
             }
-            return m || 'Product lookup failed. Check Settings → Integrations for your provider key.';
+            return 'Product lookup is temporarily unavailable. Please try again in a moment.';
         }
 
         function tryExtractApiKeyFromText(text) {
@@ -13624,17 +13630,6 @@
             if (typeof window.KOTAPAL_API_BASE === 'string' && window.KOTAPAL_API_BASE.trim()) {
                 return window.KOTAPAL_API_BASE.trim().replace(/\/$/, '');
             }
-            if (window.location.protocol === 'http:' || window.location.protocol === 'https:') {
-                var host = window.location.hostname || '';
-                var port = window.location.port || '';
-                if (/\.firebaseapp\.com$/i.test(host) || /\.web\.app$/i.test(host) || /kotapal/i.test(host)) {
-                    return '';
-                }
-                if ((host === 'localhost' || host === '127.0.0.1') && port && port !== '3000') {
-                    return 'http://localhost:3000';
-                }
-                return '';
-            }
             return '';
         }
 
@@ -13687,7 +13682,11 @@
             url = appendRetailerSearchOptionsToUrl(url, options.searchOptions);
             const headers = { Accept: 'application/json' };
             if (apiKey && !isPlaceholderProviderKey(apiKey)) headers['X-Provider-Api-Key'] = apiKey;
-            const res = await fetch(url, { method: 'GET', headers: headers });
+            const fetchOpts = { method: 'GET', headers: headers };
+            if (typeof AbortSignal !== 'undefined' && AbortSignal.timeout) {
+                fetchOpts.signal = AbortSignal.timeout(15000);
+            }
+            const res = await fetch(url, fetchOpts);
             let data = null;
             try {
                 data = await res.json();
@@ -13732,48 +13731,59 @@
             return mapSearchResultItems(data.products || extractProductsArray(data), retailer);
         }
 
+        function getProductLookupEndpoints() {
+            const endpoints = [];
+            const seen = new Set();
+            const add = function(apiRoot, searchPath) {
+                const root = String(apiRoot || '').replace(/\/$/, '');
+                const path = searchPath || '/api/products/search';
+                const key = root + '|' + path;
+                if (seen.has(key)) return;
+                seen.add(key);
+                endpoints.push({ apiRoot: root, searchPath: path });
+            };
+
+            const isHttp = window.location.protocol === 'http:' || window.location.protocol === 'https:';
+            if (isHttp) add('', '/api/products/search');
+
+            const cloudBase = getCloudFunctionsApiBase();
+            if (cloudBase) add(cloudBase, '/apiProductsSearch');
+
+            return endpoints;
+        }
+
         async function fetchProductsFromBackend(retailer, query, preferredKey, searchOptions) {
             let lastError = null;
             const key = preferredKey != null ? String(preferredKey).trim() : '';
             const usableKey = key && !isPlaceholderProviderKey(key) ? key : '';
-            const canTryHttp = window.location.protocol === 'http:' || window.location.protocol === 'https:';
-
-            if (canTryHttp) {
-                const health = await checkSearchBackendHealth();
-                if (health && health.ok) {
-                    try {
-                        return await fetchProductsViaHttpApi(retailer, query, usableKey, { searchOptions: searchOptions });
-                    } catch (httpErr) {
-                        lastError = httpErr;
-                        console.warn('HTTP product lookup failed:', httpErr);
-                    }
-                }
-            }
+            const endpoints = getProductLookupEndpoints();
+            let sawSuccessfulEmpty = false;
 
             try {
-                return await fetchProductsViaCloudHttpApi(retailer, query, usableKey, searchOptions);
-            } catch (cloudHttpErr) {
-                lastError = lastError || cloudHttpErr;
-                console.warn('Cloud HTTP product lookup failed:', cloudHttpErr);
-            }
-
-            try {
-                return await fetchProductsViaFirebaseCallable(retailer, query, usableKey, searchOptions);
+                const callableProducts = await fetchProductsViaFirebaseCallable(retailer, query, usableKey, searchOptions);
+                if (callableProducts && callableProducts.length) return callableProducts;
+                sawSuccessfulEmpty = true;
             } catch (callableErr) {
-                lastError = lastError || callableErr;
+                lastError = callableErr;
                 console.warn('Callable product lookup failed:', callableErr);
             }
 
-            if (canTryHttp) {
+            for (var ei = 0; ei < endpoints.length; ei++) {
                 try {
-                    return await fetchProductsViaHttpApi(retailer, query, usableKey, {
-                        searchOptions: searchOptions,
-                        apiRoot: getProductsApiBase() || ''
+                    const products = await fetchProductsViaHttpApi(retailer, query, usableKey, {
+                        apiRoot: endpoints[ei].apiRoot,
+                        searchPath: endpoints[ei].searchPath,
+                        searchOptions: searchOptions
                     });
-                } catch (sameOriginErr) {
-                    lastError = lastError || sameOriginErr;
+                    if (products && products.length) return products;
+                    sawSuccessfulEmpty = true;
+                } catch (httpErr) {
+                    lastError = lastError || httpErr;
+                    console.warn('Product lookup endpoint failed:', endpoints[ei], httpErr);
                 }
             }
+
+            if (sawSuccessfulEmpty) return [];
 
             throw new Error(formatProviderSearchError(
                 (lastError && lastError.message) || 'Product lookup failed'
@@ -13821,14 +13831,7 @@
         }
 
         async function warnIfSearchBackendUnavailable() {
-            const health = await checkSearchBackendHealth();
-            if (health && health.ok) return;
-            if (getFirebaseFunctionsClient() || getCloudFunctionsApiBase()) return;
-            showNotification(
-                'Live product lookup is connecting. Add your product keys in Settings → Integrations if searches stay empty.',
-                'warning',
-                'Product lookup'
-            );
+            /* Platform-managed product lookup — no user key prompt. */
         }
 
         function mapBackendProductToCard(item, retailer, index) {
@@ -13852,7 +13855,7 @@
         }
 
         function liveRetailerSearchBlockedMessage(retailer) {
-            return 'Add your ' + getProviderLabel(retailer) + ' product key in Settings → Integrations, then click Save keys.';
+            return 'Product lookup is temporarily unavailable for ' + getProviderLabel(retailer) + '.';
         }
 
         function extractProductsArray(data) {
@@ -13933,8 +13936,8 @@
             };
         }
 
-        function buildProviderSearchRequestUrl(retailer, query, apiKey) {
-            var endpoint = getProviderApiEndpoint(retailer);
+        function buildProviderSearchRequestUrl(retailer, query, apiKey, searchOptions) {
+            var endpoint = getProviderApiEndpoint(retailer) || SEARCHAPI_DEFAULT_BASE;
             var key = apiKey;
             var storedRaw = localStorage.getItem(getProviderApiStorageKey(retailer)) || '';
             if (storedRaw && /^https?:\/\//i.test(storedRaw)) {
@@ -13942,8 +13945,7 @@
                 if (parsedStored.endpoint) endpoint = parsedStored.endpoint;
                 if (parsedStored.apiKey) key = parsedStored.apiKey;
             }
-            if (!endpoint) throw new Error('Add a product lookup URL for ' + retailer + ' in Settings.');
-            if (!key) throw new Error('Add an API key for ' + retailer + ' in Settings or paste it in chat.');
+            if (!key) throw new Error('Add your SearchAPI product key in Settings → Integrations.');
             var requestUrl;
             try {
                 requestUrl = new URL(endpoint, window.location.href);
@@ -13962,11 +13964,18 @@
             if (!requestUrl.searchParams.has('api_key') && !requestUrl.searchParams.has('key') && !requestUrl.searchParams.has('apikey') && !requestUrl.searchParams.has('token')) {
                 requestUrl.searchParams.set('api_key', key);
             }
+            if (searchOptions) {
+                RETAILER_SEARCH_OPTION_KEYS.forEach(function(optKey) {
+                    if (searchOptions[optKey] != null && searchOptions[optKey] !== '' && !requestUrl.searchParams.has(optKey)) {
+                        requestUrl.searchParams.set(optKey, searchOptions[optKey]);
+                    }
+                });
+            }
             return { url: requestUrl.toString(), key: key };
         }
 
-        async function fetchProviderProducts(retailer, query, apiKey) {
-            const built = buildProviderSearchRequestUrl(retailer, query, apiKey);
+        async function fetchProviderProducts(retailer, query, apiKey, searchOptions) {
+            const built = buildProviderSearchRequestUrl(retailer, query, apiKey, searchOptions);
             const headers = { Accept: 'application/json' };
             if (!/[?&](api_key|key|apikey|token)=/i.test(built.url)) {
                 headers.Authorization = 'Bearer ' + built.key;
@@ -13988,6 +13997,28 @@
             });
         }
 
+        async function syncProductLookupKeyToFirestore() {
+            const uid = currentUser && currentUser.uid;
+            if (!uid) return;
+            let sharedKey = '';
+            LIVE_RETAILER_PROVIDERS.forEach(function(provider) {
+                if (sharedKey) return;
+                const k = getProviderApiKey(provider, false);
+                if (k && !isPlaceholderProviderKey(k)) sharedKey = k;
+            });
+            if (!sharedKey) return;
+            let db = window.firebaseDb;
+            if (!db && typeof firebase !== 'undefined') {
+                try { db = firebase.app().firestore(); } catch (e) {}
+            }
+            if (!db) return;
+            try {
+                await db.collection('users').doc(uid).set({ productLookupApiKey: sharedKey }, { merge: true });
+            } catch (err) {
+                console.warn('Could not sync product key to cloud profile:', err);
+            }
+        }
+
         async function searchRetailerProductsLive(retailer, query, searchOptions) {
             const unsavedKey = getUnsavedProviderApiKeyFromDom(retailer);
             if (unsavedKey) applyProviderCredential(retailer, unsavedKey);
@@ -13996,29 +14027,34 @@
                 setProviderApiEndpoint(retailer, unsavedEndpointEl.value.trim());
             }
 
-            const keys = getApiKeysToTry(retailer).filter(function(k) {
-                return k && !isPlaceholderProviderKey(k);
-            });
-            const attempts = keys.length ? keys : [''];
             let lastError = null;
             let sawSuccessfulEmpty = false;
 
-            for (var ki = 0; ki < attempts.length; ki++) {
+            try {
+                const platformProducts = await fetchProductsFromBackend(retailer, query, '', searchOptions);
+                if (platformProducts && platformProducts.length) return platformProducts;
+                sawSuccessfulEmpty = true;
+            } catch (platformErr) {
+                lastError = platformErr;
+                console.warn('Platform product search failed:', retailer, platformErr);
+            }
+
+            const keys = getApiKeysToTry(retailer).filter(function(k) {
+                return k && !isPlaceholderProviderKey(k);
+            });
+            for (var ki = 0; ki < keys.length; ki++) {
                 try {
-                    const backendProducts = await fetchProductsFromBackend(retailer, query, attempts[ki], searchOptions);
+                    const backendProducts = await fetchProductsFromBackend(retailer, query, keys[ki], searchOptions);
                     if (backendProducts && backendProducts.length) return backendProducts;
                     sawSuccessfulEmpty = true;
                 } catch (backendErr) {
-                    lastError = backendErr;
+                    lastError = lastError || backendErr;
                     console.warn('Backend product search failed:', retailer, backendErr);
                 }
             }
 
-            if (lastError) {
+            if (lastError && !sawSuccessfulEmpty) {
                 throw new Error(formatProviderSearchError(lastError.message || String(lastError)));
-            }
-            if (!sawSuccessfulEmpty && !keys.length) {
-                throw new Error(formatProviderSearchError(liveRetailerSearchBlockedMessage(retailer)));
             }
             return [];
         }
@@ -14057,6 +14093,7 @@
             currentIntegrations = loadSavedIntegrations();
             saveIntegrations();
             renderIntegrations();
+            if (typeof syncProductLookupKeyToFirestore === 'function') syncProductLookupKeyToFirestore();
             showNotification('Provider API keys saved.', 'success', 'Settings');
         }
 

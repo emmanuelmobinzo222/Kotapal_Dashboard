@@ -3,6 +3,12 @@ const { getAuth } = require('firebase-admin/auth');
 const { getFirestore } = require('firebase-admin/firestore');
 const { initializeApp } = require('firebase-admin/app');
 
+try {
+  require('dotenv').config();
+} catch (e) {
+  /* dotenv optional in Cloud Functions runtime */
+}
+
 initializeApp();
 
 /**
@@ -351,15 +357,31 @@ function getRetailerService() {
   return retailerServiceInstance;
 }
 
+function isPlaceholderProductKey(key) {
+  const value = String(key || '').trim().toLowerCase();
+  if (!value) return true;
+  return /^(your[-_])?(searchapi|provider)[-_]?key$|^replace[-_]me$|^change[-_]me/.test(value);
+}
+
+function pickUsableProductKey(...candidates) {
+  for (const candidate of candidates) {
+    const value = String(candidate || '').trim();
+    if (value && !isPlaceholderProductKey(value)) return value;
+  }
+  return '';
+}
+
 async function resolvePlatformProductKey(db) {
-  if (process.env.SEARCHAPI_API_KEY) return process.env.SEARCHAPI_API_KEY;
-  if (process.env.AMAZON_API_KEY) return process.env.AMAZON_API_KEY;
+  const fromEnv = pickUsableProductKey(
+    process.env.SEARCHAPI_API_KEY,
+    process.env.AMAZON_API_KEY
+  );
+  if (fromEnv) return fromEnv;
   try {
     const snap = await db.doc('platform/productLookup').get();
     if (snap.exists) {
       const data = snap.data() || {};
-      if (data.apiKey) return data.apiKey;
-      if (data.searchApiKey) return data.searchApiKey;
+      return pickUsableProductKey(data.apiKey, data.searchApiKey);
     }
   } catch (err) {
     console.warn('Could not read platform/productLookup:', err.message);
@@ -394,7 +416,7 @@ async function runRetailerProductSearch(params) {
   });
 
   if (!credentials.apiKey) {
-    throw new HttpsError('failed-precondition', 'Product key is required. Add your key in Settings → Integrations.');
+    throw new HttpsError('failed-precondition', 'Product lookup is not configured on the server.');
   }
 
   const products = await getRetailerService().searchProducts(retailer, query, {
@@ -416,7 +438,17 @@ async function runRetailerProductSearch(params) {
  * Real-time product lookup for international clients (Firebase SDK, no localhost).
  */
 exports.searchRetailerProducts = onCall({ region: 'us-central1', timeoutSeconds: 60 }, async (request) => {
-  return runRetailerProductSearch(request.data || {});
+  const params = Object.assign({}, request.data || {});
+  if (!params.apiKey && request.auth && request.auth.uid) {
+    try {
+      const userSnap = await getFirestore().collection('users').doc(request.auth.uid).get();
+      const userData = userSnap.exists ? (userSnap.data() || {}) : {};
+      if (userData.productLookupApiKey) params.apiKey = userData.productLookupApiKey;
+    } catch (err) {
+      console.warn('Could not read user product key:', err.message);
+    }
+  }
+  return runRetailerProductSearch(params);
 });
 
 async function runTrendingProductSearch(limit = 6) {

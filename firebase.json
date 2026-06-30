@@ -12,6 +12,7 @@
       "**/.*",
       "**/node_modules/**",
       "functions/**",
+      "functions/.env",
       "services/**",
       "scripts/**",
       "backend.js",

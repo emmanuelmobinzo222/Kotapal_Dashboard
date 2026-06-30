@@ -326,14 +326,17 @@ app.get('/api/products/trending', async (req, res) => {
     const limit = Math.min(parseInt(req.query.limit, 10) || 4, 10);
     const retailers = ['amazon', 'walmart', 'ebay'];
     const batches = await Promise.allSettled(
-      retailers.map((retailer) =>
-        retailerService.searchProducts(retailer, TRENDING_SEARCH_QUERIES[retailer], {
+      retailers.map((retailer) => {
+        const credentials = resolveRetailerSearchCredentials(retailer, {});
+        return retailerService.searchProducts(retailer, TRENDING_SEARCH_QUERIES[retailer], {
           limit,
+          apiKey: credentials.apiKey || undefined,
+          apiBaseUrl: credentials.apiBaseUrl || undefined,
           ...(retailer === 'amazon' ? { sort_by: 'bestsellers' } : {}),
           ...(retailer === 'ebay' ? { sort_by: 'time_newly_listed', filters: 'deals_and_savings', include_related_results: true } : {}),
           ...(retailer === 'walmart' ? { sort_by: 'best_seller' } : {})
-        })
-      )
+        });
+      })
     );
 
     const products = [];
