@@ -305,6 +305,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-functions-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="admin-realtime.js"></script>
 
     <style>
         /* Reset and Base Styles */
@@ -5314,7 +5315,7 @@
                             <div class="status-item"><div class="status-label"><div class="status-indicator"></div><span>Server Status</span></div><div class="status-value">All Systems Operational</div></div>
                             <div class="status-item"><div class="status-label"><div class="status-indicator"></div><span>API Response</span></div><div class="status-value">Normal</div></div>
                             <div class="status-item"><div class="status-label"><div class="status-indicator"></div><span>Database</span></div><div class="status-value">Healthy</div></div>
-                            <div class="status-item"><div class="status-label"><div class="status-indicator" style="background:var(--admin-warning);"></div><span>Storage</span></div><div class="status-value" style="color:var(--admin-warning);">75% Used</div></div>
+                            <div class="status-item"><div class="status-label"><div class="status-indicator" style="background:var(--admin-warning);"></div><span>Storage</span></div><div class="status-value" id="admin-system-storage">Checking…</div></div>
                         </div>
                     </div>
                     <div class="card">
@@ -5434,7 +5435,10 @@
                 <div class="chart-section">
                     <div class="section-header">
                         <h2 class="section-title">User Growth</h2>
-                        <button type="button" class="admin-btn admin-btn-sm admin-btn-primary" id="adminExportReportBtn" style="display:inline-flex;align-items:center;gap:8px;"><i class="fas fa-download"></i> Export Users (CSV)</button>
+                        <div style="display:flex;flex-wrap:wrap;gap:8px;">
+                            <button type="button" class="admin-btn admin-btn-sm admin-btn-primary" id="adminExportReportBtn" style="display:inline-flex;align-items:center;gap:8px;"><i class="fas fa-download"></i> Export Users (CSV)</button>
+                            <button type="button" class="admin-btn admin-btn-sm admin-btn-secondary" id="adminExportPdfBtn" style="display:inline-flex;align-items:center;gap:8px;"><i class="fas fa-file-pdf"></i> Export PDF</button>
+                        </div>
                     </div>
                     <p style="font-size:13px;color:var(--admin-gray-500);margin:-8px 0 16px;"><span style="display:inline-block;width:10px;height:10px;background:#6366f1;border-radius:2px;margin-right:6px;"></span>New Users <span style="margin-left:16px;display:inline-block;width:10px;height:10px;background:#06b6d4;border-radius:2px;margin-right:6px;"></span>Active Users</p>
                     <div class="admin-chart-container" style="height:320px;"><canvas id="adminAnalyticsBarChart"></canvas></div>
@@ -5450,11 +5454,18 @@
                 </div>
             </div>
             <div id="admin-page-reports" class="admin-page">
-                <div class="admin-header"><h1><i class="fas fa-file-lines"></i> Reports</h1><button type="button" class="admin-btn admin-btn-secondary" style="width:auto;padding:10px 20px;display:inline-flex;align-items:center;gap:8px;" onclick="showAdminPage('stats'); return false;"><i class="fas fa-chart-line"></i> Open Analytics</button></div>
+                <div class="admin-header" style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;">
+                    <h1><i class="fas fa-file-lines"></i> Reports</h1>
+                    <div style="display:flex;flex-wrap:wrap;gap:8px;">
+                        <button type="button" class="admin-btn admin-btn-secondary" style="width:auto;padding:10px 20px;display:inline-flex;align-items:center;gap:8px;" onclick="showAdminPage('stats'); return false;"><i class="fas fa-chart-line"></i> Open Analytics</button>
+                        <button type="button" class="admin-btn admin-btn-primary" id="adminExportReportCsvBtn" style="width:auto;padding:10px 20px;display:inline-flex;align-items:center;gap:8px;"><i class="fas fa-file-csv"></i> Export CSV</button>
+                        <button type="button" class="admin-btn admin-btn-secondary" id="adminExportReportPdfBtn" style="width:auto;padding:10px 20px;display:inline-flex;align-items:center;gap:8px;"><i class="fas fa-file-pdf"></i> Export PDF</button>
+                    </div>
+                </div>
                 <p style="font-size:14px;color:var(--admin-gray-500);margin:-12px 0 20px;">Export-ready summaries and a quick trend preview. Full interactive charts live on <strong>Analytics</strong>.</p>
                 <div class="admin-stats-grid">
-                    <div class="admin-stat-card"><div class="stat-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:15px;"><div class="admin-stat-label">Monthly export</div><div class="stat-icon blue"><i class="fas fa-file-export"></i></div></div><div class="admin-stat">CSV / PDF</div><div class="admin-stat-label">From Analytics toolbar</div></div>
-                    <div class="admin-stat-card"><div class="stat-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:15px;"><div class="admin-stat-label">Scheduled reports</div><div class="stat-icon cyan"><i class="fas fa-clock"></i></div></div><div class="admin-stat">Weekly</div><div class="admin-stat-label">Configure in Settings</div></div>
+                    <div class="admin-stat-card"><div class="stat-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:15px;"><div class="admin-stat-label">Monthly export</div><div class="stat-icon blue"><i class="fas fa-file-export"></i></div></div><div class="admin-stat">CSV / PDF</div><div class="admin-stat-label">Use buttons above</div></div>
+                    <div class="admin-stat-card"><div class="stat-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:15px;"><div class="admin-stat-label">Scheduled reports</div><div class="stat-icon cyan"><i class="fas fa-clock"></i></div></div><div class="admin-stat">Weekly</div><div class="admin-stat-label"><button type="button" class="admin-btn-sm admin-btn-secondary" id="adminConfigureScheduleBtn" style="margin-top:6px;">Configure schedule</button></div></div>
                     <div class="admin-stat-card"><div class="stat-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:15px;"><div class="admin-stat-label">Data freshness</div><div class="stat-icon green"><i class="fas fa-sync-alt"></i></div></div><div class="admin-stat">Live</div><div class="admin-stat-label">Firestore-backed metrics</div></div>
                 </div>
                 <div class="admin-card"><div class="admin-card-header">Trend preview</div><div style="padding:16px 24px 24px;"><div class="admin-chart-container" style="height:300px;"><canvas id="adminReportsPreviewChart"></canvas></div></div></div>
@@ -5463,7 +5474,7 @@
                 <div class="admin-header"><h1>Payments &amp; Billing</h1><button type="button" class="admin-btn admin-btn-secondary" style="width:auto;padding:10px 20px;display:inline-flex;align-items:center;gap:8px;" onclick="loadAdminBilling()"><i class="fas fa-sync-alt"></i> Refresh</button></div>
                 <div class="admin-stats-grid">
                     <div class="admin-stat-card"><div class="stat-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:15px;"><div class="admin-stat-label">Total Revenue</div><div class="stat-icon green"><i class="fas fa-dollar-sign"></i></div></div><div class="admin-stat" id="admin-billing-total">0</div><div class="admin-stat-label" style="color:var(--admin-success);"><i class="fas fa-arrow-up"></i> From billing data</div></div>
-                    <div class="admin-stat-card"><div class="stat-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:15px;"><div class="admin-stat-label">Failed Payments</div><div class="stat-icon orange"><i class="fas fa-exclamation-triangle"></i></div></div><div class="admin-stat">—</div><div class="admin-stat-label" style="color:var(--admin-danger);">Needs attention</div></div>
+                    <div class="admin-stat-card"><div class="stat-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:15px;"><div class="admin-stat-label">Failed Payments</div><div class="stat-icon orange"><i class="fas fa-exclamation-triangle"></i></div></div><div class="admin-stat" id="admin-billing-failed">0</div><div class="admin-stat-label" style="color:var(--admin-danger);">Needs attention</div></div>
                     <div class="admin-stat-card"><div class="stat-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:15px;"><div class="admin-stat-label">Transactions</div><div class="stat-icon cyan"><i class="fas fa-receipt"></i></div></div><div class="admin-stat" id="admin-billing-transactions">0</div><div class="admin-stat-label">Payment records</div></div>
                 </div>
                 <div class="admin-card"><div class="admin-card-header">Recent Transactions</div><div style="overflow-x:auto;-webkit-overflow-scrolling:touch;"><table class="admin-table"><thead><tr><th>Transaction ID</th><th>User</th><th>Amount</th><th>Type</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead><tbody id="adminBillingTableBody"></tbody></table></div></div>
@@ -5473,8 +5484,8 @@
                 <div class="admin-header"><h1>Support &amp; Tickets</h1><button type="button" class="admin-btn admin-btn-secondary" style="width:auto;padding:10px 20px;display:inline-flex;align-items:center;gap:8px;" onclick="loadAdminSupport(true)"><i class="fas fa-sync-alt"></i> Refresh</button></div>
                 <div class="admin-stats-grid">
                     <div class="admin-stat-card"><div class="stat-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:15px;"><div class="admin-stat-label">Open Tickets</div><div class="stat-icon blue"><i class="fas fa-inbox"></i></div></div><div class="admin-stat" id="admin-support-open">0</div></div>
-                    <div class="admin-stat-card"><div class="stat-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:15px;"><div class="admin-stat-label">Resolved (This Week)</div><div class="stat-icon green"><i class="fas fa-check"></i></div></div><div class="admin-stat">128</div></div>
-                    <div class="admin-stat-card"><div class="stat-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:15px;"><div class="admin-stat-label">Avg Response Time</div><div class="stat-icon cyan"><i class="fas fa-clock"></i></div></div><div class="admin-stat">2.4h</div></div>
+                    <div class="admin-stat-card"><div class="stat-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:15px;"><div class="admin-stat-label">Resolved (This Week)</div><div class="stat-icon green"><i class="fas fa-check"></i></div></div><div class="admin-stat" id="admin-support-resolved-week">0</div></div>
+                    <div class="admin-stat-card"><div class="stat-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:15px;"><div class="admin-stat-label">Avg Response Time</div><div class="stat-icon cyan"><i class="fas fa-clock"></i></div></div><div class="admin-stat" id="admin-support-avg-response">—</div></div>
                 </div>
                 <div class="admin-card"><div class="admin-card-header">Support Tickets</div><div style="overflow-x:auto;-webkit-overflow-scrolling:touch;"><table class="admin-table"><thead><tr><th>Ticket ID</th><th>Subject</th><th>User</th><th>Priority</th><th>Status</th><th>Assigned</th><th>Actions</th></tr></thead><tbody id="adminSupportTableBody"></tbody></table></div></div>
             </div>
@@ -5484,13 +5495,17 @@
                     <div class="admin-card-header">Send Notification</div>
                     <div style="padding:24px;">
                         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-bottom:20px;">
-                            <div><label style="display:block;font-size:13px;font-weight:600;margin-bottom:8px;color:var(--admin-gray-700);">Notification Type</label><select class="form-control"><option>Email Notification</option><option>In-app</option></select></div>
-                            <div><label style="display:block;font-size:13px;font-weight:600;margin-bottom:8px;color:var(--admin-gray-700);">Target Audience</label><select class="form-control"><option>All Users</option><option>Pro only</option></select></div>
+                            <div><label for="adminNotifyType" style="display:block;font-size:13px;font-weight:600;margin-bottom:8px;color:var(--admin-gray-700);">Notification Type</label><select class="form-control" id="adminNotifyType"><option value="email">Email Notification</option><option value="in-app">In-app</option><option value="both">Email + In-app</option></select></div>
+                            <div><label for="adminNotifyAudience" style="display:block;font-size:13px;font-weight:600;margin-bottom:8px;color:var(--admin-gray-700);">Target Audience</label><select class="form-control" id="adminNotifyAudience"><option value="all">All Users</option><option value="pro">Pro only</option><option value="starter">Starter / Free</option><option value="active">Active only</option><option value="suspended">Suspended only</option></select></div>
                         </div>
                         <div class="admin-form-group"><label>Subject</label><input type="text" id="adminNotifySubject" class="form-control" placeholder="Enter notification subject"></div>
                         <div class="admin-form-group"><label>Message</label><textarea id="adminNotifyMessage" class="form-control" rows="5" placeholder="Enter your message here..."></textarea></div>
                         <button type="button" class="admin-btn" id="adminSendNotificationBtn" style="width:auto;display:inline-flex;align-items:center;gap:8px;"><i class="fas fa-paper-plane"></i> Send Notification</button>
                     </div>
+                </div>
+                <div class="admin-card">
+                    <div class="admin-card-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;"><span>Sent / Queued</span><button type="button" class="admin-btn admin-btn-sm admin-btn-secondary" id="adminRefreshNotifyQueueBtn" style="width:auto;"><i class="fas fa-sync-alt"></i> Refresh</button></div>
+                    <div style="overflow-x:auto;"><table class="admin-table"><thead><tr><th>When</th><th>Type</th><th>Audience</th><th>Subject</th><th>Recipients</th></tr></thead><tbody id="adminNotifyQueueBody"><tr><td colspan="5" style="padding:24px;color:#6b7280;text-align:center;">No notifications sent yet.</td></tr></tbody></table></div>
                 </div>
             </div>
             <div id="admin-page-api" class="admin-page">
@@ -5498,13 +5513,13 @@
                 <div class="grid-2">
                     <div class="admin-card" style="margin:0;">
                         <div class="admin-card-header" style="display:flex;justify-content:space-between;align-items:center;"><span>API Keys</span><button type="button" class="admin-btn admin-btn-sm" id="adminApiGenerateBtn" style="width:auto;background:var(--admin-primary);color:#fff;"><i class="fas fa-plus"></i> Generate Key</button></div>
-                        <div style="overflow-x:auto;"><table class="admin-table" id="adminApiKeysTable"><thead><tr><th>Key Name</th><th>Key</th><th>Created</th><th>Actions</th></tr></thead><tbody id="adminApiKeysTableBody"><tr data-key-id="default"><td>Production Key</td><td>pk_live_••••••••</td><td>Jan 1, 2026</td><td><button type="button" class="admin-btn-sm admin-btn-secondary admin-api-revoke-btn">Revoke</button></td></tr></tbody></table></div>
+                        <div style="overflow-x:auto;"><table class="admin-table" id="adminApiKeysTable"><thead><tr><th>Key Name</th><th>Key</th><th>Created</th><th>Actions</th></tr></thead><tbody id="adminApiKeysTableBody"><tr><td colspan="4" style="padding:24px;color:#6b7280;text-align:center;">Loading keys…</td></tr></tbody></table></div>
                     </div>
                     <div class="admin-card" style="margin:0;">
                         <div class="admin-card-header">API Usage</div>
                         <div style="padding:0 24px 24px;">
-                            <div style="margin-bottom:20px;"><div style="display:flex;justify-content:space-between;font-size:14px;margin-bottom:8px;"><span>Requests This Month</span><span>45,234 / 100,000</span></div><div style="height:8px;background:var(--admin-gray-100);border-radius:4px;overflow:hidden;"><div style="height:100%;width:45%;background:var(--admin-primary);border-radius:4px;"></div></div></div>
-                            <div><div style="display:flex;justify-content:space-between;font-size:14px;margin-bottom:8px;"><span>Rate Limit</span><span>1,000 req/min</span></div><div style="height:8px;background:var(--admin-gray-100);border-radius:4px;overflow:hidden;"><div style="height:100%;width:20%;background:var(--admin-success);border-radius:4px;"></div></div></div>
+                            <div style="margin-bottom:20px;"><div style="display:flex;justify-content:space-between;font-size:14px;margin-bottom:8px;"><span>Requests This Month</span><span data-admin-usage-requests>0 / 100,000</span></div><div style="height:8px;background:var(--admin-gray-100);border-radius:4px;overflow:hidden;"><div data-admin-usage-bar style="height:100%;width:0%;background:var(--admin-primary);border-radius:4px;"></div></div></div>
+                            <div><div style="display:flex;justify-content:space-between;font-size:14px;margin-bottom:8px;"><span>Rate Limit</span><span data-admin-usage-rate>1,000 req/min</span></div><div style="height:8px;background:var(--admin-gray-100);border-radius:4px;overflow:hidden;"><div style="height:100%;width:100%;background:var(--admin-success);border-radius:4px;"></div></div></div>
                         </div>
                     </div>
                 </div>
@@ -5531,14 +5546,19 @@
                     <div class="admin-card" style="margin:0;">
                         <div class="admin-card-header">Security Settings</div>
                         <div style="padding:24px;">
-                            <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 0;border-bottom:1px solid var(--admin-gray-100);"><div><div style="font-weight:600;">Two-Factor Authentication</div><div style="font-size:13px;color:var(--admin-gray-500);">Add an extra layer of security</div></div><button type="button" class="admin-toggle-btn" id="adminToggle2FA" aria-pressed="true" title="Toggle 2FA (simulated)"><span id="admin2FATrack" style="width:44px;height:24px;background:var(--admin-success);border-radius:12px;display:inline-block;position:relative;"><span id="admin2FAKnob" style="position:absolute;right:4px;top:3px;width:18px;height:18px;background:#fff;border-radius:50%;transition:left .2s,right .2s;"></span></span></button></div>
-                            <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 0;"><div><div style="font-weight:600;">IP Restrictions</div><div style="font-size:13px;color:var(--admin-gray-500);">Limit access by IP address</div></div><button type="button" class="admin-toggle-btn" id="adminToggleIP" aria-pressed="false" title="Toggle IP restrictions (simulated)"><span id="adminIPTrack" style="width:44px;height:24px;background:var(--admin-gray-200);border-radius:12px;display:inline-block;position:relative;"><span id="adminIPKnob" style="position:absolute;left:4px;top:3px;width:18px;height:18px;background:#fff;border-radius:50%;transition:left .2s,right .2s;"></span></span></button></div>
+                            <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 0;border-bottom:1px solid var(--admin-gray-100);"><div><div style="font-weight:600;">Two-Factor Authentication</div><div style="font-size:13px;color:var(--admin-gray-500);">Add an extra layer of security</div></div><button type="button" class="admin-toggle-btn" id="adminToggle2FA" aria-pressed="true" title="Toggle two-factor authentication"><span id="admin2FATrack" style="width:44px;height:24px;background:var(--admin-success);border-radius:12px;display:inline-block;position:relative;"><span id="admin2FAKnob" style="position:absolute;right:4px;top:3px;width:18px;height:18px;background:#fff;border-radius:50%;transition:left .2s,right .2s;"></span></span></button></div>
+                            <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 0;border-bottom:1px solid var(--admin-gray-100);"><div><div style="font-weight:600;">IP Restrictions</div><div style="font-size:13px;color:var(--admin-gray-500);">Limit access by IP address</div></div><button type="button" class="admin-toggle-btn" id="adminToggleIP" aria-pressed="false" title="Toggle IP restrictions"><span id="adminIPTrack" style="width:44px;height:24px;background:var(--admin-gray-200);border-radius:12px;display:inline-block;position:relative;"><span id="adminIPKnob" style="position:absolute;left:4px;top:3px;width:18px;height:18px;background:#fff;border-radius:50%;transition:left .2s,right .2s;"></span></span></button></div>
+                            <div id="adminIpAllowlistWrap" style="padding:12px 0 0;display:none;">
+                                <label for="adminIpAllowlist" style="display:block;font-size:13px;font-weight:600;margin-bottom:8px;color:var(--admin-gray-700);">Allowed IPs (comma-separated)</label>
+                                <input type="text" class="form-control" id="adminIpAllowlist" placeholder="127.0.0.1, 192.168.1.1">
+                                <button type="button" class="admin-btn admin-btn-sm" id="adminSaveIpAllowlistBtn" style="width:auto;margin-top:10px;">Save IP list</button>
+                            </div>
                         </div>
                     </div>
                 </div>
                 <div class="admin-card">
-                    <div class="admin-card-header">Login Activity</div>
-                    <div style="overflow-x:auto;"><table class="admin-table"><thead><tr><th>User</th><th>IP Address</th><th>Location</th><th>Device</th><th>Date &amp; Time</th><th>Status</th></tr></thead><tbody><tr><td>admin@kotapal.com</td><td>192.168.1.1</td><td>New York, USA</td><td>Chrome on Windows</td><td>Mar 17, 2026 10:30 AM</td><td><span class="status-badge completed">Success</span></td></tr></tbody></table></div>
+                    <div class="admin-card-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;"><span>Login Activity</span><button type="button" class="admin-btn admin-btn-sm admin-btn-secondary" id="adminRefreshLoginActivityBtn" style="width:auto;"><i class="fas fa-sync-alt"></i> Refresh</button></div>
+                    <div style="overflow-x:auto;"><table class="admin-table"><thead><tr><th>User</th><th>IP Address</th><th>Location</th><th>Device</th><th>Date &amp; Time</th><th>Status</th></tr></thead><tbody id="adminLoginActivityBody"><tr><td colspan="6" style="padding:24px;color:#6b7280;text-align:center;">Loading…</td></tr></tbody></table></div>
                 </div>
             </div>
             <div id="admin-page-activity" class="admin-page">
@@ -5551,9 +5571,10 @@
                     <div class="admin-card" style="margin:0;">
                         <div class="admin-card-header">General Settings</div>
                         <div style="padding:24px;">
-                            <div class="admin-form-group"><label>Platform Name</label><input type="text" class="form-control" value="Kotapal"></div>
-                            <div class="admin-form-group"><label>Platform Description</label><textarea class="form-control" rows="3">Your marketplace platform</textarea></div>
-                            <div class="admin-form-group"><label>Contact Email</label><input type="email" class="form-control" value="support@kotapal.com"></div>
+                            <div class="admin-form-group"><label for="adminPlatformName">Platform Name</label><input type="text" class="form-control" id="adminPlatformName" value="Kotapal"></div>
+                            <div class="admin-form-group"><label for="adminPlatformDescription">Platform Description</label><textarea class="form-control" id="adminPlatformDescription" rows="3">Your marketplace platform</textarea></div>
+                            <div class="admin-form-group"><label for="adminContactEmail">Contact Email</label><input type="email" class="form-control" id="adminContactEmail" value="support@kotapal.com"></div>
+                            <div class="admin-form-group"><label for="adminReportSchedule">Scheduled reports</label><select class="form-control" id="adminReportSchedule"><option value="off">Off</option><option value="daily">Daily</option><option value="weekly" selected>Weekly</option><option value="monthly">Monthly</option></select></div>
                             <button type="button" class="admin-btn" id="adminSaveGeneralBtn" style="width:auto;">Save Changes</button>
                         </div>
                     </div>
@@ -5561,8 +5582,8 @@
                         <div class="admin-card-header">Branding</div>
                         <div style="padding:24px;">
                             <div id="adminLogoDropZone" style="border:2px dashed var(--admin-gray-200);border-radius:12px;padding:40px;text-align:center;color:var(--admin-gray-500);margin-bottom:20px;cursor:pointer;"><i class="fas fa-cloud-upload-alt" style="font-size:2rem;margin-bottom:12px;display:block;"></i>Drop your logo here or click to upload<input type="file" id="adminLogoFileInput" accept="image/*" style="display:none;"></div>
-                            <div class="admin-form-group"><label>Primary Color</label><div style="height:12px;border-radius:6px;background:linear-gradient(90deg,#6366f1,#4338ca);"></div></div>
-                            <div class="admin-form-group"><label>Secondary Color</label><div style="height:12px;border-radius:6px;background:linear-gradient(90deg,#06b6d4,#0e7490);"></div></div>
+                            <div class="admin-form-group"><label for="adminPrimaryColor">Primary Color</label><div style="display:flex;gap:10px;align-items:center;"><input type="color" id="adminPrimaryColor" value="#6366f1" style="width:48px;height:36px;border:1px solid #e5e7eb;border-radius:8px;padding:2px;cursor:pointer;"><input type="text" class="form-control" id="adminPrimaryColorHex" value="#6366f1" style="flex:1;"></div></div>
+                            <div class="admin-form-group"><label for="adminSecondaryColor">Secondary Color</label><div style="display:flex;gap:10px;align-items:center;"><input type="color" id="adminSecondaryColor" value="#06b6d4" style="width:48px;height:36px;border:1px solid #e5e7eb;border-radius:8px;padding:2px;cursor:pointer;"><input type="text" class="form-control" id="adminSecondaryColorHex" value="#06b6d4" style="flex:1;"></div></div>
                             <button type="button" class="admin-btn" id="adminSaveBrandingBtn" style="width:auto;">Update Branding</button>
                         </div>
                     </div>
@@ -5572,15 +5593,15 @@
                     <div style="padding:24px;">
                         <h3 style="font-size:1rem;margin-bottom:16px;color:var(--admin-gray-800);">SMTP Configuration</h3>
                         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px;">
-                            <div class="admin-form-group" style="margin:0;"><label>SMTP Host</label><input type="text" class="form-control" value="smtp.gmail.com"></div>
-                            <div class="admin-form-group" style="margin:0;"><label>SMTP Port</label><input type="text" class="form-control" value="587"></div>
-                            <div class="admin-form-group" style="margin:0;grid-column:1/-1;"><label>Username</label><input type="text" class="form-control" value="your@email.com"></div>
+                            <div class="admin-form-group" style="margin:0;"><label for="adminSmtpHost">SMTP Host</label><input type="text" class="form-control" id="adminSmtpHost" value="smtp.gmail.com"></div>
+                            <div class="admin-form-group" style="margin:0;"><label for="adminSmtpPort">SMTP Port</label><input type="text" class="form-control" id="adminSmtpPort" value="587"></div>
+                            <div class="admin-form-group" style="margin:0;grid-column:1/-1;"><label for="adminSmtpUsername">Username</label><input type="text" class="form-control" id="adminSmtpUsername" value="your@email.com"></div>
                         </div>
                         <h3 style="font-size:1rem;margin-bottom:16px;color:var(--admin-gray-800);">Payment Gateway</h3>
                         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;">
-                            <div class="admin-form-group" style="margin:0;"><label>Provider</label><select class="form-control"><option>Stripe</option></select></div>
-                            <div class="admin-form-group" style="margin:0;"><label>API Key</label><input type="password" class="form-control" value="sk_live_••••"></div>
-                            <div class="admin-form-group" style="margin:0;"><label>Webhook Secret</label><input type="password" class="form-control" value="whsec_••••"></div>
+                            <div class="admin-form-group" style="margin:0;"><label for="adminPaymentProvider">Provider</label><select class="form-control" id="adminPaymentProvider"><option value="stripe">Stripe</option><option value="paypal">PayPal</option><option value="square">Square</option></select></div>
+                            <div class="admin-form-group" style="margin:0;"><label for="adminPaymentApiKey">API Key</label><input type="password" class="form-control" id="adminPaymentApiKey" value="" placeholder="sk_live_..."></div>
+                            <div class="admin-form-group" style="margin:0;"><label for="adminPaymentWebhookSecret">Webhook Secret</label><input type="password" class="form-control" id="adminPaymentWebhookSecret" value="" placeholder="whsec_..."></div>
                         </div>
                         <button type="button" class="admin-btn" id="adminSaveEmailPaymentBtn" style="width:auto;margin-top:20px;">Save Settings</button>
                     </div>
@@ -5650,11 +5671,13 @@
         </div>
     </div>
 
-    <div id="adminDetailModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:2200;align-items:center;justify-content:center;padding:20px;">
+            <div id="adminDetailModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:2200;align-items:center;justify-content:center;padding:20px;">
         <div style="background:white;padding:24px;border-radius:12px;max-width:560px;width:100%;max-height:90vh;overflow-y:auto;">
             <h3 id="adminDetailModalTitle" style="margin-bottom:12px;">Details</h3>
             <div id="adminDetailModalBody" style="font-size:14px;color:#374151;line-height:1.6;white-space:pre-wrap;"></div>
-            <div style="display:flex;gap:10px;margin-top:20px;justify-content:flex-end;">
+            <div style="display:flex;gap:10px;margin-top:20px;justify-content:flex-end;flex-wrap:wrap;">
+                <button type="button" class="admin-btn admin-btn-secondary" id="adminDetailPrintBtn" style="display:none;" onclick="if(window.adminPrintDetailModal){window.adminPrintDetailModal();}">Print / PDF</button>
+                <button type="button" class="admin-btn admin-btn-secondary" id="adminDetailCopyBtn" style="display:none;" onclick="if(window.adminCopyDetailModal){window.adminCopyDetailModal();}">Copy</button>
                 <button type="button" class="admin-btn admin-btn-secondary" onclick="closeAdminDetailModal()">Close</button>
             </div>
         </div>
@@ -5926,7 +5949,10 @@
             }
         };
         function getAdminPlanOverrides() {
-            try { return JSON.parse(localStorage.getItem('admin_plan_overrides') || '{}') || {}; } catch (e) { return {}; }
+            if (window._adminRealtimeState && window._adminRealtimeState.planOverrides) {
+                return window._adminRealtimeState.planOverrides || {};
+            }
+            return {};
         }
         function getAdminPlanIds() {
             var overrides = getAdminPlanOverrides();
@@ -6154,10 +6180,22 @@
                 localStorage.setItem('kotapal_explicit_login', 'true'); // Backup in localStorage
                 localStorage.setItem('kotaUser', JSON.stringify(userData));
                 currentUser = userData;
-                var logs = JSON.parse(localStorage.getItem('kota_activity_logs') || '[]');
-                logs.unshift({ time: new Date().toISOString(), user: user.email, action: 'sign_in', details: 'User signed in' });
-                if (logs.length > 500) logs = logs.slice(0, 500);
-                localStorage.setItem('kota_activity_logs', JSON.stringify(logs));
+                if (typeof window.adminLogActivity === 'function') {
+                    window.adminLogActivity('sign_in', 'User signed in', user.email);
+                } else {
+                    try {
+                        var dbLog = window.firebaseDb || (typeof firebase !== 'undefined' && firebase.firestore && firebase.firestore());
+                        if (dbLog) {
+                            dbLog.collection('activityLogs').add({
+                                time: new Date().toISOString(),
+                                user: user.email,
+                                action: 'sign_in',
+                                details: 'User signed in',
+                                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                            }).catch(function() {});
+                        }
+                    } catch (e) {}
+                }
                 
                 // Small delay to ensure auth state listener processes the change after flags are set
                 await new Promise(resolve => setTimeout(resolve, 100));
@@ -6611,6 +6649,9 @@
                     case 'view-product':
                         if (window.viewAdminProduct) window.viewAdminProduct(actEl.getAttribute('data-product-id'));
                         break;
+                    case 'delete-product':
+                        if (window.deleteAdminProduct) window.deleteAdminProduct(actEl.getAttribute('data-product-id'));
+                        break;
                     case 'create-plan':
                         if (window.openAdminPlanEdit) window.openAdminPlanEdit('');
                         break;
@@ -6646,9 +6687,8 @@
             function isAdminUser(email) { if (!email) return false; return ADMIN_EMAILS.indexOf(email.toLowerCase()) >= 0; }
             function getSuperAdminEmail() {
                 try {
-                    var raw = localStorage.getItem('admin_roles');
-                    if (raw) {
-                        var roles = JSON.parse(raw);
+                    if (typeof window.loadAdminRoles === 'function') {
+                        var roles = window.loadAdminRoles();
                         if (roles && roles.super && roles.super.email) return String(roles.super.email).toLowerCase();
                     }
                 } catch (e) {}
@@ -6697,10 +6737,28 @@
             }
             function renderAdminSupportFromTickets(tickets) {
                 var pending = tickets.filter(function(x) { return String(x.status || 'pending').toLowerCase() !== 'resolved'; }).length;
+                var weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+                var resolvedWeek = tickets.filter(function(x) {
+                    if (String(x.status || '').toLowerCase() !== 'resolved') return false;
+                    var t = x.resolvedAt && x.resolvedAt.toMillis ? x.resolvedAt.toMillis() : (x.updatedAt && x.updatedAt.toMillis ? x.updatedAt.toMillis() : (x.date ? new Date(x.date).getTime() : 0));
+                    return t >= weekAgo;
+                }).length;
+                var responseHours = [];
+                tickets.forEach(function(x) {
+                    if (!x.resolvedAt || !x.createdAt) return;
+                    var created = x.createdAt.toMillis ? x.createdAt.toMillis() : 0;
+                    var resolved = x.resolvedAt.toMillis ? x.resolvedAt.toMillis() : 0;
+                    if (created && resolved && resolved >= created) responseHours.push((resolved - created) / 3600000);
+                });
+                var avgH = responseHours.length ? (responseHours.reduce(function(a, b) { return a + b; }, 0) / responseHours.length) : null;
                 var el = document.getElementById('admin-support-total');
                 if (el) el.textContent = tickets.length;
                 el = document.getElementById('admin-support-open');
                 if (el) el.textContent = pending;
+                el = document.getElementById('admin-support-resolved-week');
+                if (el) el.textContent = resolvedWeek;
+                el = document.getElementById('admin-support-avg-response');
+                if (el) el.textContent = avgH == null ? '—' : (avgH < 1 ? Math.round(avgH * 60) + 'm' : avgH.toFixed(1) + 'h');
                 var tbody = document.getElementById('adminSupportTableBody');
                 if (!tbody) return;
                 if (tickets.length === 0) { tbody.innerHTML = '<tr><td colspan="7" style="padding:24px;color:#6b7280;text-align:center;">No support tickets yet.</td></tr>'; return; }
@@ -6780,6 +6838,7 @@
                 if (typeof window.wireAdminActionButtons === 'function') window.wireAdminActionButtons();
                 if (typeof window.applyAdminUserFilters === 'function') window.applyAdminUserFilters();
                 if (typeof window.updateAdminSuperAccessUI === 'function') window.updateAdminSuperAccessUI();
+                if (typeof window.startAdminRealtimeListeners === 'function') window.startAdminRealtimeListeners();
                 if (typeof initAdminRevenueChart === 'function') setTimeout(initAdminRevenueChart, 100);
                 if (typeof loadAdminSupport === 'function') setTimeout(function() { loadAdminSupport(); }, 0);
             }
@@ -6900,6 +6959,7 @@
                     if (emailEl) emailEl.textContent = email;
                     var avatarEl = document.getElementById('adminUserAvatar');
                     if (avatarEl && email) avatarEl.textContent = (email.charAt(0) || 'A').toUpperCase();
+                    if (typeof window.adminRecordLoginActivity === 'function') window.adminRecordLoginActivity(email);
                     if (typeof loadAdminUsers === 'function') {
                         loadAdminUsers().then(function() { if (typeof updateDashboardPage === 'function') updateDashboardPage(); }).catch(function() { if (typeof updateDashboardPage === 'function') updateDashboardPage(); });
                     }
@@ -7049,14 +7109,34 @@
             window.initAdminRevenueChart = function() {
                 var canvas = document.getElementById('adminRevenueChart');
                 if (!canvas || typeof Chart === 'undefined') return;
+                var series = typeof window.adminBuildChartSeries === 'function' ? window.adminBuildChartSeries() : { months: [], revenue: [] };
                 var sel = document.getElementById('adminRevenueRange');
                 var key = sel && sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex].text : 'Last 7 Months';
-                var presets = {
-                    'Last 7 Months': { labels: ['Jan','Feb','Mar','Apr','May','Jun','Jul'], data: [12000,15000,18000,16000,20000,22000,24750] },
-                    'Last Year': { labels: ['Q1','Q2','Q3','Q4'], data: [52000,61000,58500,67200] },
-                    'All Time': { labels: ['Y1','Y2','Y3','Y4','Y5'], data: [180000,245000,310000,398000,475000] }
-                };
-                var P = presets[key] || presets['Last 7 Months'];
+                var labels = series.months || [];
+                var data = series.revenue || [];
+                if (key === 'Last Year') {
+                    labels = ['Q1', 'Q2', 'Q3', 'Q4'];
+                    var payments = typeof window.adminGetPayments === 'function' ? window.adminGetPayments() : [];
+                    var y = new Date().getFullYear();
+                    data = [0, 1, 2, 3].map(function(q) {
+                        return payments.filter(function(p) {
+                            if (!p.date) return false;
+                            var pd = new Date(p.date);
+                            return pd.getFullYear() === y && Math.floor(pd.getMonth() / 3) === q;
+                        }).reduce(function(s, p) { return s + (Number(p.amount) || 0); }, 0);
+                    });
+                } else if (key === 'All Time') {
+                    var pays = typeof window.adminGetPayments === 'function' ? window.adminGetPayments() : [];
+                    var byYear = {};
+                    pays.forEach(function(p) {
+                        if (!p.date) return;
+                        var yy = String(new Date(p.date).getFullYear());
+                        byYear[yy] = (byYear[yy] || 0) + (Number(p.amount) || 0);
+                    });
+                    labels = Object.keys(byYear).sort();
+                    data = labels.map(function(yy) { return byYear[yy]; });
+                    if (!labels.length) { labels = [String(new Date().getFullYear())]; data = [0]; }
+                }
                 if (window._adminRevenueChartRef) { try { window._adminRevenueChartRef.destroy(); } catch (e) {} window._adminRevenueChartRef = null; }
                 var ctx = canvas.getContext('2d');
                 var grad = ctx.createLinearGradient(0, 0, 0, 400);
@@ -7065,10 +7145,10 @@
                 window._adminRevenueChartRef = new Chart(ctx, {
                     type: 'line',
                     data: {
-                        labels: P.labels,
+                        labels: labels,
                         datasets: [{
-                            label: 'Monthly Recurring Revenue',
-                            data: P.data,
+                            label: 'Revenue',
+                            data: data,
                             borderColor: '#4f46e5',
                             backgroundColor: grad,
                             borderWidth: 3,
@@ -7094,7 +7174,8 @@
             };
             window.initAdminAnalyticsCharts = function() {
                 if (typeof Chart === 'undefined') return;
-                var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul'];
+                var series = typeof window.adminBuildChartSeries === 'function' ? window.adminBuildChartSeries() : { months: ['—'], newUsers: [0], activeUsers: [0], planCounts: {} };
+                var months = series.months;
                 var barAnim = {
                     duration: 1400,
                     easing: 'easeOutQuart',
@@ -7112,8 +7193,8 @@
                         data: {
                             labels: months,
                             datasets: [
-                                { label: 'New Users', data: [420,532,601,734,690,812,900], backgroundColor: '#6366f1', borderRadius: 6, barPercentage: 0.68 },
-                                { label: 'Active Users', data: [980,1100,1250,1180,1320,1400,1550], backgroundColor: '#06b6d4', borderRadius: 6, barPercentage: 0.68 }
+                                { label: 'New Users', data: series.newUsers, backgroundColor: '#6366f1', borderRadius: 6, barPercentage: 0.68 },
+                                { label: 'Active Users', data: series.activeUsers, backgroundColor: '#06b6d4', borderRadius: 6, barPercentage: 0.68 }
                             ]
                         },
                         options: {
@@ -7131,11 +7212,15 @@
                 var dough = document.getElementById('adminTrafficDoughnut');
                 if (dough) {
                     if (window._adminDoughnut) { window._adminDoughnut.destroy(); window._adminDoughnut = null; }
+                    var pc = series.planCounts || {};
+                    var planLabels = Object.keys(pc).filter(function(k) { return pc[k] > 0; });
+                    var planData = planLabels.map(function(k) { return pc[k]; });
+                    if (!planLabels.length) { planLabels = ['No users']; planData = [1]; }
                     window._adminDoughnut = new Chart(dough.getContext('2d'), {
                         type: 'pie',
                         data: {
-                            labels: ['Direct','Organic Search','Referral','Social Media'],
-                            datasets: [{ data: [35, 28, 22, 15], backgroundColor: ['#6366f1','#06b6d4','#10b981','#f97316'], borderWidth: 2, borderColor: '#fff' }]
+                            labels: planLabels.map(function(k) { return k.charAt(0).toUpperCase() + k.slice(1); }),
+                            datasets: [{ data: planData, backgroundColor: ['#6366f1','#06b6d4','#10b981','#f97316','#a855f7','#94a3b8'], borderWidth: 2, borderColor: '#fff' }]
                         },
                         options: {
                             responsive: true,
@@ -7151,13 +7236,17 @@
                     var g = line.getContext('2d').createLinearGradient(0, 0, 0, 220);
                     g.addColorStop(0, 'rgba(6,182,212,0.25)');
                     g.addColorStop(1, 'rgba(6,182,212,0)');
+                    var conv = (series.newUsers || []).map(function(n, i) {
+                        var a = (series.activeUsers && series.activeUsers[i]) || 0;
+                        return a ? Number(((n / a) * 100).toFixed(1)) : 0;
+                    });
                     window._adminLineChart = new Chart(line.getContext('2d'), {
                         type: 'line',
                         data: {
-                            labels: ['Week 1','Week 2','Week 3','Week 4'],
+                            labels: months,
                             datasets: [{
-                                label: 'Conversion',
-                                data: [1.2, 2.1, 2.8, 3.2],
+                                label: 'New / Active %',
+                                data: conv,
                                 borderColor: '#06b6d4',
                                 backgroundColor: g,
                                 borderWidth: 2,
@@ -7175,7 +7264,7 @@
                             animation: { duration: 1500, easing: 'easeOutQuart' },
                             plugins: { legend: { display: false } },
                             scales: {
-                                y: { beginAtZero: true, max: 3.5, grid: { color: 'rgba(0,0,0,0.06)' } },
+                                y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.06)' } },
                                 x: { grid: { display: false } }
                             }
                         }
@@ -7187,13 +7276,14 @@
                 var cv = document.getElementById('adminReportsPreviewChart');
                 if (!cv) return;
                 if (window._adminReportsPreviewChart) { window._adminReportsPreviewChart.destroy(); window._adminReportsPreviewChart = null; }
+                var series = typeof window.adminBuildChartSeries === 'function' ? window.adminBuildChartSeries() : { months: ['—'], newUsers: [0] };
                 window._adminReportsPreviewChart = new Chart(cv.getContext('2d'), {
                     type: 'line',
                     data: {
-                        labels: ['W1','W2','W3','W4','W5','W6'],
+                        labels: series.months,
                         datasets: [{
                             label: 'Signups',
-                            data: [12, 19, 24, 22, 30, 35],
+                            data: series.newUsers,
                             borderColor: '#4f46e5',
                             backgroundColor: 'rgba(79,70,229,0.12)',
                             fill: true,
@@ -7217,6 +7307,7 @@
             };
             window.handleAdminLogout = async function() {
                 sessionStorage.removeItem('admin_logged_in');
+                if (typeof window.stopAdminRealtimeListeners === 'function') window.stopAdminRealtimeListeners();
                 try {
                     if (typeof auth !== 'undefined' && auth) await auth.signOut();
                 } catch (err) { console.warn('Admin sign out:', err); }
@@ -7380,8 +7471,8 @@
                 if (el) el.textContent = active;
                 el = document.getElementById('admin-dash-revenue');
                 if (el) {
-                    var payments = JSON.parse(localStorage.getItem('kota_payment_history') || '[]');
-                    var totalRev = payments.reduce(function(s, p) { return s + (p.amount || 0); }, 0);
+                    var payments = typeof window.adminGetPayments === 'function' ? window.adminGetPayments() : [];
+                    var totalRev = payments.reduce(function(s, p) { return s + (Number(p.amount) || 0); }, 0);
                     el.textContent = '$' + totalRev.toLocaleString();
                 }
                 el = document.getElementById('admin-dash-churn');
@@ -7401,10 +7492,10 @@
                 }
                 var txList = document.getElementById('adminLatestTransactionsList');
                 if (txList) {
-                    var payments = JSON.parse(localStorage.getItem('kota_payment_history') || '[]');
-                    payments = payments.slice(0, 5);
-                    if (payments.length === 0) txList.innerHTML = '<div class="transaction-item"><div class="transaction-info"><div class="transaction-icon"><i class="fas fa-arrow-down"></i></div><div class="transaction-details"><div class="transaction-name">No transactions yet</div><div class="transaction-type">Payments will appear here</div></div></div><div class="transaction-amount">$0</div><span class="status-badge completed">-</span></div>';
-                    else txList.innerHTML = payments.map(function(p) {
+                    var paymentsTx = typeof window.adminGetPayments === 'function' ? window.adminGetPayments() : [];
+                    paymentsTx = paymentsTx.slice(0, 5);
+                    if (paymentsTx.length === 0) txList.innerHTML = '<div class="transaction-item"><div class="transaction-info"><div class="transaction-icon"><i class="fas fa-arrow-down"></i></div><div class="transaction-details"><div class="transaction-name">No transactions yet</div><div class="transaction-type">Payments will appear here</div></div></div><div class="transaction-amount">$0</div><span class="status-badge completed">-</span></div>';
+                    else txList.innerHTML = paymentsTx.map(function(p) {
                         var amt = p.amount || 0;
                         var neg = p.status === 'refund' || (p.type && String(p.type).toLowerCase().indexOf('refund') >= 0);
                         return '<div class="transaction-item"><div class="transaction-info"><div class="transaction-icon" style="color:' + (neg ? 'var(--admin-danger)' : 'var(--admin-primary)') + ';"><i class="fas fa-' + (neg ? 'undo' : 'arrow-down') + '"></i></div><div class="transaction-details"><div class="transaction-name">' + (neg ? 'Refund to ' : 'Payment from ') + html(p.user || '-') + '</div><div class="transaction-type">' + html(p.plan || 'Subscription') + '</div></div></div><div class="transaction-amount' + (neg ? ' negative' : '') + '">' + (neg ? '-' : '') + '$' + amt + '</div><span class="status-badge ' + (p.status === 'refunded' || neg ? 'refunded' : p.status === 'pending' ? 'pending' : 'completed') + '">' + (neg ? 'Refunded' : p.status || 'Completed') + '</span></div>';
@@ -7412,7 +7503,7 @@
                 }
                 var topProductsBody = document.getElementById('adminTopProductsBody');
                 if (topProductsBody) {
-                    var catalogProducts = typeof loadAdminProducts === 'function' ? loadAdminProducts() : [];
+                    var catalogProducts = typeof window.adminGetProducts === 'function' ? window.adminGetProducts() : (typeof loadAdminProducts === 'function' ? loadAdminProducts() : []);
                     var topProducts = catalogProducts.slice().sort(function(a, b) {
                         return (b.sales || 0) - (a.sales || 0);
                     }).slice(0, 5);
@@ -7506,22 +7597,28 @@
                 }).join('');
             };
             window.loadAdminBilling = function() {
+                if (window._adminRealtimeState && typeof window.adminGetPayments === 'function') {
+                    /* Prefer Firestore-backed renderer from admin-realtime.js if still attached */
+                }
                 var users = window.adminUsers || [];
-                var payments = JSON.parse(localStorage.getItem('kota_payment_history') || '[]');
+                var payments = typeof window.adminGetPayments === 'function' ? window.adminGetPayments() : [];
                 var planPrices = getKotaPlanPricesMap();
                 var byPlan = {};
                 users.forEach(function(u) { var p = u.plan || 'starter'; byPlan[p] = (byPlan[p] || 0) + 1; });
-                if (payments.length === 0 && users.length > 0) {
-                    payments = users.slice(0, 10).map(function(u, i) { return { date: new Date(Date.now() - i * 86400000 * 30).toISOString(), user: u.email, plan: u.plan || 'starter', amount: getKotaPlanPrice(u.plan), status: 'paid' }; });
-                }
-                var totalRev = payments.reduce(function(s, p) { return s + (p.amount || 0); }, 0);
+                var totalRev = payments.reduce(function(s, p) { return s + (Number(p.amount) || 0); }, 0);
+                var failed = payments.filter(function(p) {
+                    var st = String(p.status || '').toLowerCase();
+                    return st === 'failed' || st === 'refund' || st === 'refunded';
+                }).length;
                 var el = document.getElementById('admin-billing-total');
                 if (el) el.textContent = '$' + totalRev.toLocaleString();
                 el = document.getElementById('admin-billing-transactions');
                 if (el) el.textContent = payments.length;
+                el = document.getElementById('admin-billing-failed');
+                if (el) el.textContent = String(failed);
                 var tbody = document.getElementById('adminBillingTableBody');
                 if (tbody) {
-                    if (payments.length === 0) tbody.innerHTML = '<tr><td colspan="7" style="padding:24px;color:#6b7280;text-align:center;">No payment records yet.</td></tr>';
+                    if (payments.length === 0) tbody.innerHTML = '<tr><td colspan="7" style="padding:24px;color:#6b7280;text-align:center;">No payment records yet. Changing a user plan creates a live payment row.</td></tr>';
                     else {
                     window.adminPaymentsByIndex = {};
                     window.adminPaymentsByUser = {};
@@ -7531,9 +7628,9 @@
                         if (p.user) window.adminPaymentsByUser[String(p.user)] = p;
                         var d = p.date ? new Date(p.date).toLocaleDateString() : '-';
                         var st = (p.status || 'paid').toLowerCase();
-                        var badge = st === 'refund' || st === 'refunded' ? 'refunded' : st === 'pending' ? 'pending' : 'completed';
-                        var stLabel = badge === 'refunded' ? 'Refunded' : badge === 'pending' ? 'Pending' : 'Completed';
-                        return '<tr><td>' + html(p.id || ('TX-' + String(idx + 1).padStart(4, '0'))) + '</td><td>' + html(p.user || '-') + '</td><td>$' + html(p.amount || 0) + '</td><td>Subscription</td><td><span class="status-badge ' + badge + '">' + stLabel + '</span></td><td>' + html(d) + '</td><td><div class="action-btns"><button type="button" class="admin-btn-sm admin-btn-secondary" data-admin-action="billing-invoice" data-payment-idx="' + idx + '">Invoice</button><button type="button" class="admin-btn-sm admin-btn-primary" data-admin-action="billing-detail" data-payment-idx="' + idx + '">View</button></div></td></tr>';
+                        var badge = st === 'refund' || st === 'refunded' || st === 'failed' ? 'refunded' : st === 'pending' ? 'pending' : 'completed';
+                        var stLabel = badge === 'refunded' ? (st === 'failed' ? 'Failed' : 'Refunded') : badge === 'pending' ? 'Pending' : 'Completed';
+                        return '<tr><td>' + html(p.id || ('TX-' + String(idx + 1).padStart(4, '0'))) + '</td><td>' + html(p.user || '-') + '</td><td>$' + html(p.amount || 0) + '</td><td>' + html(p.type || 'Subscription') + '</td><td><span class="status-badge ' + badge + '">' + stLabel + '</span></td><td>' + html(d) + '</td><td><div class="action-btns"><button type="button" class="admin-btn-sm admin-btn-secondary" data-admin-action="billing-invoice" data-payment-idx="' + idx + '">Invoice</button><button type="button" class="admin-btn-sm admin-btn-primary" data-admin-action="billing-detail" data-payment-idx="' + idx + '">View</button></div></td></tr>';
                     }).join('');
                     }
                 }
@@ -7552,9 +7649,8 @@
             window.loadAdminSupport = function(forceRefresh) {
                 var dbUse = db || window.firebaseDb;
                 if (!dbUse) {
-                    var localTix = JSON.parse(localStorage.getItem('kota_support_tickets') || '[]');
-                    localTix.forEach(function(t, i) { if (!t.id) t.id = 'local_' + i; });
-                    renderAdminSupportFromTickets(localTix);
+                    renderAdminSupportFromTickets([]);
+                    if (typeof window.adminToast === 'function') window.adminToast('Firebase required for live support tickets.', 'warn');
                     return;
                 }
                 if (adminSupportFirestoreUnsub) {
@@ -7593,41 +7689,25 @@
             };
             window.adminResolveTicketById = async function(id) {
                 if (!id) return;
-                if (String(id).indexOf('local_') === 0) {
-                    var tix = JSON.parse(localStorage.getItem('kota_support_tickets') || '[]');
-                    var idx = parseInt(String(id).replace(/^local_/, ''), 10);
-                    if (!isNaN(idx) && tix[idx]) {
-                        tix[idx].status = 'resolved';
-                        localStorage.setItem('kota_support_tickets', JSON.stringify(tix));
-                        tix.forEach(function(t, i) { if (!t.id) t.id = 'local_' + i; });
-                        renderAdminSupportFromTickets(tix);
-                        if (typeof window.adminToast === 'function') window.adminToast('Ticket marked resolved.', 'success');
-                    }
-                    return;
-                }
                 var dbUse = db || window.firebaseDb;
                 if (!dbUse) return;
                 try {
                     await dbUse.collection('supportTickets').doc(id).set({
                         status: 'resolved',
+                        resolvedAt: firebase.firestore.FieldValue.serverTimestamp(),
                         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                     }, { merge: true });
+                    if (typeof window.adminLogActivity === 'function') window.adminLogActivity('ticket_resolve', id);
                     if (typeof window.adminToast === 'function') window.adminToast('Ticket marked resolved.', 'success');
                 } catch (e) {
                     if (typeof window.adminToast === 'function') window.adminToast('Failed: ' + (e.message || e), 'warn');
                 }
             };
             window.updateTicketStatus = function(id, status) {
-                var tickets = JSON.parse(localStorage.getItem('kota_support_tickets') || '[]');
-                var t = tickets.find(function(x) { return x.id === id; });
-                if (t) { t.status = status; localStorage.setItem('kota_support_tickets', JSON.stringify(tickets)); if (typeof loadAdminSupport === 'function') loadAdminSupport(); }
+                if (status === 'resolved' && typeof window.adminResolveTicketById === 'function') window.adminResolveTicketById(id);
             };
             window.loadAdminActivity = function() {
-                var logs = JSON.parse(localStorage.getItem('kota_activity_logs') || '[]');
-                var users = window.adminUsers || [];
-                if (logs.length === 0 && users.length > 0) {
-                    logs = users.slice(0, 5).map(function(u, i) { return { time: new Date(Date.now() - i * 3600000).toISOString(), user: u.email, action: 'sign_in', details: 'User signed in' }; });
-                }
+                var logs = (window._adminRealtimeState && window._adminRealtimeState.activityLogs) || [];
                 var tbody = document.getElementById('adminActivityTableBody');
                 if (!tbody) return;
                 if (logs.length === 0) { tbody.innerHTML = '<tr><td colspan="4" style="padding:24px;color:#6b7280;text-align:center;">No activity logs yet.</td></tr>'; return; }
@@ -7671,6 +7751,21 @@
                         alert('Failed to update plan: ' + (err2.message || err1.message));
                         return;
                     }
+                }
+                var userRow = (window.adminUsers || []).find(function(u) { return u.id === uid; });
+                var amount = typeof getKotaPlanPrice === 'function' ? getKotaPlanPrice(plan) : 0;
+                if (typeof window.adminWritePayment === 'function' && amount > 0) {
+                    await window.adminWritePayment({
+                        user: (userRow && userRow.email) || uid,
+                        userId: uid,
+                        plan: plan,
+                        amount: amount,
+                        status: 'paid',
+                        type: 'Subscription'
+                    });
+                }
+                if (typeof window.adminLogActivity === 'function') {
+                    window.adminLogActivity('plan_change', uid + ' → ' + plan);
                 }
                 closeChangePlanModal();
                 if (typeof window.patchAdminUserLocal === 'function') window.patchAdminUserLocal(uid, { plan: plan });
@@ -8233,21 +8328,57 @@
         window.closeAdminDetailModal = function() {
             var m = document.getElementById('adminDetailModal');
             if (m) m.style.display = 'none';
+            var printBtn = document.getElementById('adminDetailPrintBtn');
+            var copyBtn = document.getElementById('adminDetailCopyBtn');
+            if (printBtn) printBtn.style.display = 'none';
+            if (copyBtn) copyBtn.style.display = 'none';
         };
-        window.openAdminDetailModal = function(title, body) {
+        window.openAdminDetailModal = function(title, body, options) {
+            options = options || {};
             var m = document.getElementById('adminDetailModal');
             var t = document.getElementById('adminDetailModalTitle');
             var b = document.getElementById('adminDetailModalBody');
             if (t) t.textContent = title || 'Details';
             if (b) b.textContent = body || '';
+            var printBtn = document.getElementById('adminDetailPrintBtn');
+            var copyBtn = document.getElementById('adminDetailCopyBtn');
+            if (printBtn) printBtn.style.display = options.showPrint ? 'inline-flex' : 'none';
+            if (copyBtn) copyBtn.style.display = options.showCopy ? 'inline-flex' : 'none';
             if (m) m.style.display = 'flex';
         };
-        function getDefaultAdminProducts() {
-            return [
-                { id: 'prod_1', name: 'Wireless Headphones', category: 'Electronics', price: 99, stock: 120, sales: 342, status: 'Active', image: 'https://images.pexels.com/photos/1649771/pexels-photo-1649771.jpeg?auto=compress&cs=tinysrgb&w=200' },
-                { id: 'prod_2', name: 'Smart Watch Pro', category: 'Wearables', price: 249, stock: 45, sales: 189, status: 'Active', image: 'https://images.pexels.com/photos/437037/pexels-photo-437037.jpeg?auto=compress&cs=tinysrgb&w=200' }
-            ];
+        window.adminPrintDetailModal = function() {
+            var title = (document.getElementById('adminDetailModalTitle') && document.getElementById('adminDetailModalTitle').textContent) || 'Details';
+            var body = (document.getElementById('adminDetailModalBody') && document.getElementById('adminDetailModalBody').textContent) || '';
+            var w = window.open('', '_blank', 'noopener,noreferrer,width=720,height=900');
+            if (!w) { adminToast('Pop-up blocked. Allow pop-ups to print.', 'warn'); return; }
+            w.document.write('<!DOCTYPE html><html><head><title>' + String(title).replace(/</g, '&lt;') + '</title><style>body{font-family:Segoe UI,Arial,sans-serif;padding:32px;color:#111;line-height:1.5;white-space:pre-wrap;}h1{font-size:20px;margin:0 0 16px;}@media print{button{display:none;}}</style></head><body><h1>' + String(title).replace(/</g, '&lt;') + '</h1><pre style="font:inherit;white-space:pre-wrap;margin:0;">' + String(body).replace(/</g, '&lt;') + '</pre><p style="margin-top:24px;"><button onclick="window.print()">Print / Save as PDF</button></p></body></html>');
+            w.document.close();
+            setTimeout(function() { try { w.focus(); w.print(); } catch (e) {} }, 250);
+        };
+        window.adminCopyDetailModal = function() {
+            var title = (document.getElementById('adminDetailModalTitle') && document.getElementById('adminDetailModalTitle').textContent) || '';
+            var body = (document.getElementById('adminDetailModalBody') && document.getElementById('adminDetailModalBody').textContent) || '';
+            var text = title + '\n\n' + body;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(function() { adminToast('Copied to clipboard.', 'success'); }).catch(function() { adminToast('Could not copy.', 'warn'); });
+            } else {
+                adminToast('Clipboard unavailable in this browser.', 'warn');
+            }
+        };
+        function getDefaultAdminProducts() { return []; }
+        if (!window._adminRealtimeState) {
+        function loadAdminProducts() {
+            try {
+                var list = JSON.parse(localStorage.getItem('admin_products_catalog') || 'null');
+                if (!list || !list.length) list = [];
+                return list;
+            } catch (e) { return []; }
         }
+        window.loadAdminProducts = loadAdminProducts;
+        function saveAdminProducts(list) {
+            localStorage.setItem('admin_products_catalog', JSON.stringify(list || []));
+        }
+        } /* end legacy products when realtime unavailable */
         function adminProductThumbUrl(p) {
             var url = (p && (p.image || p.thumbnail || p.img)) ? String(p.image || p.thumbnail || p.img).trim() : '';
             return url || 'https://via.placeholder.com/80?text=Product';
@@ -8261,30 +8392,11 @@
             prev.style.display = 'block';
             prev.onerror = function() { this.src = 'https://via.placeholder.com/80?text=Product'; };
         }
-        function loadAdminProducts() {
-            try {
-                var list = JSON.parse(localStorage.getItem('admin_products_catalog') || 'null');
-                if (!list || !list.length) list = getDefaultAdminProducts();
-                var defaults = getDefaultAdminProducts();
-                var changed = false;
-                list = list.map(function(p) {
-                    if (!p.image && !p.thumbnail) {
-                        var match = defaults.find(function(d) { return d.id === p.id; });
-                        if (match && match.image) { changed = true; return Object.assign({}, p, { image: match.image }); }
-                    }
-                    return p;
-                });
-                if (changed) saveAdminProducts(list);
-                return list;
-            } catch (e) { return getDefaultAdminProducts(); }
-        }
-        function saveAdminProducts(list) {
-            localStorage.setItem('admin_products_catalog', JSON.stringify(list));
-        }
+        if (!window._adminRealtimeState) {
         window.renderAdminProductsTable = function() {
             var tbody = document.getElementById('adminProductsTableBody');
             if (!tbody) return;
-            var products = loadAdminProducts();
+            var products = typeof loadAdminProducts === 'function' ? loadAdminProducts() : [];
             function esc(s) { return String(s || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
             var categoryFilter = document.getElementById('adminProductCategoryFilter');
             var statusFilter = document.getElementById('adminProductStatusFilter');
@@ -8320,8 +8432,16 @@
             tbody.innerHTML = visible.map(function(p) {
                 var badge = p.status === 'Active' ? 'completed' : 'pending';
                 var thumb = adminProductThumbUrl(p);
-                return '<tr><td><div class="admin-product-cell"><img src="' + esc(thumb) + '" alt="" class="admin-product-thumb" onerror="this.onerror=null;this.src=\'https://via.placeholder.com/80?text=Product\'"><span>' + esc(p.name) + '</span></div></td><td>' + esc(p.category) + '</td><td>$' + Number(p.price || 0).toFixed(2) + '</td><td>' + esc(p.stock) + '</td><td>' + esc(p.sales) + '</td><td><span class="status-badge ' + badge + '">' + esc(p.status) + '</span></td><td><div class="action-btns"><button type="button" class="admin-btn-sm admin-btn-secondary" data-admin-action="edit-product" data-product-id="' + esc(p.id) + '">Edit</button><button type="button" class="admin-btn-sm admin-btn-primary" data-admin-action="view-product" data-product-id="' + esc(p.id) + '">View</button></div></td></tr>';
+                return '<tr><td><div class="admin-product-cell"><img src="' + esc(thumb) + '" alt="" class="admin-product-thumb" onerror="this.onerror=null;this.src=\'https://via.placeholder.com/80?text=Product\'"><span>' + esc(p.name) + '</span></div></td><td>' + esc(p.category) + '</td><td>$' + Number(p.price || 0).toFixed(2) + '</td><td>' + esc(p.stock) + '</td><td>' + esc(p.sales) + '</td><td><span class="status-badge ' + badge + '">' + esc(p.status) + '</span></td><td><div class="action-btns"><button type="button" class="admin-btn-sm admin-btn-secondary" data-admin-action="edit-product" data-product-id="' + esc(p.id) + '">Edit</button><button type="button" class="admin-btn-sm admin-btn-primary" data-admin-action="view-product" data-product-id="' + esc(p.id) + '">View</button><button type="button" class="admin-btn-sm admin-btn-danger" data-admin-action="delete-product" data-product-id="' + esc(p.id) + '">Delete</button></div></td></tr>';
             }).join('');
+        };
+        window.deleteAdminProduct = function(id) {
+            if (!id) return;
+            if (!confirm('Delete this product from the catalog?')) return;
+            var list = loadAdminProducts().filter(function(x) { return x.id !== id; });
+            saveAdminProducts(list);
+            renderAdminProductsTable();
+            adminToast('Product deleted.', 'success');
         };
         window.openAdminProductEdit = function(id) {
             var p = loadAdminProducts().find(function(x) { return x.id === id; });
@@ -8338,6 +8458,15 @@
             document.getElementById('adminProductEditTitle').textContent = 'Edit Product';
             document.getElementById('adminProductEditModal').style.display = 'flex';
         };
+        window.saveAdminProductEdit = function() {
+            adminToast('Connect Firebase realtime layer to save products.', 'warn');
+        };
+        window.viewAdminProduct = function(id) {
+            var p = loadAdminProducts().find(function(x) { return x.id === id; });
+            if (!p) { adminToast('Product not found.', 'warn'); return; }
+            openAdminDetailModal(p.name, 'Category: ' + p.category);
+        };
+        } /* end legacy product UI */
         window.openAdminProductCreate = function() {
             document.getElementById('adminProductEditId').value = '';
             document.getElementById('adminProductEditName').value = '';
@@ -8355,37 +8484,7 @@
             var m = document.getElementById('adminProductEditModal');
             if (m) m.style.display = 'none';
         };
-        window.saveAdminProductEdit = function() {
-            var id = document.getElementById('adminProductEditId').value || ('prod_' + Date.now());
-            var imageUrl = '';
-            var imgField = document.getElementById('adminProductEditImage');
-            if (imgField) imageUrl = imgField.value.trim();
-            var item = {
-                id: id,
-                name: document.getElementById('adminProductEditName').value.trim(),
-                image: imageUrl,
-                category: document.getElementById('adminProductEditCategory').value.trim(),
-                price: parseFloat(document.getElementById('adminProductEditPrice').value) || 0,
-                stock: parseInt(document.getElementById('adminProductEditStock').value, 10) || 0,
-                sales: 0,
-                status: document.getElementById('adminProductEditStatus').value
-            };
-            if (!item.name) { adminToast('Product name is required.', 'warn'); return; }
-            var list = loadAdminProducts();
-            var idx = list.findIndex(function(x) { return x.id === id; });
-            if (idx >= 0) { item.sales = list[idx].sales || 0; if (!item.image && list[idx].image) item.image = list[idx].image; list[idx] = item; } else list.push(item);
-            saveAdminProducts(list);
-            renderAdminProductsTable();
-            closeAdminProductEditModal();
-            adminToast('Product saved.', 'success');
-        };
-        window.viewAdminProduct = function(id) {
-            var p = loadAdminProducts().find(function(x) { return x.id === id; });
-            if (!p) { adminToast('Product not found.', 'warn'); return; }
-            var detail = 'Category: ' + p.category + '\nPrice: $' + Number(p.price).toFixed(2) + '\nStock: ' + p.stock + '\nSales: ' + p.sales + '\nStatus: ' + p.status;
-            if (p.image) detail += '\nImage: ' + p.image;
-            openAdminDetailModal(p.name, detail);
-        };
+        if (!window._adminRealtimeState) {
         window.loadAdminWebhookSettings = function() {
             var whInp = document.getElementById('adminWebhookUrlInput');
             if (whInp) {
@@ -8409,23 +8508,26 @@
                 statusEl.textContent = url ? ('Saved endpoint: ' + url) : 'Enter a webhook URL and choose events, then save.';
             }
         };
+        }
         function getDefaultAdminRoles() {
             return {
                 super: { name: 'Super Admin', email: 'admin@kotapal.com', permissions: 'Full Access' },
                 support: { name: 'Support Admin', email: 'support@kotapal.com', permissions: 'Limited Access' }
             };
         }
+        if (!window.loadAdminRoles || !window._adminRealtimeState) {
         function loadAdminRoles() {
-            try {
-                var r = JSON.parse(localStorage.getItem('admin_roles') || 'null');
-                if (!r) r = getDefaultAdminRoles();
-                return r;
-            } catch (e) { return getDefaultAdminRoles(); }
+            if (window._adminRealtimeState && typeof window.loadAdminRoles === 'function') {
+                return window.loadAdminRoles();
+            }
+            return getDefaultAdminRoles();
+        }
+        if (!window._adminRealtimeState) window.loadAdminRoles = loadAdminRoles;
         }
         window.renderAdminRolesTable = function() {
             var tbody = document.getElementById('adminRolesTableBody');
             if (!tbody) return;
-            var roles = loadAdminRoles();
+            var roles = typeof window.loadAdminRoles === 'function' ? window.loadAdminRoles() : getDefaultAdminRoles();
             function html(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
             tbody.innerHTML = Object.keys(roles).map(function(key) {
                 var r = roles[key] || {};
@@ -8445,18 +8547,27 @@
             var m = document.getElementById('adminRoleEditModal');
             if (m) m.style.display = 'none';
         };
-        window.saveAdminRoleEdit = function() {
+        window.saveAdminRoleEdit = async function() {
+            if (window._adminRealtimeState && window.saveAdminRoleEdit !== arguments.callee) {
+                /* prefer realtime; fall through if this is the only definition */
+            }
+            var d = window.firebaseDb || (typeof firebase !== 'undefined' && firebase.firestore && firebase.firestore());
             var key = document.getElementById('adminRoleEditKey').value;
-            var roles = loadAdminRoles();
+            var roles = typeof window.loadAdminRoles === 'function' ? Object.assign({}, window.loadAdminRoles()) : getDefaultAdminRoles();
             roles[key] = {
                 name: document.getElementById('adminRoleEditName').value.trim(),
                 email: document.getElementById('adminRoleEditEmail').value.trim(),
                 permissions: document.getElementById('adminRoleEditPermissions').value
             };
-            localStorage.setItem('admin_roles', JSON.stringify(roles));
-            closeAdminRoleEditModal();
-            if (typeof renderAdminRolesTable === 'function') renderAdminRolesTable();
-            adminToast('Role updated.', 'success');
+            if (!d) { adminToast('Firebase not connected.', 'warn'); return; }
+            try {
+                await d.collection('config').doc('roles').set({ roles: roles, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+                closeAdminRoleEditModal();
+                if (typeof renderAdminRolesTable === 'function') renderAdminRolesTable();
+                adminToast('Role updated.', 'success');
+            } catch (e) {
+                adminToast('Failed: ' + (e.message || e), 'warn');
+            }
         };
         window.openAdminPlanEdit = function(planId) {
             var plan = planId ? getKotaPlan(planId) : { id: '', name: '', price: 0, features: [] };
@@ -8471,24 +8582,29 @@
             var m = document.getElementById('adminPlanEditModal');
             if (m) m.style.display = 'none';
         };
-        window.saveAdminPlanEdit = function() {
+        window.saveAdminPlanEdit = async function() {
+            var d = window.firebaseDb || (typeof firebase !== 'undefined' && firebase.firestore && firebase.firestore());
             var id = (document.getElementById('adminPlanEditId').value || '').trim().toLowerCase().replace(/[^a-z0-9_-]/g, '');
             if (!id) id = 'custom_' + Date.now();
             var name = document.getElementById('adminPlanEditName').value.trim();
             if (!name) { adminToast('Plan name is required.', 'warn'); return; }
-            var overrides = {};
-            try { overrides = JSON.parse(localStorage.getItem('admin_plan_overrides') || '{}'); } catch (e) {}
+            if (!d) { adminToast('Firebase not connected.', 'warn'); return; }
+            var overrides = getAdminPlanOverrides() || {};
             overrides[id] = {
                 name: name,
                 price: parseFloat(document.getElementById('adminPlanEditPrice').value) || 0,
                 features: document.getElementById('adminPlanEditFeatures').value.split('\n').map(function(s) { return s.trim(); }).filter(Boolean)
             };
-            localStorage.setItem('admin_plan_overrides', JSON.stringify(overrides));
-            closeAdminPlanEditModal();
-            if (typeof renderAdminPlansGrid === 'function') renderAdminPlansGrid();
-            syncAdminPlanSelectOptions(document.getElementById('changePlanSelect'), id);
-            syncAdminPlanSelectOptions(document.getElementById('adminUserManagePlan'), id);
-            adminToast('Plan saved locally.', 'success');
+            try {
+                await d.collection('config').doc('plans').set({ overrides: overrides, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+                closeAdminPlanEditModal();
+                if (typeof renderAdminPlansGrid === 'function') renderAdminPlansGrid();
+                syncAdminPlanSelectOptions(document.getElementById('changePlanSelect'), id);
+                syncAdminPlanSelectOptions(document.getElementById('adminUserManagePlan'), id);
+                adminToast('Plan saved.', 'success');
+            } catch (e) {
+                adminToast('Failed: ' + (e.message || e), 'warn');
+            }
         };
         window.setAdminUserManageMode = function(mode) {
             var isView = mode === 'view';
@@ -8546,9 +8662,18 @@
                 else if (window.adminPaymentsByUser) p = window.adminPaymentsByUser[recordKey];
                 var user = p ? (p.user || '-') : recordKey;
                 var total = p ? Number(p.amount || 0) : Number(amount || 0);
-                var line = 'Invoice - ' + user + ' - $' + total.toFixed(2) + (p && p.date ? ' - ' + new Date(p.date).toLocaleDateString() : '');
-                if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(line).catch(function() {});
-                adminToast('Invoice summary copied: ' + line, 'success');
+                var invoiceId = (p && p.id) ? p.id : ('INV-' + Date.now());
+                var dateStr = p && p.date ? new Date(p.date).toLocaleString() : new Date().toLocaleString();
+                var body = 'Invoice ID: ' + invoiceId +
+                    '\nBilled to: ' + user +
+                    '\nAmount: $' + total.toFixed(2) +
+                    '\nPlan: ' + ((p && p.plan) || '-') +
+                    '\nStatus: ' + ((p && p.status) || 'paid') +
+                    '\nDate: ' + dateStr +
+                    '\n\nThank you for your business.\nKotapal Billing';
+                if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(body).catch(function() {});
+                if (typeof openAdminDetailModal === 'function') openAdminDetailModal('Invoice ' + invoiceId, body, { showPrint: true, showCopy: true });
+                adminToast('Invoice ready — use Print / PDF or Copy.', 'success');
             };
             window.adminBillingDetail = function(userOrIdx) {
                 var p = null;
@@ -8556,7 +8681,7 @@
                 else if (window.adminPaymentsByUser) p = window.adminPaymentsByUser[userOrIdx];
                 if (!p) { adminToast('Payment record not found.', 'warn'); return; }
                 var body = 'User: ' + (p.user || '-') + '\nAmount: $' + (p.amount || 0) + '\nPlan: ' + (p.plan || '-') + '\nStatus: ' + (p.status || 'paid') + '\nDate: ' + (p.date ? new Date(p.date).toLocaleString() : '-');
-                if (typeof openAdminDetailModal === 'function') openAdminDetailModal('Payment details', body);
+                if (typeof openAdminDetailModal === 'function') openAdminDetailModal('Payment details', body, { showPrint: true, showCopy: true });
             };
             window.adminExportUsersCsv = function() {
                 var users = window.adminUsers || [];
@@ -8573,23 +8698,56 @@
                 URL.revokeObjectURL(a.href);
                 adminToast('Exported ' + users.length + ' user(s) to CSV.', 'success');
             };
-            function adminPersistApiKeysList(list) {
-                localStorage.setItem('admin_api_keys', JSON.stringify(list));
+            window.adminExportUsersPdf = function() {
+                var users = window.adminUsers || [];
+                if (!users.length) { adminToast('No users loaded to export yet.', 'warn'); return; }
+                var lines = users.map(function(u, i) {
+                    return (i + 1) + '. ' + (u.name || '-') + ' | ' + (u.email || '-') + ' | ' + (u.plan || '-') + ' | ' + (u.status || '-') + ' | ' + (u.joined || '-');
+                }).join('\n');
+                var body = 'Kotapal Users Report\nGenerated: ' + new Date().toLocaleString() + '\nTotal users: ' + users.length + '\n\n' + lines;
+                if (typeof openAdminDetailModal === 'function') openAdminDetailModal('Users report (PDF)', body, { showPrint: true, showCopy: true });
+                adminToast('Report ready — click Print / PDF in the dialog.', 'success');
+            };
+            window.adminFilterUsersByAudience = function(audience) {
+                var users = window.adminUsers || [];
+                var a = String(audience || 'all').toLowerCase();
+                return users.filter(function(u) {
+                    var plan = String(u.plan || 'free').toLowerCase();
+                    var status = String(u.status || 'active').toLowerCase();
+                    if (a === 'all') return true;
+                    if (a === 'pro') return plan === 'pro' || plan === 'creatorplus' || plan === 'agency';
+                    if (a === 'starter') return plan === 'starter' || plan === 'free' || !plan;
+                    if (a === 'active') return status !== 'suspended';
+                    if (a === 'suspended') return status === 'suspended';
+                    return true;
+                });
+            };
+            if (!window._adminRealtimeState) {
+            window.adminSendNotification = async function() {
+                adminToast('Firebase realtime layer required to send notifications.', 'warn');
+            };
+            window.adminRenderNotifyQueue = function() {
+                var tbody = document.getElementById('adminNotifyQueueBody');
+                if (tbody) tbody.innerHTML = '<tr><td colspan="5" style="padding:24px;color:#6b7280;text-align:center;">No notifications sent yet.</td></tr>';
+            };
+            window.adminApplyGeneralSettings = function() {};
+            window.adminApplyBranding = function() {};
+            window.adminApplyEmailPaymentSettings = function() {};
+            window.adminRenderLoginActivity = function() {
+                var tbody = document.getElementById('adminLoginActivityBody');
+                if (tbody) tbody.innerHTML = '<tr><td colspan="6" style="padding:24px;color:#6b7280;text-align:center;">No login activity recorded yet.</td></tr>';
+            };
+            window.adminRecordLoginActivity = function() {};
             }
-            function adminDefaultApiKeys() {
-                return [{ id: 'default', name: 'Production Key', key: 'pk_live_••••••••', created: 'Jan 1, 2026' }];
-            }
+            function adminPersistApiKeysList() { /* Firestore via adminGenerateApiKey / adminRevokeApiKey */ }
+            function adminDefaultApiKeys() { return []; }
+            if (!window._adminRealtimeState) {
             window.adminRenderApiKeysTable = function() {
                 var tb = document.getElementById('adminApiKeysTableBody');
                 if (!tb) return;
-                var keys;
-                try { keys = JSON.parse(localStorage.getItem('admin_api_keys') || '[]'); } catch (e) { keys = []; }
-                if (!keys || !keys.length) keys = adminDefaultApiKeys();
-                tb.innerHTML = keys.map(function(k, i) {
-                    function escHtml(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
-                    return '<tr data-key-id="' + escHtml(k.id || String(i)) + '"><td>' + escHtml(k.name) + '</td><td>' + escHtml(k.key) + '</td><td>' + escHtml(k.created) + '</td><td><button type="button" class="admin-btn-sm admin-btn-secondary admin-api-revoke-btn" data-key-idx="' + i + '">Revoke</button></td></tr>';
-                }).join('');
+                tb.innerHTML = '<tr><td colspan="4" style="padding:24px;color:#6b7280;text-align:center;">No API keys yet.</td></tr>';
             };
+            }
             (function initAdminDashboardWiring() {
                 try {
                 var av = document.getElementById('admin-view');
@@ -8598,16 +8756,8 @@
                     av.addEventListener('click', function(e) {
                         var rev = e.target.closest('.admin-api-revoke-btn');
                         if (rev) {
-                            var idx = parseInt(rev.getAttribute('data-key-idx'), 10);
-                            var keys = JSON.parse(localStorage.getItem('admin_api_keys') || '[]');
-                            if (!keys.length) keys = adminDefaultApiKeys();
-                            if (!isNaN(idx) && keys[idx]) {
-                                keys.splice(idx, 1);
-                                if (!keys.length) keys = adminDefaultApiKeys();
-                                adminPersistApiKeysList(keys);
-                                adminRenderApiKeysTable();
-                                adminToast('API key revoked. (Demo: stored in localStorage.)', 'success');
-                            }
+                            var keyId = rev.getAttribute('data-key-id');
+                            if (keyId && typeof window.adminRevokeApiKey === 'function') window.adminRevokeApiKey(keyId);
                             return;
                         }
                         var openU = e.target.closest('[data-admin-open-users]');
@@ -8619,12 +8769,8 @@
                         if (navEl) {
                             var navPage = navEl.getAttribute('data-admin-nav');
                             if (navPage && typeof showAdminPage === 'function') showAdminPage(navPage);
-                            var navMsg = navEl.getAttribute('data-admin-demo');
-                            if (navMsg) adminToast(navMsg, 'info');
                             return;
                         }
-                        var demo = e.target.closest('[data-admin-demo]');
-                        if (demo) adminToast(demo.getAttribute('data-admin-demo'), 'info');
                     });
                 }
                 var aumm = document.getElementById('adminUserManageModal');
@@ -8676,18 +8822,58 @@
                 var globSearch = document.getElementById('adminSearchInput');
                 if (globSearch && !globSearch._wire) {
                     globSearch._wire = true;
+                    globSearch.addEventListener('keydown', function(ev) {
+                        if (ev.key === 'Enter') {
+                            ev.preventDefault();
+                            globSearch.dispatchEvent(new Event('input'));
+                        }
+                    });
                     globSearch.addEventListener('input', function() {
                         clearTimeout(globSearch._st);
                         globSearch._st = setTimeout(function() {
+                            var q = (globSearch.value || '').trim().toLowerCase();
+                            if (!q) return;
                             var usersPage = document.getElementById('admin-page-users');
+                            var productsPage = document.getElementById('admin-page-blocks');
+                            var billingPage = document.getElementById('admin-page-billing');
                             if (usersPage && usersPage.classList.contains('active')) {
                                 var u = document.getElementById('adminUserSearch');
                                 if (u) { u.value = globSearch.value; if (typeof window.applyAdminUserFilters === 'function') window.applyAdminUserFilters(); }
-                            } else if (globSearch.value.trim()) {
-                                if (typeof showAdminPage === 'function') showAdminPage('users');
-                                var u2 = document.getElementById('adminUserSearch');
-                                if (u2) { u2.value = globSearch.value; if (typeof window.applyAdminUserFilters === 'function') window.applyAdminUserFilters(); }
+                                return;
                             }
+                            if (productsPage && productsPage.classList.contains('active')) {
+                                var products = (typeof loadAdminProducts === 'function') ? loadAdminProducts() : [];
+                                var match = products.find(function(p) {
+                                    return String(p.name || '').toLowerCase().indexOf(q) >= 0 || String(p.category || '').toLowerCase().indexOf(q) >= 0;
+                                });
+                                if (match && typeof viewAdminProduct === 'function') {
+                                    viewAdminProduct(match.id);
+                                    adminToast('Found product: ' + match.name, 'info');
+                                } else {
+                                    adminToast('No products matched "' + globSearch.value + '".', 'warn');
+                                }
+                                return;
+                            }
+                            if (billingPage && billingPage.classList.contains('active')) {
+                                var payments = window.adminPaymentsByIndex || [];
+                                var hit = null;
+                                for (var i = 0; i < payments.length; i++) {
+                                    var p = payments[i];
+                                    if (!p) continue;
+                                    if (String(p.user || '').toLowerCase().indexOf(q) >= 0 || String(p.id || '').toLowerCase().indexOf(q) >= 0) { hit = { idx: i, p: p }; break; }
+                                }
+                                if (hit && typeof adminBillingDetail === 'function') {
+                                    adminBillingDetail(hit.idx);
+                                    adminToast('Found transaction for ' + (hit.p.user || hit.p.id), 'info');
+                                } else {
+                                    adminToast('No transactions matched "' + globSearch.value + '".', 'warn');
+                                }
+                                return;
+                            }
+                            if (typeof showAdminPage === 'function') showAdminPage('users');
+                            var u2 = document.getElementById('adminUserSearch');
+                            if (u2) { u2.value = globSearch.value; if (typeof window.applyAdminUserFilters === 'function') window.applyAdminUserFilters(); }
+                            adminToast('Searching users for "' + globSearch.value + '".', 'info');
                         }, 250);
                     });
                 }
@@ -8819,46 +9005,90 @@
                 }
                 var ex = document.getElementById('adminExportReportBtn');
                 if (ex && !ex._wire) { ex._wire = true; ex.addEventListener('click', adminExportUsersCsv); }
+                var exPdf = document.getElementById('adminExportPdfBtn');
+                if (exPdf && !exPdf._wire) { exPdf._wire = true; exPdf.addEventListener('click', function() { if (typeof adminExportUsersPdf === 'function') adminExportUsersPdf(); }); }
+                var exCsvR = document.getElementById('adminExportReportCsvBtn');
+                if (exCsvR && !exCsvR._wire) { exCsvR._wire = true; exCsvR.addEventListener('click', adminExportUsersCsv); }
+                var exPdfR = document.getElementById('adminExportReportPdfBtn');
+                if (exPdfR && !exPdfR._wire) { exPdfR._wire = true; exPdfR.addEventListener('click', function() { if (typeof adminExportUsersPdf === 'function') adminExportUsersPdf(); }); }
+                var schedBtn = document.getElementById('adminConfigureScheduleBtn');
+                if (schedBtn && !schedBtn._wire) {
+                    schedBtn._wire = true;
+                    schedBtn.addEventListener('click', function() {
+                        if (typeof showAdminPage === 'function') showAdminPage('settings');
+                        var el = document.getElementById('adminReportSchedule');
+                        if (el) {
+                            setTimeout(function() { el.focus(); el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 100);
+                        }
+                        adminToast('Set scheduled reports under General Settings, then Save Changes.', 'info');
+                    });
+                }
                 var snd = document.getElementById('adminSendNotificationBtn');
                 if (snd && !snd._wire) {
                     snd._wire = true;
                     snd.addEventListener('click', function() {
-                        var sub = (document.getElementById('adminNotifySubject') && document.getElementById('adminNotifySubject').value || '').trim();
-                        var msg = (document.getElementById('adminNotifyMessage') && document.getElementById('adminNotifyMessage').value || '').trim();
-                        if (!sub || !msg) { adminToast('Enter subject and message first.', 'warn'); return; }
-                        var q = JSON.parse(localStorage.getItem('admin_notification_queue') || '[]');
-                        q.push({ subject: sub, message: msg, at: new Date().toISOString() });
-                        localStorage.setItem('admin_notification_queue', JSON.stringify(q));
-                        adminToast('Notification queued locally (' + q.length + ' total). Connect email backend to send for real.', 'success');
+                        if (typeof window.adminSendNotification === 'function') window.adminSendNotification();
+                    });
+                }
+                var refreshNotify = document.getElementById('adminRefreshNotifyQueueBtn');
+                if (refreshNotify && !refreshNotify._wire) {
+                    refreshNotify._wire = true;
+                    refreshNotify.addEventListener('click', function() {
+                        if (typeof window.adminRenderNotifyQueue === 'function') window.adminRenderNotifyQueue();
+                        adminToast('Notification queue refreshed.', 'info');
                     });
                 }
                 var wh = document.getElementById('adminSaveWebhookBtn');
                 if (wh && !wh._wire) {
                     wh._wire = true;
                     wh.addEventListener('click', function() {
-                        var u = document.getElementById('adminWebhookUrlInput');
-                        var url = (u && u.value || '').trim();
-                        if (!url) { adminToast('Enter a valid webhook URL first.', 'warn'); return; }
-                        try { new URL(url); } catch (e) { adminToast('Webhook URL must be a valid https URL.', 'warn'); return; }
-                        localStorage.setItem('admin_webhook_url', url);
-                        var events = {
-                            paymentCompleted: !!(document.getElementById('adminWebhookEventPayment') && document.getElementById('adminWebhookEventPayment').checked),
-                            subscriptionCreated: !!(document.getElementById('adminWebhookEventSubscription') && document.getElementById('adminWebhookEventSubscription').checked),
-                            userRegistered: !!(document.getElementById('adminWebhookEventUserRegistered') && document.getElementById('adminWebhookEventUserRegistered').checked)
-                        };
-                        localStorage.setItem('admin_webhook_events', JSON.stringify(events));
-                        if (typeof loadAdminWebhookSettings === 'function') loadAdminWebhookSettings();
-                        adminToast('Webhook settings saved.', 'success');
+                        if (typeof window.adminSaveWebhook === 'function') window.adminSaveWebhook();
                     });
                 }
                 var whTest = document.getElementById('adminTestWebhookBtn');
                 if (whTest && !whTest._wire) {
                     whTest._wire = true;
-                    whTest.addEventListener('click', function() {
+                    whTest.addEventListener('click', async function() {
                         var u = document.getElementById('adminWebhookUrlInput');
                         var url = (u && u.value || '').trim();
                         if (!url) { adminToast('Save a webhook URL before sending a test.', 'warn'); return; }
-                        adminToast('Test payload queued for ' + url + ' (connect your backend to deliver for real).', 'info');
+                        var statusEl = document.getElementById('adminWebhookStatus');
+                        var payload = {
+                            event: 'kotapal.test',
+                            sentAt: new Date().toISOString(),
+                            source: 'admin-dashboard',
+                            data: { message: 'Kotapal webhook test event' }
+                        };
+                        whTest.disabled = true;
+                        whTest.textContent = 'Sending…';
+                        if (statusEl) statusEl.textContent = 'Sending test event to ' + url + '…';
+                        try {
+                            var res = await fetch(url, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(payload),
+                                mode: 'cors'
+                            });
+                            if (statusEl) statusEl.textContent = 'Test event delivered: HTTP ' + res.status + ' from ' + url;
+                            adminToast('Test event sent (HTTP ' + res.status + ').', res.ok ? 'success' : 'warn');
+                        } catch (err) {
+                            try {
+                                await fetch(url, {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify(payload),
+                                    mode: 'no-cors'
+                                });
+                                if (statusEl) statusEl.textContent = 'Test event dispatched (opaque/no-cors). Endpoint may have received it: ' + url;
+                                adminToast('Test event dispatched (response hidden by browser CORS).', 'info');
+                            } catch (err2) {
+                                if (statusEl) statusEl.textContent = 'Failed to reach webhook: ' + (err2.message || err.message || 'network error');
+                                adminToast('Webhook test failed: ' + (err2.message || err.message || 'network error'), 'warn');
+                            }
+                        } finally {
+                            whTest.disabled = false;
+                            whTest.textContent = 'Send test event';
+                        }
                     });
                 }
                 var prodImgInp = document.getElementById('adminProductEditImage');
@@ -8870,33 +9100,73 @@
                 if (ag && !ag._wire) {
                     ag._wire = true;
                     ag.addEventListener('click', function() {
-                        var keys = JSON.parse(localStorage.getItem('admin_api_keys') || '[]');
-                        if (!keys.length) keys = adminDefaultApiKeys();
-                        var rand = 'pk_test_' + Math.random().toString(36).slice(2, 14);
-                        keys.push({ id: 'k_' + Date.now(), name: 'Key ' + keys.length, key: rand, created: new Date().toLocaleDateString() });
-                        adminPersistApiKeysList(keys);
-                        adminRenderApiKeysTable();
-                        adminToast('New API key generated (demo). Copied to clipboard.', 'success');
-                        if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(rand).catch(function() {});
+                        if (typeof window.adminGenerateApiKey === 'function') window.adminGenerateApiKey();
                     });
                 }
                 var sg = document.getElementById('adminSaveGeneralBtn');
                 if (sg && !sg._wire) {
                     sg._wire = true;
-                    sg.addEventListener('click', function() {
-                        var card = sg.closest('.admin-card');
-                        var data = {};
-                        if (card) card.querySelectorAll('input,textarea').forEach(function(inp) { if (inp.id) data[inp.id] = inp.value; });
-                        localStorage.setItem('admin_general_settings', JSON.stringify(data));
-                        adminToast('General settings saved locally.', 'success');
+                    sg.addEventListener('click', async function() {
+                        var d = window.firebaseDb || (typeof firebase !== 'undefined' && firebase.firestore && firebase.firestore());
+                        if (!d) { adminToast('Firebase not connected.', 'warn'); return; }
+                        var data = {
+                            platformName: (document.getElementById('adminPlatformName') && document.getElementById('adminPlatformName').value || '').trim() || 'Kotapal',
+                            description: (document.getElementById('adminPlatformDescription') && document.getElementById('adminPlatformDescription').value || '').trim(),
+                            contactEmail: (document.getElementById('adminContactEmail') && document.getElementById('adminContactEmail').value || '').trim(),
+                            reportSchedule: (document.getElementById('adminReportSchedule') && document.getElementById('adminReportSchedule').value) || 'weekly',
+                            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                        };
+                        try {
+                            await d.collection('config').doc('general').set(data, { merge: true });
+                            adminToast('General settings saved.', 'success');
+                            if (typeof window.adminLogActivity === 'function') window.adminLogActivity('settings_general', data.platformName);
+                        } catch (e) {
+                            adminToast('Save failed: ' + (e.message || e), 'warn');
+                        }
                     });
                 }
+                function syncAdminColorPair(pickerId, hexId) {
+                    var picker = document.getElementById(pickerId);
+                    var hex = document.getElementById(hexId);
+                    if (picker && hex && !picker._colorWire) {
+                        picker._colorWire = true;
+                        picker.addEventListener('input', function() { hex.value = picker.value; });
+                        hex.addEventListener('change', function() {
+                            var v = hex.value.trim();
+                            if (/^#[0-9a-fA-F]{6}$/.test(v)) picker.value = v;
+                        });
+                    }
+                }
+                syncAdminColorPair('adminPrimaryColor', 'adminPrimaryColorHex');
+                syncAdminColorPair('adminSecondaryColor', 'adminSecondaryColorHex');
                 var sb = document.getElementById('adminSaveBrandingBtn');
                 if (sb && !sb._wire) {
                     sb._wire = true;
-                    sb.addEventListener('click', function() {
-                        localStorage.setItem('admin_branding_saved', '1');
-                        adminToast('Branding preferences saved.', 'success');
+                    sb.addEventListener('click', async function() {
+                        var d = window.firebaseDb || (typeof firebase !== 'undefined' && firebase.firestore && firebase.firestore());
+                        if (!d) { adminToast('Firebase not connected.', 'warn'); return; }
+                        var primary = (document.getElementById('adminPrimaryColorHex') && document.getElementById('adminPrimaryColorHex').value) ||
+                            (document.getElementById('adminPrimaryColor') && document.getElementById('adminPrimaryColor').value) || '#6366f1';
+                        var secondary = (document.getElementById('adminSecondaryColorHex') && document.getElementById('adminSecondaryColorHex').value) ||
+                            (document.getElementById('adminSecondaryColor') && document.getElementById('adminSecondaryColor').value) || '#06b6d4';
+                        if (!/^#[0-9a-fA-F]{6}$/.test(primary) || !/^#[0-9a-fA-F]{6}$/.test(secondary)) {
+                            adminToast('Colors must be hex values like #6366f1.', 'warn');
+                            return;
+                        }
+                        var logoImg = document.querySelector('#adminLogoDropZone img[data-admin-logo], #adminLogoDropZone img');
+                        var payload = {
+                            primary: primary,
+                            secondary: secondary,
+                            logoUrl: (logoImg && logoImg.src && logoImg.src.indexOf('data:') === 0) ? logoImg.src : (logoImg && logoImg.src) || '',
+                            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                        };
+                        try {
+                            await d.collection('config').doc('branding').set(payload, { merge: true });
+                            adminToast('Branding updated.', 'success');
+                            if (typeof window.adminLogActivity === 'function') window.adminLogActivity('settings_branding', primary);
+                        } catch (e) {
+                            adminToast('Save failed: ' + (e.message || e), 'warn');
+                        }
                     });
                 }
                 function handleAdminLogoFile(file) {
@@ -8906,16 +9176,15 @@
                     }
                     var reader = new FileReader();
                     reader.onload = function() {
-                        localStorage.setItem('admin_branding_logo', reader.result);
                         var zone = document.getElementById('adminLogoDropZone');
                         if (zone) {
-                            zone.innerHTML = '<img src="' + reader.result + '" alt="Logo" style="max-height:80px;max-width:100%;object-fit:contain;"><input type="file" id="adminLogoFileInput" accept="image/*" style="display:none;">';
+                            zone.innerHTML = '<img data-admin-logo src="' + reader.result + '" alt="Logo" style="max-height:80px;max-width:100%;object-fit:contain;"><input type="file" id="adminLogoFileInput" accept="image/*" style="display:none;">';
                             var reinp = document.getElementById('adminLogoFileInput');
                             if (reinp) reinp.addEventListener('change', function() {
                                 if (reinp.files && reinp.files[0]) handleAdminLogoFile(reinp.files[0]);
                             });
                         }
-                        adminToast('Logo uploaded. Click Update Branding to save preferences.', 'success');
+                        adminToast('Logo ready. Click Update Branding to save to Firestore.', 'success');
                     };
                     reader.readAsDataURL(file);
                 }
@@ -8949,12 +9218,29 @@
                 var sep = document.getElementById('adminSaveEmailPaymentBtn');
                 if (sep && !sep._wire) {
                     sep._wire = true;
-                    sep.addEventListener('click', function() {
-                        var card = sep.closest('.admin-card');
-                        var data = {};
-                        if (card) card.querySelectorAll('input,select,textarea').forEach(function(inp) { if (inp.name || inp.id) data[inp.name || inp.id] = inp.value; });
-                        localStorage.setItem('admin_email_payment', JSON.stringify(data));
-                        adminToast('Email & payment fields saved locally.', 'success');
+                    sep.addEventListener('click', async function() {
+                        var d = window.firebaseDb || (typeof firebase !== 'undefined' && firebase.firestore && firebase.firestore());
+                        if (!d) { adminToast('Firebase not connected.', 'warn'); return; }
+                        var data = {
+                            smtpHost: (document.getElementById('adminSmtpHost') && document.getElementById('adminSmtpHost').value || '').trim(),
+                            smtpPort: (document.getElementById('adminSmtpPort') && document.getElementById('adminSmtpPort').value || '').trim(),
+                            smtpUsername: (document.getElementById('adminSmtpUsername') && document.getElementById('adminSmtpUsername').value || '').trim(),
+                            paymentProvider: (document.getElementById('adminPaymentProvider') && document.getElementById('adminPaymentProvider').value) || 'stripe',
+                            paymentApiKey: (document.getElementById('adminPaymentApiKey') && document.getElementById('adminPaymentApiKey').value || '').trim(),
+                            paymentWebhookSecret: (document.getElementById('adminPaymentWebhookSecret') && document.getElementById('adminPaymentWebhookSecret').value || '').trim(),
+                            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                        };
+                        if (!data.smtpHost || !data.smtpPort) {
+                            adminToast('SMTP host and port are required.', 'warn');
+                            return;
+                        }
+                        try {
+                            await d.collection('config').doc('emailPayment').set(data, { merge: true });
+                            adminToast('Email & payment settings saved.', 'success');
+                            if (typeof window.adminLogActivity === 'function') window.adminLogActivity('settings_email_payment', data.paymentProvider);
+                        } catch (e) {
+                            adminToast('Save failed: ' + (e.message || e), 'warn');
+                        }
                     });
                 }
                 function styleToggle(trackEl, knobEl, on) {
@@ -8963,55 +9249,84 @@
                     knobEl.style.left = on ? 'auto' : '4px';
                     knobEl.style.right = on ? '4px' : 'auto';
                 }
+                function syncIpAllowlistVisibility() {
+                    var wrap = document.getElementById('adminIpAllowlistWrap');
+                    var sec = (window._adminRealtimeState && window._adminRealtimeState.security) || {};
+                    var on = !!sec.ipRestrict;
+                    if (wrap) wrap.style.display = on ? 'block' : 'none';
+                }
                 var mt = document.getElementById('adminMaintenanceToggle');
-                var mtr = document.getElementById('adminMaintenanceTrack');
-                var mtk = document.getElementById('adminMaintenanceKnob');
-                if (mt && mtr && mtk && !mt._wire) {
+                if (mt && !mt._wire) {
                     mt._wire = true;
-                    (function syncM() { var on = localStorage.getItem('admin_maintenance') === '1'; styleToggle(mtr, mtk, on); mt.setAttribute('aria-pressed', on ? 'true' : 'false'); })();
                     mt.addEventListener('click', function() {
-                        var on = !(localStorage.getItem('admin_maintenance') === '1');
-                        localStorage.setItem('admin_maintenance', on ? '1' : '0');
-                        styleToggle(mtr, mtk, on);
-                        mt.setAttribute('aria-pressed', on ? 'true' : 'false');
-                        adminToast(on ? 'Maintenance mode ON (local flag only).' : 'Maintenance mode OFF.', on ? 'warn' : 'success');
+                        var on = mt.getAttribute('aria-pressed') !== 'true';
+                        if (typeof window.adminSetSecurityFlag === 'function') window.adminSetSecurityFlag('maintenanceMode', on);
                     });
                 }
                 var t2 = document.getElementById('adminToggle2FA');
-                var t2tr = document.getElementById('admin2FATrack');
-                var t2k = document.getElementById('admin2FAKnob');
-                if (t2 && t2tr && t2k && !t2._wire) {
+                if (t2 && !t2._wire) {
                     t2._wire = true;
-                    (function sync2() { var on = localStorage.getItem('admin_2fa') !== '0'; styleToggle(t2tr, t2k, on); t2.setAttribute('aria-pressed', on ? 'true' : 'false'); })();
                     t2.addEventListener('click', function() {
-                        var on = !(localStorage.getItem('admin_2fa') !== '0');
-                        localStorage.setItem('admin_2fa', on ? '1' : '0');
-                        styleToggle(t2tr, t2k, on);
-                        t2.setAttribute('aria-pressed', on ? 'true' : 'false');
-                        adminToast(on ? '2FA preference ON (demo).' : '2FA preference OFF (demo).', 'info');
+                        var on = t2.getAttribute('aria-pressed') !== 'true';
+                        if (typeof window.adminSetSecurityFlag === 'function') window.adminSetSecurityFlag('require2fa', on);
                     });
                 }
                 var tip = document.getElementById('adminToggleIP');
-                var tiptr = document.getElementById('adminIPTrack');
-                var tipk = document.getElementById('adminIPKnob');
-                if (tip && tiptr && tipk && !tip._wire) {
+                if (tip && !tip._wire) {
                     tip._wire = true;
-                    (function syncIp() { var on = localStorage.getItem('admin_ip_restrict') === '1'; styleToggle(tiptr, tipk, on); tip.setAttribute('aria-pressed', on ? 'true' : 'false'); })();
                     tip.addEventListener('click', function() {
-                        var on = !(localStorage.getItem('admin_ip_restrict') === '1');
-                        localStorage.setItem('admin_ip_restrict', on ? '1' : '0');
-                        styleToggle(tiptr, tipk, on);
-                        tip.setAttribute('aria-pressed', on ? 'true' : 'false');
-                        adminToast(on ? 'IP restriction flag ON (demo).' : 'IP restriction OFF (demo).', 'info');
+                        var on = tip.getAttribute('aria-pressed') !== 'true';
+                        if (typeof window.adminSetSecurityFlag === 'function') {
+                            window.adminSetSecurityFlag('ipRestrict', on).then(function() {
+                                syncIpAllowlistVisibility();
+                            });
+                        }
                     });
                 }
-                adminRenderApiKeysTable();
+                var saveIpBtn = document.getElementById('adminSaveIpAllowlistBtn');
+                if (saveIpBtn && !saveIpBtn._wire) {
+                    saveIpBtn._wire = true;
+                    saveIpBtn.addEventListener('click', async function() {
+                        var listEl = document.getElementById('adminIpAllowlist');
+                        var raw = (listEl && listEl.value || '').trim();
+                        if (!raw) { adminToast('Enter at least one IP address.', 'warn'); return; }
+                        var list = raw.split(',').map(function(s) { return s.trim(); }).filter(Boolean);
+                        var d = window.firebaseDb || (typeof firebase !== 'undefined' && firebase.firestore && firebase.firestore());
+                        if (!d) { adminToast('Firebase not connected.', 'warn'); return; }
+                        try {
+                            await d.collection('config').doc('security').set({
+                                ipRestrict: true,
+                                ipAllowlist: list,
+                                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                            }, { merge: true });
+                            adminToast('Allowed IPs saved.', 'success');
+                        } catch (e) {
+                            adminToast('Save failed: ' + (e.message || e), 'warn');
+                        }
+                    });
+                }
+                var refreshLogin = document.getElementById('adminRefreshLoginActivityBtn');
+                if (refreshLogin && !refreshLogin._wire) {
+                    refreshLogin._wire = true;
+                    refreshLogin.addEventListener('click', function() {
+                        if (typeof window.adminRenderLoginActivity === 'function') window.adminRenderLoginActivity();
+                        adminToast('Login activity refreshed.', 'info');
+                    });
+                }
+                if (typeof window.adminRenderApiKeysTable === 'function') window.adminRenderApiKeysTable();
                 if (typeof renderAdminProductsTable === 'function') renderAdminProductsTable();
                 if (typeof renderAdminPlansGrid === 'function') renderAdminPlansGrid();
                 if (typeof renderAdminRolesTable === 'function') renderAdminRolesTable();
                 syncAdminPlanSelectOptions(document.getElementById('changePlanSelect'), 'starter');
                 syncAdminPlanSelectOptions(document.getElementById('adminUserManagePlan'), 'starter');
                 if (typeof loadAdminWebhookSettings === 'function') loadAdminWebhookSettings();
+                if (typeof window.adminApplyGeneralSettings === 'function') window.adminApplyGeneralSettings();
+                if (typeof window.adminApplyBranding === 'function') window.adminApplyBranding();
+                if (typeof window.adminApplyEmailPaymentSettings === 'function') window.adminApplyEmailPaymentSettings();
+                if (typeof window.adminApplySecuritySettings === 'function') window.adminApplySecuritySettings();
+                if (typeof window.adminRenderLoginActivity === 'function') window.adminRenderLoginActivity();
+                if (typeof window.adminRenderNotifyQueue === 'function') window.adminRenderNotifyQueue();
+                syncIpAllowlistVisibility();
                 } catch (wireErr) {
                     console.error('Admin dashboard wiring failed:', wireErr);
                     if (typeof window.adminToast === 'function') window.adminToast('Some admin controls failed to load. Refresh the page.', 'warn');
