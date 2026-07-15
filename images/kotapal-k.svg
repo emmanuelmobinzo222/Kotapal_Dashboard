@@ -1,4 +1,21 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="Kotapal">
-  <image width="64" height="64" xlink:href="kotapal-favicon-512.png" href="kotapal-favicon-512.png"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="Kotapal">
+  <defs>
+    <linearGradient id="kTop" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#22d3ee"/>
+      <stop offset="100%" stop-color="#2563eb"/>
+    </linearGradient>
+    <linearGradient id="kMid" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2563eb"/>
+      <stop offset="100%" stop-color="#7c3aed"/>
+    </linearGradient>
+    <linearGradient id="kBot" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#a855f7"/>
+      <stop offset="100%" stop-color="#6366f1"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" fill="transparent"/>
+  <!-- Geometric folded K matching landing logo -->
+  <polygon points="8,8 28,8 28,30 8,30" fill="url(#kTop)"/>
+  <polygon points="28,8 52,8 28,32" fill="url(#kMid)"/>
+  <polygon points="8,30 28,32 52,56 28,56 8,36" fill="url(#kBot)"/>
 </svg>

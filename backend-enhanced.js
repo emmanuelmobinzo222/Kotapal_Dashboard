@@ -6,7 +6,7 @@
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { v4: uuidv4 } = require('uuid');
 const http = require('http');
@@ -275,6 +275,103 @@ app.post('/api/auth/login', async (req, res) => {
 // Product search (live retailer APIs)
 // ===========================
 
+function getMockCatalogProducts(retailer, query, looseMatch) {
+  const q = String(query || '').trim().toLowerCase();
+  const catalogs = {
+    amazon: [
+      {
+        id: 'amz_demo_1',
+        title: 'Sony WH-1000XM5 Wireless Noise Canceling Headphones',
+        image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=500&q=80',
+        price: 299.99,
+        retailer: 'amazon',
+        availability: 'In Stock'
+      },
+      {
+        id: 'amz_demo_2',
+        title: 'Apple MacBook Air Laptop',
+        image: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=500&q=80',
+        price: 999.99,
+        retailer: 'amazon',
+        availability: 'In Stock'
+      }
+    ],
+    walmart: [
+      {
+        id: 'wlm_demo_1',
+        title: 'Samsung 55" Crystal UHD Smart TV',
+        image: 'https://images.unsplash.com/photo-1593305841991-05c297ba4575?auto=format&fit=crop&w=500&q=80',
+        price: 499.99,
+        retailer: 'walmart',
+        availability: 'In Stock'
+      },
+      {
+        id: 'wlm_demo_2',
+        title: 'Dyson V11 Cordless Vacuum',
+        image: 'https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?auto=format&fit=crop&w=500&q=80',
+        price: 599.00,
+        retailer: 'walmart',
+        availability: 'In Stock'
+      }
+    ],
+    ebay: [
+      {
+        id: 'ebay_demo_1',
+        title: 'Unlocked Apple iPhone SE 64GB',
+        image: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=500&q=80',
+        price: 99.99,
+        retailer: 'ebay',
+        availability: 'In Stock'
+      },
+      {
+        id: 'ebay_demo_2',
+        title: 'Nike Air Jordan 1 Retro High',
+        image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=500&q=80',
+        price: 449.99,
+        retailer: 'ebay',
+        availability: 'In Stock'
+      }
+    ],
+    shopify: [
+      {
+        id: 'shp_1',
+        title: 'Premium Yoga Mat - Eco Friendly',
+        image: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80',
+        price: 49.99,
+        retailer: 'shopify'
+      },
+      {
+        id: 'shp_2',
+        title: 'Organic Cotton T-Shirt - Unisex',
+        image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80',
+        price: 29.99,
+        retailer: 'shopify'
+      }
+    ],
+    skimlinks: [
+      {
+        id: 'skm_1',
+        title: 'Nike Air Max 270',
+        image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80',
+        price: 150.00,
+        retailer: 'skimlinks'
+      },
+      {
+        id: 'skm_2',
+        title: 'Instant Pot Duo 7-in-1',
+        image: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80',
+        price: 89.99,
+        retailer: 'skimlinks'
+      }
+    ]
+  };
+
+  return (catalogs[retailer] || []).filter(function(p) {
+    if (looseMatch) return true;
+    return !q || p.title.toLowerCase().includes(q);
+  });
+}
+
 app.get('/api/products/search', async (req, res) => {
   try {
     const { retailer, query } = req.query;
@@ -283,26 +380,45 @@ app.get('/api/products/search', async (req, res) => {
       return res.status(400).json({ error: 'Retailer and query are required' });
     }
 
+    const retailerKey = String(retailer).toLowerCase();
+    if (retailerKey === 'shopify' || retailerKey === 'skimlinks') {
+      return res.json({
+        retailer: retailerKey,
+        query,
+        products: getMockCatalogProducts(retailerKey, query),
+        timestamp: new Date()
+      });
+    }
+
     if (!retailerService) {
       return res.status(503).json({ error: 'Retailer service not ready' });
     }
 
-    const retailerKey = String(retailer).toLowerCase();
     const credentials = resolveRetailerSearchCredentials(retailerKey, {
       apiKey: req.query.apiKey || req.headers['x-provider-api-key'] || undefined,
       apiBaseUrl: req.query.apiEndpoint || req.query.apiBaseUrl || undefined
     });
 
-    const products = await retailerService.searchProducts(retailerKey, String(query), {
-      ...buildRetailerSearchOptions(retailerKey, req.query),
-      apiKey: credentials.apiKey || undefined,
-      apiBaseUrl: credentials.apiBaseUrl || undefined
-    });
+    let products = [];
+    let usedFallback = false;
+    try {
+      products = await retailerService.searchProducts(retailerKey, String(query), {
+        ...buildRetailerSearchOptions(retailerKey, req.query),
+        apiKey: credentials.apiKey || undefined,
+        apiBaseUrl: credentials.apiBaseUrl || undefined
+      });
+    } catch (searchError) {
+      console.error('Live product search failed, using catalog fallback:', searchError.message);
+      products = getMockCatalogProducts(retailerKey, query, true);
+      usedFallback = products.length > 0;
+      if (!usedFallback) throw searchError;
+    }
 
     res.json({
       retailer,
       query,
       products: Array.isArray(products) ? products : [],
+      fallback: usedFallback,
       timestamp: new Date()
     });
   } catch (error) {
