@@ -381,44 +381,59 @@ app.get('/api/products/search', async (req, res) => {
     }
 
     const retailerKey = String(retailer).toLowerCase();
-    if (retailerKey === 'shopify' || retailerKey === 'skimlinks') {
-      return res.json({
-        retailer: retailerKey,
-        query,
-        products: getMockCatalogProducts(retailerKey, query),
-        timestamp: new Date()
-      });
-    }
+    const searchQuery = Object.assign({}, req.query, { sort: req.query.sort || 'top' });
 
     if (!retailerService) {
       return res.status(503).json({ error: 'Retailer service not ready' });
     }
 
-    const credentials = resolveRetailerSearchCredentials(retailerKey, {
-      apiKey: req.query.apiKey || req.headers['x-provider-api-key'] || undefined,
-      apiBaseUrl: req.query.apiEndpoint || req.query.apiBaseUrl || undefined
-    });
+    // Platform keys only — creator store API keys are not required for Product Library search.
+    const credentials = resolveRetailerSearchCredentials(
+      (retailerKey === 'all' || retailerKey === 'multi') ? 'amazon' : retailerKey,
+      {
+        apiKey: req.query.apiKey || req.headers['x-provider-api-key'] || undefined,
+        apiBaseUrl: req.query.apiEndpoint || req.query.apiBaseUrl || undefined
+      }
+    );
 
     let products = [];
     let usedFallback = false;
     try {
       products = await retailerService.searchProducts(retailerKey, String(query), {
-        ...buildRetailerSearchOptions(retailerKey, req.query),
+        ...buildRetailerSearchOptions(retailerKey, searchQuery),
         apiKey: credentials.apiKey || undefined,
-        apiBaseUrl: credentials.apiBaseUrl || undefined
+        apiBaseUrl: credentials.apiBaseUrl || undefined,
+        limit: parseInt(req.query.limit, 10) || ((retailerKey === 'all' || retailerKey === 'multi') ? 24 : 20)
       });
     } catch (searchError) {
       console.error('Live product search failed, using catalog fallback:', searchError.message);
-      products = getMockCatalogProducts(retailerKey, query, true);
-      usedFallback = products.length > 0;
+      try {
+        const { filterRankCuratedCatalog } = require('./services/retailerIntegration');
+        if (retailerKey === 'shopify' || retailerKey === 'skimlinks') {
+          products = filterRankCuratedCatalog(retailerKey, query, 20);
+          usedFallback = products.length > 0;
+        } else if (retailerKey === 'all' || retailerKey === 'multi') {
+          products = []
+            .concat(filterRankCuratedCatalog('shopify', query, 8))
+            .concat(filterRankCuratedCatalog('skimlinks', query, 8));
+          usedFallback = products.length > 0;
+        } else {
+          products = getMockCatalogProducts(retailerKey, query, true);
+          usedFallback = products.length > 0;
+        }
+      } catch (fallbackErr) {
+        products = getMockCatalogProducts(retailerKey, query, true);
+        usedFallback = products.length > 0;
+      }
       if (!usedFallback) throw searchError;
     }
 
     res.json({
-      retailer,
+      retailer: retailerKey,
       query,
       products: Array.isArray(products) ? products : [],
       fallback: usedFallback,
+      sort: 'top',
       timestamp: new Date()
     });
   } catch (error) {
@@ -430,7 +445,8 @@ app.get('/api/products/search', async (req, res) => {
 const TRENDING_SEARCH_QUERIES = {
   amazon: 'best sellers electronics',
   walmart: 'best sellers home',
-  ebay: 'trending deals'
+  shopify: 'best sellers',
+  skimlinks: 'best sellers'
 };
 
 app.get('/api/products/trending', async (req, res) => {
@@ -439,17 +455,17 @@ app.get('/api/products/trending', async (req, res) => {
       return res.status(503).json({ error: 'Retailer service not ready' });
     }
 
-    const limit = Math.min(parseInt(req.query.limit, 10) || 4, 10);
-    const retailers = ['amazon', 'walmart', 'ebay'];
+    const limit = Math.min(parseInt(req.query.limit, 10) || 8, 24);
+    const retailers = ['amazon', 'walmart', 'shopify', 'skimlinks'];
     const batches = await Promise.allSettled(
       retailers.map((retailer) => {
         const credentials = resolveRetailerSearchCredentials(retailer, {});
         return retailerService.searchProducts(retailer, TRENDING_SEARCH_QUERIES[retailer], {
-          limit,
+          limit: Math.ceil(limit / retailers.length) + 2,
           apiKey: credentials.apiKey || undefined,
           apiBaseUrl: credentials.apiBaseUrl || undefined,
+          sort: 'top',
           ...(retailer === 'amazon' ? { sort_by: 'bestsellers' } : {}),
-          ...(retailer === 'ebay' ? { sort_by: 'time_newly_listed', filters: 'deals_and_savings', include_related_results: true } : {}),
           ...(retailer === 'walmart' ? { sort_by: 'best_seller' } : {})
         });
       })
@@ -460,12 +476,12 @@ app.get('/api/products/trending', async (req, res) => {
       if (result.status === 'fulfilled' && Array.isArray(result.value)) {
         products.push(...result.value);
       } else if (result.status === 'rejected') {
-        console.warn('Trending fetch failed for', retailers[index], result.reason?.message);
+        console.warn('Trending fetch failed for', retailers[index], result.reason && result.reason.message);
       }
     });
 
     res.json({
-      products,
+      products: products.slice(0, limit),
       retailers,
       timestamp: new Date()
     });

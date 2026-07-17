@@ -398,7 +398,8 @@ function applyProductLookupCors(res) {
 const TRENDING_SEARCH_QUERIES = {
   amazon: 'best sellers electronics',
   walmart: 'best sellers home',
-  ebay: 'trending deals'
+  shopify: 'best sellers',
+  skimlinks: 'best sellers'
 };
 
 async function runRetailerProductSearch(params) {
@@ -410,27 +411,49 @@ async function runRetailerProductSearch(params) {
 
   const db = getFirestore();
   const platformKey = await resolvePlatformProductKey(db);
-  const credentials = resolveRetailerSearchCredentials(retailer, {
+  const credRetailer = (retailer === 'all' || retailer === 'multi') ? 'amazon' : retailer;
+  const credentials = resolveRetailerSearchCredentials(credRetailer, {
     apiKey: params.apiKey || platformKey || undefined,
     apiBaseUrl: params.apiEndpoint || params.apiBaseUrl || undefined
   });
 
-  if (!credentials.apiKey) {
-    throw new HttpsError('failed-precondition', 'Product lookup is not configured on the server.');
+  const searchParams = Object.assign({}, params, { sort: params.sort || 'top' });
+  const canSearchWithoutKey = retailer === 'shopify' || retailer === 'skimlinks' || retailer === 'all' || retailer === 'multi';
+
+  try {
+    const products = await getRetailerService().searchProducts(retailer, query, {
+      ...buildRetailerSearchOptions(retailer, searchParams),
+      apiKey: credentials.apiKey || undefined,
+      apiBaseUrl: credentials.apiBaseUrl || undefined,
+      limit: parseInt(params.limit, 10) || ((retailer === 'all' || retailer === 'multi') ? 24 : 20)
+    });
+    return {
+      retailer,
+      query,
+      products: Array.isArray(products) ? products : [],
+      sort: 'top',
+      timestamp: new Date().toISOString()
+    };
+  } catch (err) {
+    if (canSearchWithoutKey) {
+      const { filterRankCuratedCatalog } = require('./retailerIntegration');
+      const products = (retailer === 'all' || retailer === 'multi')
+        ? filterRankCuratedCatalog('shopify', query, 8).concat(filterRankCuratedCatalog('skimlinks', query, 8))
+        : filterRankCuratedCatalog(retailer, query, 20);
+      return {
+        retailer,
+        query,
+        products,
+        fallback: true,
+        sort: 'top',
+        timestamp: new Date().toISOString()
+      };
+    }
+    if (!credentials.apiKey) {
+      throw new HttpsError('failed-precondition', 'Product lookup is not configured on the server.');
+    }
+    throw err;
   }
-
-  const products = await getRetailerService().searchProducts(retailer, query, {
-    ...buildRetailerSearchOptions(retailer, params),
-    apiKey: credentials.apiKey,
-    apiBaseUrl: credentials.apiBaseUrl
-  });
-
-  return {
-    retailer,
-    query,
-    products: Array.isArray(products) ? products : [],
-    timestamp: new Date().toISOString()
-  };
 }
 
 /**
@@ -455,19 +478,17 @@ async function runTrendingProductSearch(limit = 6) {
   const capped = Math.min(parseInt(limit, 10) || 6, 12);
   const db = getFirestore();
   const platformKey = await resolvePlatformProductKey(db);
-  const retailers = ['amazon', 'walmart', 'ebay'];
+  const retailers = ['amazon', 'walmart', 'shopify', 'skimlinks'];
   const merged = [];
 
   for (const retailer of retailers) {
     try {
       const credentials = resolveRetailerSearchCredentials(retailer, { apiKey: platformKey || undefined });
-      if (!credentials.apiKey) continue;
       const batch = await getRetailerService().searchProducts(retailer, TRENDING_SEARCH_QUERIES[retailer], {
         limit: Math.ceil(capped / retailers.length) + 2,
         apiKey: credentials.apiKey,
         apiBaseUrl: credentials.apiBaseUrl,
         ...(retailer === 'amazon' ? { sort_by: 'bestsellers' } : {}),
-        ...(retailer === 'ebay' ? { sort_by: 'time_newly_listed', filters: 'deals_and_savings', include_related_results: true } : {}),
         ...(retailer === 'walmart' ? { sort_by: 'best_seller' } : {})
       });
       if (Array.isArray(batch)) merged.push(...batch.slice(0, 4));

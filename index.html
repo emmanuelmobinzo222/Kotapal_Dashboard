@@ -257,7 +257,13 @@
             if (!dv) return;
             dv.removeAttribute('data-kotapal-visible');
             dv.style.display = 'none';
+            dv.style.pointerEvents = 'none';
+            dv.style.visibility = 'hidden';
             dv.classList.remove('active');
+            var sidebar = document.getElementById('sidebar');
+            if (sidebar) sidebar.classList.remove('active', 'nav-collapsed');
+            var overlay = document.getElementById('sidebarOverlay');
+            if (overlay) overlay.classList.remove('active');
             if (typeof setDashboardScrollLock === 'function') setDashboardScrollLock(false);
         };
         function initLandingMobileNav() {
@@ -4631,10 +4637,9 @@
                             <div class="form-group">
                                 <label>Select Retailer</label>
                                 <select id="retailerSelect" class="form-control">
-                                    <option value="">Select a retailer</option>
+                                    <option value="all" selected>All retailers (top performing)</option>
                                     <option value="amazon">Amazon</option>
                                     <option value="walmart">Walmart</option>
-                                    <option value="ebay">eBay</option>
                                     <option value="shopify">Shopify</option>
                                     <option value="skimlinks">Skimlinks</option>
                                 </select>
@@ -4659,10 +4664,10 @@
 
                 <div id="integrations-page" class="page-content" style="display:none;">
                     <div class="header"><h1 class="page-title">Integrations</h1></div>
-                    <p style="margin-bottom:20px;color:var(--gray);">Connect your stores and affiliate accounts to pull products and track performance in one place.</p>
+                    <p style="margin-bottom:20px;color:var(--gray);">Add your affiliate / partner IDs so KotaPal can attribute earnings. Product Library search uses KotaPal’s platform catalog — you do not need store API keys.</p>
                     <div class="card">
                         <div class="card-header"><h3 class="card-title">Retailer & store connections</h3></div>
-                        <p style="margin-bottom:16px;">Link Shopify, Amazon Associates, and Walmart Affiliate to sync products and commissions.</p>
+                        <p style="margin-bottom:16px;">Save affiliate tags for Amazon, Walmart, Shopify, and Skimlinks. Product discovery is powered by KotaPal.</p>
                         <div id="integrationsContainer"></div>
                     </div>
                     <div class="card">
@@ -4863,15 +4868,15 @@
                     <div class="card">
                         <div class="card-body">
                             <div style="display:flex; gap:12px; margin-bottom:12px; flex-wrap:wrap; align-items:flex-end;">
-                                <select id="productLibraryRetailer" class="form-control" style="max-width:160px;">
+                                <select id="productLibraryRetailer" class="form-control" style="max-width:200px;">
+                                    <option value="all" selected>All retailers (top performing)</option>
                                     <option value="amazon">Amazon</option>
                                     <option value="walmart">Walmart</option>
-                                    <option value="ebay">eBay</option>
                                     <option value="shopify">Shopify</option>
                                     <option value="skimlinks">Skimlinks</option>
                                 </select>
-                                <input id="productLibraryRetailerQuery" class="form-control" placeholder="Search retailers..." style="max-width:240px;">
-                                <button type="button" class="btn btn-secondary" id="productLibrarySearchRetailersBtn">Search retailers</button>
+                                <input id="productLibraryRetailerQuery" class="form-control" placeholder="Search top products..." style="max-width:280px;">
+                                <button type="button" class="btn btn-secondary" id="productLibrarySearchRetailersBtn">Search</button>
                                 <span id="productLibrarySearchStatus" style="font-size:0.9rem;color:var(--gray);"></span>
                             </div>
                             <div id="productLibrarySearchResults" style="margin-bottom:16px; display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:16px;"></div>
@@ -5008,8 +5013,8 @@
                                 <input type="url" id="userWebsite" class="form-control">
                             </div>
                             <div class="form-group">
-                                <label>Shopify store connection</label>
-                                <input type="text" class="form-control" placeholder="Store URL or API key">
+                                <label>Shopify affiliate / partner ID</label>
+                                <input type="text" class="form-control" id="settingsShopifyAffiliate" placeholder="Optional partner / referral ID">
                             </div>
                             <div class="form-group">
                                 <label>Amazon affiliate tag</label>
@@ -5037,34 +5042,22 @@
                         </form>
                     </div>
                     <div class="card" style="margin-top:20px;">
-                        <div class="card-header"><h3 class="card-title">Provider API keys</h3></div>
+                        <div class="card-header"><h3 class="card-title">Product search</h3></div>
                         <div class="card-body">
-                            <div class="form-group">
-                                <label for="amazonApiKey">SearchAPI.io key (Amazon product search)</label>
-                                <input type="password" id="amazonApiKey" class="form-control provider-api-key-input" data-provider="amazon" placeholder="Paste your Amazon/SearchAPI key" autocomplete="off" spellcheck="false">
-                                <p id="amazonApiKeyStatus" style="margin-top:8px;font-size:0.85rem;color:var(--gray);"></p>
+                            <p style="color:var(--gray);margin-bottom:12px;">KotaPal loads top-performing products from Amazon, Shopify, Walmart, and Skimlinks for you. You only need affiliate / partner IDs (set them under Integrations).</p>
+                            <div style="display:none;" aria-hidden="true">
+                                <input type="password" id="amazonApiKey" class="form-control provider-api-key-input" data-provider="amazon" autocomplete="off">
+                                <p id="amazonApiKeyStatus"></p>
+                                <input type="password" id="walmartApiKey" class="form-control provider-api-key-input" data-provider="walmart" autocomplete="off">
+                                <p id="walmartApiKeyStatus"></p>
+                                <input type="password" id="ebayApiKey" class="form-control provider-api-key-input" data-provider="ebay" autocomplete="off">
+                                <p id="ebayApiKeyStatus"></p>
+                                <input type="password" id="shopifyApiKey" class="form-control provider-api-key-input" data-provider="shopify" autocomplete="off">
+                                <p id="shopifyApiKeyStatus"></p>
+                                <input type="password" id="skimlinksApiKey" class="form-control provider-api-key-input" data-provider="skimlinks" autocomplete="off">
+                                <p id="skimlinksApiKeyStatus"></p>
+                                <button type="button" id="saveAmazonApiKey">Save API keys</button>
                             </div>
-                            <div class="form-group">
-                                <label for="walmartApiKey">SearchAPI.io key (Walmart product search)</label>
-                                <input type="password" id="walmartApiKey" class="form-control provider-api-key-input" data-provider="walmart" placeholder="Paste your Walmart/SearchAPI key" autocomplete="off" spellcheck="false">
-                                <p id="walmartApiKeyStatus" style="margin-top:8px;font-size:0.85rem;color:var(--gray);"></p>
-                            </div>
-                            <div class="form-group">
-                                <label for="ebayApiKey">SearchAPI.io key (eBay product search)</label>
-                                <input type="password" id="ebayApiKey" class="form-control provider-api-key-input" data-provider="ebay" placeholder="Paste your eBay/SearchAPI key" autocomplete="off" spellcheck="false">
-                                <p id="ebayApiKeyStatus" style="margin-top:8px;font-size:0.85rem;color:var(--gray);"></p>
-                            </div>
-                            <div class="form-group">
-                                <label for="shopifyApiKey">Shopify API key / access token</label>
-                                <input type="password" id="shopifyApiKey" class="form-control provider-api-key-input" data-provider="shopify" placeholder="Paste your Shopify API key or token" autocomplete="off" spellcheck="false">
-                                <p id="shopifyApiKeyStatus" style="margin-top:8px;font-size:0.85rem;color:var(--gray);"></p>
-                            </div>
-                            <div class="form-group">
-                                <label for="skimlinksApiKey">Skimlinks API key</label>
-                                <input type="password" id="skimlinksApiKey" class="form-control provider-api-key-input" data-provider="skimlinks" placeholder="Paste your Skimlinks API key" autocomplete="off" spellcheck="false">
-                                <p id="skimlinksApiKeyStatus" style="margin-top:8px;font-size:0.85rem;color:var(--gray);"></p>
-                            </div>
-                            <button type="button" class="btn btn-primary" id="saveAmazonApiKey">Save API keys</button>
                         </div>
                     </div>
                     </div>
@@ -9344,71 +9337,60 @@
                 if (window.location.hash === '#admin') return;
                 if (isProcessingAuthState) return;
                 isProcessingAuthState = true;
-                if (isInitialLoad) {
-                    isProcessingAuthState = false;
-                    return;
-                }
-                
-                // Require login this session: show Login/Sign Up forms when user visits (no auto-login to another user's dashboard)
-                let explicitLogin = sessionStorage.getItem('kotapal_explicit_login') === 'true';
-                
-                // Only show dashboard if user signed in this session (entered credentials)
-                if (user && explicitLogin) {
-                    // User is signed in and explicitly logged in
-                    const savedUserData = JSON.parse(localStorage.getItem('kotaUser') || '{}');
-                    const userData = {
-                        uid: user.uid,
-                        email: user.email,
-                        displayName: user.displayName || savedUserData.displayName || user.email.split('@')[0],
-                        emailVerified: user.emailVerified,
-                        plan: savedUserData.plan || 'starter',
-                        signupDate: savedUserData.signupDate || new Date().toISOString()
-                    };
-                    localStorage.setItem('kotaUser', JSON.stringify(userData));
-                    currentUser = userData;
-                    
-                    const landingView = document.getElementById('landing-page-view');
-                    const nav = document.querySelector('nav');
-                    const footer = document.querySelector('footer');
-                    const dashboardView = document.getElementById('dashboard-view');
-                    
-                    if (typeof window.showKotapalDashboard === 'function') window.showKotapalDashboard();
-                    updateSidebarUserInfo();
-                    showPage('dashboard');
-                    if (typeof initDashboard === 'function') initDashboard();
-                    if (typeof window.clearStaleOverlays === 'function') window.clearStaleOverlays();
-                    
-                    // Mark processing complete
-                    isProcessingAuthState = false;
-                } else {
-                    // User is signed out OR did not log in this session (must enter credentials)
-                    // Show landing page so they click Login and enter email/password
-                    
-                    // Clear user data if signed out
-                    if (!user) {
-                        localStorage.removeItem('kotaUser');
-                        localStorage.removeItem('kotapal_explicit_login'); // Also remove from localStorage
-                        sessionStorage.removeItem('kotapal_explicit_login');
-                        currentUser = null;
+                try {
+                    if (isInitialLoad) return;
+
+                    // Require login this session: show Login/Sign Up forms when user visits (no auto-login to another user's dashboard)
+                    let explicitLogin = sessionStorage.getItem('kotapal_explicit_login') === 'true';
+
+                    // Only show dashboard if user signed in this session (entered credentials)
+                    if (user && explicitLogin) {
+                        // User is signed in and explicitly logged in
+                        const savedUserData = JSON.parse(localStorage.getItem('kotaUser') || '{}');
+                        const userData = {
+                            uid: user.uid,
+                            email: user.email,
+                            displayName: user.displayName || savedUserData.displayName || user.email.split('@')[0],
+                            emailVerified: user.emailVerified,
+                            plan: savedUserData.plan || 'starter',
+                            signupDate: savedUserData.signupDate || new Date().toISOString()
+                        };
+                        localStorage.setItem('kotaUser', JSON.stringify(userData));
+                        currentUser = userData;
+
+                        if (typeof window.showKotapalDashboard === 'function') window.showKotapalDashboard();
+                        updateSidebarUserInfo();
+                        showPage('dashboard');
+                        if (typeof initDashboard === 'function') initDashboard();
+                        if (typeof window.clearStaleOverlays === 'function') window.clearStaleOverlays();
+                    } else {
+                        // User is signed out OR did not log in this session (must enter credentials)
+                        // Show landing page so they click Login and enter email/password
+
+                        // Clear user data if signed out
+                        if (!user) {
+                            localStorage.removeItem('kotaUser');
+                            localStorage.removeItem('kotapal_explicit_login'); // Also remove from localStorage
+                            sessionStorage.removeItem('kotapal_explicit_login');
+                            currentUser = null;
+                        }
+
+                        // Show landing page if not explicitly logged in
+                        const landingView = document.getElementById('landing-page-view');
+                        const nav = document.querySelector('#landing-page-view > nav') || document.querySelector('nav');
+                        const footer = document.querySelector('footer');
+
+                        if (typeof window.hideKotapalDashboard === 'function') window.hideKotapalDashboard();
+                        if (landingView) {
+                            landingView.style.display = 'block';
+                            landingView.classList.remove('theme-dark'); /* Landing never uses dark mode */
+                            document.documentElement.classList.add('landing-page-active');
+                        }
+                        if (nav) nav.style.display = 'flex';
+                        if (footer) footer.style.display = 'block';
+                        if (typeof window.ensureSiteInteractive === 'function') window.ensureSiteInteractive();
                     }
-                    
-                    // Show landing page if not explicitly logged in
-                    const landingView = document.getElementById('landing-page-view');
-                    const nav = document.querySelector('nav');
-                    const footer = document.querySelector('footer');
-                    const dashboardView = document.getElementById('dashboard-view');
-                    
-                    if (typeof window.hideKotapalDashboard === 'function') window.hideKotapalDashboard();
-                    if (landingView) {
-                        landingView.style.display = 'block';
-                        landingView.classList.remove('theme-dark'); /* Landing never uses dark mode */
-                        document.documentElement.classList.add('landing-page-active');
-                    }
-                    if (nav) nav.style.display = 'flex';
-                    if (footer) footer.style.display = 'block';
-                    if (typeof window.ensureSiteInteractive === 'function') window.ensureSiteInteractive();
-                    
-                    // Mark processing complete
+                } finally {
                     isProcessingAuthState = false;
                 }
             });
@@ -10333,7 +10315,7 @@
                 const found = saved.find(function(item) { return item && item.id === def.id; }) || {};
                 const apiKey = getProviderApiKey(def.id, false);
                 const affiliateId = found.affiliateId != null ? found.affiliateId : (localStorage.getItem(getProviderAffiliateStorageKey(def.id)) || def.affiliateId || '');
-                const status = found.status || (apiKey || affiliateId ? 'connected' : def.status);
+                const status = found.status || (affiliateId ? 'connected' : def.status);
                 return Object.assign({}, def, found, {
                     affiliateId: affiliateId,
                     status: status,
@@ -10463,34 +10445,57 @@
             const modal = document.getElementById('logoutConfirmModal');
             if (modal) modal.style.display = 'none';
             if (typeof stopInactivityTimer === 'function') stopInactivityTimer();
+
+            // Clear session gate first so onAuthStateChanged cannot re-show the dashboard
+            localStorage.removeItem('kotaUser');
+            localStorage.removeItem('kotapal_explicit_login');
+            sessionStorage.removeItem('kotapal_explicit_login');
+            sessionStorage.removeItem('settings_access_granted');
+            if (typeof currentUser !== 'undefined') currentUser = null;
+
+            function returnToLanding() {
+                if (typeof stopDashboardBlocksSync === 'function') stopDashboardBlocksSync();
+                if (typeof stopUserHelpTicketsListener === 'function') stopUserHelpTicketsListener();
+                if (typeof window.hideKotapalDashboard === 'function') {
+                    window.hideKotapalDashboard();
+                } else {
+                    const dv = document.getElementById('dashboard-view');
+                    if (dv) {
+                        dv.removeAttribute('data-kotapal-visible');
+                        dv.style.display = 'none';
+                        dv.style.pointerEvents = 'none';
+                        dv.style.visibility = 'hidden';
+                        dv.classList.remove('active');
+                    }
+                }
+                const landingView = document.getElementById('landing-page-view');
+                const nav = document.querySelector('#landing-page-view > nav') || document.querySelector('nav');
+                const footer = document.querySelector('footer');
+                if (landingView) {
+                    landingView.style.display = 'block';
+                    landingView.classList.remove('theme-dark');
+                }
+                document.documentElement.classList.add('landing-page-active');
+                document.documentElement.classList.remove('dashboard-scroll-lock');
+                if (nav) nav.style.display = 'flex';
+                if (footer) footer.style.display = 'block';
+                const homePage = document.getElementById('home-page');
+                const contactPage = document.getElementById('contact-page');
+                if (homePage) homePage.style.display = 'block';
+                if (contactPage) contactPage.style.display = 'none';
+                if (typeof window.ensureSiteInteractive === 'function') window.ensureSiteInteractive();
+            }
+
             try {
                 if (typeof auth !== 'undefined' && auth) {
                     await auth.signOut();
                 }
-                localStorage.removeItem('kotaUser');
-                localStorage.removeItem('kotapal_explicit_login');
-                sessionStorage.removeItem('kotapal_explicit_login');
-                sessionStorage.removeItem('settings_access_granted');
-                if (typeof currentUser !== 'undefined') currentUser = null;
-                if (typeof stopDashboardBlocksSync === 'function') stopDashboardBlocksSync();
-                if (typeof stopUserHelpTicketsListener === 'function') stopUserHelpTicketsListener();
-                const dashboardView = document.getElementById('dashboard-view');
-                const landingView = document.getElementById('landing-page-view');
-                const nav = document.querySelector('nav');
-                const footer = document.querySelector('footer');
-                if (typeof window.hideKotapalDashboard === 'function') window.hideKotapalDashboard();
-                if (landingView) { landingView.style.display = 'block'; landingView.classList.remove('theme-dark'); }
-                document.documentElement.classList.add('landing-page-active');
-                if (nav) nav.style.display = 'flex';
-                if (footer) footer.style.display = 'block';
-                if (typeof window.ensureSiteInteractive === 'function') window.ensureSiteInteractive();
-                var homePage = document.getElementById('home-page');
-                var contactPage = document.getElementById('contact-page');
-                if (homePage) homePage.style.display = 'block';
-                if (contactPage) contactPage.style.display = 'none';
             } catch (error) {
                 console.error('Logout error:', error);
                 showNotification('Error signing out. Please try again.', 'error', 'Logout');
+            } finally {
+                // Always hide the auth nav/sidebar, even if Firebase signOut fails
+                returnToLanding();
             }
         }
 
@@ -11449,17 +11454,13 @@
                     </div>
                     <div>
                         <p>Last synced: ${escapeHtml(integration.lastSync || 'Never')}</p>
-                        <p style="color:var(--gray);font-size:0.9rem;margin-bottom:12px;">Save the ${providerLabel} credentials used for product search, SmartBlocks, and Product Library items from this provider.</p>
+                        <p style="color:var(--gray);font-size:0.9rem;margin-bottom:12px;">Save your ${providerLabel} affiliate / partner ID. Product Library search is powered by KotaPal — no store API key needed.</p>
                         <div class="form-group">
                             <label>${providerLabel} affiliate / partner ID</label>
                             <input type="text" value="${escapeHtml(affiliateId)}" class="form-control integration-id" data-id="${integration.id}" placeholder="Paste affiliate or partner ID" autocomplete="off" spellcheck="false">
                         </div>
-                        <div class="form-group">
-                            <label>${providerLabel} API key</label>
-                            <input type="password" value="${escapeHtml(apiKey)}" class="form-control integration-api-key" data-id="${integration.id}" placeholder="Paste ${providerLabel} API key" autocomplete="off" spellcheck="false">
-                        </div>
                         <div style="display: flex; gap: 10px; margin-top: 20px; flex-wrap:wrap;">
-                            <button class="btn btn-primary integration-save-btn" data-id="${integration.id}">Save credentials</button>
+                            <button class="btn btn-primary integration-save-btn" data-id="${integration.id}">Save affiliate ID</button>
                             ${integration.status === 'connected'
                                 ? `<button class="btn btn-danger disconnect-btn" data-id="${integration.id}">Disconnect</button>`
                                 : `<button class="btn btn-secondary connect-btn" data-id="${integration.id}">Connect Account</button>`}
@@ -11483,24 +11484,20 @@
                     btn.addEventListener('click', function() {
                         const integrationId = this.getAttribute('data-id');
                         const integrationIndex = currentIntegrations.findIndex(i => i.id === integrationId);
-                        const apiInput = document.querySelector('.integration-api-key[data-id="' + integrationId + '"]');
                         const idInput = document.querySelector('.integration-id[data-id="' + integrationId + '"]');
-                        const apiValue = apiInput && apiInput.value ? apiInput.value.trim() : '';
                         const affiliateValue = idInput && idInput.value ? idInput.value.trim() : '';
 
-                        if (apiValue) setProviderApiKey(integrationId, apiValue);
                         setProviderAffiliateId(integrationId, affiliateValue);
 
                         if (integrationIndex !== -1) {
-                            currentIntegrations[integrationIndex].status = (apiValue || affiliateValue) ? 'connected' : currentIntegrations[integrationIndex].status;
+                            currentIntegrations[integrationIndex].status = affiliateValue ? 'connected' : currentIntegrations[integrationIndex].status;
                             currentIntegrations[integrationIndex].affiliateId = affiliateValue;
                             currentIntegrations[integrationIndex].lastSync = 'Just now';
-                            currentIntegrations[integrationIndex].apiKeyConfigured = Boolean(apiValue || getProviderApiKey(integrationId, false));
+                            currentIntegrations[integrationIndex].apiKeyConfigured = false;
                         }
                         saveIntegrations();
-                        loadProviderApiKeys();
                         renderIntegrations();
-                        showNotification(getProviderLabel(integrationId) + ' credentials saved.', 'success', 'Integrations');
+                        showNotification(getProviderLabel(integrationId) + ' affiliate ID saved.', 'success', 'Integrations');
                     });
                 });
                 document.querySelectorAll('.connect-btn').forEach(btn => {
@@ -11944,24 +11941,43 @@
 
         function getProductSearchApiUrl(retailer, query) {
             const params = new URLSearchParams({
-                retailer: String(retailer || 'amazon').toLowerCase(),
-                query: String(query || '').trim()
+                retailer: String(retailer || 'all').toLowerCase(),
+                query: String(query || '').trim(),
+                sort: 'top',
+                limit: retailer === 'all' || retailer === 'multi' ? '24' : '20'
             });
             return `${PRODUCT_SEARCH_API}?${params.toString()}`;
         }
 
+        function applyAffiliateToProductLink(product) {
+            if (!product) return product;
+            const retailer = String(product.retailer || '').toLowerCase();
+            const aff = typeof getProviderAffiliateId === 'function' ? getProviderAffiliateId(retailer) : '';
+            if (!aff) return product;
+            let link = product.link || '';
+            if (retailer === 'amazon' && (product.asin || product.id)) {
+                const asin = product.asin || product.id;
+                link = 'https://www.amazon.com/dp/' + encodeURIComponent(asin) + '?tag=' + encodeURIComponent(aff);
+            } else if (retailer === 'walmart' && product.id) {
+                link = 'https://www.walmart.com/ip/' + encodeURIComponent(product.id) + '?affid=' + encodeURIComponent(aff);
+            } else if (retailer === 'shopify' && product.id) {
+                link = 'https://store.shopify.com/products/' + encodeURIComponent(product.id) + '?ref=' + encodeURIComponent(aff);
+            } else if (retailer === 'skimlinks') {
+                const target = link || String(product.id || '');
+                link = 'https://go.skimresources.com/?id=' + encodeURIComponent(aff) + '&url=' + encodeURIComponent(target);
+            }
+            return Object.assign({}, product, { link: link, affiliateId: aff });
+        }
+
         async function fetchRetailerProducts(retailer, query) {
-            retailer = String(retailer || 'amazon').toLowerCase();
+            retailer = String(retailer || 'all').toLowerCase();
             query = String(query || '').trim();
             if (!query) {
                 return { retailer: retailer, query: query, products: [] };
             }
 
+            // Product search uses platform credentials on the server. Creators only store affiliate IDs.
             const headers = { Accept: 'application/json' };
-            const userApiKey = SEARCHAPI_PROVIDERS.includes(retailer) ? getProviderApiKey(retailer, false) : getProviderApiKey(retailer, false);
-            if (userApiKey) {
-                headers['x-provider-api-key'] = userApiKey;
-            }
 
             const response = await fetch(getProductSearchApiUrl(retailer, query), {
                 method: 'GET',
@@ -11974,8 +11990,8 @@
             }
 
             const products = (Array.isArray(data.products) ? data.products : []).map(function(product, index) {
-                return {
-                    id: product.id || product.asin || product.item_id || (retailer + '_' + index),
+                const mapped = {
+                    id: product.id || product.asin || product.item_id || ((product.retailer || retailer) + '_' + index),
                     title: product.title || 'Product',
                     image: product.image || product.thumbnail || 'https://via.placeholder.com/200',
                     price: typeof product.price === 'number' ? product.price : (parseFloat(product.price) || 0),
@@ -11986,8 +12002,10 @@
                     retailer: product.retailer || retailer,
                     asin: product.asin || null,
                     link: product.link || null,
-                    brand: product.brand || null
+                    brand: product.brand || null,
+                    performanceScore: product.performanceScore || 0
                 };
+                return applyAffiliateToProductLink(mapped);
             });
 
             return {
@@ -12070,11 +12088,7 @@
 
             if (!searchStatus || !productsContainer) return;
 
-            if (!retailer) {
-                searchStatus.textContent = 'Please select a retailer before searching.';
-                productsContainer.innerHTML = '';
-                return;
-            }
+            retailer = retailer || 'all';
 
             if (!query || !query.trim()) {
                 searchStatus.textContent = 'Please enter a search query';
@@ -12082,13 +12096,13 @@
                 return;
             }
 
-            searchStatus.innerHTML = '<div class="loading"><div class="spinner"></div> Searching...</div>';
+            searchStatus.innerHTML = '<div class="loading"><div class="spinner"></div> Searching top products...</div>';
             productsContainer.innerHTML = '';
 
             try {
                 const result = await fetchRetailerProducts(retailer, query);
                 const products = result.products || [];
-                const retailerLabel = (retailer || '').charAt(0).toUpperCase() + (retailer || '').slice(1);
+                const retailerLabel = retailer === 'all' ? 'top-performing' : ((retailer || '').charAt(0).toUpperCase() + (retailer || '').slice(1));
 
                 if (products.length === 0) {
                     searchStatus.textContent = `No ${retailerLabel} products found for "${query}".`;
@@ -12108,7 +12122,7 @@
                         <img src="${(product.image || 'https://via.placeholder.com/200').replace(/"/g, '&quot;')}" alt="${(product.title || '').replace(/"/g, '&quot;')}" class="product-image-dashboard" onerror="this.src='https://via.placeholder.com/200'">
                         <div class="product-title">${product.title || 'Product'}</div>
                         <div class="product-price">$${(product.price || 0).toFixed(2)}</div>
-                        <div class="product-retailer">${retailerLabel}</div>
+                        <div class="product-retailer">${((product.retailer || retailer || '').charAt(0).toUpperCase() + (product.retailer || retailer || '').slice(1))}</div>
                     `;
                     productCard.addEventListener('click', function() {
                         const isSelected = selectedProductsList.some(function(p) { return p.id === product.id; });
@@ -12133,7 +12147,7 @@
                 });
             } catch (error) {
                 console.error('Search products error:', error);
-                searchStatus.textContent = `Error searching products: ${error.message}. Check your API key in Settings or server configuration.`;
+                searchStatus.textContent = `Error searching products: ${error.message}. Please try again.`;
                 productsContainer.innerHTML = '<p style="text-align: center; color: var(--danger); padding: 20px;">Error loading products. Please try again.</p>';
             }
         }
@@ -12143,20 +12157,21 @@
             const statusEl = document.getElementById('productLibrarySearchStatus');
             const resultsEl = document.getElementById('productLibrarySearchResults');
             if (!statusEl || !resultsEl) return;
+            retailer = retailer || 'all';
             if (!query || !query.trim()) {
-                statusEl.textContent = 'Enter a search term.';
+                statusEl.textContent = 'Enter a search term to find top-performing products.';
                 resultsEl.innerHTML = '';
                 return;
             }
-            statusEl.textContent = 'Searching...';
-            resultsEl.innerHTML = '<div style="padding: 24px; text-align: center; color: var(--gray); grid-column: 1 / -1;"><div class="spinner" style="margin: 0 auto 12px;"></div>Loading products...</div>';
+            statusEl.textContent = 'Searching top products across retailers...';
+            resultsEl.innerHTML = '<div style="padding: 24px; text-align: center; color: var(--gray); grid-column: 1 / -1;"><div class="spinner" style="margin: 0 auto 12px;"></div>Loading top products...</div>';
             try {
                 const result = await fetchRetailerProducts(retailer, query);
                 const products = result.products || [];
-                const retailerLabel = (retailer || '').charAt(0).toUpperCase() + (retailer || '').slice(1);
+                const retailerLabel = retailer === 'all' ? 'top-performing' : ((retailer || '').charAt(0).toUpperCase() + (retailer || '').slice(1));
 
                 statusEl.textContent = products.length > 0
-                    ? `Found ${products.length} ${retailerLabel} product(s) for "${query}". Click "Add to Library" to save.` + (result.fallback ? ' (demo catalog — live API unavailable)' : '')
+                    ? `Found ${products.length} ${retailerLabel} product(s) for "${query}". Click "Add to Library" to save.` + (result.fallback ? ' (platform catalog)' : '')
                     : `No ${retailerLabel} products found for "${query}".`;
                 window._lastLibrarySearchProducts = products.map(function(p) {
                     return Object.assign({}, p, { addedDate: p.addedDate || new Date().toISOString() });
@@ -12169,7 +12184,7 @@
                         <img src="${(p.image || 'https://via.placeholder.com/200').replace(/"/g, '&quot;')}" alt="${(p.title || '').replace(/"/g, '&quot;')}" class="product-image-dashboard" onerror="this.src='https://via.placeholder.com/200'">
                         <div class="product-title">${(p.title || 'Product').substring(0, 60)}${(p.title || '').length > 60 ? '...' : ''}</div>
                         <div class="product-price">$${(p.price || 0).toFixed(2)}</div>
-                        <div class="product-retailer">${retailerLabel}</div>
+                        <div class="product-retailer">${(p.retailer || retailer || '').charAt(0).toUpperCase() + (p.retailer || retailer || '').slice(1)}</div>
                         <button type="button" class="btn btn-primary btn-sm" style="margin-top: 8px; width: 100%; padding: 8px;" onclick="addProductToLibraryByIndex(${idx})">
                             <i class="fas fa-plus"></i> Add to Library
                         </button>
@@ -12177,7 +12192,7 @@
                     }).join('');
             } catch (err) {
                 console.error('Product Library search error:', err);
-                statusEl.textContent = `Error: ${err.message}. Check your API key in Settings or server configuration.`;
+                statusEl.textContent = `Error: ${err.message}. Please try again.`;
                 resultsEl.innerHTML = '<p style="text-align: center; color: var(--danger); padding: 20px; grid-column: 1 / -1;">Search failed. Please try again.</p>';
             }
         }
@@ -12211,6 +12226,8 @@
                 image: product.image,
                 price: product.price,
                 retailer: product.retailer,
+                link: product.link || null,
+                affiliateId: product.affiliateId || (typeof getProviderAffiliateId === 'function' ? getProviderAffiliateId(product.retailer) : ''),
                 addedDate: product.addedDate || new Date().toISOString()
             });
             localStorage.setItem(libraryKey, JSON.stringify(list));
@@ -13639,14 +13656,11 @@
                         return;
                     }
 
-                    if (!retailer) {
-                        if (searchStatus) searchStatus.textContent = 'Select a retailer to search for products.';
-                        return;
-                    }
+                    const selectedRetailer = retailer || 'all';
 
                     if (query.length >= 2) {
                         searchTimeout = setTimeout(function() {
-                            searchProducts(retailer, query);
+                            searchProducts(selectedRetailer, query);
                         }, 500);
                     }
                 });
@@ -13655,13 +13669,8 @@
                     if (e.key === 'Enter') {
                         e.preventDefault();
                         clearTimeout(searchTimeout);
-                        const retailer = retailerSelect ? retailerSelect.value : '';
+                        const retailer = (retailerSelect && retailerSelect.value) ? retailerSelect.value : 'all';
                         const query = this.value.trim();
-                        if (!retailer) {
-                            const searchStatus = getSearchStatusEl();
-                            if (searchStatus) searchStatus.textContent = 'Select a retailer to search for products.';
-                            return;
-                        }
                         if (query) searchProducts(retailer, query);
                     }
                 });
@@ -13671,14 +13680,11 @@
                 retailerSelect.addEventListener('change', function() {
                     const query = productSearchInput ? productSearchInput.value.trim() : '';
                     const searchStatus = getSearchStatusEl();
-                    if (!this.value) {
-                        if (searchStatus) searchStatus.textContent = '';
-                        return;
-                    }
+                    const selected = this.value || 'all';
                     if (query.length >= 2) {
-                        searchProducts(this.value, query);
+                        searchProducts(selected, query);
                     } else if (searchStatus) {
-                        searchStatus.textContent = 'Type at least 2 characters to search ' + this.value + ' products.';
+                        searchStatus.textContent = 'Type at least 2 characters to search top products.';
                     }
                 });
             }
@@ -13859,16 +13865,32 @@
         const productLibrarySearchRetailersBtn = document.getElementById('productLibrarySearchRetailersBtn');
         const productLibraryRetailer = document.getElementById('productLibraryRetailer');
         const productLibraryRetailerQuery = document.getElementById('productLibraryRetailerQuery');
+        let productLibrarySearchTimeout;
         if (productLibrarySearchRetailersBtn && productLibraryRetailer && productLibraryRetailerQuery) {
             productLibrarySearchRetailersBtn.addEventListener('click', () => {
-                searchProductsForLibrary(productLibraryRetailer.value, productLibraryRetailerQuery.value.trim());
+                searchProductsForLibrary(productLibraryRetailer.value || 'all', productLibraryRetailerQuery.value.trim());
+            });
+            productLibraryRetailerQuery.addEventListener('input', function() {
+                clearTimeout(productLibrarySearchTimeout);
+                const q = this.value.trim();
+                if (q.length < 2) return;
+                productLibrarySearchTimeout = setTimeout(function() {
+                    searchProductsForLibrary((productLibraryRetailer && productLibraryRetailer.value) || 'all', q);
+                }, 450);
             });
             productLibraryRetailerQuery.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') {
                     e.preventDefault();
-                    searchProductsForLibrary(productLibraryRetailer.value, productLibraryRetailerQuery.value.trim());
+                    clearTimeout(productLibrarySearchTimeout);
+                    searchProductsForLibrary(productLibraryRetailer.value || 'all', productLibraryRetailerQuery.value.trim());
                 }
             });
+            if (productLibraryRetailer) {
+                productLibraryRetailer.addEventListener('change', function() {
+                    const q = productLibraryRetailerQuery.value.trim();
+                    if (q.length >= 2) searchProductsForLibrary(this.value || 'all', q);
+                });
+            }
         }
         
         // AI Assistant Chat
